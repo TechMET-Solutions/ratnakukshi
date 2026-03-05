@@ -272,6 +272,7 @@ const FamilyDetailsForm = () => {
 
                             return (
                                 <div key={rel} className="border border-slate-300 rounded-md mb-3">
+
                                     <div className="w-full flex items-center justify-between p-4 bg-slate-100 hover:bg-slate-200 gap-4">
                                         <button
                                             type="button"
@@ -281,8 +282,6 @@ const FamilyDetailsForm = () => {
                                             <span className="font-medium text-slate-800">{rel} Details</span>
                                             {expandedRelations[rel] ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
                                         </button>
-
-                                       
 
                                         {isAdditionalRow && (
                                             <button
@@ -296,83 +295,198 @@ const FamilyDetailsForm = () => {
                                     </div>
 
                                     {expandedRelations[rel] && (
-                                        <div className="p-4 border-t border-slate-300 space-y-4">
-                                            {/* Head of Family Member - Exclusive */}
-                                            <div className="mb-4 p-3 bg-blue-50 rounded-md">
-                                                <label className="flex items-center gap-2 cursor-pointer">
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={headOfFamily === rel}
-                                                        onChange={() => handleHeadOfFamilyChange(rel)}
-                                                        className="w-5 h-5 border-slate-400 rounded"
-                                                    />
-                                                    <span className="font-semibold text-slate-700">Head of Family</span>
-                                                </label>
-                                            </div>
+                                        <div className="flex p-4 border-t border-slate-300 space-y-4">
+                                            <div className="w-[85%]">
+                                                {/* Head of Family Member - Exclusive */}
+                                                <div className="mb-4 p-3 w-[180px] bg-blue-50 rounded-md">
+                                                    <label className="flex items-center gap-2 cursor-pointer">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={headOfFamily === rel}
+                                                            onChange={() => handleHeadOfFamilyChange(rel)}
+                                                            className="w-5 h-5 border-slate-400 rounded"
+                                                        />
+                                                        <span className="font-semibold text-slate-700">Head of Family</span>
+                                                    </label>
+                                                </div>
 
-                                            {/* Conditional Fields for "Other" Relation */}
-                                            {rel === 'Other' && (
-                                                <div className="flex gap-6 mb-4">
-                                                    <div>
-                                                        <label className="block text-sm font-medium text-slate-700 mb-1">Relation Name<span className="text-red-500">*</span></label>
+                                                {/* Conditional Fields for "Other" Relation */}
+                                                {rel === 'Other' && (
+                                                    <div className="flex gap-6 mb-4">
+                                                        <div>
+                                                            <label className="block text-sm font-medium text-slate-700 mb-1">Relation Name<span className="text-red-500">*</span></label>
+                                                            <input
+                                                                type="text"
+                                                                placeholder="e.g., Cousin, Uncle, Aunt"
+                                                                value={relationDetails[rel]?.relationName || ''}
+                                                                onChange={(e) => handleRelationDetailChange(rel, 'relationName', e.target.value)}
+                                                                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
+                                                            />
+                                                        </div>
+
+                                                    </div>
+                                                )}
+
+                                                <div className="flex  gap-4">
+                                                    {/* Full Name */}
+                                                    <div className='w-[350px]'>
+                                                        <label className="block text-sm font-medium text-slate-700 mb-1">Full Name<span className="text-red-500">*</span></label>
                                                         <input
                                                             type="text"
-                                                            placeholder="e.g., Cousin, Uncle, Aunt"
-                                                            value={relationDetails[rel]?.relationName || ''}
-                                                            onChange={(e) => handleRelationDetailChange(rel, 'relationName', e.target.value)}
+                                                            value={relationDetails[rel]?.fullName || ''}
+                                                            onChange={(e) => handleRelationDetailChange(rel, 'fullName', e.target.value)}
                                                             className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                                                         />
                                                     </div>
 
-                                                </div>
-                                            )}
+                                                    {/* Aadhar Number */}
+                                                    <div className='w-[250px]'>
+                                                        <label className="block text-sm font-medium text-slate-700 mb-1">Aadhar Number<span className="text-red-500">*</span></label>
+                                                        <input
+                                                            type="text"
+                                                            value={relationDetails[rel]?.aadharNumber || ''}
+                                                            onChange={(e) => handleRelationDetailChange(rel, 'aadharNumber', e.target.value)}
+                                                            className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
+                                                        />
+                                                    </div>
 
-                                            <div className="flex  gap-4">
-                                                {/* Full Name */}
-                                                <div className='w-[300px]'>
-                                                    <label className="block text-sm font-medium text-slate-700 mb-1">Full Name<span className="text-red-500">*</span></label>
-                                                    <input
-                                                        type="text"
-                                                        value={relationDetails[rel]?.fullName || ''}
-                                                        onChange={(e) => handleRelationDetailChange(rel, 'fullName', e.target.value)}
-                                                        className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
-                                                    />
-                                                </div>
+                                                    {/* Pan Number */}
+                                                    <div>
+                                                        <label className="block text-sm font-medium text-slate-700 mb-1">Pan Number<span className="text-red-500">*</span></label>
+                                                        <input
+                                                            type="text"
+                                                            value={relationDetails[rel]?.panNumber || ''}
+                                                            onChange={(e) => handleRelationDetailChange(rel, 'panNumber', e.target.value)}
+                                                            className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
+                                                        />
+                                                    </div>
 
-                                                {/* Aadhar Number */}
-                                                <div>
-                                                    <label className="block text-sm font-medium text-slate-700 mb-1">Aadhar Number<span className="text-red-500">*</span></label>
-                                                    <input
-                                                        type="text"
-                                                        value={relationDetails[rel]?.aadharNumber || ''}
-                                                        onChange={(e) => handleRelationDetailChange(rel, 'aadharNumber', e.target.value)}
-                                                        className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
-                                                    />
-                                                </div>
+                                                 
 
-                                                {/* Pan Number */}
-                                                <div>
-                                                    <label className="block text-sm font-medium text-slate-700 mb-1">Pan Number<span className="text-red-500">*</span></label>
-                                                    <input
-                                                        type="text"
-                                                        value={relationDetails[rel]?.panNumber || ''}
-                                                        onChange={(e) => handleRelationDetailChange(rel, 'panNumber', e.target.value)}
-                                                        className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
-                                                    />
+
                                                 </div>
 
+                                                <div className="flex gap-6 mt-4 w-full">
+                                                    {/* Ayushman Radio */}
+                                                    <div>
+                                                        <p className="text-sm font-medium text-slate-700 mb-2">Does this person have Ayushman coverage?<span className="text-red-500">*</span></p>
+                                                        <div className="flex gap-4">
+                                                            <label className="flex items-center gap-2">
+                                                                <input
+                                                                    type="radio"
+                                                                    name={`ayushman-${rel}`}
+                                                                    checked={relationDetails[rel]?.ayushman === true}
+                                                                    onChange={() => handleRelationDetailChange(rel, 'ayushman', true)}
+                                                                />
+                                                                Yes
+                                                            </label>
+                                                            <label className="flex items-center gap-2">
+                                                                <input
+                                                                    type="radio"
+                                                                    name={`ayushman-${rel}`}
+                                                                    checked={relationDetails[rel]?.ayushman === false}
+                                                                    onChange={() => handleRelationDetailChange(rel, 'ayushman', false)}
+                                                                />
+                                                                No
+                                                            </label>
+                                                        </div>
+                                                    </div>
+                                                   
+                                                    {/* Do they have any Mediclaim policy?* Radio */}
+                                                    <div>
+                                                        <p className="text-sm font-medium text-slate-700 mb-2">Do they have any Mediclaim policy?<span className="text-red-500">*</span></p>
+                                                        <div className="flex gap-4">
+                                                            <label className="flex items-center gap-2">
+                                                                <input
+                                                                    type="radio"
+                                                                    name={`mediclaim-${rel}`}
+                                                                    checked={relationDetails[rel]?.mediclaim === true}
+                                                                    onChange={() => handleRelationDetailChange(rel, 'mediclaim', true)}
+                                                                />
+                                                                Yes
+                                                            </label>
+                                                            <label className="flex items-center gap-2">
+                                                                <input
+                                                                    type="radio"
+                                                                    name={`mediclaim-${rel}`}
+                                                                    checked={relationDetails[rel]?.mediclaim === false}
+                                                                    onChange={() => handleRelationDetailChange(rel, 'mediclaim', false)}
+                                                                />
+                                                                No
+                                                            </label>
+                                                        </div>
+                                                    </div>
+
+                                                    <div>
+                                                        <p className="text-sm font-medium text-slate-700 mb-2">Need Assistance<span className="text-red-500">*</span></p>
+                                                        <div className="flex gap-4">
+                                                            <label className="flex items-center gap-2">
+                                                                <input
+                                                                    type="radio"
+                                                                    name={`needAssistance-${rel}`}
+                                                                    checked={relationDetails[rel]?.needAssistance === true}
+                                                                    onChange={() => handleRelationDetailChange(rel, 'needAssistance', true)}
+                                                                />
+                                                                Yes
+                                                            </label>
+                                                            <label className="flex items-center gap-2">
+                                                                <input
+                                                                    type="radio"
+                                                                    name={`needAssistance-${rel}`}
+                                                                    checked={relationDetails[rel]?.needAssistance === false}
+                                                                    onChange={() => handleRelationDetailChange(rel, 'needAssistance', false)}
+                                                                />
+                                                                No
+                                                            </label>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                {/* Amount - Conditional Render */}
+                                                {relationDetails[rel]?.ayushman === true && (
+                                                    <div className="w-[200px] mt-4">
+                                                        <label className="block text-sm font-medium text-slate-700 mb-1">Amount<span className="text-red-500">*</span></label>
+                                                        <input
+                                                            type="text"
+                                                            value={relationDetails[rel]?.amount || ''}
+                                                            onChange={(e) => handleRelationDetailChange(rel, 'amount', e.target.value)}
+                                                            className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
+                                                        />
+                                                    </div>
+                                                )} 
+                                                {/* Show Assistance Categories when Need Assistance is Yes */}
+                                                {relationDetails[rel]?.needAssistance === true && (
+                                                    <div className="w-full mt-6">
+                                                        <p className="text-sm font-medium text-slate-700 mb-3">Assistances<span className="text-red-500">*</span></p>
+                                                        <div className="flex flex-wrap gap-4">
+                                                            {assistanceTypes.map((type) => (
+                                                                <label key={type} className="flex items-center gap-2 text-slate-700 cursor-pointer">
+                                                                    <input
+                                                                        type="checkbox"
+                                                                        checked={relationDetails[rel]?.assistanceCategories?.includes(type) || false}
+                                                                        onChange={() => handleAssistanceCategory(rel, type)}
+                                                                        className="w-4 h-4 border-slate-400 rounded"
+                                                                    />
+                                                                    <span>{type}</span>
+                                                                </label>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                            {/* Photo Upload Preview - Right Side */}
+                                            <div className="flex justify-center items-start mt-10 w-[15%] mb-4">
                                                 <div className="relative flex-shrink-0 group">
                                                     <img
                                                         src={
                                                             relationDetails[rel]?.photo
                                                                 ? relationDetails[rel].photo
-                                                                : 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 121"%3E%3Crect fill="%23e5e7eb" width="200" height="121"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-size="12" fill="%239ca3af"%3ENo Image%3C/text%3E%3C/svg%3E'
+                                                                : 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"%3E%3Crect fill="%23e5e7eb" width="100" height="100"/%3E%3C/svg%3E'
                                                         }
                                                         alt="profile"
-                                                        className="w-[120px] h-[75px] border-2 border-gray-300 rounded object-cover"
+                                                        className="w-[120px] h-[120px] border-2 border-gray-400 rounded object-cover"
                                                     />
                                                     <div
-                                                        className="absolute inset-0 w-[120px] h-[75px] flex items-center justify-center bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded cursor-pointer"
+                                                        className="absolute inset-0 w-[120px] h-[120px] flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded cursor-pointer"
                                                         onClick={() =>
                                                             document.getElementById(`photoUpload-${rel}`).click()
                                                         }
@@ -387,116 +501,9 @@ const FamilyDetailsForm = () => {
                                                         onChange={(e) => handleProfileUpload(rel, e)}
                                                     />
                                                 </div>
-
-
-
                                             </div>
 
-                                            <div className="flex gap-6 w-full">
-                                                {/* Ayushman Radio */}
-                                                <div>
-                                                    <p className="text-sm font-medium text-slate-700 mb-2">Does this person have Ayushman coverage?<span className="text-red-500">*</span></p>
-                                                    <div className="flex gap-4">
-                                                        <label className="flex items-center gap-2">
-                                                            <input
-                                                                type="radio"
-                                                                name={`ayushman-${rel}`}
-                                                                checked={relationDetails[rel]?.ayushman === true}
-                                                                onChange={() => handleRelationDetailChange(rel, 'ayushman', true)}
-                                                            />
-                                                            Yes
-                                                        </label>
-                                                        <label className="flex items-center gap-2">
-                                                            <input
-                                                                type="radio"
-                                                                name={`ayushman-${rel}`}
-                                                                checked={relationDetails[rel]?.ayushman === false}
-                                                                onChange={() => handleRelationDetailChange(rel, 'ayushman', false)}
-                                                            />
-                                                            No
-                                                        </label>
-                                                    </div>
-                                                </div>
-                                                {/* Amount - Conditional Render */}
-                                                {relationDetails[rel]?.ayushman === true && (
-                                                    <div>
-                                                        <label className="block text-sm font-medium text-slate-700 mb-1">Amount<span className="text-red-500">*</span></label>
-                                                        <input
-                                                            type="text"
-                                                            value={relationDetails[rel]?.amount || ''}
-                                                            onChange={(e) => handleRelationDetailChange(rel, 'amount', e.target.value)}
-                                                            className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
-                                                        />
-                                                    </div>
-                                                )}
-                                                {/* Do they have any Mediclaim policy?* Radio */}
-                                                <div>
-                                                    <p className="text-sm font-medium text-slate-700 mb-2">Do they have any Mediclaim policy?<span className="text-red-500">*</span></p>
-                                                    <div className="flex gap-4">
-                                                        <label className="flex items-center gap-2">
-                                                            <input
-                                                                type="radio"
-                                                                name={`mediclaim-${rel}`}
-                                                                checked={relationDetails[rel]?.mediclaim === true}
-                                                                onChange={() => handleRelationDetailChange(rel, 'mediclaim', true)}
-                                                            />
-                                                            Yes
-                                                        </label>
-                                                        <label className="flex items-center gap-2">
-                                                            <input
-                                                                type="radio"
-                                                                name={`mediclaim-${rel}`}
-                                                                checked={relationDetails[rel]?.mediclaim === false}
-                                                                onChange={() => handleRelationDetailChange(rel, 'mediclaim', false)}
-                                                            />
-                                                            No
-                                                        </label>
-                                                    </div>
-                                                </div>
-
-                                                <div>
-                                                    <p className="text-sm font-medium text-slate-700 mb-2">Need Assistance<span className="text-red-500">*</span></p>
-                                                    <div className="flex gap-4">
-                                                        <label className="flex items-center gap-2">
-                                                            <input
-                                                                type="radio"
-                                                                name={`needAssistance-${rel}`}
-                                                                checked={relationDetails[rel]?.needAssistance === true}
-                                                                onChange={() => handleRelationDetailChange(rel, 'needAssistance', true)}
-                                                            />
-                                                            Yes
-                                                        </label>
-                                                        <label className="flex items-center gap-2">
-                                                            <input
-                                                                type="radio"
-                                                                name={`needAssistance-${rel}`}
-                                                                checked={relationDetails[rel]?.needAssistance === false}
-                                                                onChange={() => handleRelationDetailChange(rel, 'needAssistance', false)}
-                                                            />
-                                                            No
-                                                        </label>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            {/* Show Assistance Categories when Need Assistance is Yes */}
-                                            {relationDetails[rel]?.needAssistance === true && (
-                                                <div className="w-full">
-                                                    <p className="text-sm font-medium text-slate-700 mb-3">Assistances<span className="text-red-500">*</span></p>
-                                                    <div className="flex flex-wrap gap-4">
-                                                        {assistanceTypes.map((type) => (
-                                                            <label key={type} className="flex items-center gap-2 text-slate-700 cursor-pointer">
-                                                                <input
-                                                                    type="checkbox"
-                                                                    checked={relationDetails[rel]?.assistanceCategories?.includes(type) || false}
-                                                                    onChange={() => handleAssistanceCategory(rel, type)}
-                                                                    className="w-4 h-4 border-slate-400 rounded"
-                                                                />
-                                                                <span>{type}</span>
-                                                            </label>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            )}
+                                           
 
                                         </div>
                                     )}
