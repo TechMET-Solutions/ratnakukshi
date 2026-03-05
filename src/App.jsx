@@ -2,6 +2,7 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import Sidebar from "./Component/Sidebar";
 import { default as DiksharthiListing } from "./pages/DiksharthiDetails";
 import DiksharthiDetailsAdd from "./Pages/DiksharthiDetailsAdd";
+import FamilyDetailsForm from "./pages/FamilyDetailsForm";
 
 // A simple wrapper to keep the Sidebar visible
 const Layout = ({ children }) => {
@@ -26,6 +27,10 @@ function App() {
           <Route
             path="/diksharthi-details-add"
             element={<DiksharthiDetailsAdd />}
+          />
+          <Route
+            path="/family-details"
+            element={<FamilyDetailsForm />}
           />
 
           {/* Add other routes here */}
