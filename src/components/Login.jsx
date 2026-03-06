@@ -1,100 +1,34 @@
 import React, { useState } from 'react';
 import { User, Lock, Eye, EyeOff } from 'lucide-react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 const Login = () => {
-    const location = useLocation();
-    const queryParams = new URLSearchParams(location.search);
-    const isExpired = queryParams.get('expired') === 'true';
-    const [identifier, setIdentifier] = useState('');
-    const [password, setPassword] = useState('');
-    const [showPassword, setShowPassword] = useState(false);
-    const [error, setError] = useState('');
-    const [loading, setLoading] = useState(false);
-
-    // const { login } = useAuth();
     const navigate = useNavigate();
 
-    // 1. Define Dummy Data
-    const DUMMY_USERS = [
-        {
-            identifier: 'admin@gmail.com',
-            password: '123',
-            user: { id: 1, name: 'Admin User', role: 'admin', email: 'admin@gmail.com' },
-            token: 'dummy-token-admin'
-        },
-        {
-            identifier: 'tms@gmail.com',
-            password: '123',
-            user: { id: 2, name: 'Staff Member', role: 'staff', email: 'tms@gmail.com' },
-            token: 'dummy-token-staff'
-        }
-    ];
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
+    const [error, setError] = useState("");
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = (e) => {
         e.preventDefault();
-        setError('');
-        const cleanIdentifier = identifier.trim();
+        setError(""); // Reset error on new attempt
 
-        if (!cleanIdentifier || !password) {
-            setError('Please enter both Email/ID and Password');
-            return;
-        }
-
-        setLoading(true);
-
-        // 2. Logic: Check Dummy Data First
-        const dummyMatch = DUMMY_USERS.find(
-            u => u.identifier === cleanIdentifier && u.password === password
-        );
-
-        if (dummyMatch) {
-            // Simulate a short delay for realism
-            setTimeout(() => {
-                login({ ...dummyMatch.user, token: dummyMatch.token });
-                setLoading(false);
-                navigate('/');
-            }, 800);
-            return;
-        }
-
-        // 3. Logic: Fallback to Live API
-        try {
-            const response = await api.post('/auth/login', {
-                identifier: cleanIdentifier,
-                password
-            });
-
-            if (response.data.firstLogin) {
-                navigate('/update-password', {
-                    state: { userId: response.data.userId, table: response.data.table }
-                });
-            } else {
-                login({
-                    ...response.data.user,
-                    token: response.data.token
-                });
-                navigate('/');
-            }
-        } catch (err) {
-            setError(err.response?.data?.message || 'Invalid email/ID or password');
-        } finally {
-            setLoading(false);
+        // Dummy credentials check
+        if (email === "admin@gmail.com" && password === "123") {
+            localStorage.setItem("token", "dummy-auth-token");
+            navigate("/");
+        } else {
+            setError("Invalid email or password");
         }
     };
 
-
     return (
         <div className="min-h-screen flex items-center justify-center bg-[#fdf8f4] p-4">
-            {/* Main Card */}
-            <div className="w-full max-auto max-w-[400px] bg-white rounded-xl shadow-2xl overflow-hidden">
-
-                {/* Top Blue Banner */}
+            <div className="w-full mx-auto max-w-[400px] bg-white rounded-xl shadow-2xl overflow-hidden">
                 <div className="h-2 bg-[#4285f4] w-full"></div>
 
                 <div className="px-8 pt-10 pb-12 flex flex-col items-center">
-
-                    {/* Logo Placeholder */}
                     <div className="w-20 h-12 bg-gray-300 rounded-sm mb-6"></div>
 
                     <h1 className="text-[#4285f4] text-2xl font-semibold mb-2">
@@ -105,16 +39,25 @@ const Login = () => {
                         Enter your login credentials to access the portal.
                     </p>
 
-                    <form onSubmit={handleSubmit} className="w-full space-y-4">
+                    {/* Error Message Display */}
+                    {error && (
+                        <div className="w-full p-3 mb-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg">
+                            {error}
+                        </div>
+                    )}
 
-                        {/* Staff ID / Email Input */}
+                    <form onSubmit={handleSubmit} className="w-full space-y-4">
+                        {/* Email Input */}
                         <div className="relative">
                             <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
                                 <User size={18} />
                             </span>
                             <input
-                                type="text"
-                                placeholder="Staff ID/ Email"
+                                type="email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                placeholder="Staff ID / Email"
+                                required
                                 className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition text-gray-700 placeholder-gray-400"
                             />
                         </div>
@@ -126,7 +69,10 @@ const Login = () => {
                             </span>
                             <input
                                 type={showPassword ? "text" : "password"}
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
                                 placeholder="Password"
+                                required
                                 className="w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition text-gray-700 placeholder-gray-400"
                             />
                             <button
@@ -138,14 +84,12 @@ const Login = () => {
                             </button>
                         </div>
 
-                        {/* Forget Password */}
                         <div className="text-right">
                             <a href="#" className="text-[#4285f4] text-sm hover:underline">
-                                Forget Password?
+                                Forgot Password?
                             </a>
                         </div>
 
-                        {/* Login Button */}
                         <button
                             type="submit"
                             className="w-full bg-[#4285f4] text-white py-3 rounded-lg font-medium text-lg hover:bg-blue-600 transition-colors shadow-md mt-4"
