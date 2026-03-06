@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { User, Lock, Eye, EyeOff } from 'lucide-react';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 const Login = () => {
     const location = useLocation();
@@ -11,7 +12,7 @@ const Login = () => {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
-    const { login } = useAuth();
+    // const { login } = useAuth();
     const navigate = useNavigate();
 
     // 1. Define Dummy Data
