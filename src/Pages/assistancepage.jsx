@@ -9,6 +9,8 @@ const AssistancePage = () => {
   const [results, setResults] = useState([]);
   const [selectedSadhu, setSelectedSadhu] = useState(null);
   const [familyDetails, setFamilyDetails] = useState([]);
+
+  console.log(familyDetails, "familyDetails");
   const navigate = useNavigate();
   const handleSearch = async (value) => {
     setSearchText(value);
@@ -42,22 +44,23 @@ const AssistancePage = () => {
   };
 
   const handleEdit = (member, relation, family) => {
-  console.log("FULL FAMILY", family);
+    console.log("FULL FAMILY", family);
 
-  const assistanceData = family?.assistance_data?.[relation] || {};
+    const assistanceData = family?.assistance_data?.[relation] || {};
 
-  console.log("ASSISTANCE DATA", assistanceData);
+    console.log("ASSISTANCE DATA", assistanceData);
 
-  navigate("/assistance-details", {
-    state: {
-      memberData: member,
-      relation: relation,
-      familyId: family?.id,
-      sadhuName: selectedSadhu?.sadhu_sadhvi_name,
-      assistanceData: assistanceData,
-    },
-  });
-};
+    navigate("/assistance-details", {
+      state: {
+        memberData: member,
+        relation: relation,
+            selectedSadhu: selectedSadhu?.id,
+        familyId: family?.id,
+        sadhuName: selectedSadhu?.sadhu_sadhvi_name,
+        assistanceData: assistanceData,
+      },
+    });
+  };
   return (
     <div className="flex h-screen bg-[#f8fafc]">
       <main className="flex-1 p-12 overflow-y-auto">
@@ -182,23 +185,24 @@ const AssistancePage = () => {
                             <p className="font-semibold text-slate-700">
                               {member.fullName || "N/A"} ({relation})
                             </p>
-                            <p className="text-sm text-slate-500">
-                              Category:{" "}
-                              {member.assistanceCategories?.join(", ") ||
-                                "General"}{" "}
-                              Assistance
-                            </p>
+                          <p className="text-sm text-slate-500">
+  Category:{" "}
+  {family.assistance_data?.[relation]
+    ? Object.keys(family.assistance_data[relation]).join(", ")
+    : "General"}{" "}
+  Assistance
+</p>
                           </div>
                         </div>
 
                         {/* Buttons */}
                         <div className="flex gap-3">
-                         <button
-  onClick={() => handleEdit(member, relation, family)}
-  className="bg-[#f2a12a] hover:bg-[#d98d1f] text-white px-5 py-2 rounded-lg font-medium transition-colors text-sm"
->
-  Edit Assistance
-</button>
+                          <button
+                            onClick={() => handleEdit(member, relation, family)}
+                            className="bg-[#f2a12a] hover:bg-[#d98d1f] text-white px-5 py-2 rounded-lg font-medium transition-colors text-sm"
+                          >
+                            Edit Assistance
+                          </button>
                           <button className="bg-[#cc4b00] hover:bg-[#a63d00] text-white px-5 py-2 rounded-lg font-medium transition-colors text-sm">
                             Close assistance
                           </button>

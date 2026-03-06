@@ -1251,7 +1251,8 @@ const handleSave = async () => {
                                         </label>
                                       ))}
                                     </div>
-                                  </div>
+                                                      </div>
+                                               
 
                                   <div className="flex flex-col gap-1">
                                     <label className="text-[11px] font-bold uppercase text-gray-500">
@@ -1274,7 +1275,9 @@ const handleSave = async () => {
                                     />
                                   </div>
 
-                                  {/* Row 4 */}
+                                                      
+                               
+                                                      
                                   <div className="flex flex-col gap-1">
                                     <label className="text-[11px] font-bold uppercase text-gray-500">
                                       Repeated Medical Assistance Required?*
@@ -1317,29 +1320,67 @@ const handleSave = async () => {
                                     </div>
                                   </div>
 
-                                  <div className="flex flex-col gap-1">
-                                    <label className="text-[11px] font-bold uppercase text-gray-500">
-                                      Amount of Assistance Required?*
-                                    </label>
-                                    <input
-                                      type="number"
-                                      placeholder="0.00"
-                                      value={
-                                        assistanceData[rel]?.Medical
-                                          ?.amountRequired || ""
-                                      }
-                                      onChange={(e) =>
-                                        handleMedicalChange(
-                                          rel,
-                                          "amountRequired",
-                                          e.target.value,
-                                        )
-                                      }
-                                      className="border p-2 rounded outline-none focus:border-blue-500"
-                                    />
-                                  </div>
 
-                                  {/* Row 5: Document Upload */}
+
+                                 
+
+                                                      {/* Row 5: Document Upload */}
+                                                      {
+                                                          
+                                                      }
+                             {assistanceData[rel]?.Medical?.repeatedAssistance && (
+  <div className="col-span-full md:col-span-2">
+    <div className="flex gap-2">
+
+      <div className="flex flex-col gap-1">
+        <label className="text-[11px] font-bold uppercase text-gray-500">
+          Treatment Frequency*
+        </label>
+        <select
+          className="border p-2 rounded bg-white outline-none focus:border-blue-500"
+          value={assistanceData[rel]?.Medical?.frequency || ""}
+          onChange={(e) =>
+            handleMedicalChange(rel, "frequency", e.target.value)
+          }
+        >
+          <option value="">Select</option>
+          <option value="Weekly">Weekly</option>
+          <option value="Monthly">Monthly</option>
+        </select>
+      </div>
+
+      <div className="flex flex-col gap-1">
+        <label className="text-[11px] font-bold uppercase text-gray-500">
+          Estimated Cost Per Session*
+        </label>
+        <input
+          type="number"
+          value={assistanceData[rel]?.Medical?.costPerSession || ""}
+          onChange={(e) =>
+            handleMedicalChange(rel, "costPerSession", e.target.value)
+          }
+          className="border p-2 rounded outline-none focus:border-blue-500"
+        />
+      </div>
+
+      <div className="flex flex-col gap-1">
+        <label className="text-[11px] font-bold uppercase text-gray-500">
+          Expected Number of Sessions*
+        </label>
+        <input
+          type="number"
+          value={assistanceData[rel]?.Medical?.sessionsCount || ""}
+          onChange={(e) =>
+            handleMedicalChange(rel, "sessionsCount", e.target.value)
+          }
+          className="border p-2 rounded outline-none focus:border-blue-500"
+        />
+      </div>
+
+    </div>
+  </div>
+)}
+                                  
                                   <div className="col-span-full md:col-span-2">
                                     <label className="text-[11px] font-bold uppercase text-gray-500">
                                       Upload Medical Documents
@@ -1414,76 +1455,9 @@ const handleSave = async () => {
 
                                   <div className="hidden lg:block"></div>
 
-                                  {/* Row 6 */}
                                   <div className="flex flex-col gap-1">
                                     <label className="text-[11px] font-bold uppercase text-gray-500">
-                                      Treatment Frequency*
-                                    </label>
-                                    <select
-                                      className="border p-2 rounded bg-white outline-none focus:border-blue-500"
-                                      value={
-                                        assistanceData[rel]?.Medical
-                                          ?.frequency || ""
-                                      }
-                                      onChange={(e) =>
-                                        handleMedicalChange(
-                                          rel,
-                                          "frequency",
-                                          e.target.value,
-                                        )
-                                      }
-                                    >
-                                      <option value="Weekly">Weekly</option>
-                                      <option value="Monthly">Monthly</option>
-                                    </select>
-                                  </div>
-
-                                  <div className="flex flex-col gap-1">
-                                    <label className="text-[11px] font-bold uppercase text-gray-500">
-                                      Estimated Cost Per Session*
-                                    </label>
-                                    <input
-                                      type="number"
-                                      value={
-                                        assistanceData[rel]?.Medical
-                                          ?.costPerSession || ""
-                                      }
-                                      onChange={(e) =>
-                                        handleMedicalChange(
-                                          rel,
-                                          "costPerSession",
-                                          e.target.value,
-                                        )
-                                      }
-                                      className="border p-2 rounded outline-none focus:border-blue-500"
-                                    />
-                                  </div>
-
-                                  <div className="flex flex-col gap-1">
-                                    <label className="text-[11px] font-bold uppercase text-gray-500">
-                                      Expected Number of Sessions*
-                                    </label>
-                                    <input
-                                      type="number"
-                                      value={
-                                        assistanceData[rel]?.Medical
-                                          ?.sessionsCount || ""
-                                      }
-                                      onChange={(e) =>
-                                        handleMedicalChange(
-                                          rel,
-                                          "sessionsCount",
-                                          e.target.value,
-                                        )
-                                      }
-                                      className="border p-2 rounded outline-none focus:border-blue-500"
-                                    />
-                                  </div>
-
-                                  {/* Row 7 */}
-                                  <div className="flex flex-col gap-1">
-                                    <label className="text-[11px] font-bold uppercase text-gray-500">
-                                      Next Treatment Date*
+                                       Treatment Start Date*
                                     </label>
                                     <input
                                       type="date"
@@ -1495,6 +1469,27 @@ const handleSave = async () => {
                                           e.target.value,
                                         )
                                       }
+                                    />
+                                                      </div>
+                                                       <div className="flex flex-col gap-1">
+                                    <label className="text-[11px] font-bold uppercase text-gray-500">
+                                      Amount of Assistance Required?*
+                                    </label>
+                                    <input
+                                      type="number"
+                                      placeholder="0.00"
+                                      value={
+                                        assistanceData[rel]?.Medical
+                                          ?.amountRequired || ""
+                                      }
+                                      onChange={(e) =>
+                                        handleMedicalChange(
+                                          rel,
+                                          "amountRequired",
+                                          e.target.value,
+                                        )
+                                      }
+                                      className="border p-2 rounded outline-none focus:border-blue-500"
                                     />
                                   </div>
                                 </div>
@@ -1636,7 +1631,26 @@ const handleSave = async () => {
                                       className="border p-2 rounded outline-none focus:border-blue-500"
                                     />
                                   </div>
-
+<div className="flex flex-col gap-1">
+                                    <label className="text-[11px] font-bold uppercase text-gray-500">
+                                      Other Expenses
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={
+                                        assistanceData[rel]?.Education
+                                          ?.minorityNumber || ""
+                                      }
+                                      onChange={(e) =>
+                                        handleEducationChange(
+                                          rel,
+                                          "OtherExpenses",
+                                          e.target.value,
+                                        )
+                                      }
+                                      className="border p-2 rounded outline-none focus:border-blue-500"
+                                    />
+                                  </div>
                                   <div className="flex flex-col gap-1">
                                     <label className="text-[11px] font-bold uppercase text-gray-500">
                                       Total Expenses*
@@ -1659,26 +1673,7 @@ const handleSave = async () => {
                                   </div>
 
                                   {/* Row 3 */}
-                                  <div className="flex flex-col gap-1">
-                                    <label className="text-[11px] font-bold uppercase text-gray-500">
-                                      Minority Number
-                                    </label>
-                                    <input
-                                      type="text"
-                                      value={
-                                        assistanceData[rel]?.Education
-                                          ?.minorityNumber || ""
-                                      }
-                                      onChange={(e) =>
-                                        handleEducationChange(
-                                          rel,
-                                          "minorityNumber",
-                                          e.target.value,
-                                        )
-                                      }
-                                      className="border p-2 rounded outline-none focus:border-blue-500"
-                                    />
-                                  </div>
+                                  
 
                                   <div className="flex flex-col gap-1">
                                     <label className="text-[11px] font-bold uppercase text-gray-500">
@@ -1860,7 +1855,7 @@ const handleSave = async () => {
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-6">
                                   {/* Row 1 */}
-                                  <div className="flex flex-col gap-1">
+                                  {/* <div className="flex flex-col gap-1">
                                     <label className="text-[11px] font-bold uppercase text-gray-500">
                                       Current Employment Status*
                                     </label>
@@ -1879,7 +1874,25 @@ const handleSave = async () => {
                                       }
                                       className="border p-2 rounded outline-none focus:border-blue-500"
                                     />
-                                  </div>
+                                  </div> */}
+                                                       <div className="flex flex-col gap-1">
+  <label className="text-[11px] font-bold uppercase text-gray-500">
+    Current Employment Status*
+  </label>
+
+  <select
+    className="border p-2 rounded bg-white outline-none focus:border-blue-500 text-gray-500"
+    value={assistanceData[rel]?.Job?.employmentStatus || ""}
+    onChange={(e) =>
+      handleJobChange(rel, "employmentStatus", e.target.value)
+    }
+  >
+    <option value="">Select</option>
+    <option value="employed">Employed</option>
+    <option value="unemployed">Unemployed</option>
+  </select>
+</div>
+                                  
 
                                   <div className="flex flex-col gap-1">
                                     <label className="text-[11px] font-bold uppercase text-gray-500">
@@ -2033,7 +2046,8 @@ const handleSave = async () => {
                                         "Dharamshala",
                                         "Vihardham",
                                         "Tapovan",
-                                        "Bhojan Shala",
+                                                                  "Bhojan Shala",
+                                         "None",
                                       ].map((place) => (
                                         <label
                                           key={place}
@@ -2198,7 +2212,7 @@ const handleSave = async () => {
                                   {/* Row 2 */}
                                   <div className="flex flex-col gap-1">
                                     <label className="text-[11px] font-bold uppercase text-gray-500">
-                                      Duration of Support Required?*
+                                      Frequency
                                     </label>
                                     <select
                                       className="border p-2 rounded bg-white outline-none focus:border-blue-500 text-gray-700"
@@ -2214,13 +2228,36 @@ const handleSave = async () => {
                                         )
                                       }
                                     >
+                                         <option value="Daily">Daily</option>
                                       <option value="Monthly">Monthly</option>
                                       <option value="Weekly">Weekly</option>
                                       <option value="One-time">One-time</option>
+                                         <option value="One-time">Temporary</option>
                                     </select>
                                   </div>
 
-                                  <div className="flex flex-col gap-1">
+                                                      <div className="flex flex-col gap-1">
+                                    <label className="text-[11px] font-bold uppercase text-gray-500">
+                                    Duration(Days/Month)?*
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={
+                                        assistanceData[rel]?.Food
+                                          ?.FrequencyDuration || ""
+                                      }
+                                      onChange={(e) =>
+                                        handleFoodChange(
+                                          rel,
+                                          "FrequencyDuration",
+                                          e.target.value,
+                                        )
+                                      }
+                                      className="border p-2 rounded outline-none focus:border-blue-500"
+                                    />
+                                  </div>
+
+                                  {/* <div className="flex flex-col gap-1">
                                     <label className="text-[11px] font-bold uppercase text-gray-500">
                                       Any Special Dietary Requirement?*
                                     </label>
@@ -2249,7 +2286,7 @@ const handleSave = async () => {
                                         </label>
                                       ))}
                                     </div>
-                                  </div>
+                                  </div> */}
                                 </div>
 
                                 {/* Reason Section */}
@@ -2617,7 +2654,7 @@ const handleSave = async () => {
 
                               <div className="flex flex-col gap-1">
                                 <label className="text-[11px] font-bold uppercase text-gray-500">
-                                  Estimated Total Cost of the House*
+                                  Estimated Expenses*
                                 </label>
                                 <input
                                   type="number"
@@ -2851,7 +2888,7 @@ const handleSave = async () => {
                             </h3>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                              <div>
+                              {/* <div>
                                 <label className="text-[11px] font-bold uppercase text-gray-500">
                                   Emergency Assistance Required*
                                 </label>
@@ -2875,6 +2912,26 @@ const handleSave = async () => {
                                   </option>
                                   <option value="Accident">Accident</option>
                                 </select>
+                              </div> */}
+                               <div>
+                                <label className="text-[11px] font-bold uppercase text-gray-500">
+                                  Emergency Assistance Required For?
+                                </label>
+                                <input
+                                  type="text"
+                                  className="w-full border p-2 rounded mt-1 outline-none"
+                                  value={
+                                    assistanceData[rel]?.EmergencyExpenses
+                                      ?.type || ""
+                                  }
+                                  onChange={(e) =>
+                                    handleEmergencyChange(
+                                      rel,
+                                      "type",
+                                      e.target.value,
+                                    )
+                                  }
+                                />
                               </div>
                               <div>
                                 <label className="text-[11px] font-bold uppercase text-gray-500">
