@@ -2,77 +2,101 @@ import { ChevronLeft } from "lucide-react";
 import { useState } from "react";
 
 function AddDonor() {
-    const [currentStep, setCurrentStep] = useState(1);
-    const [formData, setFormData] = useState({
-  personalDetails: {
-    salutation: "",
-    name: "",
-    gender: "",
-    dob: "",
-    anniversary: "",
-    mobile: "",
-    altMobile: "",
-    email: "",
-    bloodGroup: "",
-    motherTongue: "",
-    nativePlace: "",
-    aadhar: null,
-    pan: null,
-    photo: null,
-  },
+  const [currentStep, setCurrentStep] = useState(1);
+  const [formData, setFormData] = useState({
+    personalDetails: {
+      salutation: "",
+      name: "",
+      gender: "",
+      dob: "",
+      anniversary: "",
+      mobile: "",
+      altMobile: "",
+      email: "",
+      bloodGroup: "",
+      motherTongue: "",
+      nativePlace: "",
+      aadhar: null,
+      pan: null,
+      photo: null,
+    },
 
-  contactPerson: {
-    name: "",
-    mobile: "",
-  },
+    contactPerson: {
+      contactPersonName: "",
+      contactPersonMobile: "",
+    },
 
-  residentialAddress: {
-    address1: "",
-    city: "",
-    pincode: "",
-    contactCode: "",
-    contactNumber: "",
-    proof: "",
-    preferredAddress: "",
-  },
+    residentialAddress: {
+      address1: "",
+      city: "",
+      pincode: "",
+      contactCode: "",
+      contactNumber: "",
+      proof: "",
+      preferredAddress: "",
+    },
 
-  communicationAddress: {
-    address1: "",
-    address2: "",
-  },
+    communicationAddress: {
+      communicationAddress1: "",
+      communicationAddress2: "",
+    },
 
-  companyDetails: {
-    name: "",
-    number: "",
-    address: "",
-  },
+    companyDetails: {
+      companyName: "",
+      companyNumber: "",
+      companyAddress: "",
+    },
 
-  familyDetails: {
-    fatherName: "",
-    spouseName: "",
-    spouseDob: "",
-    spouseBloodGroup: "",
-    hasChildren: "",
-    children: [],
-  },
+    familyDetails: {
+      fatherName: "",
+      spouseName: "",
+      spouseDob: "",
+      spouseBloodGroup: "",
+      hasChildren: "",
+      children: [],
+    },
 
-  nomineeDetails: {
-    name: "",
-    contactNumber: "",
-    address: "",
-    city: "",
-    pincode: "",
-    relation: "",
-    companyName: "",
-    residentialAddress: "",
-    officeAddress: "",
-    officeContact: "",
-  },
+    nomineeDetails: {
+      nomineeName: "",
+      nomineeContact: "",
+      nomineeAddress: "",
+      nomineecity: "",
+      nomineepincode: "",
+      nomineerelation: "",
+      nomineecompanyName: "",
+      nomineeresidentialAddress: "",
+      nomineeofficeAddress: "",
+      nomineeofficeContact: "",
+    },
 
-  paymentDetails: {
-    installments: [],
-  },
-});
+    paymentDetails: {
+      installments: [],
+    },
+  });
+
+  const handleSubmit = async () => {
+    try {
+      const response = await fetch("http://localhost:5000/api/donors/create-donor", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ...formData,
+          children,
+        }),
+      });
+
+      const data = await response.json();
+
+      alert("Donor Created Successfully");
+
+      console.log(data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   const steps = [
     "Personal Details",
     "Family Details",
@@ -82,22 +106,22 @@ function AddDonor() {
   const [hasChildren, setHasChildren] = useState("");
   const [children, setChildren] = useState([]);
   const [numInstallments, setNumInstallments] = useState("");
-const [photo, setPhoto] = useState(null);
-const handleNext = (e) => {
-  e.preventDefault();
+  const [photo, setPhoto] = useState(null);
+  const handleNext = (e) => {
+    e.preventDefault();
 
-  if (currentStep < steps.length) {
-    setCurrentStep((prev) => prev + 1);
-  }
-};
+    if (currentStep < steps.length) {
+      setCurrentStep((prev) => prev + 1);
+    }
+  };
 
-const handlePrevious = (e) => {
-  e.preventDefault();
+  const handlePrevious = (e) => {
+    e.preventDefault();
 
-  if (currentStep > 1) {
-    setCurrentStep((prev) => prev - 1);
-  }
-};
+    if (currentStep > 1) {
+      setCurrentStep((prev) => prev - 1);
+    }
+  };
 
   const handleAddChild = () => {
     setChildren([...children, { id: Date.now() }]);
@@ -106,15 +130,15 @@ const handlePrevious = (e) => {
   const handleRemoveChild = (id) => {
     setChildren(children.filter((child) => child.id !== id));
   };
-const handleChange = (section, field, value) => {
-  setFormData((prev) => ({
-    ...prev,
-    [section]: {
-      ...prev[section],
-      [field]: value,
-    },
-  }));
-};
+  const handleChange = (section, field, value) => {
+    setFormData((prev) => ({
+      ...prev,
+      [section]: {
+        ...prev[section],
+        [field]: value,
+      },
+    }));
+  };
   return (
     <div className="min-h-screen bg-gray-50 flex p-6 justify-center">
       <div className="w-full max-w-6xl bg-white p-6 shadow-sm">
@@ -145,10 +169,10 @@ const handleChange = (section, field, value) => {
           </div>
         </div>
 
-       <form
-  className="space-y-8"
-  onSubmit={(e) => e.preventDefault()}
->
+        <form
+          className="space-y-8"
+          onSubmit={(e) => e.preventDefault()}
+        >
           {/* STEP 1: Personal Details */}
           {currentStep === 1 && (
             <>
@@ -162,29 +186,29 @@ const handleChange = (section, field, value) => {
                   <label className="block text-sm font-medium text-slate-700 mb-1">
                     Salutation<span className="text-red-500">*</span>
                   </label>
-                 <select
-  value={formData.personalDetails.salutation}
-  onChange={(e) =>
-    handleChange("personalDetails", "salutation", e.target.value)
-  }
-  className="w-full p-2 border border-slate-300 rounded-md outline-none focus:ring-2 focus:ring-blue-100"
->
-  <option value="">Select</option>
-  <option value="Shri">Shri.</option>
-  <option value="Smt">Smt.</option>
-</select>
+                  <select
+                    value={formData.personalDetails.salutation}
+                    onChange={(e) =>
+                      handleChange("personalDetails", "salutation", e.target.value)
+                    }
+                    className="w-full p-2 border border-slate-300 rounded-md outline-none focus:ring-2 focus:ring-blue-100"
+                  >
+                    <option value="">Select</option>
+                    <option value="Shri">Shri.</option>
+                    <option value="Smt">Smt.</option>
+                  </select>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
                     Name<span className="text-red-500">*</span>
                   </label>
-                 <input
-  type="text"
-  value={formData.personalDetails.name}
-  onChange={(e) =>
-    handleChange("personalDetails", "name", e.target.value)
-  }
-/>
+                  <input
+                    type="text"
+                    value={formData.personalDetails.name}
+                    onChange={(e) =>
+                      handleChange("personalDetails", "name", e.target.value)
+                    }
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -202,6 +226,10 @@ const handleChange = (section, field, value) => {
                   </label>
                   <input
                     type="date"
+                    value={formData.personalDetails.dateOfBirth}
+                    onChange={(e) =>
+                      handleChange("personalDetails", "dateOfBirth", e.target.value)
+                    }
                     className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                   />
                 </div>
@@ -211,6 +239,10 @@ const handleChange = (section, field, value) => {
                   </label>
                   <input
                     type="date"
+                    value={formData.personalDetails.anniversary}
+                    onChange={(e) =>
+                      handleChange("personalDetails", "anniversary", e.target.value)
+                    }
                     className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                   />
                 </div>
@@ -220,6 +252,10 @@ const handleChange = (section, field, value) => {
                   </label>
                   <input
                     type="text"
+                    value={formData.personalDetails.mobileNumber}
+                    onChange={(e) =>
+                      handleChange("personalDetails", "mobileNumber", e.target.value)
+                    }
                     className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                   />
                 </div>
@@ -229,6 +265,10 @@ const handleChange = (section, field, value) => {
                   </label>
                   <input
                     type="text"
+                    value={formData.personalDetails.altMobileNumber}
+                    onChange={(e) =>
+                      handleChange("personalDetails", "altMobileNumber", e.target.value)
+                    }
                     className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                   />
                 </div>
@@ -238,6 +278,10 @@ const handleChange = (section, field, value) => {
                   </label>
                   <input
                     type="email"
+                    value={formData.personalDetails.email}
+                    onChange={(e) =>
+                      handleChange("personalDetails", "email", e.target.value)
+                    }
                     className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                   />
                 </div>
@@ -247,6 +291,10 @@ const handleChange = (section, field, value) => {
                   </label>
                   <input
                     type="text"
+                    value={formData.personalDetails.bloodGroup}
+                    onChange={(e) =>
+                      handleChange("personalDetails", "bloodGroup", e.target.value)
+                    }
                     className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                   />
                 </div>
@@ -256,6 +304,10 @@ const handleChange = (section, field, value) => {
                   </label>
                   <input
                     type="text"
+                    value={formData.personalDetails.motherTongue}
+                    onChange={(e) =>
+                      handleChange("personalDetails", "motherTongue", e.target.value)
+                    }
                     className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                   />
                 </div>
@@ -265,6 +317,10 @@ const handleChange = (section, field, value) => {
                   </label>
                   <input
                     type="text"
+                    value={formData.personalDetails.nativePlace}
+                    onChange={(e) =>
+                      handleChange("personalDetails", "nativePlace", e.target.value)
+                    }
                     className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                   />
                 </div>
@@ -275,6 +331,7 @@ const handleChange = (section, field, value) => {
                   <input
                     type="file"
                     onChange={(e) => setPhoto(e.target.files[0])}
+                    // value={}
                     className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                   />
                 </div>
@@ -284,7 +341,7 @@ const handleChange = (section, field, value) => {
                   </label>
                   <input
                     type="file"
-                  onChange={(e) => setPhoto(e.target.files[0])}
+                    onChange={(e) => setPhoto(e.target.files[0])}
                     className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                   />
                 </div>
@@ -312,6 +369,10 @@ const handleChange = (section, field, value) => {
                     </label>
                     <input
                       type="text"
+                      value={formData.personalDetails.contactPersonName}
+                      onChange={(e) =>
+                        handleChange("personalDetails", "contactPersonName", e.target.value)
+                      }
                       className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                     />
                   </div>
@@ -322,6 +383,10 @@ const handleChange = (section, field, value) => {
                     </label>
                     <input
                       type="text"
+                      value={formData.personalDetails.contactPersonMobile}
+                      onChange={(e) =>
+                        handleChange("personalDetails", "contactPersonMobile", e.target.value)
+                      }
                       className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                     />
                   </div>
@@ -338,7 +403,12 @@ const handleChange = (section, field, value) => {
                     <label className="block text-sm font-medium text-slate-700 mb-1">
                       Res. Address 1<span className="text-red-500">*</span>
                     </label>
-                    <textarea className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none" />
+                    <textarea
+                      value={formData.personalDetails.address1}
+                      onChange={(e) =>
+                        handleChange("personalDetails", "address1", e.target.value)
+                      }
+                      className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -346,6 +416,10 @@ const handleChange = (section, field, value) => {
                     </label>
                     <input
                       type="text"
+                      value={formData.personalDetails.city}
+                      onChange={(e) =>
+                        handleChange("personalDetails", "city", e.target.value)
+                      }
                       className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                     />
                   </div>
@@ -355,6 +429,10 @@ const handleChange = (section, field, value) => {
                     </label>
                     <input
                       type="text"
+                      value={formData.personalDetails.pincode}
+                      onChange={(e) =>
+                        handleChange("personalDetails", "pincode", e.target.value)
+                      }
                       className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                     />
                   </div>
@@ -364,6 +442,10 @@ const handleChange = (section, field, value) => {
                     </label>
                     <input
                       type="text"
+                      value={formData.personalDetails.contactCode}
+                      onChange={(e) =>
+                        handleChange("personalDetails", "contactCode", e.target.value)
+                      }
                       className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                     />
                   </div>
@@ -373,6 +455,10 @@ const handleChange = (section, field, value) => {
                     </label>
                     <input
                       type="text"
+                      value={formData.personalDetails.contactNumber}
+                      onChange={(e) =>
+                        handleChange("personalDetails", "contactNumber", e.target.value)
+                      }
                       className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                     />
                   </div>
@@ -401,6 +487,10 @@ const handleChange = (section, field, value) => {
                     </label>
                     <input
                       type="text"
+                      value={formData.personalDetails.preferredAddress}
+                      onChange={(e) =>
+                        handleChange("personalDetails", "preferredAddress", e.target.value)
+                      }
                       className="w-[535px] p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                     />
                   </div>
@@ -420,6 +510,10 @@ const handleChange = (section, field, value) => {
                     </label>
                     <input
                       type="text"
+                      value={formData.personalDetails.communicationAddress1}
+                      onChange={(e) =>
+                        handleChange("personalDetails", "communicationAddress1", e.target.value)
+                      }
                       className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                     />
                   </div>
@@ -430,6 +524,10 @@ const handleChange = (section, field, value) => {
                     </label>
                     <input
                       type="text"
+                      value={formData.personalDetails.communicationAddress2}
+                      onChange={(e) =>
+                        handleChange("personalDetails", "communicationAddress2", e.target.value)
+                      }
                       className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                     />
                   </div>
@@ -448,6 +546,10 @@ const handleChange = (section, field, value) => {
                     </label>
                     <input
                       type="text"
+                      value={formData.personalDetails.companyName}
+                      onChange={(e) =>
+                        handleChange("personalDetails", "companyName", e.target.value)
+                      }
                       className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                     />
                   </div>
@@ -457,6 +559,10 @@ const handleChange = (section, field, value) => {
                     </label>
                     <input
                       type="text"
+                      value={formData.personalDetails.companyNumber}
+                      onChange={(e) =>
+                        handleChange("personalDetails", "companyNumber", e.target.value)
+                      }
                       className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                     />
                   </div>
@@ -464,7 +570,13 @@ const handleChange = (section, field, value) => {
                     <label className="block text-sm font-medium text-slate-700 mb-1">
                       Company Address<span className="text-red-500">*</span>
                     </label>
-                    <textarea className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none" />
+                    <textarea
+                      value={formData.personalDetails.companyAddress}
+                      onChange={(e) =>
+                        handleChange("personalDetails", "companyAddress", e.target.value)
+                      }
+                      className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
+                    />
                   </div>
                 </div>
               </div>
@@ -486,6 +598,10 @@ const handleChange = (section, field, value) => {
                     </label>
                     <input
                       type="text"
+                      value={formData.personalDetails.fatherName}
+                      onChange={(e) =>
+                        handleChange("personalDetails", "fatherName", e.target.value)
+                      }
                       className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                     />
                   </div>
@@ -497,6 +613,10 @@ const handleChange = (section, field, value) => {
                     </label>
                     <input
                       type="text"
+                      value={formData.personalDetails.spouseName}
+                      onChange={(e) =>
+                        handleChange("personalDetails", "spouseName", e.target.value)
+                      }
                       className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                     />
                   </div>
@@ -507,6 +627,10 @@ const handleChange = (section, field, value) => {
                     </label>
                     <input
                       type="date"
+                      value={formData.personalDetails.spouseDob}
+                      onChange={(e) =>
+                        handleChange("personalDetails", "spouseDob", e.target.value)
+                      }
                       className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                     />
                   </div>
@@ -516,6 +640,10 @@ const handleChange = (section, field, value) => {
                     </label>
                     <input
                       type="text"
+                      value={formData.personalDetails.spouseBloodGroup}
+                      onChange={(e) =>
+                        handleChange("personalDetails", "spouseBloodGroup", e.target.value)
+                      }
                       className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                     />
                   </div>
@@ -600,6 +728,10 @@ const handleChange = (section, field, value) => {
                             </label>
                             <input
                               type="text"
+                              value={child.name}
+                              onChange={(e) =>
+                                handleChildChange(child.id, "name", e.target.value)
+                              }
                               className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                             />
                           </div>
@@ -636,6 +768,10 @@ const handleChange = (section, field, value) => {
                             </label>
                             <input
                               type="date"
+                              value={child.dob}
+                              onChange={(e) =>
+                                handleChildChange(child.id, "dob", e.target.value)
+                              }
                               className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                             />
                           </div>
@@ -645,6 +781,10 @@ const handleChange = (section, field, value) => {
                             </label>
                             <input
                               type="text"
+                              value={child.bloodGroup}
+                              onChange={(e) =>
+                                handleChildChange(child.id, "bloodGroup", e.target.value)
+                              }
                               className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                             />
                           </div>
@@ -653,7 +793,13 @@ const handleChange = (section, field, value) => {
                               Marital Status
                               <span className="text-red-500">*</span>
                             </label>
-                            <select className="flex-1 p-2 border border-slate-300 rounded-md outline-none focus:ring-2 focus:ring-blue-100 w-[200px]">
+                            <select
+                              value={child.maritalStatus}
+                              onChange={(e) =>
+                                handleChildChange(child.id, "maritalStatus", e.target.value)
+                              }
+                              className="flex-1 p-2 border border-slate-300 rounded-md outline-none focus:ring-2 focus:ring-blue-100 w-[200px]"
+                            >
                               <option value="">Select</option>
                               <option value="Single">Single</option>
                               <option value="Married">Married</option>
@@ -683,6 +829,10 @@ const handleChange = (section, field, value) => {
                   </label>
                   <input
                     type="text"
+                    value={child.nomineeName}
+                    onChange={(e) =>
+                      handleChange("nomineeDetails", "nomineeName", e.target.value)
+                    }
                     className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                   />
                 </div>
@@ -692,6 +842,10 @@ const handleChange = (section, field, value) => {
                   </label>
                   <input
                     type="text"
+                    value={child.nomineeContact}
+                    onChange={(e) =>
+                      handleChange("nomineeDetails", "nomineeContact", e.target.value)
+                    }
                     className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                   />
                 </div>
@@ -699,7 +853,12 @@ const handleChange = (section, field, value) => {
                   <label className="block text-sm font-medium text-slate-700 mb-1">
                     Address<span className="text-red-500">*</span>
                   </label>
-                  <textarea className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none h-[40px]" />
+                  <textarea
+                    value={child.nomineeAddress}
+                    onChange={(e) =>
+                      handleChange("nomineeDetails", "nomineeAddress", e.target.value)
+                    }
+                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none h-[40px]" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -707,6 +866,11 @@ const handleChange = (section, field, value) => {
                   </label>
                   <input
                     type="text"
+                    value={child.nomineecity}
+                    onChange={(e) =>
+                      handleChange("nomineeDetails", "nomineecity", e.target.value)
+                    }
+
                     className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                   />
                 </div>
@@ -716,6 +880,10 @@ const handleChange = (section, field, value) => {
                   </label>
                   <input
                     type="text"
+                    value={child.nomineecity}
+                    onChange={(e) =>
+                      handleChange("nomineeDetails", "nomineecity", e.target.value)
+                    }                
                     className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                   />
                 </div>
@@ -725,6 +893,10 @@ const handleChange = (section, field, value) => {
                   </label>
                   <input
                     type="text"
+                    value={child.nomineerelation}
+                    onChange={(e) =>
+                      handleChange("nomineeDetails", "nomineerelation", e.target.value)
+                    }
                     className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                   />
                 </div>
@@ -734,6 +906,10 @@ const handleChange = (section, field, value) => {
                   </label>
                   <input
                     type="text"
+                    value={child.nomineecompanyName}
+                    onChange={(e) =>
+                      handleChange("nomineeDetails", "nomineecompanyName", e.target.value)
+                    }
                     className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                   />
                 </div>
@@ -741,13 +917,23 @@ const handleChange = (section, field, value) => {
                   <label className="block text-sm font-medium text-slate-700 mb-1">
                     Residential Address<span className="text-red-500">*</span>
                   </label>
-                  <textarea className="w-full p-2 border h-[40px] border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none" />
+                  <textarea
+                    value={child.nomineeresidentialAddress}
+                    onChange={(e) =>
+                      handleChange("nomineeDetails", "nomineeresidentialAddress", e.target.value)
+                    }
+                    className="w-full p-2 border h-[40px] border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
                     Office Address<span className="text-red-500">*</span>
                   </label>
-                  <textarea className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none h-[40px]" />
+                  <textarea
+                    value={child.nomineeofficeAddress}
+                    onChange={(e) =>
+                      handleChange("nomineeDetails", "nomineeofficeAddress", e.target.value)
+                    }
+                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none h-[40px]" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -755,6 +941,10 @@ const handleChange = (section, field, value) => {
                   </label>
                   <input
                     type="text"
+                    value={child.nomineeofficeContact}
+                    onChange={(e) =>
+                      handleChange("nomineeDetails", "nomineeofficeContact", e.target.value)
+                    }
                     className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                   />
                 </div>
@@ -823,6 +1013,10 @@ const handleChange = (section, field, value) => {
                               </label>
                               <input
                                 type="text"
+                                value={formData.paymentDetails.installments.name}
+                                onChange={(e) =>
+                                  handleChange("paymentDetails", "installments", e.target.value)
+                                }
                                 placeholder="Enter amount"
                                 className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                               />
@@ -834,6 +1028,10 @@ const handleChange = (section, field, value) => {
                               </label>
                               <input
                                 type="date"
+                                value={formData.paymentDetails.installments.dueAmount}
+                                onChange={(e) =>
+                                  handleChange("paymentDetails", "installments", e.target.value)
+                                }
                                 className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                               />
                             </div>
@@ -844,6 +1042,10 @@ const handleChange = (section, field, value) => {
                               </label>
                               <input
                                 type="date"
+                                value={formData.paymentDetails.installments.dateFundRecived}
+                                onChange={(e) =>
+                                  handleChange("paymentDetails", "installments", e.target.value)
+                                }
                                 className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                               />
                             </div>
@@ -869,6 +1071,10 @@ const handleChange = (section, field, value) => {
                               </label>
                               <input
                                 type="text"
+                                value={formData.paymentDetails.installments.utrNumber}
+                                onChange={(e) =>
+                                  handleChange("paymentDetails", "installments", e.target.value)
+                                }
                                 placeholder="Enter UTR"
                                 className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                               />
@@ -877,7 +1083,12 @@ const handleChange = (section, field, value) => {
                               <label className="block text-sm font-medium text-slate-700 mb-1">
                                 Status<span className="text-red-500">*</span>
                               </label>
-                              <select className="w-full p-2 border border-slate-300 rounded-md outline-none focus:ring-2 focus:ring-blue-100">
+                              <select
+                                value={formData.paymentDetails.installments.Status}
+                                onChange={(e) =>
+                                  handleChange("paymentDetails", "installments", e.target.value)
+                                }
+                                className="w-full p-2 border border-slate-300 rounded-md outline-none focus:ring-2 focus:ring-blue-100">
                                 <option value="">Select</option>
                                 <option value="Pending">Pending</option>
                                 <option value="Completed">Completed</option>
