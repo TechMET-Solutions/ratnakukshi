@@ -2,7 +2,77 @@ import { ChevronLeft } from "lucide-react";
 import { useState } from "react";
 
 function AddDonor() {
-  const [currentStep, setCurrentStep] = useState(1);
+    const [currentStep, setCurrentStep] = useState(1);
+    const [formData, setFormData] = useState({
+  personalDetails: {
+    salutation: "",
+    name: "",
+    gender: "",
+    dob: "",
+    anniversary: "",
+    mobile: "",
+    altMobile: "",
+    email: "",
+    bloodGroup: "",
+    motherTongue: "",
+    nativePlace: "",
+    aadhar: null,
+    pan: null,
+    photo: null,
+  },
+
+  contactPerson: {
+    name: "",
+    mobile: "",
+  },
+
+  residentialAddress: {
+    address1: "",
+    city: "",
+    pincode: "",
+    contactCode: "",
+    contactNumber: "",
+    proof: "",
+    preferredAddress: "",
+  },
+
+  communicationAddress: {
+    address1: "",
+    address2: "",
+  },
+
+  companyDetails: {
+    name: "",
+    number: "",
+    address: "",
+  },
+
+  familyDetails: {
+    fatherName: "",
+    spouseName: "",
+    spouseDob: "",
+    spouseBloodGroup: "",
+    hasChildren: "",
+    children: [],
+  },
+
+  nomineeDetails: {
+    name: "",
+    contactNumber: "",
+    address: "",
+    city: "",
+    pincode: "",
+    relation: "",
+    companyName: "",
+    residentialAddress: "",
+    officeAddress: "",
+    officeContact: "",
+  },
+
+  paymentDetails: {
+    installments: [],
+  },
+});
   const steps = [
     "Personal Details",
     "Family Details",
@@ -36,7 +106,15 @@ const handlePrevious = (e) => {
   const handleRemoveChild = (id) => {
     setChildren(children.filter((child) => child.id !== id));
   };
-
+const handleChange = (section, field, value) => {
+  setFormData((prev) => ({
+    ...prev,
+    [section]: {
+      ...prev[section],
+      [field]: value,
+    },
+  }));
+};
   return (
     <div className="min-h-screen bg-gray-50 flex p-6 justify-center">
       <div className="w-full max-w-6xl bg-white p-6 shadow-sm">
@@ -84,20 +162,29 @@ const handlePrevious = (e) => {
                   <label className="block text-sm font-medium text-slate-700 mb-1">
                     Salutation<span className="text-red-500">*</span>
                   </label>
-                  <select className="w-full p-2 border border-slate-300 rounded-md outline-none focus:ring-2 focus:ring-blue-100">
-                    <option value="">Select</option>
-                    <option value="Shri">Shri.</option>
-                    <option value="Smt">Smt.</option>
-                  </select>
+                 <select
+  value={formData.personalDetails.salutation}
+  onChange={(e) =>
+    handleChange("personalDetails", "salutation", e.target.value)
+  }
+  className="w-full p-2 border border-slate-300 rounded-md outline-none focus:ring-2 focus:ring-blue-100"
+>
+  <option value="">Select</option>
+  <option value="Shri">Shri.</option>
+  <option value="Smt">Smt.</option>
+</select>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
                     Name<span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="text"
-                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
-                  />
+                 <input
+  type="text"
+  value={formData.personalDetails.name}
+  onChange={(e) =>
+    handleChange("personalDetails", "name", e.target.value)
+  }
+/>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
