@@ -16,33 +16,33 @@ const AssistancePage = () => {
   const [results, setResults] = useState([]);
   const [selectedSadhu, setSelectedSadhu] = useState(null);
   const [familyDetails, setFamilyDetails] = useState([]);
-  //   const defaultTableData = [
-  //     {
-  //       member: "Prakash Shah",
-  //       head: "Ravi Shah",
-  //       karyakarta: "Suresh Jain",
-  //       type: "Medical",
-  //       amount: "50,000",
-  //       renewal: "Onetime",
-  //     },
-  //     {
-  //       member: "Nitin Jain",
-  //       head: "Kunal Jain",
-  //       karyakarta: "Anil Mehta",
-  //       type: "Education",
-  //       amount: "40,000",
-  //       renewal: "4 renewals",
-  //     },
-  //     {
-  //       member: "Manish Desai",
-  //       head: "Anuj Desai",
-  //       karyakarta: "Ramesh Shah",
-  //       type: "Business",
-  //       amount: "50,000",
-  //       renewal: "Onetime",
-  //     },
-  //     // Add more rows as needed...
-  //   ];
+    const defaultTableData = [
+      {
+        member: "Prakash Shah",
+        head: "Ravi Shah",
+        karyakarta: "Suresh Jain",
+        type: "Medical",
+        amount: "50,000",
+        renewal: "Onetime",
+      },
+      {
+        member: "Nitin Jain",
+        head: "Kunal Jain",
+        karyakarta: "Anil Mehta",
+        type: "Education",
+        amount: "40,000",
+        renewal: "4 renewals",
+      },
+      {
+        member: "Manish Desai",
+        head: "Anuj Desai",
+        karyakarta: "Ramesh Shah",
+        type: "Business",
+        amount: "50,000",
+        renewal: "Onetime",
+      },
+      // Add more rows as needed...
+    ];
 
   const [tableData, setTableData] = useState([]);
 
@@ -136,7 +136,7 @@ const AssistancePage = () => {
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-100">
-          {tableData.map((row, index) => (
+          {defaultTableData.map((row, index) => (
             <tr key={index} className="hover:bg-slate-50 transition-colors">
               <td className="p-4 text-slate-600">{row.diksharthi}</td>
               <td className="p-4 text-slate-600">{row.member}</td>
@@ -147,7 +147,9 @@ const AssistancePage = () => {
               <td className="p-4 text-slate-600">{row.renewal}</td>
               <td className="p-4">
                 <div className="flex justify-center gap-2">
-                  <Eye size={18} className="text-yellow-500 cursor-pointer" />
+                  <Eye
+                    onClick={navigate("/request-details")}
+                    size={18} className="text-yellow-500 cursor-pointer" />
                   <CheckCircle
                     size={18}
                     className="text-green-500 cursor-pointer"

@@ -62,6 +62,7 @@ import PublicRoute from "./routes/PublicRoute";
 import Settings from "./pages/Settings";
 import DonorList from "./pages/DonorList";
 import AddDoner from "./pages/AddDoner";
+import RequestDetails from "./pages/RequestDetails";
 
 const Layout = ({ children }) => {
   return (
@@ -149,6 +150,16 @@ function App() {
             <ProtectedRoute>
               <Layout>
                 <Assisatncedetailspage />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/request-details"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <RequestDetails />
               </Layout>
             </ProtectedRoute>
           }
