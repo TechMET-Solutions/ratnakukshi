@@ -63,6 +63,9 @@ import Settings from "./pages/Settings";
 import DonorList from "./pages/DonorList";
 import AddDoner from "./pages/AddDoner";
 import RequestDetails from "./pages/RequestDetails";
+import KaryakartaList from "./pages/KaryakartaList";
+import KaryakartaDetails from "./pages/KaryakartaDetails";
+import DonorPaymentHistory from "./pages/DonorPaymentHistory";
 
 const Layout = ({ children }) => {
   return (
@@ -180,6 +183,37 @@ function App() {
             <ProtectedRoute>
               <Layout>
                 <AddDoner />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/donor/payment-history"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <DonorPaymentHistory />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/karyakarta"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <KaryakartaList />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+       
+        <Route
+          path="/karyakarta/:id"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <KaryakartaDetails />
               </Layout>
             </ProtectedRoute>
           }

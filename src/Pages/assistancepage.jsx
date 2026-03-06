@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { API } from "../api/BaseURL";
 
 const AssistancePage = () => {
   const [searchType, setSearchType] = useState("sadhu");
@@ -23,7 +24,7 @@ const AssistancePage = () => {
 
   useEffect(() => {
     axios
-      .get("http://localhost:5000/api/familyAccounting-details")
+      .get(`${API}/api/familyAccounting-details`)
       .then((res) => {
         setTableData(res.data.data);
       });
@@ -41,7 +42,7 @@ const AssistancePage = () => {
     try {
       // Tuza actual API endpoint vapar
       const res = await axios.get(
-        `http://localhost:5000/api/search-diksharthi?name=${value}`,
+        `${API}/api/search-diksharthi?name=${value}`,
       );
       setResults(res.data.data || []);
     } catch (error) {
@@ -55,7 +56,7 @@ const AssistancePage = () => {
     setSearchText(item.sadhu_sadhvi_name);
     try {
       const res = await axios.get(
-        `http://localhost:5000/api/family-details/${item.id}`,
+        `${API}/api/family-details/${item.id}`,
       );
       setFamilyDetails(res.data.data || []);
     } catch (error) {

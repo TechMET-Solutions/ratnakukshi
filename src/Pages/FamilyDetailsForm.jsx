@@ -2,6 +2,7 @@ import axios from "axios";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { useState } from "react";
 import { useLocation } from "react-router-dom";
+import { API } from "../api/BaseURL";
 
 const FamilyDetailsForm = () => {
   const location = useLocation();
@@ -290,7 +291,7 @@ const handleSave = async () => {
     console.log(payload, "Sending Data");
 
     const response = await axios.post(
-      "http://localhost:5000/api/create-family-details",
+      `${API}/api/create-family-details`,
       payload
     );
 

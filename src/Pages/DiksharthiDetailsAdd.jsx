@@ -149,7 +149,7 @@ const DiksharthiDetailsAdd = () => {
       if (photo) data.append("photo", photo);
 
       const response = await axios.post(
-        "http://localhost:5000/api/create-diksharthi",
+        `${API}/api/create-diksharthi`,
         data,
         { headers: { "Content-Type": "multipart/form-data" } }
       );

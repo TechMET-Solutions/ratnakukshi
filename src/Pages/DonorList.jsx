@@ -1,77 +1,11 @@
-// import { Plus } from 'lucide-react'
-// import React from 'react'
-// import { Link } from 'react-router-dom'
-
-// function DonorList() {
-//   return (
-//       <div className="p-8 min-h-screen">
-//           {/* Header Section */}
-//           <div className="flex justify-between items-center mb-6">
-//               <h1 className="text-2xl font-bold text-slate-700">
-//                   Donor List
-//               </h1>
-//               <Link
-//                   to="/donor-add"
-//                   className="bg-[#ECB000] hover:bg-[#ECB000] text-white px-4 py-2 rounded-md flex items-center gap-2 text-sm font-medium transition-colors shadow-sm"
-//               >
-//                   <Plus size={18} />
-//                   Add Donor
-//               </Link>
-//           </div>
-//           {/* <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
-// fgdf
-//               </div> */}
-
-//           <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
-//               <div className="flex">
-//                   {/* search and Filter Dropdown */}
-//               </div>
-//               <table className="w-full text-left border-collapse">
-//                   <thead>
-//                       <tr className="bg-gray-50 border-b border-gray-100">
-//                           <th className="px-6 py-4 text-sm font-semibold text-gray-700">
-//                               Sr. No.
-//                           </th>
-//                           <th className="px-6 py-4 text-sm font-semibold text-gray-700">
-//                               Donor Name
-//                           </th>
-//                           <th className="px-6 py-4 text-sm font-semibold text-gray-700">
-//                               Contact No.
-//                           </th>
-//                           <th className="px-6 py-4 text-sm font-semibold text-gray-700">
-//                               Email
-//                           </th>
-//                           <th className="px-6 py-4 text-sm font-semibold text-gray-700">
-//                               Total Donation
-//                           </th>
-//                           <th className="px-6 py-4 text-sm font-semibold text-gray-700">
-//                               Due Amount
-//                           </th>
-                          
-//                           <th className="px-6 py-4 text-sm font-semibold text-gray-700">
-//                               Actions
-//                           </th>
-//                           <th className="px-6 py-4 text-sm font-semibold text-gray-700">
-//                               Recepit
-//                           </th>
-//                       </tr>
-//                   </thead>
-//                   <tbody>
-                      
-//                   </tbody>
-//               </table>
-//           </div>
-//       </div>
-//   )
-// }
-
-// export default DonorList
-
 import { Plus, Search, Filter, Edit, Trash2, FileText, CreditCard, Award } from 'lucide-react';
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 function DonorList() {
+
+    const navigate = useNavigate();
+
     // 1. Dummy Data
     const initialDonors = [
         {
@@ -183,7 +117,9 @@ function DonorList() {
                                     <td className="px-6 py-4 text-sm">
                                         <div className="flex gap-3 text-gray-400">
                                             <button className="hover:text-blue-600 transition-colors"><Edit size={18} /></button>
-                                            <button className="hover:text-green-600 transition-colors"><CreditCard size={18} /></button>
+                                            <button
+                                                onClick={() => navigate("/donor/payment-history")}
+                                                className="hover:text-green-600 transition-colors"><CreditCard size={18} /></button>
                                             <button className="hover:text-red-600 transition-colors"><Award size={18} /></button>
                                         </div>
                                     </td>

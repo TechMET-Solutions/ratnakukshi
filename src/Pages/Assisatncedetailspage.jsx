@@ -1,6 +1,7 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
+import { API } from "../api/BaseURL";
 
 const AssistanceDetails = () => {
   const location = useLocation();
@@ -29,7 +30,7 @@ const AssistanceDetails = () => {
   const fetchFamilyDetails = async () => {
     try {
       const res = await axios.get(
-        `http://localhost:5000/api/family-details/${selectedSadhu}`,
+        `${API}/api/family-details/${selectedSadhu}`,
       );
 
       const family = res?.data?.data?.[0];
@@ -231,7 +232,7 @@ const handleCategoryToggle = (rel, category) => {
       console.log("Updating Application:", payload);
 
       const response = await axios.put(
-        "http://localhost:5000/api/update-assistance",
+        `${API}/api/update-assistance`,
         payload,
       );
 

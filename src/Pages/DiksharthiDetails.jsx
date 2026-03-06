@@ -1,6 +1,7 @@
 import { Plus, RotateCcw, Search } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { API } from "../api/BaseURL";
 
 const DiksharthiListing = () => {
 
@@ -10,7 +11,7 @@ const [diksharthiList, setDiksharthiList] = useState([]);
 
     
    useEffect(() => {
-  fetch("http://localhost:5000/api/get-diksharthi")
+  fetch(`${API}/api/get-diksharthi`)
     .then((res) => res.json())
     .then((data) => {
       setDiksharthiList(data.data);
@@ -84,7 +85,7 @@ const [diksharthiList, setDiksharthiList] = useState([]);
         {/* Photo */}
         <td className="px-6 py-3">
           <img
-            src={`http://localhost:5000/uploads/${item.photo}`}
+            src={`${API}/uploads/${item.photo}`}
             alt=""
             className="w-10 h-10 rounded-full object-cover"
           />

@@ -27,7 +27,7 @@ const RequestDetails = () => {
         };
 
         const res = await axios.post(
-          "http://localhost:5000/api/get-family-assistance",
+          `${API}/api/get-family-assistance`,
           payload,
         );
 
