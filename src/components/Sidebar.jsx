@@ -98,7 +98,7 @@ const Sidebar = () => {
 
       {/* Navigation */}
       <nav className="flex-1 mt-4">
-        <NavItem to="/dashboard" icon={<LayoutDashboard size={18} />} label="Dashboard" />
+        <NavItem to="/" icon={<LayoutDashboard size={18} />} label="Dashboard" />
         <NavItem to="/diksharthi-details" icon={<FileText size={18} />} label="Diksharthi Details" />
         <NavItem to="/family-details" icon={<Users size={18} />} label="Family details" />
         <NavItem to="/assistance" icon={<Handshake size={18} />} label="Assistance" />

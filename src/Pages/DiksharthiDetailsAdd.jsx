@@ -64,6 +64,8 @@ const DiksharthiDetailsAdd = () => {
     debugger;
     if (!validate()) return;
 
+
+
     try {
       const data = new FormData();
 
@@ -136,30 +138,21 @@ const DiksharthiDetailsAdd = () => {
   };
 
   return (
-    <div className="flex min-h-screen font-sans">
-      <div className="flex-1">
-        <div className="h-32 w-full"></div>
+    <div className="min-h-full bg-gray-50 flex p-6 justify-center">
+      <div className="w-full max-w-6xl bg-white p-6 shadow-sm">
 
-        <div className="p-8 -mt-16">
-          <div className="bg-white overflow-hidden">
             {/* Header */}
-            <div className="flex items-center gap-2">
-              <div className="border border-black p-0.5">
-                <FileText size={20} />
-              </div>
-
-              <h2 className="font-inter font-semibold text-2xl text-gray-800">
-                Diksharthi Details
-              </h2>
+            <div className="flex items-center gap-2 mb-8 text-slate-800">
+              <FileText size={20} />
+              <h2 className="text-xl font-bold"> Diksharthi Details</h2>
             </div>
 
             {/* Form */}
             <div className="grid grid-cols-3 gap-6 mt-5">
               {/* Name */}
               <div>
-                <label className="text-[20px] text-gray-700">
-                  Name of P. Pujya. Sadhu/ Sadhvi Ji
-                  <span className="text-red-500">*</span>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Name of P. Pujya. Sadhu/ Sadhvi Ji<span className="text-red-500">*</span>
                 </label>
 
                 <input
@@ -167,7 +160,7 @@ const DiksharthiDetailsAdd = () => {
                   value={formData.sadhu_sadhvi_name}
                   onChange={handleChange}
                   type="text"
-                  className="w-full text-[20px] border border-gray-300 rounded px-3 py-2 text-sm mt-1"
+                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                 />
 
                 {errors.sadhu_sadhvi_name && (
@@ -179,9 +172,8 @@ const DiksharthiDetailsAdd = () => {
 
               {/* DOB */}
               <div>
-                <label className="text-[20px] text-gray-700">
-                  Date of Birth of Maharaj saheb
-                  <span className="text-red-500">*</span>
+               <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Date of Birth of Maharaj saheb<span className="text-red-500">*</span>
                 </label>
 
                 <div className="relative">
@@ -190,7 +182,7 @@ const DiksharthiDetailsAdd = () => {
                     value={formData.dob}
                     onChange={handleChange}
                     type="date"
-                    className="w-full text-[20px] border border-gray-300 rounded px-3 py-2 text-sm mt-1"
+                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                   />
                 </div>
 
@@ -200,28 +192,32 @@ const DiksharthiDetailsAdd = () => {
               </div>
 
               {/* Gender */}
-              <div>
-                <label className="text-[20px] text-gray-700">
+              <div> 
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Monastic Gender <span className="text-red-500">*</span>
                 </label>
 
                 <div className="flex gap-4 mt-2">
-                  <label className="flex  text-[20px] items-center gap-2 text-[20px]">
+              <label className="flex items-center gap-2 cursor-pointer">
                     <input
                       type="radio"
                       name="gender"
                       value="Sadhu"
-                      onChange={handleChange}
+                  onChange={handleChange}
+                  className="w-4 h-4 text-blue-600"
+
                     />
                     Sadhu
                   </label>
 
-                  <label className="flex items-center gap-2 text-[20px]">
+              <label className="flex items-center gap-2 cursor-pointer">
                     <input
                       type="radio"
                       name="gender"
                       value="Sadhvi"
-                      onChange={handleChange}
+                  onChange={handleChange}
+                  className="w-4 h-4 text-blue-600"
+
                     />
                     Sadhvi
                   </label>
@@ -234,8 +230,8 @@ const DiksharthiDetailsAdd = () => {
 
               {/* Pad */}
               <div>
-                <label className="text-[20px] text-gray-700">
-                  Pad <span className="text-red-500">*</span>
+               <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Pad<span className="text-red-500">*</span>
                 </label>
 
                 <div className="relative">
@@ -243,7 +239,7 @@ const DiksharthiDetailsAdd = () => {
                     name="pad"
                     value={formData.pad}
                     onChange={handleChange}
-                    className="w-full border text-[20px] border-gray-300 rounded px-3 py-1 text-sm mt-1 appearance-none text-[20px]"
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                   >
                     <option value="">Select</option>
                     <option>Acharya</option>
@@ -266,8 +262,8 @@ const DiksharthiDetailsAdd = () => {
 
               {/* Samudaay */}
               <div>
-                <label className="text-[20px] text-gray-700">
-                  Samudaay <span className="text-red-500">*</span>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Samudaay<span className="text-red-500">*</span>
                 </label>
 
                 <input
@@ -275,7 +271,7 @@ const DiksharthiDetailsAdd = () => {
                   value={formData.samudaay}
                   onChange={handleChange}
                   type="text"
-                  className="w-full text-[20px] border border-gray-300 rounded px-3 py-2 text-sm mt-1"
+                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                 />
 
                 {errors.samudaay && (
@@ -285,9 +281,8 @@ const DiksharthiDetailsAdd = () => {
 
               {/* Guru */}
               <div>
-                <label className="text-[20px] text-gray-700">
-                  Name of respected Guru / Guruni
-                  <span className="text-red-500">*</span>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Name of respected Guru / Guruni<span className="text-red-500">*</span>
                 </label>
 
                 <input
@@ -295,7 +290,7 @@ const DiksharthiDetailsAdd = () => {
                   value={formData.guruName}
                   onChange={handleChange}
                   type="text"
-                  className="w-full text-[20px] border border-gray-300 rounded px-3 py-2 text-sm mt-1"
+                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                 />
 
                 {errors.guruName && (
@@ -305,8 +300,8 @@ const DiksharthiDetailsAdd = () => {
 
               {/* Acharya */}
               <div>
-                <label className="text-[20px] text-gray-700">
-                  Under which Acharya ji
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Under which Acharya ji<span className="text-red-500">*</span>
                 </label>
 
                 <input
@@ -314,14 +309,14 @@ const DiksharthiDetailsAdd = () => {
                   value={formData.acharya}
                   onChange={handleChange}
                   type="text"
-                  className="w-full text-[20px] border border-gray-300 rounded px-3 py-2 text-sm mt-1"
+                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                 />
               </div>
 
               {/* Gaachh */}
               <div>
-                <label className="text-[20px] text-gray-700">
-                  Name of Gaachh <span className="text-red-500">*</span>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Name of Gaachh<span className="text-red-500">*</span>
                 </label>
 
                 <input
@@ -329,7 +324,7 @@ const DiksharthiDetailsAdd = () => {
                   value={formData.gaachh}
                   onChange={handleChange}
                   type="text"
-                  className="w-full text-[20px] border border-gray-300 rounded px-3 py-2 text-sm mt-1"
+                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                 />
 
                 {errors.gaachh && (
@@ -339,17 +334,15 @@ const DiksharthiDetailsAdd = () => {
 
               {/* Gadipati */}
               <div>
-                <label className="text-[20px] text-gray-700">
-                  Name of Gachadhipati / Gadipati
-                  <span className="text-red-500">*</span>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Name of Gachadhipati / Gadipati<span className="text-red-500">*</span>
                 </label>
-
                 <input
                   name="gadipati"
                   value={formData.gadipati}
                   onChange={handleChange}
                   type="text"
-                  className="w-full text-[20px] border border-gray-300 rounded px-3 py-2 text-sm mt-1"
+                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                 />
 
                 {errors.gadipati && (
@@ -359,9 +352,8 @@ const DiksharthiDetailsAdd = () => {
 
               {/* Alive */}
               <div>
-                <label className="text-[20px] text-gray-700">
-                  Is he/she currently alive
-                  <span className="text-red-500">*</span>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Is he/she currently alive<span className="text-red-500">*</span>
                 </label>
 
                 <div className="relative">
@@ -369,7 +361,7 @@ const DiksharthiDetailsAdd = () => {
                     name="isAlive"
                     value={formData.isAlive}
                     onChange={handleChange}
-                    className="w-full text-[20px] border border-gray-300 rounded px-3 py-1 text-sm mt-1 appearance-none text-[20px]"
+                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                   >
                     <option value="">Select</option>
                     <option>Yes</option>
@@ -389,9 +381,8 @@ const DiksharthiDetailsAdd = () => {
 
               {/* Location */}
               <div>
-                <label className="text-[20px] text-gray-700">
-                  Current Vihar Location
-                  <span className="text-red-500">*</span>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Current Vihar Location<span className="text-red-500">*</span>
                 </label>
 
                 <input
@@ -399,30 +390,35 @@ const DiksharthiDetailsAdd = () => {
                   value={formData.viharLocation}
                   onChange={handleChange}
                   type="text"
-                  className="w-full text-[20px] border border-gray-300 rounded px-3 py-2 text-sm mt-1"
+                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                 />
 
                 {errors.viharLocation && (
                   <p className="text-red-500 text-xs">{errors.viharLocation}</p>
                 )}
               </div>
+
+              {/* Photo of P. Pujya. Sadhu/ Sadhvi Ji */}
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Photo of P. Pujya. Sadhu/ Sadhvi Ji<span className="text-red-500">*</span>
+                </label>
+
               <input
                 type="file"
                 onChange={(e) => setPhoto(e.target.files[0])}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 mt-1 text-sm cursor-pointer bg-gray-50
-  file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0
-  file:text-sm file:font-medium
-  file:bg-gray-200 file:text-gray-700
-  hover:file:bg-gray-300"
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
               />
+            </div>
             </div>
 
             {/* Conditional Samadhi */}
             {formData.isAlive === "No" && (
               <div className="flex gap-6 mt-4">
                 <div>
-                  <label className="text-[20px] text-gray-700">
-                    Samadhi Prapti Date <span className="text-red-500">*</span>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Samadhi Prapti Date<span className="text-red-500">*</span>
                   </label>
 
                   <input
@@ -430,7 +426,8 @@ const DiksharthiDetailsAdd = () => {
                     name="samadhiDate"
                     value={formData.samadhiDate}
                     onChange={handleChange}
-                    className="w-full text-[20px] border border-gray-300 rounded px-3 py-1 mt-1"
+                     className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
+
                   />
 
                   {errors.samadhiDate && (
@@ -439,9 +436,8 @@ const DiksharthiDetailsAdd = () => {
                 </div>
 
                 <div>
-                  <label className="text-[20px] text-gray-700">
-                    Samadhi Place (City / Sangh / Tirth)
-                    <span className="text-red-500">*</span>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Samadhi Place (City / Sangh / Tirth)<span className="text-red-500">*</span>
                   </label>
 
                   <input
@@ -449,7 +445,8 @@ const DiksharthiDetailsAdd = () => {
                     value={formData.samadhiPlace}
                     onChange={handleChange}
                     type="text"
-                    className="w-full text-[20px] border border-gray-300 rounded px-3 py-1 mt-1"
+                     className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
+
                   />
 
                   {errors.samadhiPlace && (
@@ -476,8 +473,6 @@ const DiksharthiDetailsAdd = () => {
             </div>
           </div>
         </div>
-      </div>
-    </div>
   );
 };
 
