@@ -829,7 +829,7 @@ function AddDonor() {
                   </label>
                   <input
                     type="text"
-                    value={child.nomineeName}
+                    value={formData.nomineeDetails.nomineeName}
                     onChange={(e) =>
                       handleChange("nomineeDetails", "nomineeName", e.target.value)
                     }
@@ -842,7 +842,7 @@ function AddDonor() {
                   </label>
                   <input
                     type="text"
-                    value={child.nomineeContact}
+                    value={formData.nomineeDetails.nomineeContact}
                     onChange={(e) =>
                       handleChange("nomineeDetails", "nomineeContact", e.target.value)
                     }
@@ -854,7 +854,7 @@ function AddDonor() {
                     Address<span className="text-red-500">*</span>
                   </label>
                   <textarea
-                    value={child.nomineeAddress}
+                    value={formData.nomineeDetails.nomineeAddress}
                     onChange={(e) =>
                       handleChange("nomineeDetails", "nomineeAddress", e.target.value)
                     }
@@ -866,7 +866,7 @@ function AddDonor() {
                   </label>
                   <input
                     type="text"
-                    value={child.nomineecity}
+                    value={formData.nomineeDetails.nomineecity}
                     onChange={(e) =>
                       handleChange("nomineeDetails", "nomineecity", e.target.value)
                     }
@@ -880,7 +880,7 @@ function AddDonor() {
                   </label>
                   <input
                     type="text"
-                    value={child.nomineecity}
+                    value={formData.nomineeDetails.nomineecity}
                     onChange={(e) =>
                       handleChange("nomineeDetails", "nomineecity", e.target.value)
                     }                
@@ -893,7 +893,7 @@ function AddDonor() {
                   </label>
                   <input
                     type="text"
-                    value={child.nomineerelation}
+                    value={formData.nomineeDetails.nomineerelation}
                     onChange={(e) =>
                       handleChange("nomineeDetails", "nomineerelation", e.target.value)
                     }
@@ -906,7 +906,7 @@ function AddDonor() {
                   </label>
                   <input
                     type="text"
-                    value={child.nomineecompanyName}
+                    value={formData.nomineeDetails.nomineecompanyName}
                     onChange={(e) =>
                       handleChange("nomineeDetails", "nomineecompanyName", e.target.value)
                     }
@@ -918,7 +918,7 @@ function AddDonor() {
                     Residential Address<span className="text-red-500">*</span>
                   </label>
                   <textarea
-                    value={child.nomineeresidentialAddress}
+                    value={formData.nomineeDetails.nomineeresidentialAddress}
                     onChange={(e) =>
                       handleChange("nomineeDetails", "nomineeresidentialAddress", e.target.value)
                     }
@@ -929,7 +929,7 @@ function AddDonor() {
                     Office Address<span className="text-red-500">*</span>
                   </label>
                   <textarea
-                    value={child.nomineeofficeAddress}
+                    value={formData.nomineeDetails.nomineeofficeAddress}
                     onChange={(e) =>
                       handleChange("nomineeDetails", "nomineeofficeAddress", e.target.value)
                     }
@@ -941,7 +941,7 @@ function AddDonor() {
                   </label>
                   <input
                     type="text"
-                    value={child.nomineeofficeContact}
+                    value={formData.nomineeDetails.nomineeofficeContact}
                     onChange={(e) =>
                       handleChange("nomineeDetails", "nomineeofficeContact", e.target.value)
                     }
@@ -1013,7 +1013,7 @@ function AddDonor() {
                               </label>
                               <input
                                 type="text"
-                                value={formData.paymentDetails.installments.name}
+                                value={formData.paymentDetails.installments}
                                 onChange={(e) =>
                                   handleChange("paymentDetails", "installments", e.target.value)
                                 }
@@ -1028,7 +1028,7 @@ function AddDonor() {
                               </label>
                               <input
                                 type="date"
-                                value={formData.paymentDetails.installments.dueAmount}
+                                value={formData.paymentDetails.installments}
                                 onChange={(e) =>
                                   handleChange("paymentDetails", "installments", e.target.value)
                                 }
@@ -1042,7 +1042,7 @@ function AddDonor() {
                               </label>
                               <input
                                 type="date"
-                                value={formData.paymentDetails.installments.dateFundRecived}
+                                value={formData.paymentDetails.installments}
                                 onChange={(e) =>
                                   handleChange("paymentDetails", "installments", e.target.value)
                                 }
@@ -1071,7 +1071,7 @@ function AddDonor() {
                               </label>
                               <input
                                 type="text"
-                                value={formData.paymentDetails.installments.utrNumber}
+                                value={formData.paymentDetails.installments}
                                 onChange={(e) =>
                                   handleChange("paymentDetails", "installments", e.target.value)
                                 }
@@ -1084,7 +1084,7 @@ function AddDonor() {
                                 Status<span className="text-red-500">*</span>
                               </label>
                               <select
-                                value={formData.paymentDetails.installments.Status}
+                                value={formData.paymentDetails.installments}
                                 onChange={(e) =>
                                   handleChange("paymentDetails", "installments", e.target.value)
                                 }
