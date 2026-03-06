@@ -5,6 +5,7 @@ import {
     FileText,
     Search,
     User,
+    X,
     XCircle,
 } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -16,35 +17,9 @@ const AssistancePage = () => {
   const [results, setResults] = useState([]);
   const [selectedSadhu, setSelectedSadhu] = useState(null);
   const [familyDetails, setFamilyDetails] = useState([]);
-    const defaultTableData = [
-      {
-        member: "Prakash Shah",
-        head: "Ravi Shah",
-        karyakarta: "Suresh Jain",
-        type: "Medical",
-        amount: "50,000",
-        renewal: "Onetime",
-      },
-      {
-        member: "Nitin Jain",
-        head: "Kunal Jain",
-        karyakarta: "Anil Mehta",
-        type: "Education",
-        amount: "40,000",
-        renewal: "4 renewals",
-      },
-      {
-        member: "Manish Desai",
-        head: "Anuj Desai",
-        karyakarta: "Ramesh Shah",
-        type: "Business",
-        amount: "50,000",
-        renewal: "Onetime",
-      },
-      // Add more rows as needed...
-    ];
-
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [tableData, setTableData] = useState([]);
+  const [activeRow, setActiveRow] = useState(null);
 
   useEffect(() => {
     axios
@@ -55,6 +30,7 @@ const AssistancePage = () => {
   }, []);
 
   console.log(familyDetails, "familyDetails");
+
   const navigate = useNavigate();
   const handleSearch = async (value) => {
     setSearchText(value);
@@ -105,7 +81,10 @@ const AssistancePage = () => {
       },
     });
   };
-
+  const handleOpenFileModal = (row) => {
+    setActiveRow(row);
+    setIsModalOpen(true);
+  };
   const renderDefaultTable = () => (
     <div className="mt-8 overflow-hidden border border-blue-400 rounded-lg shadow-sm">
       <table className="w-full text-left border-collapse bg-white">
@@ -124,9 +103,9 @@ const AssistancePage = () => {
             <th className="p-4 font-semibold text-slate-700 border-b">
               Assistance
             </th>
-            {/* <th className="p-4 font-semibold text-slate-700 border-b">
-              Requested Amount
-            </th> */}
+            <th className="p-4 font-semibold text-slate-700 border-b">
+              Status
+            </th>
             <th className="p-4 font-semibold text-slate-700 border-b">
               Renewal
             </th>
@@ -136,20 +115,32 @@ const AssistancePage = () => {
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-100">
-          {defaultTableData.map((row, index) => (
+          {tableData.map((row, index) => (
             <tr key={index} className="hover:bg-slate-50 transition-colors">
               <td className="p-4 text-slate-600">{row.diksharthi}</td>
-              <td className="p-4 text-slate-600">{row.member}</td>
+              <td className="p-4 text-slate-600">{row.member_name}</td>
               <td className="p-4 text-slate-600">{row.head}</td>
 
               <td className="p-4 text-slate-600">{row.type}</td>
-              {/* <td className="p-4 text-slate-600">₹ {row.amount}</td> */}
+              <td
+                className={`p-4 font-semibold ${
+                  row.status === "Pending"
+                    ? "text-yellow-600"
+                    : row.status === "Approved"
+                      ? "text-green-600"
+                      : "text-red-600"
+                }`}
+              >
+                {row.status}
+              </td>
               <td className="p-4 text-slate-600">{row.renewal}</td>
               <td className="p-4">
                 <div className="flex justify-center gap-2">
                   <Eye
-                    onClick={navigate("/request-details")}
-                    size={18} className="text-yellow-500 cursor-pointer" />
+                    size={18}
+                    className="text-yellow-500 cursor-pointer"
+                    onClick={() => navigate("/request-details", { state: row })}
+                  />
                   <CheckCircle
                     size={18}
                     className="text-green-500 cursor-pointer"
@@ -158,6 +149,7 @@ const AssistancePage = () => {
                   <FileText
                     size={18}
                     className="text-blue-500 cursor-pointer"
+                    onClick={() => handleOpenFileModal(row)}
                   />
                 </div>
               </td>
@@ -310,6 +302,58 @@ const AssistancePage = () => {
               </div>
             ))
           : renderDefaultTable()}
+
+        {isModalOpen && (
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md animate-in fade-in zoom-in duration-200">
+              <div className="flex items-center justify-between p-6 border-b">
+                <h3 className="text-xl font-bold text-slate-800">
+                  Staff Queries
+                </h3>
+                <button
+                  onClick={() => setIsModalOpen(false)}
+                  className="p-1 hover:bg-slate-100 rounded-full transition-colors"
+                >
+                  <X size={24} className="text-slate-500" />
+                </button>
+              </div>
+              <div className="p-8">
+                <div className="flex flex-col items-center text-center space-y-4">
+                  <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center text-blue-500">
+                    <FileText size={32} />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-lg text-slate-700">
+                      {activeRow?.member}
+                    </h4>
+                    <p className="text-slate-500 text-sm">
+                      Case ID: #ASSIST-{activeRow?.id}024
+                    </p>
+                  </div>
+                  <div className="w-full p-4 bg-slate-50 rounded-xl border border-dashed border-slate-300">
+                    <p className="text-slate-500 italic text-sm">
+                      No active queries found for this request.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="p-6 border-t flex gap-3">
+                <button
+                  onClick={() => setIsModalOpen(false)}
+                  className="flex-1 py-3 px-4 border border-slate-200 rounded-xl font-semibold text-slate-600 hover:bg-slate-50 transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => setIsModalOpen(false)}
+                  className="flex-1 py-3 px-4 bg-blue-600 text-white rounded-xl font-semibold shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all"
+                >
+                  Understood
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );

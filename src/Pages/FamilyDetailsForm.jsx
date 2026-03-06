@@ -312,7 +312,8 @@ const handleSave = async () => {
         ...prev[relation],
         Medical: {
           ...prev[relation]?.Medical,
-          [field]: value,
+            [field]: value,
+           status: "Pending",
         },
       },
     }));
@@ -324,7 +325,8 @@ const handleSave = async () => {
         ...prev[relation],
         Education: {
           ...prev[relation]?.Education,
-          [field]: value,
+            [field]: value,
+           status: "Pending",
         },
       },
     }));
@@ -337,7 +339,8 @@ const handleSave = async () => {
         ...prev[relation],
         Job: {
           ...prev[relation]?.Job,
-          [field]: value,
+            [field]: value,
+          status: "Pending",
         },
       },
     }));
@@ -350,7 +353,8 @@ const handleSave = async () => {
         ...prev[relation],
         Food: {
           ...prev[relation]?.Food,
-          [field]: value,
+            [field]: value,
+          status: "Pending",
         },
       },
     }));
@@ -362,7 +366,8 @@ const handleSave = async () => {
         ...prev[relation],
         Rent: {
           ...prev[relation]?.Rent,
-          [field]: value,
+            [field]: value,
+          status: "Pending",
         },
       },
     }));
@@ -375,7 +380,8 @@ const handleSave = async () => {
         ...prev[relation],
         Housing: {
           ...prev[relation]?.Housing,
-          [field]: value,
+            [field]: value,
+          status: "Pending",
         },
       },
     }));
@@ -388,7 +394,8 @@ const handleSave = async () => {
         ...prev[relation],
         Vaiyavacch: {
           ...prev[relation]?.Vaiyavacch,
-          [field]: value,
+            [field]: value,
+          status: "Pending",
         },
       },
     }));
@@ -400,7 +407,8 @@ const handleSave = async () => {
         ...prev[relation],
         EmergencyExpenses: {
           ...prev[relation]?.EmergencyExpenses,
-          [field]: value,
+            [field]: value,
+          status: "Pending",
         },
       },
     }));
@@ -414,6 +422,7 @@ const handleSave = async () => {
         Business: {
           ...prev[relation]?.Business,
           [field]: value,
+          status: "Pending",
         },
       },
     }));
