@@ -103,7 +103,7 @@ const Sidebar = () => {
         <NavItem to="/family-details" icon={<Users size={18} />} label="Family details" />
         <NavItem to="/assistance" icon={<Handshake size={18} />} label="Assistance" />
         <NavItem to="/religious-practices" icon={<Home size={18} />} label="Family religious Practices" />
-        <NavItem to="/review" icon={<FileText size={18} />} label="Review & Submit" />
+        <NavItem to="/donor" icon={<FileText size={18} />} label="Donor List" />
         <NavItem to="/settings" icon={<Settings size={18} />} label="Settings" />
 
         {/* Logout Button: We pass the onClick handler here */}

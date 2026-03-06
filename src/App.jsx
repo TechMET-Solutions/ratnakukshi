@@ -59,6 +59,9 @@ import DiksharthiDetailsAdd from "./Pages/DiksharthiDetailsAdd";
 import FamilyDetailsForm from "./pages/FamilyDetailsForm";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import PublicRoute from "./routes/PublicRoute";
+import Settings from "./pages/Settings";
+import DonorList from "./pages/DonorList";
+import AddDoner from "./pages/AddDoner";
 
 const Layout = ({ children }) => {
   return (
@@ -146,6 +149,36 @@ function App() {
             <ProtectedRoute>
               <Layout>
                 <Assisatncedetailspage />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/donor"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <DonorList />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/donor/add"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <AddDoner />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <Settings />
               </Layout>
             </ProtectedRoute>
           }
