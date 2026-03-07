@@ -2,11 +2,12 @@ import axios from "axios";
 import { ChevronDown, FileText } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { API } from "../api/BaseURL";
 
 const DiksharthiDetailsAdd = () => {
   const [photo, setPhoto] = useState(null);
   const [showModal, setShowModal] = useState(false); // New state for Modal
-  const [savedId, setSavedId] = useState(""); 
+  const [savedId, setSavedId] = useState("");
   const [formData, setFormData] = useState({
     sadhu_sadhvi_name: "",
     dob: "",
@@ -60,13 +61,9 @@ const DiksharthiDetailsAdd = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-
-
   // const handleSave = async () => {
   //   debugger;
   //   if (!validate()) return;
-
-
 
   //   try {
   //     const data = new FormData();
@@ -139,20 +136,17 @@ const DiksharthiDetailsAdd = () => {
   //   }
   // };
 
-
   const handleSave = async () => {
     if (!validate()) return;
 
     try {
       const data = new FormData();
-      Object.keys(formData).forEach(key => data.append(key, formData[key]));
+      Object.keys(formData).forEach((key) => data.append(key, formData[key]));
       if (photo) data.append("photo", photo);
 
-      const response = await axios.post(
-        `${API}/api/create-diksharthi`,
-        data,
-        { headers: { "Content-Type": "multipart/form-data" } }
-      );
+      const response = await axios.post(`${API}/api/create-diksharthi`, data, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
 
       const diksharthi = response.data.data;
 
@@ -162,9 +156,19 @@ const DiksharthiDetailsAdd = () => {
 
       // 2. Clear form state
       setFormData({
-        sadhu_sadhvi_name: "", dob: "", gender: "", pad: "", samudaay: "",
-        guruName: "", acharya: "", gaachh: "", gadipati: "", isAlive: "",
-        viharLocation: "", samadhiDate: "", samadhiPlace: "",
+        sadhu_sadhvi_name: "",
+        dob: "",
+        gender: "",
+        pad: "",
+        samudaay: "",
+        guruName: "",
+        acharya: "",
+        gaachh: "",
+        gadipati: "",
+        isAlive: "",
+        viharLocation: "",
+        samadhiDate: "",
+        samadhiPlace: "",
       });
       setPhoto(null);
       setErrors({});
@@ -180,17 +184,15 @@ const DiksharthiDetailsAdd = () => {
           },
         });
       }, 5000);
-
     } catch (error) {
       console.error(error);
       alert("Something went wrong");
     }
   };
-  
+
   return (
     <div className="min-h-full bg-gray-50 flex p-6 justify-center">
       <div className="w-full max-w-6xl bg-white p-6 shadow-sm">
-
         {/* Header */}
         <div className="flex items-center gap-2 mb-8 text-slate-800">
           <FileText size={20} />
@@ -202,7 +204,8 @@ const DiksharthiDetailsAdd = () => {
           {/* Name */}
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">
-              Name of P. Pujya. Sadhu/ Sadhvi Ji<span className="text-red-500">*</span>
+              Name of P. Pujya. Sadhu/ Sadhvi Ji
+              <span className="text-red-500">*</span>
             </label>
 
             <input
@@ -214,16 +217,15 @@ const DiksharthiDetailsAdd = () => {
             />
 
             {errors.sadhu_sadhvi_name && (
-              <p className="text-red-500 text-xs">
-                {errors.sadhu_sadhvi_name}
-              </p>
+              <p className="text-red-500 text-xs">{errors.sadhu_sadhvi_name}</p>
             )}
           </div>
 
           {/* DOB */}
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">
-              Date of Birth of Maharaj saheb<span className="text-red-500">*</span>
+              Date of Birth of Maharaj saheb
+              <span className="text-red-500">*</span>
             </label>
 
             <div className="relative">
@@ -236,9 +238,7 @@ const DiksharthiDetailsAdd = () => {
               />
             </div>
 
-            {errors.dob && (
-              <p className="text-red-500 text-xs">{errors.dob}</p>
-            )}
+            {errors.dob && <p className="text-red-500 text-xs">{errors.dob}</p>}
           </div>
 
           {/* Gender */}
@@ -255,7 +255,6 @@ const DiksharthiDetailsAdd = () => {
                   value="Sadhu"
                   onChange={handleChange}
                   className="w-4 h-4 text-blue-600"
-
                 />
                 Sadhu
               </label>
@@ -267,7 +266,6 @@ const DiksharthiDetailsAdd = () => {
                   value="Sadhvi"
                   onChange={handleChange}
                   className="w-4 h-4 text-blue-600"
-
                 />
                 Sadhvi
               </label>
@@ -305,9 +303,7 @@ const DiksharthiDetailsAdd = () => {
               />
             </div>
 
-            {errors.pad && (
-              <p className="text-red-500 text-xs">{errors.pad}</p>
-            )}
+            {errors.pad && <p className="text-red-500 text-xs">{errors.pad}</p>}
           </div>
 
           {/* Samudaay */}
@@ -332,7 +328,8 @@ const DiksharthiDetailsAdd = () => {
           {/* Guru */}
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">
-              Name of respected Guru / Guruni<span className="text-red-500">*</span>
+              Name of respected Guru / Guruni
+              <span className="text-red-500">*</span>
             </label>
 
             <input
@@ -385,7 +382,8 @@ const DiksharthiDetailsAdd = () => {
           {/* Gadipati */}
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">
-              Name of Gachadhipati / Gadipati<span className="text-red-500">*</span>
+              Name of Gachadhipati / Gadipati
+              <span className="text-red-500">*</span>
             </label>
             <input
               name="gadipati"
@@ -452,7 +450,8 @@ const DiksharthiDetailsAdd = () => {
 
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">
-              Photo of P. Pujya. Sadhu/ Sadhvi Ji<span className="text-red-500">*</span>
+              Photo of P. Pujya. Sadhu/ Sadhvi Ji
+              <span className="text-red-500">*</span>
             </label>
 
             <input
@@ -477,7 +476,6 @@ const DiksharthiDetailsAdd = () => {
                 value={formData.samadhiDate}
                 onChange={handleChange}
                 className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
-
               />
 
               {errors.samadhiDate && (
@@ -487,7 +485,8 @@ const DiksharthiDetailsAdd = () => {
 
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">
-                Samadhi Place (City / Sangh / Tirth)<span className="text-red-500">*</span>
+                Samadhi Place (City / Sangh / Tirth)
+                <span className="text-red-500">*</span>
               </label>
 
               <input
@@ -496,13 +495,10 @@ const DiksharthiDetailsAdd = () => {
                 onChange={handleChange}
                 type="text"
                 className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
-
               />
 
               {errors.samadhiPlace && (
-                <p className="text-red-500 text-xs">
-                  {errors.samadhiPlace}
-                </p>
+                <p className="text-red-500 text-xs">{errors.samadhiPlace}</p>
               )}
             </div>
           </div>

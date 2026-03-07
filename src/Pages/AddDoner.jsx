@@ -76,7 +76,7 @@ function AddDonor() {
 
   const handleSubmit = async () => {
     try {
-      const response = await fetch("http://localhost:5000/api/donors/create-donor", {
+      const response = await fetch("http://localhost:5000/api/create-donor", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -169,10 +169,7 @@ function AddDonor() {
           </div>
         </div>
 
-        <form
-          className="space-y-8"
-          onSubmit={(e) => e.preventDefault()}
-        >
+        <form className="space-y-8" onSubmit={(e) => e.preventDefault()}>
           {/* STEP 1: Personal Details */}
           {currentStep === 1 && (
             <>
@@ -189,7 +186,11 @@ function AddDonor() {
                   <select
                     value={formData.personalDetails.salutation}
                     onChange={(e) =>
-                      handleChange("personalDetails", "salutation", e.target.value)
+                      handleChange(
+                        "personalDetails",
+                        "salutation",
+                        e.target.value,
+                      )
                     }
                     className="w-full p-2 border border-slate-300 rounded-md outline-none focus:ring-2 focus:ring-blue-100"
                   >
@@ -205,6 +206,7 @@ function AddDonor() {
                   <input
                     type="text"
                     value={formData.personalDetails.name}
+                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                     onChange={(e) =>
                       handleChange("personalDetails", "name", e.target.value)
                     }
@@ -228,7 +230,11 @@ function AddDonor() {
                     type="date"
                     value={formData.personalDetails.dateOfBirth}
                     onChange={(e) =>
-                      handleChange("personalDetails", "dateOfBirth", e.target.value)
+                      handleChange(
+                        "personalDetails",
+                        "dateOfBirth",
+                        e.target.value,
+                      )
                     }
                     className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                   />
@@ -241,7 +247,11 @@ function AddDonor() {
                     type="date"
                     value={formData.personalDetails.anniversary}
                     onChange={(e) =>
-                      handleChange("personalDetails", "anniversary", e.target.value)
+                      handleChange(
+                        "personalDetails",
+                        "anniversary",
+                        e.target.value,
+                      )
                     }
                     className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                   />
@@ -254,7 +264,11 @@ function AddDonor() {
                     type="text"
                     value={formData.personalDetails.mobileNumber}
                     onChange={(e) =>
-                      handleChange("personalDetails", "mobileNumber", e.target.value)
+                      handleChange(
+                        "personalDetails",
+                        "mobileNumber",
+                        e.target.value,
+                      )
                     }
                     className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                   />
@@ -267,7 +281,11 @@ function AddDonor() {
                     type="text"
                     value={formData.personalDetails.altMobileNumber}
                     onChange={(e) =>
-                      handleChange("personalDetails", "altMobileNumber", e.target.value)
+                      handleChange(
+                        "personalDetails",
+                        "altMobileNumber",
+                        e.target.value,
+                      )
                     }
                     className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                   />
@@ -293,7 +311,11 @@ function AddDonor() {
                     type="text"
                     value={formData.personalDetails.bloodGroup}
                     onChange={(e) =>
-                      handleChange("personalDetails", "bloodGroup", e.target.value)
+                      handleChange(
+                        "personalDetails",
+                        "bloodGroup",
+                        e.target.value,
+                      )
                     }
                     className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                   />
@@ -306,7 +328,11 @@ function AddDonor() {
                     type="text"
                     value={formData.personalDetails.motherTongue}
                     onChange={(e) =>
-                      handleChange("personalDetails", "motherTongue", e.target.value)
+                      handleChange(
+                        "personalDetails",
+                        "motherTongue",
+                        e.target.value,
+                      )
                     }
                     className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                   />
@@ -319,7 +345,11 @@ function AddDonor() {
                     type="text"
                     value={formData.personalDetails.nativePlace}
                     onChange={(e) =>
-                      handleChange("personalDetails", "nativePlace", e.target.value)
+                      handleChange(
+                        "personalDetails",
+                        "nativePlace",
+                        e.target.value,
+                      )
                     }
                     className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                   />
@@ -371,7 +401,11 @@ function AddDonor() {
                       type="text"
                       value={formData.personalDetails.contactPersonName}
                       onChange={(e) =>
-                        handleChange("personalDetails", "contactPersonName", e.target.value)
+                        handleChange(
+                          "personalDetails",
+                          "contactPersonName",
+                          e.target.value,
+                        )
                       }
                       className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                     />
@@ -385,7 +419,11 @@ function AddDonor() {
                       type="text"
                       value={formData.personalDetails.contactPersonMobile}
                       onChange={(e) =>
-                        handleChange("personalDetails", "contactPersonMobile", e.target.value)
+                        handleChange(
+                          "personalDetails",
+                          "contactPersonMobile",
+                          e.target.value,
+                        )
                       }
                       className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                     />
@@ -406,9 +444,14 @@ function AddDonor() {
                     <textarea
                       value={formData.personalDetails.address1}
                       onChange={(e) =>
-                        handleChange("personalDetails", "address1", e.target.value)
+                        handleChange(
+                          "personalDetails",
+                          "address1",
+                          e.target.value,
+                        )
                       }
-                      className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none" />
+                      className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
+                    />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -431,7 +474,11 @@ function AddDonor() {
                       type="text"
                       value={formData.personalDetails.pincode}
                       onChange={(e) =>
-                        handleChange("personalDetails", "pincode", e.target.value)
+                        handleChange(
+                          "personalDetails",
+                          "pincode",
+                          e.target.value,
+                        )
                       }
                       className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                     />
@@ -444,7 +491,11 @@ function AddDonor() {
                       type="text"
                       value={formData.personalDetails.contactCode}
                       onChange={(e) =>
-                        handleChange("personalDetails", "contactCode", e.target.value)
+                        handleChange(
+                          "personalDetails",
+                          "contactCode",
+                          e.target.value,
+                        )
                       }
                       className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                     />
@@ -457,7 +508,11 @@ function AddDonor() {
                       type="text"
                       value={formData.personalDetails.contactNumber}
                       onChange={(e) =>
-                        handleChange("personalDetails", "contactNumber", e.target.value)
+                        handleChange(
+                          "personalDetails",
+                          "contactNumber",
+                          e.target.value,
+                        )
                       }
                       className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                     />
@@ -489,7 +544,11 @@ function AddDonor() {
                       type="text"
                       value={formData.personalDetails.preferredAddress}
                       onChange={(e) =>
-                        handleChange("personalDetails", "preferredAddress", e.target.value)
+                        handleChange(
+                          "personalDetails",
+                          "preferredAddress",
+                          e.target.value,
+                        )
                       }
                       className="w-[535px] p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                     />
@@ -512,7 +571,11 @@ function AddDonor() {
                       type="text"
                       value={formData.personalDetails.communicationAddress1}
                       onChange={(e) =>
-                        handleChange("personalDetails", "communicationAddress1", e.target.value)
+                        handleChange(
+                          "personalDetails",
+                          "communicationAddress1",
+                          e.target.value,
+                        )
                       }
                       className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                     />
@@ -526,7 +589,11 @@ function AddDonor() {
                       type="text"
                       value={formData.personalDetails.communicationAddress2}
                       onChange={(e) =>
-                        handleChange("personalDetails", "communicationAddress2", e.target.value)
+                        handleChange(
+                          "personalDetails",
+                          "communicationAddress2",
+                          e.target.value,
+                        )
                       }
                       className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                     />
@@ -548,7 +615,11 @@ function AddDonor() {
                       type="text"
                       value={formData.personalDetails.companyName}
                       onChange={(e) =>
-                        handleChange("personalDetails", "companyName", e.target.value)
+                        handleChange(
+                          "personalDetails",
+                          "companyName",
+                          e.target.value,
+                        )
                       }
                       className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                     />
@@ -561,7 +632,11 @@ function AddDonor() {
                       type="text"
                       value={formData.personalDetails.companyNumber}
                       onChange={(e) =>
-                        handleChange("personalDetails", "companyNumber", e.target.value)
+                        handleChange(
+                          "personalDetails",
+                          "companyNumber",
+                          e.target.value,
+                        )
                       }
                       className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                     />
@@ -573,7 +648,11 @@ function AddDonor() {
                     <textarea
                       value={formData.personalDetails.companyAddress}
                       onChange={(e) =>
-                        handleChange("personalDetails", "companyAddress", e.target.value)
+                        handleChange(
+                          "personalDetails",
+                          "companyAddress",
+                          e.target.value,
+                        )
                       }
                       className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                     />
@@ -600,7 +679,11 @@ function AddDonor() {
                       type="text"
                       value={formData.personalDetails.fatherName}
                       onChange={(e) =>
-                        handleChange("personalDetails", "fatherName", e.target.value)
+                        handleChange(
+                          "personalDetails",
+                          "fatherName",
+                          e.target.value,
+                        )
                       }
                       className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                     />
@@ -615,7 +698,11 @@ function AddDonor() {
                       type="text"
                       value={formData.personalDetails.spouseName}
                       onChange={(e) =>
-                        handleChange("personalDetails", "spouseName", e.target.value)
+                        handleChange(
+                          "personalDetails",
+                          "spouseName",
+                          e.target.value,
+                        )
                       }
                       className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                     />
@@ -629,7 +716,11 @@ function AddDonor() {
                       type="date"
                       value={formData.personalDetails.spouseDob}
                       onChange={(e) =>
-                        handleChange("personalDetails", "spouseDob", e.target.value)
+                        handleChange(
+                          "personalDetails",
+                          "spouseDob",
+                          e.target.value,
+                        )
                       }
                       className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                     />
@@ -642,7 +733,11 @@ function AddDonor() {
                       type="text"
                       value={formData.personalDetails.spouseBloodGroup}
                       onChange={(e) =>
-                        handleChange("personalDetails", "spouseBloodGroup", e.target.value)
+                        handleChange(
+                          "personalDetails",
+                          "spouseBloodGroup",
+                          e.target.value,
+                        )
                       }
                       className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                     />
@@ -730,7 +825,11 @@ function AddDonor() {
                               type="text"
                               value={child.name}
                               onChange={(e) =>
-                                handleChildChange(child.id, "name", e.target.value)
+                                handleChildChange(
+                                  child.id,
+                                  "name",
+                                  e.target.value,
+                                )
                               }
                               className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                             />
@@ -770,7 +869,11 @@ function AddDonor() {
                               type="date"
                               value={child.dob}
                               onChange={(e) =>
-                                handleChildChange(child.id, "dob", e.target.value)
+                                handleChildChange(
+                                  child.id,
+                                  "dob",
+                                  e.target.value,
+                                )
                               }
                               className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                             />
@@ -783,7 +886,11 @@ function AddDonor() {
                               type="text"
                               value={child.bloodGroup}
                               onChange={(e) =>
-                                handleChildChange(child.id, "bloodGroup", e.target.value)
+                                handleChildChange(
+                                  child.id,
+                                  "bloodGroup",
+                                  e.target.value,
+                                )
                               }
                               className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                             />
@@ -796,7 +903,11 @@ function AddDonor() {
                             <select
                               value={child.maritalStatus}
                               onChange={(e) =>
-                                handleChildChange(child.id, "maritalStatus", e.target.value)
+                                handleChildChange(
+                                  child.id,
+                                  "maritalStatus",
+                                  e.target.value,
+                                )
                               }
                               className="flex-1 p-2 border border-slate-300 rounded-md outline-none focus:ring-2 focus:ring-blue-100 w-[200px]"
                             >
@@ -831,7 +942,11 @@ function AddDonor() {
                     type="text"
                     value={formData.nomineeDetails.nomineeName}
                     onChange={(e) =>
-                      handleChange("nomineeDetails", "nomineeName", e.target.value)
+                      handleChange(
+                        "nomineeDetails",
+                        "nomineeName",
+                        e.target.value,
+                      )
                     }
                     className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                   />
@@ -844,7 +959,11 @@ function AddDonor() {
                     type="text"
                     value={formData.nomineeDetails.nomineeContact}
                     onChange={(e) =>
-                      handleChange("nomineeDetails", "nomineeContact", e.target.value)
+                      handleChange(
+                        "nomineeDetails",
+                        "nomineeContact",
+                        e.target.value,
+                      )
                     }
                     className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                   />
@@ -856,9 +975,14 @@ function AddDonor() {
                   <textarea
                     value={formData.nomineeDetails.nomineeAddress}
                     onChange={(e) =>
-                      handleChange("nomineeDetails", "nomineeAddress", e.target.value)
+                      handleChange(
+                        "nomineeDetails",
+                        "nomineeAddress",
+                        e.target.value,
+                      )
                     }
-                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none h-[40px]" />
+                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none h-[40px]"
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -868,9 +992,12 @@ function AddDonor() {
                     type="text"
                     value={formData.nomineeDetails.nomineecity}
                     onChange={(e) =>
-                      handleChange("nomineeDetails", "nomineecity", e.target.value)
+                      handleChange(
+                        "nomineeDetails",
+                        "nomineecity",
+                        e.target.value,
+                      )
                     }
-
                     className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                   />
                 </div>
@@ -882,8 +1009,12 @@ function AddDonor() {
                     type="text"
                     value={formData.nomineeDetails.nomineecity}
                     onChange={(e) =>
-                      handleChange("nomineeDetails", "nomineecity", e.target.value)
-                    }                
+                      handleChange(
+                        "nomineeDetails",
+                        "nomineecity",
+                        e.target.value,
+                      )
+                    }
                     className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                   />
                 </div>
@@ -895,7 +1026,11 @@ function AddDonor() {
                     type="text"
                     value={formData.nomineeDetails.nomineerelation}
                     onChange={(e) =>
-                      handleChange("nomineeDetails", "nomineerelation", e.target.value)
+                      handleChange(
+                        "nomineeDetails",
+                        "nomineerelation",
+                        e.target.value,
+                      )
                     }
                     className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                   />
@@ -908,7 +1043,11 @@ function AddDonor() {
                     type="text"
                     value={formData.nomineeDetails.nomineecompanyName}
                     onChange={(e) =>
-                      handleChange("nomineeDetails", "nomineecompanyName", e.target.value)
+                      handleChange(
+                        "nomineeDetails",
+                        "nomineecompanyName",
+                        e.target.value,
+                      )
                     }
                     className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                   />
@@ -920,9 +1059,14 @@ function AddDonor() {
                   <textarea
                     value={formData.nomineeDetails.nomineeresidentialAddress}
                     onChange={(e) =>
-                      handleChange("nomineeDetails", "nomineeresidentialAddress", e.target.value)
+                      handleChange(
+                        "nomineeDetails",
+                        "nomineeresidentialAddress",
+                        e.target.value,
+                      )
                     }
-                    className="w-full p-2 border h-[40px] border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none" />
+                    className="w-full p-2 border h-[40px] border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -931,9 +1075,14 @@ function AddDonor() {
                   <textarea
                     value={formData.nomineeDetails.nomineeofficeAddress}
                     onChange={(e) =>
-                      handleChange("nomineeDetails", "nomineeofficeAddress", e.target.value)
+                      handleChange(
+                        "nomineeDetails",
+                        "nomineeofficeAddress",
+                        e.target.value,
+                      )
                     }
-                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none h-[40px]" />
+                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none h-[40px]"
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -943,7 +1092,11 @@ function AddDonor() {
                     type="text"
                     value={formData.nomineeDetails.nomineeofficeContact}
                     onChange={(e) =>
-                      handleChange("nomineeDetails", "nomineeofficeContact", e.target.value)
+                      handleChange(
+                        "nomineeDetails",
+                        "nomineeofficeContact",
+                        e.target.value,
+                      )
                     }
                     className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                   />
@@ -1015,7 +1168,11 @@ function AddDonor() {
                                 type="text"
                                 value={formData.paymentDetails.installments}
                                 onChange={(e) =>
-                                  handleChange("paymentDetails", "installments", e.target.value)
+                                  handleChange(
+                                    "paymentDetails",
+                                    "installments",
+                                    e.target.value,
+                                  )
                                 }
                                 placeholder="Enter amount"
                                 className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
@@ -1030,7 +1187,11 @@ function AddDonor() {
                                 type="date"
                                 value={formData.paymentDetails.installments}
                                 onChange={(e) =>
-                                  handleChange("paymentDetails", "installments", e.target.value)
+                                  handleChange(
+                                    "paymentDetails",
+                                    "installments",
+                                    e.target.value,
+                                  )
                                 }
                                 className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                               />
@@ -1044,7 +1205,11 @@ function AddDonor() {
                                 type="date"
                                 value={formData.paymentDetails.installments}
                                 onChange={(e) =>
-                                  handleChange("paymentDetails", "installments", e.target.value)
+                                  handleChange(
+                                    "paymentDetails",
+                                    "installments",
+                                    e.target.value,
+                                  )
                                 }
                                 className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                               />
@@ -1073,7 +1238,11 @@ function AddDonor() {
                                 type="text"
                                 value={formData.paymentDetails.installments}
                                 onChange={(e) =>
-                                  handleChange("paymentDetails", "installments", e.target.value)
+                                  handleChange(
+                                    "paymentDetails",
+                                    "installments",
+                                    e.target.value,
+                                  )
                                 }
                                 placeholder="Enter UTR"
                                 className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
@@ -1086,9 +1255,14 @@ function AddDonor() {
                               <select
                                 value={formData.paymentDetails.installments}
                                 onChange={(e) =>
-                                  handleChange("paymentDetails", "installments", e.target.value)
+                                  handleChange(
+                                    "paymentDetails",
+                                    "installments",
+                                    e.target.value,
+                                  )
                                 }
-                                className="w-full p-2 border border-slate-300 rounded-md outline-none focus:ring-2 focus:ring-blue-100">
+                                className="w-full p-2 border border-slate-300 rounded-md outline-none focus:ring-2 focus:ring-blue-100"
+                              >
                                 <option value="">Select</option>
                                 <option value="Pending">Pending</option>
                                 <option value="Completed">Completed</option>
@@ -1136,7 +1310,7 @@ function AddDonor() {
               </button>
             ) : (
               <button
-                type="submit"
+                onClick={handleSubmit}
                 className="flex-1 md:flex-none bg-green-600 hover:bg-green-700 text-white px-16 py-2.5 rounded-md font-bold uppercase shadow-sm transition-all"
               >
                 Submit
