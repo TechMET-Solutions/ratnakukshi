@@ -1,9 +1,10 @@
 import { Plus, RotateCcw, Search } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { API } from "../api/BaseURL";
 
 const DiksharthiListing = () => {
+const navigate = useNavigate();
 
 const [diksharthiList, setDiksharthiList] = useState([]);
 
@@ -80,36 +81,50 @@ const [diksharthiList, setDiksharthiList] = useState([]);
       </td>
     </tr>
   ) : (
-    diksharthiList.map((item) => (
-      <tr key={item.id} className="border-b border-gray-100">
+    diksharthiList.map((diksharthi) => (
+      <tr key={diksharthi.id} className="border-b border-gray-100">
         {/* Photo */}
         <td className="px-6 py-3">
           <img
-            src={`${API}/uploads/${item.photo}`}
+            src={`${API}/uploads/${diksharthi.photo}`}
             alt=""
             className="w-10 h-10 rounded-full object-cover"
           />
         </td>
 
         {/* ID */}
-        <td className="px-6 py-3">{item.diksharthi_code}</td>
+        <td className="px-6 py-3">{diksharthi.diksharthi_code}</td>
 
         {/* Name */}
-        <td className="px-6 py-3">{item.sadhu_sadhvi_name}</td>
+        <td className="px-6 py-3">{diksharthi.sadhu_sadhvi_name}</td>
 
         {/* Pad */}
-        <td className="px-6 py-3">{item.pad}</td>
+        <td className="px-6 py-3">{diksharthi.pad}</td>
 
         {/* Sect */}
-        <td className="px-6 py-3">{item.samudaay}</td>
+        <td className="px-6 py-3">{diksharthi.samudaay}</td>
 
         {/* Alive */}
-        <td className="px-6 py-3">{item.is_alive}</td>
+        <td className="px-6 py-3">{diksharthi.is_alive}</td>
 
         {/* Actions */}
         <td className="px-6 py-3 flex gap-3">
-          <button className="rounded-lg bg-blue-600 text-sm px-1 py-1 text-white">View</button>
-          <button className="rounded-lg bg-yellow-500 text-sm px-1 py-1 text-white">Add Family Details</button>
+          {/* <button className="rounded-lg bg-blue-600 text-sm px-1 py-1 text-white">View</button> */}
+          <button
+            className="rounded-lg bg-yellow-500 text-sm px-2 py-1 text-white"
+            onClick={() =>
+                  navigate("/family-details", {
+                state: {
+                  id: diksharthi.id,
+                  diksharthi_code: diksharthi.diksharthi_code,
+                  sadhu_sadhvi_name: diksharthi.sadhu_sadhvi_name,
+                  gender: diksharthi.gender,
+                },
+              })
+            }
+          >
+            Add Family Details
+          </button>
         </td>
       </tr>
     ))

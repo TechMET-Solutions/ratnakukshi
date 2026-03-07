@@ -143,56 +143,6 @@ function DonorList() {
           <tbody className="divide-y divide-gray-50">
             {filteredDonors.length > 0 ? (
               filteredDonors.map((donor, index) => (
-                // <tr
-                //   key={donor.id}
-                //   className="hover:bg-gray-50/50 transition-colors"
-                // >
-                //   <td className="px-6 py-4 text-sm text-gray-600">
-                //     {index + 1}
-                //   </td>
-                //   <td className="px-6 py-4 text-sm font-medium text-gray-800">
-                //     {donor.name}
-                //   </td>
-                //   <td className="px-6 py-4 text-sm text-gray-600">
-                //     {donor.contact}
-                //   </td>
-                //   <td className="px-6 py-4 text-sm text-gray-600">
-                //     {donor.email}
-                //   </td>
-                //   <td className="px-6 py-4 text-sm font-semibold text-gray-700">
-                //     ₹{donor.totalDonation.toLocaleString()}
-                //   </td>
-                //   <td className="px-6 py-4 text-sm">
-                //     <span
-                //       className={`px-2 py-1 rounded-full text-xs font-medium ${donor.dueAmount > 0 ? "bg-red-50 text-red-600" : "bg-green-50 text-green-600"}`}
-                //     >
-                //       ₹{donor.dueAmount.toLocaleString()}
-                //     </span>
-                //   </td>
-                //   <td className="px-6 py-4 text-sm">
-                //     <div className="flex gap-3 text-gray-400">
-                //       <button className="hover:text-blue-600 transition-colors">
-                //         <Edit size={18} />
-                //       </button>
-                //       <button
-                //         onClick={() => navigate("/donor/payment-history")}
-                //         className="hover:text-green-600 transition-colors"
-                //       >
-                //         <CreditCard size={18} />
-                //       </button>
-                //       <button className="hover:text-red-600 transition-colors">
-                //         <Award size={18} />
-                //       </button>
-                //     </div>
-                //   </td>
-                //   <td className="px-6 py-4 text-sm text-center">
-                //     <button className="text-yellow-600 hover:text-yellow-700 inline-flex items-center gap-1 font-medium">
-                //       <FileText size={16} />
-                //       View
-                //     </button>
-                //   </td>
-                // </tr>
-
                 <tr key={donor.id} className="hover:bg-gray-50/50 transition-colors">
                   <td className="px-6 py-4 text-sm text-gray-600">
                     {index + 1}
@@ -203,7 +153,7 @@ function DonorList() {
                   </td>
 
                   <td className="px-6 py-4 text-sm text-gray-600">
-                    {donor.personalDetails?.mobile}
+                    {donor.personalDetails?.mobileNumber}
                   </td>
 
                   <td className="px-6 py-4 text-sm text-gray-600">
@@ -226,11 +176,25 @@ function DonorList() {
                   </td>
                   <td className="px-6 py-4 text-sm">
                  <div className="flex gap-3 text-gray-400">
-                   <button className="hover:text-blue-600 transition-colors">
+                   <button
+                     onClick={() =>
+                       navigate("/donor/add", {
+                         state: { id: donor.id },
+                       })
+                     }
+                     className="hover:text-blue-600 transition-colors"
+                   >
                      <Edit size={18} />
                    </button>
                    <button
-                     onClick={() => navigate("/donor/payment-history")}
+                     onClick={() =>
+                       navigate("/donor/payment-history", {
+                         state: {
+                           id: donor.id,
+                           donorName: donor.personalDetails?.name || "",
+                         },
+                       })
+                     }
                      className="hover:text-green-600 transition-colors"
                    >
                      <CreditCard size={18} />

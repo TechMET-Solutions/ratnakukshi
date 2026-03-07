@@ -1,8 +1,23 @@
 import { ChevronLeft } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { API } from "../api/BaseURL";
 
+const parseMaybeJson = (value) => {
+  if (typeof value !== "string") return value;
+  try {
+    return JSON.parse(value);
+  } catch {
+    return value;
+  }
+};
+
+const asObject = (value) => (value && typeof value === "object" ? value : {});
+
 function AddDonor() {
+  const location = useLocation();
+  const editDonorId = location?.state?.id;
+  const isEditMode = Boolean(editDonorId);
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
     personalDetails: {
@@ -77,20 +92,45 @@ function AddDonor() {
 
   const handleSubmit = async () => {
     try {
-      const response = await fetch(`${API}/api/create-donor`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      const payload = {
+        ...formData,
+        personalDetails: {
+          ...formData.personalDetails,
         },
-        body: JSON.stringify({
-          ...formData,
-          children,
-        }),
-      });
+        familyDetails: {
+          ...formData.familyDetails,
+        },
+      };
+
+      delete payload.personalDetails.gender;
+      delete payload.personalDetails.dob;
+      delete payload.personalDetails.mobile;
+      delete payload.personalDetails.altMobile;
+      delete payload.familyDetails.spouseDob;
+
+      if (isEditMode) {
+        payload.id = editDonorId;
+        payload.donor_id = editDonorId;
+      }
+
+      const response = await fetch(
+        isEditMode
+          ? "https://karyakarta.ratnakukshi.org/api/update-donor"
+          : `${API}/api/create-donor`,
+        {
+          method: isEditMode ? "PUT" : "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        },
+      );
 
       const data = await response.json();
 
-      alert("Donor Created Successfully");
+      alert(
+        isEditMode ? "Donor Updated Successfully" : "Donor Created Successfully",
+      );
 
       console.log(data);
     } catch (error) {
@@ -98,28 +138,130 @@ function AddDonor() {
     }
   };
 
+  const [numInstallments, setNumInstallments] = useState("");
+  const [photo, setPhoto] = useState(null);
+
   useEffect(() => {
     if (numInstallments) {
       const count = parseInt(numInstallments);
-
-      const newInstallments = Array.from({ length: count }, () => ({
-        amount: "",
-        dueDate: "",
-        fundDate: "",
-        paymentMode: "",
-        utrNo: "",
-        status: "",
-      }));
 
       setFormData((prev) => ({
         ...prev,
         paymentDetails: {
           ...prev.paymentDetails,
-          installments: newInstallments,
+          installments: Array.from({ length: count }, (_, index) => {
+            const existing = prev.paymentDetails?.installments?.[index];
+            return (
+              existing || {
+                amount: "",
+                dueDate: "",
+                fundDate: "",
+                paymentMode: "",
+                utrNo: "",
+                status: "",
+              }
+            );
+          }),
         },
       }));
     }
   }, [numInstallments]);
+
+  useEffect(() => {
+    if (!editDonorId) return;
+
+    const fetchDonorById = async () => {
+      try {
+        const response = await fetch(`${API}/api/donor-list`);
+        const data = await response.json();
+        const donors = Array.isArray(data?.data) ? data.data : [];
+        const donor = donors.find(
+          (item) => String(item?.id) === String(editDonorId),
+        );
+
+        if (!donor) return;
+
+        const personalDetails = asObject(
+          parseMaybeJson(donor?.personalDetails ?? donor?.personal_details ?? {}),
+        );
+        const contactPerson = asObject(
+          parseMaybeJson(donor?.contactPerson ?? donor?.contact_person ?? {}),
+        );
+        const residentialAddress = asObject(
+          parseMaybeJson(
+            donor?.residentialAddress ?? donor?.residential_address ?? {},
+          ),
+        );
+        const communicationAddress = asObject(
+          parseMaybeJson(
+            donor?.communicationAddress ?? donor?.communication_address ?? {},
+          ),
+        );
+        const companyDetails = asObject(
+          parseMaybeJson(donor?.companyDetails ?? donor?.company_details ?? {}),
+        );
+        const familyDetails = asObject(
+          parseMaybeJson(donor?.familyDetails ?? donor?.family_details ?? {}),
+        );
+        const nomineeDetails = asObject(
+          parseMaybeJson(donor?.nomineeDetails ?? donor?.nominee_details ?? {}),
+        );
+        const paymentDetails = asObject(
+          parseMaybeJson(donor?.paymentDetails ?? donor?.payment_details ?? {}),
+        );
+        const installments = Array.isArray(paymentDetails?.installments)
+          ? paymentDetails.installments
+          : [];
+
+        setFormData((prev) => ({
+          ...prev,
+          personalDetails: {
+            ...prev.personalDetails,
+            ...personalDetails,
+          },
+          contactPerson: {
+            ...prev.contactPerson,
+            ...contactPerson,
+          },
+          residentialAddress: {
+            ...prev.residentialAddress,
+            ...residentialAddress,
+          },
+          communicationAddress: {
+            ...prev.communicationAddress,
+            ...communicationAddress,
+          },
+          companyDetails: {
+            ...prev.companyDetails,
+            ...companyDetails,
+          },
+          familyDetails: {
+            ...prev.familyDetails,
+            ...familyDetails,
+            children: Array.isArray(familyDetails?.children)
+              ? familyDetails.children
+              : [],
+          },
+          nomineeDetails: {
+            ...prev.nomineeDetails,
+            ...nomineeDetails,
+          },
+          paymentDetails: {
+            ...prev.paymentDetails,
+            ...paymentDetails,
+            installments,
+          },
+        }));
+
+        setNumInstallments(installments.length ? String(installments.length) : "");
+        setPhoto(personalDetails?.photo ?? null);
+      } catch (error) {
+        console.log("Error fetching donor details:", error);
+      }
+    };
+
+    fetchDonorById();
+  }, [editDonorId]);
 
   const handleInstallmentChange = (index, field, value) => {
     setFormData((prev) => {
@@ -166,10 +308,6 @@ function AddDonor() {
     "Nominee Details",
     "Payment Details",
   ];
-  const [hasChildren, setHasChildren] = useState("");
-  const [children, setChildren] = useState([]);
-  const [numInstallments, setNumInstallments] = useState("");
-  const [photo, setPhoto] = useState(null);
   const handleNext = (e) => {
     e.preventDefault();
 
@@ -539,9 +677,9 @@ function AddDonor() {
                     </label>
                     <input
                       type="text"
-                      value={formData.residentialAddress.pincode}
+                      value={formData.residentialAddress.city}
                       onChange={(e) =>
-                        handleChange("residentialAddress", "pincode", e.target.value)
+                        handleChange("residentialAddress", "city", e.target.value)
                       }
                       className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                     />
@@ -817,7 +955,7 @@ function AddDonor() {
               </div>
 
               {/* SECTION: Children Details - Conditional */}
-              {hasChildren === "Yes" && (
+              {formData.familyDetails.hasChildren === "Yes" && (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <h3 className="text-red-500 font-semibold text-lg">
@@ -832,7 +970,7 @@ function AddDonor() {
                     </button>
                   </div>
 
-                  {children.length === 0 ? (
+                  {formData.familyDetails.children.length === 0 ? (
                     <p className="text-slate-500 text-sm italic">
                       Click "Add Child" button to add children details
                     </p>
@@ -846,7 +984,7 @@ function AddDonor() {
                           <h4 className="text-slate-700 font-semibold">
                             Child {index + 1}
                           </h4>
-                          {children.length > 1 && (
+                          {formData.familyDetails.children.length > 1 && (
                             <button
                               type="button"
                               onClick={() => handleRemoveChild(child.id)}
@@ -1346,7 +1484,7 @@ function AddDonor() {
                 onClick={handleSubmit}
                 className="flex-1 md:flex-none bg-green-600 hover:bg-green-700 text-white px-16 py-2.5 rounded-md font-bold uppercase shadow-sm transition-all"
               >
-                Submit
+                {isEditMode ? "Update" : "Submit"}
               </button>
             )}
           </div>

@@ -100,7 +100,7 @@ const Sidebar = () => {
       <nav className="flex-1 mt-4">
         <NavItem to="/" icon={<LayoutDashboard size={18} />} label="Dashboard" />
         <NavItem to="/diksharthi-details" icon={<FileText size={18} />} label="Diksharthi Details" />
-        <NavItem to="/family-details" icon={<Users size={18} />} label="Family details" />
+        {/* <NavItem to="/family-details" icon={<Users size={18} />} label="Family details" /> */}
         <NavItem to="/assistance" icon={<Handshake size={18} />} label="Assistance" />
         <NavItem to="/religious-practices" icon={<Home size={18} />} label="Family religious Practices" />
         <NavItem to="/donor" icon={<FileText size={18} />} label="Donor List" />

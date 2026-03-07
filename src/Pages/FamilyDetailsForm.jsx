@@ -1,8 +1,37 @@
 import axios from "axios";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { API } from "../api/BaseURL";
+
+const INITIAL_FORM_DATA = {
+  permanentAddress: "",
+  currentAddress: "",
+  village: "",
+  taluka: "",
+  district: "",
+  pinCode: "",
+  houseDetails: "",
+  typeOfHouse: "",
+  maintenanceCost: "",
+  lightBillCost: "",
+  rentCost: "",
+  relations: [],
+  mediclaim: null,
+  Family_mediclaim_amount: null,
+  ngoAssistance: null,
+};
+
+const parseMaybeJson = (value) => {
+  if (typeof value !== "string") return value;
+  try {
+    return JSON.parse(value);
+  } catch {
+    return value;
+  }
+};
+
+const asObject = (value) => (value && typeof value === "object" ? value : {});
 
 const FamilyDetailsForm = () => {
   const location = useLocation();
@@ -17,23 +46,7 @@ const FamilyDetailsForm = () => {
   console.log("Name:", name);
   console.log("Gender:", gender);
 
-  const [formData, setFormData] = useState({
-    permanentAddress: "",
-    currentAddress: "",
-    village: "",
-    taluka: "",
-    district: "",
-    pinCode: "",
-    houseDetails: "",
-    typeOfHouse: "",
-    maintenanceCost: "",
-    lightBillCost: "",
-    rentCost: "",
-    relations: [],
-    mediclaim: null,
-    Family_mediclaim_amount: null,
-    ngoAssistance: null,
-  });
+  const [formData, setFormData] = useState(INITIAL_FORM_DATA);
 
   console.log(formData, "formData");
   const [relationDetails, setRelationDetails] = useState({});
@@ -218,24 +231,115 @@ const FamilyDetailsForm = () => {
   const [assistanceData, setAssistanceData] = useState({});
 
   console.log(assistanceData, "assistanceData");
+
+  useEffect(() => {
+    if (!id) return;
+
+    const fetchFamilyDetailsById = async () => {
+      try {
+        const res = await axios.get(
+          `https://karyakarta.ratnakukshi.org/api/family-details/${id}`,
+        );
+
+        const payload = res?.data?.data;
+        const rows = Array.isArray(payload)
+          ? payload
+          : payload
+            ? [payload]
+            : [];
+        const matchedFamily =
+          rows.find((row) => String(row?.diksharthi_id) === String(id)) ||
+          rows[0];
+
+        if (!matchedFamily) return;
+
+        const fetchedRelationDetails = asObject(
+          parseMaybeJson(
+          matchedFamily?.relationDetails ?? matchedFamily?.relation_details ?? {},
+          ),
+        );
+        const fetchedAdditionalRelations = asObject(parseMaybeJson(
+          matchedFamily?.additionalRelations ??
+            matchedFamily?.additional_relations ??
+            {},
+        ));
+        const fetchedExpandedRelations = asObject(parseMaybeJson(
+          matchedFamily?.expandedRelations ?? matchedFamily?.expanded_relations ?? {},
+        ));
+        const fetchedAssistanceData = asObject(parseMaybeJson(
+          matchedFamily?.assistanceData ?? matchedFamily?.assistance_data ?? {},
+        ));
+        const fetchedHeadOfFamily =
+          matchedFamily?.headOfFamily ?? matchedFamily?.head_of_family ?? null;
+
+        const nestedFormData = parseMaybeJson(
+          matchedFamily?.formData ?? matchedFamily?.form_data,
+        );
+        const fallbackRelations = Object.keys(fetchedRelationDetails);
+        const normalizedFormData =
+          nestedFormData && typeof nestedFormData === "object"
+            ? nestedFormData
+            : {
+                permanentAddress:
+                  matchedFamily?.permanentAddress ??
+                  matchedFamily?.permanent_address ??
+                  "",
+                currentAddress:
+                  matchedFamily?.currentAddress ??
+                  matchedFamily?.current_address ??
+                  "",
+                village: matchedFamily?.village ?? "",
+                taluka: matchedFamily?.taluka ?? "",
+                district: matchedFamily?.district ?? "",
+                pinCode: matchedFamily?.pinCode ?? matchedFamily?.pin_code ?? "",
+                houseDetails:
+                  matchedFamily?.houseDetails ?? matchedFamily?.house_details ?? "",
+                typeOfHouse:
+                  matchedFamily?.typeOfHouse ?? matchedFamily?.type_of_house ?? "",
+                maintenanceCost:
+                  matchedFamily?.maintenanceCost ??
+                  matchedFamily?.maintenance_cost ??
+                  "",
+                lightBillCost:
+                  matchedFamily?.lightBillCost ??
+                  matchedFamily?.light_bill_cost ??
+                  "",
+                rentCost: matchedFamily?.rentCost ?? matchedFamily?.rent_cost ?? "",
+                mediclaim: matchedFamily?.mediclaim ?? null,
+                Family_mediclaim_amount:
+                  matchedFamily?.Family_mediclaim_amount ??
+                  matchedFamily?.family_mediclaim_amount ??
+                  null,
+                ngoAssistance:
+                  matchedFamily?.ngoAssistance ??
+                  matchedFamily?.ngo_assistance ??
+                  null,
+                relations: fallbackRelations,
+              };
+
+        setFormData({
+          ...INITIAL_FORM_DATA,
+          ...normalizedFormData,
+          relations:
+            normalizedFormData?.relations?.length > 0
+              ? normalizedFormData.relations
+              : fallbackRelations,
+        });
+        setRelationDetails(fetchedRelationDetails);
+        setAdditionalRelations(fetchedAdditionalRelations);
+        setExpandedRelations(fetchedExpandedRelations);
+        setAssistanceData(fetchedAssistanceData);
+        setHeadOfFamily(fetchedHeadOfFamily);
+      } catch (error) {
+        console.error("Error fetching family details by id:", error);
+      }
+    };
+
+    fetchFamilyDetailsById();
+  }, [id]);
+
   const resetForm = () => {
-    setFormData({
-      permanentAddress: "",
-      currentAddress: "",
-      village: "",
-      taluka: "",
-      district: "",
-      pinCode: "",
-      houseDetails: "",
-      typeOfHouse: "",
-      maintenanceCost: "",
-      lightBillCost: "",
-      rentCost: "",
-      relations: [],
-      mediclaim: null,
-      Family_mediclaim_amount: null,
-      ngoAssistance: null,
-    });
+    setFormData(INITIAL_FORM_DATA);
 
     setRelationDetails({});
     setExpandedRelations({});
