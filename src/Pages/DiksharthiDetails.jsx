@@ -107,8 +107,9 @@ const [diksharthiList, setDiksharthiList] = useState([]);
         <td className="px-6 py-3">{item.is_alive}</td>
 
         {/* Actions */}
-        <td className="px-6 py-3">
-          <button className="text-blue-600 text-sm">View</button>
+        <td className="px-6 py-3 flex gap-3">
+          <button className="rounded-lg bg-blue-600 text-sm px-1 py-1 text-white">View</button>
+          <button className="rounded-lg bg-yellow-500 text-sm px-1 py-1 text-white">Add Family Details</button>
         </td>
       </tr>
     ))

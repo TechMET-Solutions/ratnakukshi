@@ -98,6 +98,68 @@ function AddDonor() {
     }
   };
 
+  useEffect(() => {
+    if (numInstallments) {
+      const count = parseInt(numInstallments);
+
+      const newInstallments = Array.from({ length: count }, () => ({
+        amount: "",
+        dueDate: "",
+        fundDate: "",
+        paymentMode: "",
+        utrNo: "",
+        status: "",
+      }));
+
+      setFormData((prev) => ({
+        ...prev,
+        paymentDetails: {
+          ...prev.paymentDetails,
+          installments: newInstallments,
+        },
+      }));
+    }
+  }, [numInstallments]);
+
+  const handleInstallmentChange = (index, field, value) => {
+    setFormData((prev) => {
+      const updatedInstallments = [...prev.paymentDetails.installments];
+
+      updatedInstallments[index] = {
+        ...updatedInstallments[index],
+        [field]: value,
+      };
+
+      return {
+        ...prev,
+        paymentDetails: {
+          ...prev.paymentDetails,
+          installments: updatedInstallments,
+        },
+      };
+    });
+  };
+
+  const handleAddChild = () => {
+    setFormData((prev) => ({
+      ...prev,
+      familyDetails: {
+        ...prev.familyDetails,
+        children: [
+          ...prev.familyDetails.children,
+          {
+            id: Date.now(),
+            name: "",
+            relation: "",
+            dob: "",
+            bloodGroup: "",
+            maritalStatus: "",
+          },
+        ],
+      },
+    }));
+  };
+
   const steps = [
     "Personal Details",
     "Family Details",
@@ -124,13 +186,31 @@ function AddDonor() {
     }
   };
 
-  const handleAddChild = () => {
-    setChildren([...children, { id: Date.now() }]);
-  };
 
   const handleRemoveChild = (id) => {
-    setChildren(children.filter((child) => child.id !== id));
+    setFormData((prev) => ({
+      ...prev,
+      familyDetails: {
+        ...prev.familyDetails,
+        children: prev.familyDetails.children.filter(
+          (child) => child.id !== id
+        ),
+      },
+    }));
   };
+
+  const handleChildChange = (id, field, value) => {
+  setFormData((prev) => ({
+    ...prev,
+    familyDetails: {
+      ...prev.familyDetails,
+      children: prev.familyDetails.children.map((child) =>
+        child.id === id ? { ...child, [field]: value } : child
+      ),
+    },
+  }));
+  };
+  
   const handleChange = (section, field, value) => {
     setFormData((prev) => ({
       ...prev,
@@ -140,6 +220,8 @@ function AddDonor() {
       },
     }));
   };
+
+  
   return (
     <div className="min-h-screen bg-gray-50 flex p-6 justify-center">
       <div className="w-full max-w-6xl bg-white p-6 shadow-sm">
@@ -400,12 +482,12 @@ function AddDonor() {
                     </label>
                     <input
                       type="text"
-                      value={formData.personalDetails.contactPersonName}
+                      value={formData.contactPerson.contactPersonName}
                       onChange={(e) =>
                         handleChange(
-                          "personalDetails",
+                          "contactPerson",
                           "contactPersonName",
-                          e.target.value,
+                          e.target.value
                         )
                       }
                       className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
@@ -418,12 +500,12 @@ function AddDonor() {
                     </label>
                     <input
                       type="text"
-                      value={formData.personalDetails.contactPersonMobile}
+                      value={formData.contactPerson.contactPersonMobile}
                       onChange={(e) =>
                         handleChange(
-                          "personalDetails",
+                          "contactPerson",
                           "contactPersonMobile",
-                          e.target.value,
+                          e.target.value
                         )
                       }
                       className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
@@ -443,13 +525,10 @@ function AddDonor() {
                       Res. Address 1<span className="text-red-500">*</span>
                     </label>
                     <textarea
-                      value={formData.personalDetails.address1}
+                      type="text"
+                      value={formData.residentialAddress.address1}
                       onChange={(e) =>
-                        handleChange(
-                          "personalDetails",
-                          "address1",
-                          e.target.value,
-                        )
+                        handleChange("residentialAddress", "address1", e.target.value)
                       }
                       className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                     />
@@ -460,9 +539,9 @@ function AddDonor() {
                     </label>
                     <input
                       type="text"
-                      value={formData.personalDetails.city}
+                      value={formData.residentialAddress.pincode}
                       onChange={(e) =>
-                        handleChange("personalDetails", "city", e.target.value)
+                        handleChange("residentialAddress", "pincode", e.target.value)
                       }
                       className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                     />
@@ -473,13 +552,9 @@ function AddDonor() {
                     </label>
                     <input
                       type="text"
-                      value={formData.personalDetails.pincode}
+                      value={formData.residentialAddress.pincode}
                       onChange={(e) =>
-                        handleChange(
-                          "personalDetails",
-                          "pincode",
-                          e.target.value,
-                        )
+                        handleChange("residentialAddress", "pincode", e.target.value)
                       }
                       className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                     />
@@ -490,13 +565,9 @@ function AddDonor() {
                     </label>
                     <input
                       type="text"
-                      value={formData.personalDetails.contactCode}
+                      value={formData.residentialAddress.contactCode}
                       onChange={(e) =>
-                        handleChange(
-                          "personalDetails",
-                          "contactCode",
-                          e.target.value,
-                        )
+                        handleChange("residentialAddress", "contactCode", e.target.value)
                       }
                       className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                     />
@@ -507,13 +578,9 @@ function AddDonor() {
                     </label>
                     <input
                       type="text"
-                      value={formData.personalDetails.contactNumber}
+                      value={formData.residentialAddress.contactNumber}
                       onChange={(e) =>
-                        handleChange(
-                          "personalDetails",
-                          "contactNumber",
-                          e.target.value,
-                        )
+                        handleChange("residentialAddress", "contactNumber", e.target.value)
                       }
                       className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                     />
@@ -543,13 +610,9 @@ function AddDonor() {
                     </label>
                     <input
                       type="text"
-                      value={formData.personalDetails.preferredAddress}
+                      value={formData.residentialAddress.preferredAddress}
                       onChange={(e) =>
-                        handleChange(
-                          "personalDetails",
-                          "preferredAddress",
-                          e.target.value,
-                        )
+                        handleChange("residentialAddress", "preferredAddress", e.target.value)
                       }
                       className="w-[535px] p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                     />
@@ -570,12 +633,12 @@ function AddDonor() {
                     </label>
                     <input
                       type="text"
-                      value={formData.personalDetails.communicationAddress1}
+                      value={formData.communicationAddress.communicationAddress1}
                       onChange={(e) =>
                         handleChange(
-                          "personalDetails",
+                          "communicationAddress",
                           "communicationAddress1",
-                          e.target.value,
+                          e.target.value
                         )
                       }
                       className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
@@ -588,12 +651,12 @@ function AddDonor() {
                     </label>
                     <input
                       type="text"
-                      value={formData.personalDetails.communicationAddress2}
+                      value={formData.communicationAddress.communicationAddress2}
                       onChange={(e) =>
                         handleChange(
-                          "personalDetails",
+                          "communicationAddress",
                           "communicationAddress2",
-                          e.target.value,
+                          e.target.value
                         )
                       }
                       className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
@@ -614,13 +677,9 @@ function AddDonor() {
                     </label>
                     <input
                       type="text"
-                      value={formData.personalDetails.companyName}
+                      value={formData.companyDetails.companyName}
                       onChange={(e) =>
-                        handleChange(
-                          "personalDetails",
-                          "companyName",
-                          e.target.value,
-                        )
+                        handleChange("companyDetails", "companyName", e.target.value)
                       }
                       className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                     />
@@ -631,13 +690,9 @@ function AddDonor() {
                     </label>
                     <input
                       type="text"
-                      value={formData.personalDetails.companyNumber}
+                      value={formData.companyDetails.companyNumber}
                       onChange={(e) =>
-                        handleChange(
-                          "personalDetails",
-                          "companyNumber",
-                          e.target.value,
-                        )
+                        handleChange("companyDetails", "companyNumber", e.target.value)
                       }
                       className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                     />
@@ -647,13 +702,9 @@ function AddDonor() {
                       Company Address<span className="text-red-500">*</span>
                     </label>
                     <textarea
-                      value={formData.personalDetails.companyAddress}
+                      value={formData.companyDetails.companyAddress}
                       onChange={(e) =>
-                        handleChange(
-                          "personalDetails",
-                          "companyAddress",
-                          e.target.value,
-                        )
+                        handleChange("companyDetails", "companyAddress", e.target.value)
                       }
                       className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                     />
@@ -678,13 +729,9 @@ function AddDonor() {
                     </label>
                     <input
                       type="text"
-                      value={formData.personalDetails.fatherName}
+                      value={formData.familyDetails.fatherName}
                       onChange={(e) =>
-                        handleChange(
-                          "personalDetails",
-                          "fatherName",
-                          e.target.value,
-                        )
+                        handleChange("familyDetails", "fatherName", e.target.value)
                       }
                       className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                     />
@@ -697,13 +744,9 @@ function AddDonor() {
                     </label>
                     <input
                       type="text"
-                      value={formData.personalDetails.spouseName}
+                      value={formData.familyDetails.spouseName}
                       onChange={(e) =>
-                        handleChange(
-                          "personalDetails",
-                          "spouseName",
-                          e.target.value,
-                        )
+                        handleChange("familyDetails", "spouseName", e.target.value)
                       }
                       className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                     />
@@ -715,13 +758,9 @@ function AddDonor() {
                     </label>
                     <input
                       type="date"
-                      value={formData.personalDetails.spouseDob}
+                      value={formData.familyDetails.spouseDob}
                       onChange={(e) =>
-                        handleChange(
-                          "personalDetails",
-                          "spouseDob",
-                          e.target.value,
-                        )
+                        handleChange("familyDetails", "spouseDob", e.target.value)
                       }
                       className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                     />
@@ -732,13 +771,9 @@ function AddDonor() {
                     </label>
                     <input
                       type="text"
-                      value={formData.personalDetails.spouseBloodGroup}
+                      value={formData.familyDetails.spouseBloodGroup}
                       onChange={(e) =>
-                        handleChange(
-                          "personalDetails",
-                          "spouseBloodGroup",
-                          e.target.value,
-                        )
+                        handleChange("familyDetails", "spouseBloodGroup", e.target.value)
                       }
                       className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                     />
@@ -754,8 +789,10 @@ function AddDonor() {
                           type="radio"
                           name="hasChildren"
                           value="Yes"
-                          checked={hasChildren === "Yes"}
-                          onChange={(e) => setHasChildren(e.target.value)}
+                          checked={formData.familyDetails.hasChildren === "Yes"}
+                          onChange={(e) =>
+                            handleChange("familyDetails", "hasChildren", e.target.value)
+                          }
                           className="w-4 h-4 text-blue-600"
                         />
                         Yes
@@ -766,8 +803,10 @@ function AddDonor() {
                           type="radio"
                           name="hasChildren"
                           value="No"
-                          checked={hasChildren === "No"}
-                          onChange={(e) => setHasChildren(e.target.value)}
+                          checked={formData.familyDetails.hasChildren === "No"}
+                          onChange={(e) =>
+                            handleChange("familyDetails", "hasChildren", e.target.value)
+                          }
                           className="w-4 h-4 text-blue-600"
                         />
                         No
@@ -798,7 +837,7 @@ function AddDonor() {
                       Click "Add Child" button to add children details
                     </p>
                   ) : (
-                    children.map((child, index) => (
+                    formData.familyDetails.children.map((child, index) => (
                       <div
                         key={child.id}
                         className="border border-slate-300 rounded-lg p-4 bg-slate-50"
@@ -845,6 +884,10 @@ function AddDonor() {
                                   type="radio"
                                   name={`relation-${child.id}`}
                                   value="son"
+                                  checked={child.relation === "son"}
+                                  onChange={(e) =>
+                                    handleChildChange(child.id, "relation", e.target.value)
+                                  }
                                   className="w-4 h-4 text-blue-600"
                                 />
                                 Son
@@ -855,6 +898,10 @@ function AddDonor() {
                                   type="radio"
                                   name={`relation-${child.id}`}
                                   value="daughter"
+                                  checked={child.relation === "daughter"}
+                                  onChange={(e) =>
+                                    handleChildChange(child.id, "relation", e.target.value)
+                                  }
                                   className="w-4 h-4 text-blue-600"
                                 />
                                 Daughter
@@ -1167,13 +1214,9 @@ function AddDonor() {
                               </label>
                               <input
                                 type="text"
-                                value={formData.paymentDetails.installments.amount}
+                                value={formData.paymentDetails.installments[index]?.amount || ""}
                                 onChange={(e) =>
-                                  handleChange(
-                                    "paymentDetails",
-                                    "installments",
-                                    e.target.value,
-                                  )
+                                  handleInstallmentChange(index, "amount", e.target.value)
                                 }
                                 placeholder="Enter amount"
                                 className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
@@ -1186,13 +1229,9 @@ function AddDonor() {
                               </label>
                               <input
                                 type="date"
-                                value={formData.paymentDetails.installments.dueDate}
+                                value={formData.paymentDetails.installments[index]?.dueDate || ""}
                                 onChange={(e) =>
-                                  handleChange(
-                                    "paymentDetails",
-                                    "installments",
-                                    e.target.value,
-                                  )
+                                  handleInstallmentChange(index, "dueDate", e.target.value)
                                 }
                                 className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                               />
@@ -1204,13 +1243,9 @@ function AddDonor() {
                               </label>
                               <input
                                 type="date"
-                                value={formData.paymentDetails.installments.fundDate}
+                                value={formData.paymentDetails.installments[index]?.fundDate || ""}
                                 onChange={(e) =>
-                                  handleChange(
-                                    "paymentDetails",
-                                    "installments",
-                                    e.target.value,
-                                  )
+                                  handleInstallmentChange(index, "fundDate", e.target.value)
                                 }
                                 className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                               />
@@ -1220,7 +1255,12 @@ function AddDonor() {
                                 Mode of Payment
                                 <span className="text-red-500">*</span>
                               </label>
-                              <select className="w-full p-2 border border-slate-300 rounded-md outline-none focus:ring-2 focus:ring-blue-100">
+                              <select
+                                value={formData.paymentDetails.installments[index]?.paymentMode || ""}
+                                onChange={(e) =>
+                                  handleInstallmentChange(index, "paymentMode", e.target.value)
+                                }
+                                className="w-full p-2 border border-slate-300 rounded-md outline-none focus:ring-2 focus:ring-blue-100">
                                 <option value="">Select</option>
                                 <option value="Bank Transfer">
                                   Bank Transfer
@@ -1237,13 +1277,9 @@ function AddDonor() {
                               </label>
                               <input
                                 type="text"
-                                value={formData.paymentDetails.installments.utrNo}
+                                value={formData.paymentDetails.installments[index]?.utrNo || ""}
                                 onChange={(e) =>
-                                  handleChange(
-                                    "paymentDetails",
-                                    "installments",
-                                    e.target.value,
-                                  )
+                                  handleInstallmentChange(index, "utrNo", e.target.value)
                                 }
                                 placeholder="Enter UTR"
                                 className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
@@ -1254,13 +1290,9 @@ function AddDonor() {
                                 Status<span className="text-red-500">*</span>
                               </label>
                               <select
-                                value={formData.paymentDetails.installments.status}
+                                value={formData.paymentDetails.installments[index]?.status || ""}
                                 onChange={(e) =>
-                                  handleChange(
-                                    "paymentDetails",
-                                    "installments",
-                                    e.target.value,
-                                  )
+                                  handleInstallmentChange(index, "status", e.target.value)
                                 }
                                 className="w-full p-2 border border-slate-300 rounded-md outline-none focus:ring-2 focus:ring-blue-100"
                               >
