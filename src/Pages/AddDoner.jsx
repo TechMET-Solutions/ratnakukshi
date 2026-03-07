@@ -1,5 +1,6 @@
 import { ChevronLeft } from "lucide-react";
 import { useState } from "react";
+import { API } from "../api/BaseURL";
 
 function AddDonor() {
   const [currentStep, setCurrentStep] = useState(1);
@@ -76,7 +77,7 @@ function AddDonor() {
 
   const handleSubmit = async () => {
     try {
-      const response = await fetch("http://localhost:5000/api/create-donor", {
+      const response = await fetch(`${API}/api/create-donor`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -1007,11 +1008,11 @@ function AddDonor() {
                   </label>
                   <input
                     type="text"
-                    value={formData.nomineeDetails.nomineecity}
+                    value={formData.nomineeDetails.nomineepincode}
                     onChange={(e) =>
                       handleChange(
                         "nomineeDetails",
-                        "nomineecity",
+                        "nomineepincode",
                         e.target.value,
                       )
                     }
@@ -1166,7 +1167,7 @@ function AddDonor() {
                               </label>
                               <input
                                 type="text"
-                                value={formData.paymentDetails.installments}
+                                value={formData.paymentDetails.installments.amount}
                                 onChange={(e) =>
                                   handleChange(
                                     "paymentDetails",
@@ -1185,7 +1186,7 @@ function AddDonor() {
                               </label>
                               <input
                                 type="date"
-                                value={formData.paymentDetails.installments}
+                                value={formData.paymentDetails.installments.dueDate}
                                 onChange={(e) =>
                                   handleChange(
                                     "paymentDetails",
@@ -1203,7 +1204,7 @@ function AddDonor() {
                               </label>
                               <input
                                 type="date"
-                                value={formData.paymentDetails.installments}
+                                value={formData.paymentDetails.installments.fundDate}
                                 onChange={(e) =>
                                   handleChange(
                                     "paymentDetails",
@@ -1236,7 +1237,7 @@ function AddDonor() {
                               </label>
                               <input
                                 type="text"
-                                value={formData.paymentDetails.installments}
+                                value={formData.paymentDetails.installments.utrNo}
                                 onChange={(e) =>
                                   handleChange(
                                     "paymentDetails",
@@ -1253,7 +1254,7 @@ function AddDonor() {
                                 Status<span className="text-red-500">*</span>
                               </label>
                               <select
-                                value={formData.paymentDetails.installments}
+                                value={formData.paymentDetails.installments.status}
                                 onChange={(e) =>
                                   handleChange(
                                     "paymentDetails",
