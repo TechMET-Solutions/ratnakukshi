@@ -56,7 +56,7 @@ const Login = () => {
                                 type="email"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
-                                placeholder="Staff ID / Email"
+                                placeholder="Karyakarta ID / Email"
                                 required
                                 className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition text-gray-700 placeholder-gray-400"
                             />
