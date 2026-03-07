@@ -1,6 +1,6 @@
 import { ChevronLeft } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { API } from "../api/BaseURL";
 
 const parseMaybeJson = (value) => {
@@ -15,6 +15,9 @@ const parseMaybeJson = (value) => {
 const asObject = (value) => (value && typeof value === "object" ? value : {});
 
 function AddDonor() {
+
+    const navigate = useNavigate();
+  
   const location = useLocation();
   const editDonorId = location?.state?.id;
   const isEditMode = Boolean(editDonorId);
@@ -92,6 +95,9 @@ function AddDonor() {
 
   const handleSubmit = async () => {
     try {
+      const resolvedDonorId =
+        editDonorId || formData?.id || formData?.donor_id || null;
+
       const payload = {
         ...formData,
         personalDetails: {
@@ -109,13 +115,17 @@ function AddDonor() {
       delete payload.familyDetails.spouseDob;
 
       if (isEditMode) {
-        payload.id = editDonorId;
-        payload.donor_id = editDonorId;
+        if (!resolvedDonorId) {
+          alert("Donor id is missing for update.");
+          return;
+        }
+        payload.id = resolvedDonorId;
+        payload.donor_id = resolvedDonorId;
       }
 
       const response = await fetch(
         isEditMode
-          ? "https://karyakarta.ratnakukshi.org/api/update-donor"
+          ? `https://karyakarta.ratnakukshi.org/api/update-donor/${resolvedDonorId}`
           : `${API}/api/create-donor`,
         {
           method: isEditMode ? "PUT" : "POST",
@@ -131,6 +141,8 @@ function AddDonor() {
       alert(
         isEditMode ? "Donor Updated Successfully" : "Donor Created Successfully",
       );
+
+      navigate("/donor");
 
       console.log(data);
     } catch (error) {

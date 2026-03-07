@@ -1,7 +1,7 @@
 import axios from "axios";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { API } from "../api/BaseURL";
 
 const INITIAL_FORM_DATA = {
@@ -34,6 +34,8 @@ const parseMaybeJson = (value) => {
 const asObject = (value) => (value && typeof value === "object" ? value : {});
 
 const FamilyDetailsForm = () => {
+
+  const navigate = useNavigate();
   const location = useLocation();
   const [loading, setLoading] = useState(false);
   const id = location?.state?.id;
@@ -347,39 +349,6 @@ const FamilyDetailsForm = () => {
     setHeadOfFamily(null);
   };
 
-//   const handleSave = async () => {
-//     try {
-//       const payload = {
-//         diksharthi_id: id,
-//         formData: formData,
-//         relationDetails: relationDetails,
-//         additionalRelations: additionalRelations,
-//         expandedRelations: expandedRelations,
-//         headOfFamily: headOfFamily,
-//       };
-
-//       console.log(payload, "Sending Data");
-
-//       const response = await axios.post(
-//         "http://localhost:5000/api/create-family-details",
-//         payload,
-//       );
-
-//       console.log(response.data);
-
-//       if (response.data.success) {
-//         alert("Family details saved successfully");
-
-//         // reset all states
-//         resetForm();
-//       }
-//     } catch (error) {
-//       console.error(error);
-//       alert("Something went wrong");
-//     }
-//   };
-
-
 const handleSave = async () => {
   try {
     const payload = {
@@ -404,6 +373,7 @@ const handleSave = async () => {
     if (response.data.success) {
       alert("Family details saved successfully");
       resetForm();
+      navigate("/diksharthi-details");
     }
   } catch (error) {
     console.error(error);

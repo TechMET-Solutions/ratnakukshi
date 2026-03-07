@@ -62,45 +62,24 @@ const DiksharthiDetailsAdd = () => {
   };
 
   // const handleSave = async () => {
-  //   debugger;
   //   if (!validate()) return;
 
   //   try {
   //     const data = new FormData();
+  //     Object.keys(formData).forEach((key) => data.append(key, formData[key]));
+  //     if (photo) data.append("photo", photo);
 
-  //     data.append("sadhu_sadhvi_name", formData.sadhu_sadhvi_name);
-  //     data.append("dob", formData.dob);
-  //     data.append("gender", formData.gender);
-  //     data.append("pad", formData.pad);
-  //     data.append("samudaay", formData.samudaay);
-  //     data.append("guruName", formData.guruName);
-  //     data.append("acharya", formData.acharya);
-  //     data.append("gaachh", formData.gaachh);
-  //     data.append("gadipati", formData.gadipati);
-  //     data.append("isAlive", formData.isAlive);
-  //     data.append("viharLocation", formData.viharLocation);
-  //     data.append("samadhiDate", formData.samadhiDate);
-  //     data.append("samadhiPlace", formData.samadhiPlace);
+  //     const response = await axios.post(`${API}/api/create-diksharthi`, data, {
+  //       headers: { "Content-Type": "multipart/form-data" },
+  //     });
 
-  //     if (photo) {
-  //       data.append("photo", photo);
-  //     }
+  //     const diksharthi = response.data.data;
 
-  //     const response = await axios.post(
-  //       "http://localhost:5000/api/create-diksharthi",
-  //       data,
-  //       {
-  //         headers: {
-  //           "Content-Type": "multipart/form-data",
-  //         },
-  //       },
-  //     );
+  //     // 1. Set the ID and show modal
+  //     setSavedId(diksharthi.diksharthi_code || diksharthi.id);
+  //     setShowModal(true);
 
-  //     alert(response.data.message);
-
-  //     console.log(response.data);
-
-  //     // ✅ RESET STATE AFTER SUCCESS
+  //     // 2. Clear form state
   //     setFormData({
   //       sadhu_sadhvi_name: "",
   //       dob: "",
@@ -116,25 +95,26 @@ const DiksharthiDetailsAdd = () => {
   //       samadhiDate: "",
   //       samadhiPlace: "",
   //     });
-
   //     setPhoto(null);
   //     setErrors({});
 
-  //     const diksharthi = response.data.data;
-
-  //     navigate("/family-details", {
-  //       state: {
-  //         id: diksharthi.id,
-  //         diksharthi_code: diksharthi.diksharthi_code,
-  //         sadhu_sadhvi_name: diksharthi.sadhu_sadhvi_name,
-  //         gender: diksharthi.gender,
-  //       },
-  //     });
+  //     // 3. Wait 5 seconds then navigate
+  //     setTimeout(() => {
+  //       navigate("/family-details", {
+  //         state: {
+  //           id: diksharthi.id,
+  //           diksharthi_code: diksharthi.diksharthi_code,
+  //           sadhu_sadhvi_name: diksharthi.sadhu_sadhvi_name,
+  //           gender: diksharthi.gender,
+  //         },
+  //       });
+  //     }, 5000);
   //   } catch (error) {
   //     console.error(error);
   //     alert("Something went wrong");
   //   }
   // };
+
 
   const handleSave = async () => {
     if (!validate()) return;
@@ -150,11 +130,14 @@ const DiksharthiDetailsAdd = () => {
 
       const diksharthi = response.data.data;
 
+      // Get role
+      const role = localStorage.getItem("role");
+
       // 1. Set the ID and show modal
       setSavedId(diksharthi.diksharthi_code || diksharthi.id);
       setShowModal(true);
 
-      // 2. Clear form state
+      // 2. Clear form
       setFormData({
         sadhu_sadhvi_name: "",
         dob: "",
@@ -170,26 +153,35 @@ const DiksharthiDetailsAdd = () => {
         samadhiDate: "",
         samadhiPlace: "",
       });
+
       setPhoto(null);
       setErrors({});
 
-      // 3. Wait 5 seconds then navigate
+      // 3. Navigate based on role
       setTimeout(() => {
-        navigate("/family-details", {
-          state: {
-            id: diksharthi.id,
-            diksharthi_code: diksharthi.diksharthi_code,
-            sadhu_sadhvi_name: diksharthi.sadhu_sadhvi_name,
-            gender: diksharthi.gender,
-          },
-        });
+
+        if (role === "admin") {
+          navigate("/family-details", {
+            state: {
+              id: diksharthi.id,
+              diksharthi_code: diksharthi.diksharthi_code,
+              sadhu_sadhvi_name: diksharthi.sadhu_sadhvi_name,
+              gender: diksharthi.gender,
+            },
+          });
+        } else {
+          navigate("/diksharthi-details");
+        }
+
       }, 5000);
+
     } catch (error) {
       console.error(error);
       alert("Something went wrong");
     }
   };
 
+  
   return (
     <div className="min-h-full bg-gray-50 flex p-6 justify-center">
       <div className="w-full max-w-6xl bg-white p-6 shadow-sm">
