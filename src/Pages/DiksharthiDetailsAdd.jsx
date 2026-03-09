@@ -61,61 +61,6 @@ const DiksharthiDetailsAdd = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  // const handleSave = async () => {
-  //   if (!validate()) return;
-
-  //   try {
-  //     const data = new FormData();
-  //     Object.keys(formData).forEach((key) => data.append(key, formData[key]));
-  //     if (photo) data.append("photo", photo);
-
-  //     const response = await axios.post(`${API}/api/create-diksharthi`, data, {
-  //       headers: { "Content-Type": "multipart/form-data" },
-  //     });
-
-  //     const diksharthi = response.data.data;
-
-  //     // 1. Set the ID and show modal
-  //     setSavedId(diksharthi.diksharthi_code || diksharthi.id);
-  //     setShowModal(true);
-
-  //     // 2. Clear form state
-  //     setFormData({
-  //       sadhu_sadhvi_name: "",
-  //       dob: "",
-  //       gender: "",
-  //       pad: "",
-  //       samudaay: "",
-  //       guruName: "",
-  //       acharya: "",
-  //       gaachh: "",
-  //       gadipati: "",
-  //       isAlive: "",
-  //       viharLocation: "",
-  //       samadhiDate: "",
-  //       samadhiPlace: "",
-  //     });
-  //     setPhoto(null);
-  //     setErrors({});
-
-  //     // 3. Wait 5 seconds then navigate
-  //     setTimeout(() => {
-  //       navigate("/family-details", {
-  //         state: {
-  //           id: diksharthi.id,
-  //           diksharthi_code: diksharthi.diksharthi_code,
-  //           sadhu_sadhvi_name: diksharthi.sadhu_sadhvi_name,
-  //           gender: diksharthi.gender,
-  //         },
-  //       });
-  //     }, 5000);
-  //   } catch (error) {
-  //     console.error(error);
-  //     alert("Something went wrong");
-  //   }
-  // };
-
-
   const handleSave = async () => {
     if (!validate()) return;
 
@@ -498,7 +443,9 @@ const DiksharthiDetailsAdd = () => {
 
         {/* Footer */}
         <div className="p-6 flex justify-between items-center bg-white">
-          <button className="bg-[#fbc02d] text-white px-10 py-2 rounded font-bold shadow-md uppercase text-sm">
+          <button
+            onClick={()=> navigate(-1)}
+            className="bg-[#fbc02d] text-white px-10 py-2 rounded font-bold shadow-md uppercase text-sm">
             Cancel
           </button>
 
