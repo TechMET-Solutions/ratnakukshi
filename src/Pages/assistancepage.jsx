@@ -21,13 +21,22 @@ const AssistancePage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [tableData, setTableData] = useState([]);
   const [activeRow, setActiveRow] = useState(null);
+  const [actionType, setActionType] = useState("");
+  const [remark, setRemark] = useState("");
+  const [actionError, setActionError] = useState("");
+  const [isActionLoading, setIsActionLoading] = useState(false);
+
+  const fetchFamilyAccounting = async () => {
+    try {
+      const res = await axios.get(`${API}/api/familyAccounting-details`);
+      setTableData(res.data.data || []);
+    } catch (error) {
+      console.error("Failed to fetch family accounting details:", error);
+    }
+  };
 
   useEffect(() => {
-    axios
-      .get(`${API}/api/familyAccounting-details`)
-      .then((res) => {
-        setTableData(res.data.data);
-      });
+    fetchFamilyAccounting();
   }, []);
 
   console.log(familyDetails, "familyDetails");
@@ -82,10 +91,77 @@ const AssistancePage = () => {
       },
     });
   };
-  const handleOpenFileModal = (row) => {
+  const handleOpenActionModal = (row, type) => {
     setActiveRow(row);
+    setActionType(type);
+    setRemark("");
+    setActionError("");
     setIsModalOpen(true);
   };
+
+  const handleCloseActionModal = () => {
+    setIsModalOpen(false);
+    setActionType("");
+    setRemark("");
+    setActionError("");
+    setActiveRow(null);
+  };
+
+  const handleStatusAction = async () => {
+    if (!activeRow || !actionType) return;
+
+    if (actionType === "queries" && !remark.trim()) {
+      setActionError("Remark is required for queries.");
+      return;
+    }
+
+    try {
+      setIsActionLoading(true);
+      setActionError("");
+
+      const payload = {
+        id: activeRow?.id,
+        assistance_id: activeRow?.id,
+        diksharthi_id: activeRow?.diksharthi_id,
+        relation: activeRow?.relation,
+        type: activeRow?.type,
+      };
+
+      if (actionType === "queries") {
+        payload.remark = remark.trim();
+      }
+
+      await axios.put(`${API}/api/assistance-status/${actionType}`, payload);
+
+      await fetchFamilyAccounting();
+      handleCloseActionModal();
+    } catch (error) {
+      setActionError(
+        error?.response?.data?.message || "Failed to update assistance status.",
+      );
+    } finally {
+      setIsActionLoading(false);
+    }
+  };
+
+  const actionTitleMap = {
+    approve: "Approve Request",
+    rejected: "Reject Request",
+    queries: "Raise Query",
+  };
+
+  const actionButtonLabelMap = {
+    approve: "Approve",
+    rejected: "Reject",
+    queries: "Submit Query",
+  };
+
+  const actionDescMap = {
+    approve: "Are you sure you want to approve this request?",
+    rejected: "Are you sure you want to reject this request?",
+    queries: "Please provide remark for the query.",
+  };
+
   const renderDefaultTable = () => (
     <div className="mt-8 overflow-hidden border border-blue-400 rounded-lg shadow-sm">
       <table className="w-full text-left border-collapse bg-white">
@@ -117,6 +193,12 @@ const AssistancePage = () => {
         </thead>
         <tbody className="divide-y divide-slate-100">
           {tableData.map((row, index) => (
+            (() => {
+              const normalizedStatus = String(row.status || "").toLowerCase();
+              const showOnlyView =
+                normalizedStatus === "approve" || normalizedStatus === "rejected";
+
+              return (
             <tr key={index} className="hover:bg-slate-50 transition-colors">
               <td className="p-4 text-slate-600">{row.diksharthi}</td>
               <td className="p-4 text-slate-600">{row.member_name}</td>
@@ -142,19 +224,30 @@ const AssistancePage = () => {
                     className="text-yellow-500 cursor-pointer"
                     onClick={() => navigate("/request-details", { state: row })}
                   />
-                  <CheckCircle
-                    size={18}
-                    className="text-green-500 cursor-pointer"
-                  />
-                  <XCircle size={18} className="text-red-500 cursor-pointer" />
-                  <FileText
-                    size={18}
-                    className="text-blue-500 cursor-pointer"
-                    onClick={() => handleOpenFileModal(row)}
-                  />
+                  {!showOnlyView && (
+                    <>
+                      <CheckCircle
+                        size={18}
+                        className="text-green-500 cursor-pointer"
+                        onClick={() => handleOpenActionModal(row, "approve")}
+                      />
+                      <XCircle
+                        size={18}
+                        className="text-red-500 cursor-pointer"
+                        onClick={() => handleOpenActionModal(row, "rejected")}
+                      />
+                      <FileText
+                        size={18}
+                        className="text-blue-500 cursor-pointer"
+                        onClick={() => handleOpenActionModal(row, "queries")}
+                      />
+                    </>
+                  )}
                 </div>
               </td>
             </tr>
+              );
+            })()
           ))}
         </tbody>
       </table>
@@ -309,47 +402,68 @@ const AssistancePage = () => {
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md animate-in fade-in zoom-in duration-200">
               <div className="flex items-center justify-between p-6 border-b">
                 <h3 className="text-xl font-bold text-slate-800">
-                  Staff Queries
+                  {actionTitleMap[actionType] || "Confirm Action"}
                 </h3>
                 <button
-                  onClick={() => setIsModalOpen(false)}
+                  onClick={handleCloseActionModal}
                   className="p-1 hover:bg-slate-100 rounded-full transition-colors"
                 >
                   <X size={24} className="text-slate-500" />
                 </button>
               </div>
               <div className="p-8">
-                <div className="flex flex-col items-center text-center space-y-4">
-                  <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center text-blue-500">
+                <div className="space-y-4">
+                  <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center text-blue-500 mx-auto">
                     <FileText size={32} />
                   </div>
-                  <div>
+
+                  <div className="text-center">
                     <h4 className="font-semibold text-lg text-slate-700">
-                      {activeRow?.member}
+                      {activeRow?.member_name || activeRow?.member || "Request"}
                     </h4>
                     <p className="text-slate-500 text-sm">
-                      Case ID: #ASSIST-{activeRow?.id}024
+                      Case ID: #{activeRow?.id || "-"}
                     </p>
                   </div>
-                  <div className="w-full p-4 bg-slate-50 rounded-xl border border-dashed border-slate-300">
-                    <p className="text-slate-500 italic text-sm">
-                      No active queries found for this request.
-                    </p>
-                  </div>
+
+                  <p className="text-sm text-slate-600 text-center">
+                    {actionDescMap[actionType]}
+                  </p>
+
+                  {actionType === "queries" && (
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">
+                        Remark
+                      </label>
+                      <textarea
+                        value={remark}
+                        onChange={(e) => setRemark(e.target.value)}
+                        placeholder="Enter query remark..."
+                        className="w-full h-28 border border-slate-300 rounded-lg p-3 text-sm outline-none focus:ring-2 focus:ring-blue-200"
+                      />
+                    </div>
+                  )}
+
+                  {actionError && (
+                    <p className="text-sm text-red-600 text-center">{actionError}</p>
+                  )}
                 </div>
               </div>
               <div className="p-6 border-t flex gap-3">
                 <button
-                  onClick={() => setIsModalOpen(false)}
+                  onClick={handleCloseActionModal}
                   className="flex-1 py-3 px-4 border border-slate-200 rounded-xl font-semibold text-slate-600 hover:bg-slate-50 transition-all"
                 >
                   Cancel
                 </button>
                 <button
-                  onClick={() => setIsModalOpen(false)}
+                  onClick={handleStatusAction}
+                  disabled={isActionLoading}
                   className="flex-1 py-3 px-4 bg-blue-600 text-white rounded-xl font-semibold shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all"
                 >
-                  Understood
+                  {isActionLoading
+                    ? "Processing..."
+                    : actionButtonLabelMap[actionType] || "Confirm"}
                 </button>
               </div>
             </div>

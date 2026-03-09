@@ -4,15 +4,105 @@ import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { API } from "../api/BaseURL";
 
+const typeTitleMap = {
+  medical: "Medical Assistance",
+  education: "Education Assistance",
+  job: "Job Assistance",
+  jobs: "Job Assistance",
+  food: "Food Assistance",
+  rent: "Rent Assistance",
+  housing: "Housing Assistance",
+  vaiyavacch: "Vaiyavacch Assistance",
+  emergencyexpenses: "Emergency Expenses Assistance",
+};
+
+const typeFieldConfig = {
+  medical: [
+    { label: "Type of Medical Issue", key: "issueType" },
+    { label: "Disease Name", key: "diseaseName" },
+    { label: "Major Surgery Expected", key: "majorSurgery" },
+    { label: "Any Permanent Issue", key: "isPermanent" },
+    { label: "Treatment Ongoing", key: "isOngoing" },
+    { label: "Insurance / Ayushman Card", key: "hasInsurance" },
+    { label: "Urgency Level", key: "urgency" },
+    { label: "Treatment Start Date", key: "nextDate", isDate: true },
+    { label: "Total Amount Requested", key: "amountRequired" },
+  ],
+  education: [
+    { label: "School / College Name", key: "schoolName" },
+    { label: "Class", key: "classGrade" },
+    { label: "Medium", key: "medium" },
+    { label: "Fees", key: "fees" },
+    { label: "Stationery Expenses", key: "stationeryExpenses" },
+    { label: "Other Expenses", key: "OtherExpenses" },
+    { label: "Total Expenses", key: "totalExpenses" },
+    { label: "Scholarship", key: "hasScholarship" },
+    { label: "Support Amount", key: "supportAmount" },
+    { label: "Support Duration", key: "supportDuration" },
+    { label: "Urgency", key: "urgency" },
+  ],
+  job: [
+    { label: "Current Job", key: "currentJob" },
+    { label: "Employment Status", key: "employmentStatus" },
+    { label: "Education", key: "education" },
+    { label: "Skills", key: "skills" },
+    { label: "Preferred Job Type", key: "preferredJobType" },
+    { label: "Preferred Location", key: "location" },
+    { label: "Urgency", key: "urgency" },
+  ],
+  food: [
+    { label: "Family Member Count", key: "memberCount" },
+    { label: "Food Support Type", key: "foodType" },
+    { label: "Duration", key: "duration" },
+    { label: "Frequency", key: "FrequencyDuration" },
+    { label: "Urgency", key: "urgency" },
+    { label: "Reason", key: "reason" },
+  ],
+  rent: [
+    { label: "Monthly Rent Amount", key: "monthlyAmount" },
+    { label: "Rent Pending", key: "isPending" },
+    { label: "Pending Rent Months", key: "pendingMonths" },
+    { label: "Rent Proof Available", key: "proofAvailable" },
+    { label: "Rent Reimbursement Required", key: "reimbursementRequired" },
+    { label: "Urgency", key: "urgency" },
+  ],
+  housing: [
+    { label: "Housing Assistance Type", key: "assistanceType" },
+    { label: "Total Cost", key: "totalCost" },
+    { label: "Is Partial", key: "isPartial" },
+    { label: "Amount Required", key: "amountRequired" },
+    { label: "Own Contribution", key: "ownContribution" },
+    { label: "Other Support Available", key: "hasOtherSupport" },
+    { label: "Urgency", key: "urgency" },
+  ],
+  vaiyavacch: [{ label: "Description", key: "description" }],
+  emergencyexpenses: [
+    { label: "Expense Type", key: "type" },
+    { label: "Amount", key: "amount" },
+    { label: "Contact Mobile", key: "mobile" },
+    { label: "Description", key: "description" },
+    { label: "Document Name", key: "docName" },
+  ],
+};
+
+const normalizeType = (value) => String(value || "").trim().toLowerCase();
+const formatDate = (value) => {
+  if (!value) return "-";
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? value : parsed.toLocaleDateString();
+};
+const formatValue = (value) => {
+  if (Array.isArray(value)) return value.length ? value.join(", ") : "-";
+  if (value === null || value === undefined || value === "") return "-";
+  return String(value);
+};
+
 const RequestDetails = () => {
   const location = useLocation();
   const row = location.state;
   const [assistanceData, setAssistanceData] = useState(null);
-  console.log(assistanceData, "assistanceData");
   const [loading, setLoading] = useState(true);
-
-  //   const data = assistanceData?.[row.relation]?.[row.type];
-  //   console.log(data, data);
+  const normalizedType = normalizeType(row?.type);
 
   useEffect(() => {
     if (!row) return;
@@ -32,7 +122,15 @@ const RequestDetails = () => {
           payload,
         );
 
-        const data = res.data?.[row.relation]?.[row.type] || {};
+        const relationData = res.data?.[row.relation] || {};
+        const matchedTypeKey =
+          Object.keys(relationData).find(
+            (key) => normalizeType(key) === normalizedType
+          ) ||
+          (normalizedType === "jobs" ? "Job" : null);
+
+        const data =
+          (matchedTypeKey ? relationData?.[matchedTypeKey] : null) || {};
 
         setAssistanceData(data);
       } catch (error) {
@@ -44,10 +142,26 @@ const RequestDetails = () => {
 
     fetchData();
   }, [row]);
-  console.log(row);
 
   const labelStyle = "text-gray-500 font-semibold text-sm";
   const valueStyle = "text-gray-800 font-bold text-sm";
+  const assistanceTitle = typeTitleMap[normalizedType] || "Assistance Details";
+
+  const configuredFields =
+    typeFieldConfig[normalizedType] ||
+    typeFieldConfig[normalizedType === "jobs" ? "job" : normalizedType] ||
+    [];
+
+  const dynamicDateFields = Object.keys(assistanceData || {})
+    .filter((key) => /date/i.test(key))
+    .filter((key) => !configuredFields.some((field) => field.key === key))
+    .map((key) => ({
+      label: key.replace(/([A-Z])/g, " $1").replace(/^./, (m) => m.toUpperCase()),
+      key,
+      isDate: true,
+    }));
+
+  const renderFields = [...configuredFields, ...dynamicDateFields];
 
   return (
     <div className="min-h-screen bg-gray-50 p-6 font-sans">
@@ -105,144 +219,51 @@ const RequestDetails = () => {
                 </span>
               </p>
             </div>
-            <div className="flex flex-col gap-1 border-l pl-8 border-gray-100">
-              {/* <p className={labelStyle}>
+            {/* <div className="flex flex-col gap-1 border-l pl-8 border-gray-100">
+              <p className={labelStyle}>
                 Adhaar Card Number :{" "}
                 <span className={valueStyle}>8th May 1998</span>
               </p>
               <p className={labelStyle}>
                 Pan Card Number : <span className={valueStyle}>25</span>
-              </p> */}
-              {/* <p className={labelStyle}>
+              </p> 
+               <p className={labelStyle}>
                 Education : <span className={valueStyle}>Graduation</span>
               </p>
               <p className={labelStyle}>
                 Mobile number : <span className={valueStyle}>99999 99999</span>
-              </p> */}
-            </div>
+              </p>
+            </div> */}
           </div>
         </div>
       </div>
 
-      {/* {row.type === "Medical" && (
+     
+      {!loading && (
         <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6 shadow-sm">
-          <h3 className="text-red-500 font-bold mb-4">Medical Assistance</h3>
-          <div className="grid grid-cols-2 gap-8">
-            <div className="space-y-3">
-              <div className="flex justify-between w-3/4">
-                <span className={labelStyle}>Type of Medical Issue :</span>{" "}
-                <span className={valueStyle}>Heart Disease</span>
-              </div>
-              <div className="flex justify-between w-3/4">
-                <span className={labelStyle}>Disease Name :</span>{" "}
-                <span className={valueStyle}>Coronary artery disease</span>
-              </div>
-              <div className="flex justify-between w-3/4">
-                <span className={labelStyle}>Major Surgery Expected :</span>{" "}
-                <span className={valueStyle}>Yes</span>
-              </div>
-              <div className="flex justify-between w-3/4">
-                <span className={labelStyle}>
-                  Repeated Medical Assistance Required :
-                </span>{" "}
-                <span className={valueStyle}>Yes</span>
-              </div>
-              <div className="flex justify-between w-3/4">
-                <span className={labelStyle}>Urgency Level :</span>{" "}
-                <span className={valueStyle}>High</span>
-              </div>
-            </div>
-
-            <div className="space-y-3 border-l pl-8 border-gray-200">
-              <div className="flex justify-between w-3/4">
-                <span className={labelStyle}>Any Permanent Issue :</span>{" "}
-                <span className={valueStyle}>No</span>
-              </div>
-              <div className="flex justify-between w-3/4">
-                <span className={labelStyle}>Treatment Ongoing :</span>{" "}
-                <span className={valueStyle}>Yes</span>
-              </div>
-              <div className="flex justify-between w-3/4">
-                <span className={labelStyle}>
-                  Any Insurance / Ayushman Card :
-                </span>{" "}
-                <span className={valueStyle}>No</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      )} */}
-
-      {row.type === "Medical" && (
-        <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6 shadow-sm">
-          <h3 className="text-red-500 font-bold mb-4">Medical Assistance</h3>
-
-          <div className="grid grid-cols-2 gap-8">
-            <div className="space-y-3">
-              <div className="flex justify-between w-3/4">
-                <span className={labelStyle}>Type of Medical Issue :</span>
-                <span className={valueStyle}>{assistanceData?.issueType}</span>
-              </div>
-
-              <div className="flex justify-between w-3/4">
-                <span className={labelStyle}>Disease Name :</span>
-                <span className={valueStyle}>
-                  {assistanceData?.diseaseName}
-                </span>
-              </div>
-
-              <div className="flex justify-between w-3/4">
-                <span className={labelStyle}>Major Surgery Expected :</span>
-                <span className={valueStyle}>
-                  {assistanceData?.majorSurgery}
-                </span>
-              </div>
-
-              <div className="flex justify-between w-3/4">
-                <span className={labelStyle}>
-                  Repeated Medical Assistance Required :
-                </span>
-                <span className={valueStyle}>{assistanceData?.isOngoing}</span>
-              </div>
-
-              <div className="flex justify-between w-3/4">
-                <span className={labelStyle}>Urgency Level :</span>
-                <span className={valueStyle}>{assistanceData?.urgency}</span>
-              </div>
-            </div>
-
-            <div className="space-y-3 border-l pl-8 border-gray-200">
-              <div className="flex justify-between w-3/4">
-                <span className={labelStyle}>Any Permanent Issue :</span>
-                <span className={valueStyle}>
-                  {assistanceData?.isPermanent}
-                </span>
-              </div>
-
-              <div className="flex justify-between w-3/4">
-                <span className={labelStyle}>Treatment Ongoing :</span>
-                <span className={valueStyle}>{assistanceData?.isOngoing}</span>
-              </div>
-
-              <div className="flex justify-between w-3/4">
-                <span className={labelStyle}>
-                  Any Insurance / Ayushman Card :
-                </span>
-                <span className={valueStyle}>
-                  {assistanceData?.hasInsurance}
-                </span>
-              </div>
-
-              <div className="flex justify-between w-3/4">
-                <span className={labelStyle}>Total Amount Requested :</span>
-                <span className={valueStyle}>
-                  {assistanceData?.amountRequired}
-                </span>
-              </div>
-            </div>
+          <h3 className="text-red-500 font-bold mb-4">{assistanceTitle}</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-3">
+            {renderFields.length > 0 ? (
+              renderFields.map((field) => (
+                <div key={field.key} className="flex justify-between gap-4">
+                  <span className={labelStyle}>{field.label} :</span>
+                  <span className={valueStyle}>
+                    {field.isDate
+                      ? formatDate(assistanceData?.[field.key])
+                      : formatValue(assistanceData?.[field.key])}
+                  </span>
+                </div>
+              ))
+            ) : (
+              <p className="text-sm text-gray-500 italic">
+                No assistance fields available for this type.
+              </p>
+            )}
           </div>
         </div>
       )}
+
+
 
       <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6 shadow-sm">
         <h3 className="text-red-500 font-bold mb-4">Previous Assistance</h3>
