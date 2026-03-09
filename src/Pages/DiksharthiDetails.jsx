@@ -5,7 +5,19 @@ import { API } from "../api/BaseURL";
 
 const DiksharthiListing = () => {
   const navigate = useNavigate();
-  const role = localStorage.getItem("role");
+  const storedUser = localStorage.getItem("user");
+  let loggedInUser = null;
+  try {
+    loggedInUser = storedUser ? JSON.parse(storedUser) : null;
+  } catch {
+    loggedInUser = null;
+  }
+
+  const role = String(
+    loggedInUser?.role || localStorage.getItem("role") || ""
+  ).toLowerCase();
+  const loggedInUserId = loggedInUser?.id ?? null;
+
   const [sendingId, setSendingId] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -13,7 +25,27 @@ const DiksharthiListing = () => {
 
   const [diksharthiList, setDiksharthiList] = useState([]);
 
-  const expectedStatus = role === "admin" ? "send" : "pending";
+  // const fetchDiksharthiList = async () => {
+  //   try {
+  //     const res = await fetch(`${API}/api/get-diksharthi`);
+  //     const data = await res.json();
+  //     const allRecords = Array.isArray(data?.data) ? data.data : [];
+
+  //     // staff: show only records created by logged-in staff user
+  //     // non-staff: show complete list
+  //     const filteredRecords =
+  //       role === "staff"
+  //         ? allRecords.filter(
+  //             (item) => String(item?.user_id ?? "") === String(loggedInUserId ?? "")
+  //           )
+  //         : allRecords;
+
+  //     setDiksharthiList(filteredRecords);
+  //   } catch (error) {
+  //     console.error(error);
+  //   }
+  // };
+
 
   const fetchDiksharthiList = async () => {
     try {
@@ -21,11 +53,27 @@ const DiksharthiListing = () => {
       const data = await res.json();
       const allRecords = Array.isArray(data?.data) ? data.data : [];
 
-      const filteredRecords = allRecords.filter(
-        (item) => String(item?.status || "pending").toLowerCase() === expectedStatus
-      );
+      let filteredRecords = [];
+
+      if (role === "staff") {
+        // Staff: only own records + pending
+        filteredRecords = allRecords.filter(
+          (item) =>
+            String(item?.user_id ?? "") === String(loggedInUserId ?? "") &&
+            String(item?.status ?? "").toLowerCase() === "pending"
+        );
+      } else if (role === "admin") {
+        // Admin: only send records
+        filteredRecords = allRecords.filter(
+          (item) => String(item?.status ?? "").toLowerCase() === "send"
+        );
+      } else {
+        // fallback
+        filteredRecords = allRecords;
+      }
 
       setDiksharthiList(filteredRecords);
+
     } catch (error) {
       console.error(error);
     }
@@ -33,7 +81,7 @@ const DiksharthiListing = () => {
 
   useEffect(() => {
     fetchDiksharthiList();
-  }, [expectedStatus]);
+  }, [role, loggedInUserId]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -100,13 +148,15 @@ const DiksharthiListing = () => {
         <h1 className="text-2xl font-bold text-slate-700">
           Diksharthi Details
         </h1>
-        <Link
-          to="/diksharthi-details-add"
-          className="bg-[#d94452] hover:bg-[#c13946] text-white px-4 py-2 rounded-md flex items-center gap-2 text-sm font-medium transition-colors shadow-sm"
-        >
-          <Plus size={18} />
-          Add New Diksharthi
-        </Link>
+        {role === "staff" && (
+          <Link
+            to="/diksharthi-details-add"
+            className="bg-[#d94452] hover:bg-[#c13946] text-white px-4 py-2 rounded-md flex items-center gap-2 text-sm font-medium transition-colors shadow-sm"
+          >
+            <Plus size={18} />
+            Add New Diksharthi
+          </Link>
+        )}
       </div>
 
 

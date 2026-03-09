@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Plus, X, Trash2, Edit } from "lucide-react";
+import { Plus, Search, Trash2, Edit } from "lucide-react";
 import { API } from "../api/BaseURL";
 import DeleteModal from "../components/DeleteModal";
 import UserFormModal from "../components/UserFormModal";
@@ -92,6 +92,9 @@ const buildUserFormData = (values, isUpdate = false) => {
 
 function UserList() {
     const [users, setUsers] = useState([]);
+    const [searchTerm, setSearchTerm] = useState("");
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
     const [isLoadingUsers, setIsLoadingUsers] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
@@ -138,6 +141,10 @@ function UserList() {
     useEffect(() => {
         fetchUsers();
     }, []);
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchTerm, users.length]);
 
     const resetForm = () => {
         setFormValues(initialFormState);
@@ -331,6 +338,22 @@ function UserList() {
         }
     };
 
+    const filteredUsers = users.filter((user) => {
+        const search = searchTerm.trim().toLowerCase();
+        if (!search) return true;
+
+        return [user.name, user.email, user.mobile, user.role]
+            .map((value) => String(value || "").toLowerCase())
+            .some((value) => value.includes(search));
+    });
+
+    const totalPages = Math.max(1, Math.ceil(filteredUsers.length / itemsPerPage));
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const paginatedUsers = filteredUsers.slice(
+        startIndex,
+        startIndex + itemsPerPage
+    );
+
     return (
         <div className="p-8 min-h-screen bg-gray-50">
             <div className="flex justify-between items-center mb-6">
@@ -388,6 +411,24 @@ function UserList() {
             />
 
             <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+                <div className="p-4 border-b border-gray-100 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+                    <div className="relative w-full sm:max-w-sm">
+                        <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
+                            <Search size={16} />
+                        </span>
+                        <input
+                            type="text"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            placeholder="Search by name, email, mobile, role"
+                            className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
+                        />
+                    </div>
+                    <p className="text-sm text-gray-600">
+                        Showing {filteredUsers.length} result(s)
+                    </p>
+                </div>
+
                 <table className="w-full text-left border-collapse">
                     <thead>
                         <tr className="bg-gray-50 border-b border-gray-100">
@@ -407,10 +448,12 @@ function UserList() {
                                     Loading users...
                                 </td>
                             </tr>
-                        ) : users.length > 0 ? (
-                            users.map((user, index) => (
+                        ) : paginatedUsers.length > 0 ? (
+                            paginatedUsers.map((user, index) => (
                                 <tr key={user.id} className="hover:bg-gray-50 transition-colors">
-                                    <td className="px-6 py-4 text-sm text-gray-600">{index + 1}</td>
+                                    <td className="px-6 py-4 text-sm text-gray-600">
+                                        {startIndex + index + 1}
+                                    </td>
                                     <td className="px-6 py-4">
                                         <img
                                             src={resolvePhotoUrl(user.profilePhoto)}
@@ -463,6 +506,31 @@ function UserList() {
                         )}
                     </tbody>
                 </table>
+                <div className="px-4 py-3 border-t border-gray-100 flex items-center justify-between">
+                    <p className="text-sm text-gray-600">
+                        Page {currentPage} of {totalPages}
+                    </p>
+                    <div className="flex items-center gap-2">
+                        <button
+                            type="button"
+                            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                            disabled={currentPage === 1}
+                            className="px-3 py-1.5 text-sm rounded-md border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            Previous
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() =>
+                                setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                            }
+                            disabled={currentPage === totalPages}
+                            className="px-3 py-1.5 text-sm rounded-md border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            Next
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     );
