@@ -3,8 +3,12 @@ import { ChevronDown, FileText } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { API } from "../api/BaseURL";
+import { useAuth } from "../context/AuthContext";
 
 const DiksharthiDetailsAdd = () => {
+
+  const {user} = useAuth();
+
   const [photo, setPhoto] = useState(null);
   const [showModal, setShowModal] = useState(false); // New state for Modal
   const [savedId, setSavedId] = useState("");
@@ -65,9 +69,21 @@ const DiksharthiDetailsAdd = () => {
     if (!validate()) return;
 
     try {
+      const storedUser = localStorage.getItem("user");
+      let parsedUser = null;
+      try {
+        parsedUser = storedUser ? JSON.parse(storedUser) : null;
+      } catch {
+        parsedUser = null;
+      }
+      const loggedInUserId = parsedUser?.id || null;
+
       const data = new FormData();
       Object.keys(formData).forEach((key) => data.append(key, formData[key]));
       if (photo) data.append("photo", photo);
+      if (loggedInUserId) {
+        data.append("user_id", loggedInUserId);
+      }
 
       const response = await axios.post(`${API}/api/create-diksharthi`, data, {
         headers: { "Content-Type": "multipart/form-data" },

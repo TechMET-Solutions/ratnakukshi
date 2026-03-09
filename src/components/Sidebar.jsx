@@ -161,7 +161,7 @@ const Sidebar = () => {
       {/* Navigation */}
       <nav className="flex-1 mt-6 overflow-y-auto overflow-x-hidden custom-scrollbar">
         <NavItem isCollapsed={isCollapsed} to="/" icon={<LayoutDashboard size={22} />} label="Dashboard" />
-        <NavItem isCollapsed={isCollapsed} to="/diksharthi-details" icon={<FileText size={22} />} label="Details" />
+        <NavItem isCollapsed={isCollapsed} to="/diksharthi-details" icon={<FileText size={22} />} label="Diksharthi Details" />
 
         {role === "admin" && (
           <>
