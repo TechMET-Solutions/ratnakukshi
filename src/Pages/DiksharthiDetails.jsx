@@ -4,94 +4,95 @@ import { Link, useNavigate } from "react-router-dom";
 import { API } from "../api/BaseURL";
 
 const DiksharthiListing = () => {
-const navigate = useNavigate();
-const role = localStorage.getItem("role");
-const [sendingId, setSendingId] = useState(null);
-const [searchTerm, setSearchTerm] = useState("");
-const [currentPage, setCurrentPage] = useState(1);
-const itemsPerPage = 10;
+  const navigate = useNavigate();
+  const role = localStorage.getItem("role");
+  const [sendingId, setSendingId] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
-const [diksharthiList, setDiksharthiList] = useState([]);
+  const [diksharthiList, setDiksharthiList] = useState([]);
 
-const expectedStatus = role === "admin" ? "send" : "pending";
+  const expectedStatus = role === "admin" ? "send" : "pending";
 
-const fetchDiksharthiList = async () => {
-  try {
-    const res = await fetch(`${API}/api/get-diksharthi`);
-    const data = await res.json();
-    const allRecords = Array.isArray(data?.data) ? data.data : [];
+  const fetchDiksharthiList = async () => {
+    try {
+      const res = await fetch(`${API}/api/get-diksharthi`);
+      const data = await res.json();
+      const allRecords = Array.isArray(data?.data) ? data.data : [];
 
-    const filteredRecords = allRecords.filter(
-      (item) => String(item?.status || "pending").toLowerCase() === expectedStatus
-    );
+      const filteredRecords = allRecords.filter(
+        (item) => String(item?.status || "pending").toLowerCase() === expectedStatus
+      );
 
-    setDiksharthiList(filteredRecords);
-  } catch (error) {
-    console.error(error);
-  }
-};
-
-useEffect(() => {
-  fetchDiksharthiList();
-}, [expectedStatus]);
-
-useEffect(() => {
-  setCurrentPage(1);
-}, [searchTerm, diksharthiList.length]);
-
-const handleSendToAdmin = async (id) => {
-  try {
-    setSendingId(id);
-    const res = await fetch(`${API}/api/update-diksharthi-status/${id}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        status: "send",
-      }),
-    });
-
-    if (!res.ok) {
-      throw new Error("Failed to update diksharthi status");
+      setDiksharthiList(filteredRecords);
+    } catch (error) {
+      console.error(error);
     }
+  };
 
-    await fetchDiksharthiList();
-  } catch (error) {
-    console.error(error);
-    alert("Failed to send to admin");
-  } finally {
-    setSendingId(null);
-  }
-};
+  useEffect(() => {
+    fetchDiksharthiList();
+  }, [expectedStatus]);
 
-const filteredDiksharthiList = diksharthiList.filter((diksharthi) => {
-  const search = searchTerm.trim().toLowerCase();
-  if (!search) return true;
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, diksharthiList.length]);
 
-  return [
-    diksharthi?.diksharthi_code,
-    diksharthi?.sadhu_sadhvi_name,
-    diksharthi?.pad,
-    diksharthi?.samudaay,
-    diksharthi?.is_alive,
-  ]
-    .map((value) => String(value || "").toLowerCase())
-    .some((value) => value.includes(search));
-});
+  const handleSendToAdmin = async (id) => {
+    try {
+      setSendingId(id);
+      const res = await fetch(`${API}/api/update-diksharthi-status/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          status: "send",
+        }),
+      });
 
-const totalPages = Math.max(
-  1,
-  Math.ceil(filteredDiksharthiList.length / itemsPerPage)
-);
+      if (!res.ok) {
+        throw new Error("Failed to update diksharthi status");
+      }
 
-const startIndex = (currentPage - 1) * itemsPerPage;
-const paginatedList = filteredDiksharthiList.slice(
-  startIndex,
-  startIndex + itemsPerPage
-);
-    
-    
+      await fetchDiksharthiList();
+    } catch (error) {
+      console.error(error);
+      alert("Failed to send to admin");
+    } finally {
+      setSendingId(null);
+    }
+  };
+
+  const filteredDiksharthiList = diksharthiList.filter((diksharthi) => {
+    const search = searchTerm.trim().toLowerCase();
+    if (!search) return true;
+
+    return [
+      diksharthi?.diksharthi_code,
+      diksharthi?.sadhu_sadhvi_name,
+      diksharthi?.pad,
+      diksharthi?.samudaay,
+      diksharthi?.is_alive,
+      diksharthi?.photo,
+    ]
+      .map((value) => String(value || "").toLowerCase())
+      .some((value) => value.includes(search));
+  });
+
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredDiksharthiList.length / itemsPerPage)
+  );
+
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedList = filteredDiksharthiList.slice(
+    startIndex,
+    startIndex + itemsPerPage
+  );
+  console.log(paginatedList, "paginatedList")
+
   return (
     <div className="p-8 min-h-screen">
       {/* Header Section */}
@@ -108,10 +109,10 @@ const paginatedList = filteredDiksharthiList.slice(
         </Link>
       </div>
 
-    
-      
 
-     
+
+
+
       <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
         <div className="p-4 border-b border-gray-100 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
           <div className="relative w-full sm:max-w-sm">
@@ -157,74 +158,77 @@ const paginatedList = filteredDiksharthiList.slice(
             </tr>
           </thead>
           <tbody>
-  {paginatedList.length === 0 ? (
-    <tr>
-      <td
-        colSpan="7"
-        className="px-6 py-20 text-center text-gray-500 text-sm italic"
-      >
-        No records found.
-      </td>
-    </tr>
-  ) : (
-    paginatedList.map((diksharthi) => (
-      <tr key={diksharthi.id} className="border-b border-gray-100">
-        {/* Photo */}
-        <td className="px-6 py-3">
-          <img
-            src={`${API}/uploads/${diksharthi.photo}`}
-            alt=""
-            className="w-10 h-10 rounded-full object-cover"
-          />
-        </td>
+            {paginatedList.length === 0 ? (
+              <tr>
+                <td
+                  colSpan="7"
+                  className="px-6 py-20 text-center text-gray-500 text-sm italic"
+                >
+                  No records found.
+                </td>
+              </tr>
+            ) : (
+              paginatedList.map((diksharthi) => (
+                <tr key={diksharthi.id} className="border-b border-gray-100">
+                  {/* Photo */}
+                  <td className="px-6 py-3">
+                    <img
+                      src={diksharthi.photo || "/user.png"}
+                      alt="diksharthi"
+                      onError={(e) => {
+                        e.currentTarget.src = "/user.png";
+                      }}
+                      className="w-10 h-10 rounded-full object-cover"
+                    />
+                  </td>
 
-        {/* ID */}
-        <td className="px-6 py-3">{diksharthi.diksharthi_code}</td>
+                  {/* ID */}
+                  <td className="px-6 py-3">{diksharthi.diksharthi_code}</td>
 
-        {/* Name */}
-        <td className="px-6 py-3">{diksharthi.sadhu_sadhvi_name}</td>
+                  {/* Name */}
+                  <td className="px-6 py-3">{diksharthi.sadhu_sadhvi_name}</td>
 
-        {/* Pad */}
-        <td className="px-6 py-3">{diksharthi.pad}</td>
+                  {/* Pad */}
+                  <td className="px-6 py-3">{diksharthi.pad}</td>
 
-        {/* Sect */}
-        <td className="px-6 py-3">{diksharthi.samudaay}</td>
+                  {/* Sect */}
+                  <td className="px-6 py-3">{diksharthi.samudaay}</td>
 
-        {/* Alive */}
-        <td className="px-6 py-3">{diksharthi.is_alive}</td>
+                  {/* Alive */}
+                  <td className="px-6 py-3">{diksharthi.is_alive}</td>
 
-        {/* Actions */}
-        <td className="px-6 py-3 flex gap-3">
-          {role === "staff" ? (
-            <button
-              className="rounded-lg bg-blue-600 text-sm px-2 py-1 text-white"
-              onClick={() => handleSendToAdmin(diksharthi.id)}
-              disabled={sendingId === diksharthi.id}
-            >
-              {sendingId === diksharthi.id ? "Sending..." : "Send to Karyakarta"}
-            </button>
-          ) : (
-            <button
-              className="rounded-lg bg-yellow-500 text-sm px-2 py-1 text-white"
-              onClick={() =>
-                navigate("/family-details", {
-                  state: {
-                    id: diksharthi.id,
-                    diksharthi_code: diksharthi.diksharthi_code,
-                    sadhu_sadhvi_name: diksharthi.sadhu_sadhvi_name,
-                    gender: diksharthi.gender,
-                  },
-                })
-              }
-            >
-              Add Family Details
-            </button>
-          )}
-        </td>
-      </tr>
-    ))
-  )}
-</tbody>
+                  {/* Actions */}
+                  <td className="px-6 py-3 flex gap-3">
+                    {role === "staff" ? (
+                      <button
+                        className="rounded-lg bg-blue-600 text-sm px-2 py-1 text-white"
+                        onClick={() => handleSendToAdmin(diksharthi.id)}
+                        disabled={sendingId === diksharthi.id}
+                      >
+                        {sendingId === diksharthi.id ? "Sending..." : "Send to Karyakarta"}
+                      </button>
+                    ) : (
+                      <button
+                        className="rounded-lg bg-yellow-500 text-sm px-2 py-1 text-white"
+                        onClick={() =>
+                          navigate("/family-details", {
+                            state: {
+                              id: diksharthi.id,
+                              diksharthi_code: diksharthi.diksharthi_code,
+                              sadhu_sadhvi_name: diksharthi.sadhu_sadhvi_name,
+                              gender: diksharthi.gender,
+                            },
+                          })
+                        }
+                      >
+                        Add Family Details
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
         </table>
         <div className="px-4 py-3 border-t border-gray-100 flex items-center justify-between">
           <p className="text-sm text-gray-600">

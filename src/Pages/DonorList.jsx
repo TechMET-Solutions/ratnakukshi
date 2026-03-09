@@ -72,7 +72,7 @@ function DonorList() {
         <h1 className="text-2xl font-bold text-slate-700">Donor List</h1>
         <Link
           to="/donor/add"
-          className="bg-[#ECB000] hover:bg-[#d9a200] text-white px-4 py-2 rounded-md flex items-center gap-2 text-sm font-medium transition-colors shadow-sm"
+          className="bg-[#d94452] hover:bg-[#c13946] text-white px-4 py-2 rounded-md flex items-center gap-2 text-sm font-medium transition-colors shadow-sm"
         >
           <Plus size={18} />
           Add Donor
