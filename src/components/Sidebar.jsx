@@ -3,24 +3,22 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
   UserCircle,
-  Users,
   Handshake,
   Home,
   FileText,
   Settings,
   LogOut
 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 const Sidebar = () => {
   const navigate = useNavigate();
-  const role = localStorage.getItem("role");
+  const { user, logout } = useAuth();
+  const role = String(user?.role || "").toLowerCase();
 
   const handleLogout = (e) => {
     e.preventDefault();
-
-    localStorage.removeItem("token");
-    localStorage.removeItem("role");
-
+    logout();
     navigate("/login");
   };
 
@@ -29,7 +27,15 @@ const Sidebar = () => {
 
       {/* Profile */}
       <div className="p-6 flex flex-col items-center">
-        <div className="w-16 h-16 bg-gray-300 rounded-sm mb-4"></div>
+        {user?.profilePhoto ? (
+          <img
+            src={user.profilePhoto}
+            alt={user?.name || "User"}
+            className="w-16 h-16 rounded-full object-cover mb-4 border border-white/40"
+          />
+        ) : (
+          <div className="w-16 h-16 bg-gray-300 rounded-sm mb-4"></div>
+        )}
 
         <div className="bg-white text-[#1e88e5] px-4 py-1 rounded-md flex items-center gap-2 text-sm font-medium shadow-sm">
           <UserCircle size={16} />
