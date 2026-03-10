@@ -240,7 +240,7 @@ const FamilyDetailsForm = () => {
     const fetchFamilyDetailsById = async () => {
       try {
         const res = await axios.get(
-          `https://karyakarta.ratnakukshi.org/api/family-details/${id}`,
+          `${API}/api/family-details/${id}`,
         );
 
         const payload = res?.data?.data;

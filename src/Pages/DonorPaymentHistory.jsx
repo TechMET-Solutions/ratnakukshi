@@ -1,6 +1,7 @@
 import { Search } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
+import { API } from "../api/BaseURL";
 
 function DonorPaymentHistory() {
   const location = useLocation();
@@ -18,7 +19,7 @@ function DonorPaymentHistory() {
       setLoading(true);
       try {
         const response = await fetch(
-          `https://karyakarta.ratnakukshi.org/api/get-installments/${donorId}`,
+          `${API}/api/donor/get-installments/${donorId}`,
         );
         const data = await response.json();
         const list = Array.isArray(data?.installments)

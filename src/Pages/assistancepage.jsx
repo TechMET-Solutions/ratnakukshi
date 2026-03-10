@@ -22,7 +22,7 @@ const AssistancePage = () => {
   const [tableData, setTableData] = useState([]);
   const [activeRow, setActiveRow] = useState(null);
   const [actionType, setActionType] = useState("");
-  const [remark, setRemark] = useState("");
+  const [queriesReason, setQueriesReason] = useState("");
   const [actionError, setActionError] = useState("");
   const [isActionLoading, setIsActionLoading] = useState(false);
 
@@ -94,7 +94,7 @@ const AssistancePage = () => {
   const handleOpenActionModal = (row, type) => {
     setActiveRow(row);
     setActionType(type);
-    setRemark("");
+    setQueriesReason("");
     setActionError("");
     setIsModalOpen(true);
   };
@@ -102,7 +102,7 @@ const AssistancePage = () => {
   const handleCloseActionModal = () => {
     setIsModalOpen(false);
     setActionType("");
-    setRemark("");
+    setQueriesReason("");
     setActionError("");
     setActiveRow(null);
   };
@@ -110,8 +110,8 @@ const AssistancePage = () => {
   const handleStatusAction = async () => {
     if (!activeRow || !actionType) return;
 
-    if (actionType === "queries" && !remark.trim()) {
-      setActionError("Remark is required for queries.");
+    if (actionType === "queries" && !queriesReason.trim()) {
+      setActionError("Queries reason is required for queries.");
       return;
     }
 
@@ -128,7 +128,8 @@ const AssistancePage = () => {
       };
 
       if (actionType === "queries") {
-        payload.remark = remark.trim();
+        payload.queriesReason = queriesReason.trim();
+        payload.remark = queriesReason.trim();
       }
 
       await axios.put(`${API}/api/assistance-status/${actionType}`, payload);
@@ -159,7 +160,7 @@ const AssistancePage = () => {
   const actionDescMap = {
     approve: "Are you sure you want to approve this request?",
     rejected: "Are you sure you want to reject this request?",
-    queries: "Please provide remark for the query.",
+    queries: "Please provide queriesReason for the query.",
   };
 
   const renderDefaultTable = () => (
@@ -433,12 +434,12 @@ const AssistancePage = () => {
                   {actionType === "queries" && (
                     <div>
                       <label className="block text-sm font-medium text-slate-700 mb-1">
-                        Remark
+                        queriesReason
                       </label>
                       <textarea
-                        value={remark}
-                        onChange={(e) => setRemark(e.target.value)}
-                        placeholder="Enter query remark..."
+                        value={queriesReason}
+                        onChange={(e) => setQueriesReason(e.target.value)}
+                        placeholder="Enter queriesReason..."
                         className="w-full h-28 border border-slate-300 rounded-lg p-3 text-sm outline-none focus:ring-2 focus:ring-blue-200"
                       />
                     </div>

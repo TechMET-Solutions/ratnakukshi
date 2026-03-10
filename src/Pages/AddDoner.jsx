@@ -125,8 +125,8 @@ function AddDonor() {
 
       const response = await fetch(
         isEditMode
-          ? `https://karyakarta.ratnakukshi.org/api/update-donor/${resolvedDonorId}`
-          : `${API}/api/create-donor`,
+          ? `${API}/api/donor/update/${resolvedDonorId}`
+          : `${API}/api/donor/create`,
         {
           method: isEditMode ? "PUT" : "POST",
           headers: {
@@ -184,7 +184,7 @@ function AddDonor() {
 
     const fetchDonorById = async () => {
       try {
-        const response = await fetch(`${API}/api/donor-list`);
+        const response = await fetch(`${API}/api/donor/list`);
         const data = await response.json();
         const donors = Array.isArray(data?.data) ? data.data : [];
         const donor = donors.find(

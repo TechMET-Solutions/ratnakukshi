@@ -19,7 +19,7 @@ function DonorList() {
 
   const fetchDonors = async () => {
     try {
-      const response = await fetch(`${API}/api/donor-list`);
+      const response = await fetch(`${API}/api/donor/list`);
       const data = await response.json();
 
       console.log(response,"DAta")
