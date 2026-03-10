@@ -1,4 +1,4 @@
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { API } from "../api/BaseURL";
@@ -21,31 +21,10 @@ const DiksharthiListing = () => {
   const [sendingId, setSendingId] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [queryModalData, setQueryModalData] = useState(null);
   const itemsPerPage = 10;
 
   const [diksharthiList, setDiksharthiList] = useState([]);
-
-  // const fetchDiksharthiList = async () => {
-  //   try {
-  //     const res = await fetch(`${API}/api/get-diksharthi`);
-  //     const data = await res.json();
-  //     const allRecords = Array.isArray(data?.data) ? data.data : [];
-
-  //     // staff: show only records created by logged-in staff user
-  //     // non-staff: show complete list
-  //     const filteredRecords =
-  //       role === "staff"
-  //         ? allRecords.filter(
-  //             (item) => String(item?.user_id ?? "") === String(loggedInUserId ?? "")
-  //           )
-  //         : allRecords;
-
-  //     setDiksharthiList(filteredRecords);
-  //   } catch (error) {
-  //     console.error(error);
-  //   }
-  // };
-
 
   const fetchDiksharthiList = async () => {
     try {
@@ -139,7 +118,19 @@ const DiksharthiListing = () => {
     startIndex,
     startIndex + itemsPerPage
   );
-  console.log(paginatedList, "paginatedList")
+
+  const getAssistanceSummary = (diksharthi) => {
+    const assistanceItems = Array.isArray(diksharthi?.family_details?.assistanceData)
+      ? diksharthi.family_details.assistanceData
+      : [];
+    const queryItem = assistanceItems.find(
+      (item) => String(item?.status || "").toLowerCase() === "queries"
+    );
+    return {
+      status: queryItem?.status || assistanceItems[0]?.status || "Pending",
+      queryItem,
+    };
+  };
 
   return (
     <div className="p-8 min-h-screen">
@@ -202,6 +193,11 @@ const DiksharthiListing = () => {
               <th className="px-6 py-4 text-sm font-semibold text-gray-700">
                 Alive Status
               </th>
+              {role === "admin" && (
+                <th className="px-6 py-4 text-sm font-semibold text-gray-700">
+                  Status
+                </th>
+              )}
               <th className="px-6 py-4 text-sm font-semibold text-gray-700">
                 Actions
               </th>
@@ -211,14 +207,17 @@ const DiksharthiListing = () => {
             {paginatedList.length === 0 ? (
               <tr>
                 <td
-                  colSpan="7"
+                  colSpan={role === "admin" ? "8" : "7"}
                   className="px-6 py-20 text-center text-gray-500 text-sm italic"
                 >
                   No records found.
                 </td>
               </tr>
             ) : (
-              paginatedList.map((diksharthi) => (
+              paginatedList.map((diksharthi) => {
+                const { status, queryItem } = getAssistanceSummary(diksharthi);
+
+                return (
                 <tr key={diksharthi.id} className="border-b border-gray-100">
                   {/* Photo */}
                   <td className="px-6 py-3">
@@ -247,6 +246,10 @@ const DiksharthiListing = () => {
                   {/* Alive */}
                   <td className="px-6 py-3">{diksharthi.is_alive}</td>
 
+                  {role === "admin" && (
+                    <td className="px-6 py-3">{status}</td>
+                  )}
+
                   {/* Actions */}
                   <td className="px-6 py-3 flex gap-3">
                     {role === "staff" ? (
@@ -274,9 +277,18 @@ const DiksharthiListing = () => {
                         Add Family Details
                       </button>
                     )}
+                    {role === "admin" && queryItem && (
+                      <button
+                        className="rounded-lg bg-blue-600 text-sm px-2 py-1 text-white"
+                        onClick={() => setQueryModalData(queryItem)}
+                      >
+                        View
+                      </button>
+                    )}
                   </td>
                 </tr>
-              ))
+              );
+              })
             )}
           </tbody>
         </table>
@@ -306,6 +318,50 @@ const DiksharthiListing = () => {
           </div>
         </div>
       </div>
+
+      {role === "admin" && queryModalData && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+              <h3 className="text-lg font-semibold text-gray-800">Query Details</h3>
+              <button
+                type="button"
+                className="p-1 rounded hover:bg-gray-100"
+                onClick={() => setQueryModalData(null)}
+              >
+                <X size={18} className="text-gray-600" />
+              </button>
+            </div>
+            <div className="px-5 py-4 space-y-3 text-sm">
+              <p>
+                <span className="font-semibold">Relation:</span>{" "}
+                {queryModalData?.relation || "-"}
+              </p>
+              <p>
+                <span className="font-semibold">Type:</span>{" "}
+                {queryModalData?.type || "-"}
+              </p>
+              <p>
+                <span className="font-semibold">Status:</span>{" "}
+                {queryModalData?.status || "-"}
+              </p>
+              <p>
+                <span className="font-semibold">queriesReason:</span>{" "}
+                {queryModalData?.queriesReason || queryModalData?.remark || "-"}
+              </p>
+            </div>
+            <div className="px-5 py-4 border-t border-gray-100 flex justify-end">
+              <button
+                type="button"
+                className="rounded-lg bg-blue-600 text-sm px-4 py-2 text-white"
+                onClick={() => setQueryModalData(null)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
