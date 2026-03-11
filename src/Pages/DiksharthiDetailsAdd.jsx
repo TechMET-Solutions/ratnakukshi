@@ -1,13 +1,13 @@
 import axios from "axios";
 import { ChevronDown, FileText } from "lucide-react";
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { API } from "../api/BaseURL";
-import { useAuth } from "../context/AuthContext";
 
 const DiksharthiDetailsAdd = () => {
-
-  const {user} = useAuth();
+  const location = useLocation();
+  const editRecord = location?.state?.mode === "edit" ? location?.state?.diksharthiData : null;
+  const isEditMode = Boolean(editRecord?.id);
 
   const [photo, setPhoto] = useState(null);
   const [showModal, setShowModal] = useState(false); // New state for Modal
@@ -29,6 +29,26 @@ const DiksharthiDetailsAdd = () => {
   });
   const navigate = useNavigate();
   const [errors, setErrors] = useState({});
+
+  useEffect(() => {
+    if (!isEditMode) return;
+
+    setFormData({
+      sadhu_sadhvi_name: editRecord?.sadhu_sadhvi_name || "",
+      dob: editRecord?.dob || "",
+      gender: editRecord?.gender || "",
+      pad: editRecord?.pad || "",
+      samudaay: editRecord?.samudaay || "",
+      guruName: editRecord?.guruName || editRecord?.guru_name || "",
+      acharya: editRecord?.acharya || "",
+      gaachh: editRecord?.gaachh || "",
+      gadipati: editRecord?.gadipati || "",
+      isAlive: editRecord?.isAlive || editRecord?.is_alive || "",
+      viharLocation: editRecord?.viharLocation || editRecord?.vihar_location || "",
+      samadhiDate: editRecord?.samadhiDate || editRecord?.samadhi_date || "",
+      samadhiPlace: editRecord?.samadhiPlace || editRecord?.samadhi_place || "",
+    });
+  }, [isEditMode, editRecord]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -84,19 +104,26 @@ const DiksharthiDetailsAdd = () => {
       if (loggedInUserId) {
         data.append("user_id", loggedInUserId);
       }
+      if (isEditMode) {
+        data.append("id", editRecord.id);
+      }
 
-      const response = await axios.post(`${API}/api/create-diksharthi`, data, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      const response = isEditMode
+        ? await axios.put(`${API}/api/diskshari/update`, data, {
+            headers: { "Content-Type": "multipart/form-data" },
+          })
+        : await axios.post(`${API}/api/create-diksharthi`, data, {
+            headers: { "Content-Type": "multipart/form-data" },
+          });
 
-      const diksharthi = response.data.data;
+      const diksharthi = response?.data?.data || editRecord;
 
       // Get role
       const role = localStorage.getItem("role");
 
       // 1. Set the ID and show modal
-      setSavedId(diksharthi.diksharthi_code || diksharthi.id);
-      setShowModal(true);
+      setSavedId(diksharthi?.diksharthi_code || diksharthi?.id || editRecord?.id);
+      setShowModal(!isEditMode);
 
       // 2. Clear form
       setFormData({
@@ -121,7 +148,7 @@ const DiksharthiDetailsAdd = () => {
       // 3. Navigate based on role
       setTimeout(() => {
 
-        if (role === "admin") {
+        if (role === "admin" && !isEditMode) {
           navigate("/family-details", {
             state: {
               id: diksharthi.id,
@@ -134,11 +161,11 @@ const DiksharthiDetailsAdd = () => {
           navigate("/diksharthi-details");
         }
 
-      }, 5000);
+      }, isEditMode ? 500 : 5000);
 
     } catch (error) {
       console.error(error);
-      alert("Something went wrong");
+      alert(isEditMode ? "Failed to update diksharthi" : "Something went wrong");
     }
   };
 
@@ -469,7 +496,7 @@ const DiksharthiDetailsAdd = () => {
             onClick={handleSave}
             className="bg-[#fbc02d] text-white px-10 py-2 rounded font-bold shadow-md uppercase text-sm"
           >
-            Save
+            {isEditMode ? "Update" : "Save"}
           </button>
         </div>
       </div>
