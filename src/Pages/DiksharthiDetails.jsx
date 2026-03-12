@@ -29,6 +29,13 @@ const normalizeRole = (value) => {
   return rawRole;
 };
 
+const normalizeUser = (item) => ({
+  id: item?.id || item?.userId || item?._id || "",
+  name: item?.name || item?.fullName || item?.full_name || "",
+  email: item?.email || "",
+  role: String(item?.role || "").toLowerCase(),
+});
+
 const DiksharthiListing = () => {
   const navigate = useNavigate();
   const storedUser = localStorage.getItem("user");
@@ -58,6 +65,7 @@ const DiksharthiListing = () => {
   const itemsPerPage = 10;
 
   const [diksharthiList, setDiksharthiList] = useState([]);
+  const [userDirectory, setUserDirectory] = useState([]);
 
   const fetchDiksharthiList = async () => {
     try {
@@ -123,6 +131,10 @@ const DiksharthiListing = () => {
   useEffect(() => {
     fetchDiksharthiList();
   }, [role, loggedInUserId]);
+
+  useEffect(() => {
+    fetchAdminUsers();
+  }, []);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -209,13 +221,32 @@ const DiksharthiListing = () => {
       .trim()
       .toLowerCase();
 
+  const isAdminUnassigned = (diksharthi) => {
+    const adminId = diksharthi?.admin_id;
+    return adminId === null || adminId === undefined || String(adminId).trim() === "" || String(adminId) === "0";
+  };
+
+  const getUserNameById = (userId) => {
+    if (userId === null || userId === undefined || String(userId).trim() === "" || String(userId) === "0") {
+      return "-";
+    }
+
+    const matchedUser = userDirectory.find(
+      (user) => String(user?.id) === String(userId)
+    );
+
+    return matchedUser?.name || matchedUser?.email || String(userId);
+  };
+
   const fetchAdminUsers = async () => {
     try {
       setIsAdminListLoading(true);
       const response = await fetch(`${API}/api/user/list`);
       const result = await response.json();
       const rows = Array.isArray(result?.data) ? result.data : [];
-      const admins = rows.filter(
+      const normalizedUsers = rows.map(normalizeUser);
+      setUserDirectory(normalizedUsers);
+      const admins = normalizedUsers.filter(
         (user) => String(user?.role || "").toLowerCase() === "admin"
       );
       setAdminUsers(admins);
@@ -352,12 +383,12 @@ const DiksharthiListing = () => {
               </th>
               {role === "operations-manager" && (
                 <th className="px-6 py-4 text-sm font-semibold text-gray-700">
-                  Staff ID
+                  Staff Name
                 </th>
               )}
               {role === "operations-manager" && (
                 <th className="px-6 py-4 text-sm font-semibold text-gray-700">
-                  Admin ID
+                  Admin Name
                 </th>
               )}
               {role === "admin" && (
@@ -420,11 +451,15 @@ const DiksharthiListing = () => {
                     <td className="px-6 py-3">{diksharthi.is_alive}</td>
 
                     {role === "operations-manager" && (
-                      <td className="px-6 py-3">{diksharthi.user_id || "-"}</td>
+                      <td className="px-6 py-3">
+                        {getUserNameById(diksharthi.user_id)}
+                      </td>
                     )}
 
                     {role === "operations-manager" && (
-                      <td className="px-6 py-3">{diksharthi.admin_id || "-"}</td>
+                      <td className="px-6 py-3">
+                        {getUserNameById(diksharthi.admin_id)}
+                      </td>
                     )}
 
                     {role === "admin" && (
@@ -501,12 +536,14 @@ const DiksharthiListing = () => {
                           >
                             Edit
                           </button>
-                          <button
-                            className="rounded-lg bg-purple-600 text-sm px-2 py-1 text-white"
-                            onClick={() => openAssignAdminModal(diksharthi)}
-                          >
-                            Assign Admin
-                          </button>
+                          {isAdminUnassigned(diksharthi) && (
+                            <button
+                              className="rounded-lg bg-purple-600 text-sm px-2 py-1 text-white"
+                              onClick={() => openAssignAdminModal(diksharthi)}
+                            >
+                              Assign Admin
+                            </button>
+                          )}
                         </>
                       )}
                       {role === "admin" && queryItem && (

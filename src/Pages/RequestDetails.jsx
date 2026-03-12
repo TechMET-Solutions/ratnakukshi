@@ -1,7 +1,7 @@
 import axios from "axios";
 import { ChevronLeft, Eye, FileText } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { API } from "../api/BaseURL";
 
 const typeTitleMap = {
@@ -100,6 +100,10 @@ const formatValue = (value) => {
 const RequestDetails = () => {
   const location = useLocation();
   const row = location.state;
+  console.log(row, "Details status")
+
+  const navigate = useNavigate();
+
   const [assistanceData, setAssistanceData] = useState(null);
   const [loading, setLoading] = useState(true);
   const normalizedType = normalizeType(row?.type);
@@ -113,8 +117,10 @@ const RequestDetails = () => {
       try {
         const payload = {
           diksharthi_id: row.diksharthi_id,
+          member_name: row.member_name,
           relation: row.relation,
           type: row.type,
+          remarks: row.remarks,
         };
 
         const res = await axios.post(
@@ -168,9 +174,9 @@ const RequestDetails = () => {
       {/* Header Actions */}
       <div className="flex justify-between items-start mb-4">
         <div>
-          <h1 className="text-red-500 font-bold text-lg">Request Details</h1>
-          <button className="flex items-center text-gray-600 text-sm mt-1 hover:underline">
-            <ChevronLeft size={18} /> Back to Requests
+          <button onClick={() => navigate(-1)} className="flex items-center text-red-500 font-bold text-lg mt-1 hover:underline">
+            <ChevronLeft size={20} />
+            <h1 className="">Request Details</h1>
           </button>
         </div>
         {/* <div className="flex gap-3">
@@ -192,10 +198,10 @@ const RequestDetails = () => {
           <span className="text-sm text-gray-600">
             Family Head : <span className="font-bold">{row.head}</span>
           </span>
-          <span className="text-sm text-gray-600">
+          {/* <span className="text-sm text-gray-600">
             Karyakarta : <span className="font-bold">KR123 - Suresh Jain</span>{" "}
             +91 9876543210
-          </span>
+          </span> */}
         </div>
         <div className="p-6 flex gap-8">
           <img
@@ -205,7 +211,7 @@ const RequestDetails = () => {
           />
           <div className="grid grid-cols-2 flex-grow gap-y-4">
             <div>
-              <h2 className="text-xl font-bold text-gray-800">Ravi Shah</h2>
+              <h2 className="text-xl font-bold text-gray-800">{row.member_name}</h2>
               <p className="text-sm text-gray-500">
                 Diksharthi :{" "}
                 <span className="font-semibold text-gray-700">
@@ -216,6 +222,12 @@ const RequestDetails = () => {
                 Relation :{" "}
                 <span className="font-semibold text-gray-700">
                   {row.relation}
+                </span>
+              </p>
+              <p className="text-sm text-gray-500">
+                Assistance Type :{" "}
+                <span className="font-semibold text-gray-700">
+                  {row.type}
                 </span>
               </p>
             </div>
@@ -238,7 +250,7 @@ const RequestDetails = () => {
         </div>
       </div>
 
-     
+
       {!loading && (
         <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6 shadow-sm">
           <h3 className="text-red-500 font-bold mb-4">{assistanceTitle}</h3>
@@ -362,8 +374,7 @@ const RequestDetails = () => {
       <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
         <h3 className="text-red-500 font-bold mb-2">Remark</h3>
         <p className="text-sm text-gray-600 leading-relaxed">
-          Ravi Shah had a Heart Attack and requires immediate Hospitalization
-          and surgery. Family is seeking urgent Financial help for his treatment
+          {row.remark}
         </p>
       </div>
     </div>

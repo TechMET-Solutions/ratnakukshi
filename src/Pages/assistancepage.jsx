@@ -401,7 +401,7 @@ const AssistancePage = () => {
         {isModalOpen && (
           <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md animate-in fade-in zoom-in duration-200">
-              <div className="flex items-center justify-between p-6 border-b">
+              <div className="flex items-center justify-between px-6 py-4">
                 <h3 className="text-xl font-bold text-slate-800">
                   {actionTitleMap[actionType] || "Confirm Action"}
                 </h3>
@@ -412,11 +412,11 @@ const AssistancePage = () => {
                   <X size={24} className="text-slate-500" />
                 </button>
               </div>
-              <div className="p-8">
+              <div className="px-8">
                 <div className="space-y-4">
-                  <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center text-blue-500 mx-auto">
+                  {/* <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center text-blue-500 mx-auto">
                     <FileText size={32} />
-                  </div>
+                  </div> */}
 
                   <div className="text-center">
                     <h4 className="font-semibold text-lg text-slate-700">
@@ -434,7 +434,7 @@ const AssistancePage = () => {
                   {actionType === "queries" && (
                     <div>
                       <label className="block text-sm font-medium text-slate-700 mb-1">
-                        queriesReason
+                        Reasons | Remark
                       </label>
                       <textarea
                         value={queriesReason}
@@ -450,7 +450,7 @@ const AssistancePage = () => {
                   )}
                 </div>
               </div>
-              <div className="p-6 border-t flex gap-3">
+              <div className="p-6 flex gap-3">
                 <button
                   onClick={handleCloseActionModal}
                   className="flex-1 py-3 px-4 border border-slate-200 rounded-xl font-semibold text-slate-600 hover:bg-slate-50 transition-all"
