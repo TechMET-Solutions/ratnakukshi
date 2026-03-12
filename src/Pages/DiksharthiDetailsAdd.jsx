@@ -4,51 +4,83 @@ import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { API } from "../api/BaseURL";
 
+const initialFormData = {
+  sadhu_sadhvi_name: "",
+  dob: "",
+  gender: "",
+  pad: "",
+  samudaay: "",
+  guruName: "",
+  acharya: "",
+  gaachh: "",
+  gadipati: "",
+  isAlive: "",
+  viharLocation: "",
+  samadhiDate: "",
+  samadhiPlace: "",
+};
+
+const toInputDate = (value) => {
+  if (!value) return "";
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return "";
+  return parsed.toISOString().split("T")[0];
+};
+
+const mapDiksharthiToFormData = (record) => ({
+  sadhu_sadhvi_name: record?.sadhu_sadhvi_name || "",
+  dob: toInputDate(record?.dob),
+  gender: record?.gender || "",
+  pad: record?.pad || "",
+  samudaay: record?.samudaay || "",
+  guruName: record?.guruName || record?.guru_name || "",
+  acharya: record?.acharya || "",
+  gaachh: record?.gaachh || "",
+  gadipati: record?.gadipati || "",
+  isAlive: record?.isAlive || record?.is_alive || "",
+  viharLocation: record?.viharLocation || record?.vihar_location || "",
+  samadhiDate: toInputDate(record?.samadhiDate || record?.samadhi_date),
+  samadhiPlace: record?.samadhiPlace || record?.samadhi_place || "",
+});
+
 const DiksharthiDetailsAdd = () => {
   const location = useLocation();
   const editRecord = location?.state?.mode === "edit" ? location?.state?.diksharthiData : null;
-  const isEditMode = Boolean(editRecord?.id);
+  const editId = editRecord?.id || location?.state?.id || null;
+  const isEditMode = Boolean(editId);
 
   const [photo, setPhoto] = useState(null);
   const [showModal, setShowModal] = useState(false); // New state for Modal
   const [savedId, setSavedId] = useState("");
-  const [formData, setFormData] = useState({
-    sadhu_sadhvi_name: "",
-    dob: "",
-    gender: "",
-    pad: "",
-    samudaay: "",
-    guruName: "",
-    acharya: "",
-    gaachh: "",
-    gadipati: "",
-    isAlive: "",
-    viharLocation: "",
-    samadhiDate: "",
-    samadhiPlace: "",
-  });
+  const [formData, setFormData] = useState(initialFormData);
+  const [isEditLoading, setIsEditLoading] = useState(false);
   const navigate = useNavigate();
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
     if (!isEditMode) return;
 
-    setFormData({
-      sadhu_sadhvi_name: editRecord?.sadhu_sadhvi_name || "",
-      dob: editRecord?.dob || "",
-      gender: editRecord?.gender || "",
-      pad: editRecord?.pad || "",
-      samudaay: editRecord?.samudaay || "",
-      guruName: editRecord?.guruName || editRecord?.guru_name || "",
-      acharya: editRecord?.acharya || "",
-      gaachh: editRecord?.gaachh || "",
-      gadipati: editRecord?.gadipati || "",
-      isAlive: editRecord?.isAlive || editRecord?.is_alive || "",
-      viharLocation: editRecord?.viharLocation || editRecord?.vihar_location || "",
-      samadhiDate: editRecord?.samadhiDate || editRecord?.samadhi_date || "",
-      samadhiPlace: editRecord?.samadhiPlace || editRecord?.samadhi_place || "",
-    });
-  }, [isEditMode, editRecord]);
+    const fetchDiksharthiById = async () => {
+      try {
+        setIsEditLoading(true);
+        const response = await fetch(`${API}/api/diksharthi/${editId}`);
+        const result = await response.json().catch(() => ({}));
+
+        if (!response.ok || !result?.success) {
+          throw new Error(result?.message || "Failed to fetch diksharthi details");
+        }
+
+        setFormData(mapDiksharthiToFormData(result?.data));
+      } catch (error) {
+        console.error(error);
+        alert("Failed to fetch diksharthi details");
+      } finally {
+        setIsEditLoading(false);
+      }
+    };
+
+    fetchDiksharthiById();
+  }, [isEditMode, editId]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -104,12 +136,9 @@ const DiksharthiDetailsAdd = () => {
       if (loggedInUserId) {
         data.append("user_id", loggedInUserId);
       }
-      if (isEditMode) {
-        data.append("id", editRecord.id);
-      }
 
       const response = isEditMode
-        ? await axios.put(`${API}/api/diskshari/update`, data, {
+        ? await axios.put(`${API}/api/update-diksharthi/${editId}`, data, {
             headers: { "Content-Type": "multipart/form-data" },
           })
         : await axios.post(`${API}/api/create-diksharthi`, data, {
@@ -126,21 +155,7 @@ const DiksharthiDetailsAdd = () => {
       setShowModal(!isEditMode);
 
       // 2. Clear form
-      setFormData({
-        sadhu_sadhvi_name: "",
-        dob: "",
-        gender: "",
-        pad: "",
-        samudaay: "",
-        guruName: "",
-        acharya: "",
-        gaachh: "",
-        gadipati: "",
-        isAlive: "",
-        viharLocation: "",
-        samadhiDate: "",
-        samadhiPlace: "",
-      });
+      setFormData(initialFormData);
 
       setPhoto(null);
       setErrors({});
@@ -181,6 +196,11 @@ const DiksharthiDetailsAdd = () => {
 
         {/* Form */}
         <div className="grid grid-cols-3 gap-6 mt-5">
+          {isEditLoading && (
+            <div className="col-span-3 text-sm text-gray-600">
+              Loading Diksharthi details...
+            </div>
+          )}
           {/* Name */}
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -233,6 +253,7 @@ const DiksharthiDetailsAdd = () => {
                   type="radio"
                   name="gender"
                   value="Sadhu"
+                  checked={formData.gender === "Sadhu"}
                   onChange={handleChange}
                   className="w-4 h-4 text-blue-600"
                 />
@@ -244,6 +265,7 @@ const DiksharthiDetailsAdd = () => {
                   type="radio"
                   name="gender"
                   value="Sadhvi"
+                  checked={formData.gender === "Sadhvi"}
                   onChange={handleChange}
                   className="w-4 h-4 text-blue-600"
                 />
