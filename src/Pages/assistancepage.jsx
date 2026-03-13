@@ -210,9 +210,11 @@ const AssistancePage = () => {
                 className={`p-4 font-semibold ${
                   row.status === "Pending"
                     ? "text-yellow-600"
-                    : row.status === "Approved"
-                      ? "text-green-600"
-                      : "text-red-600"
+                      : row.status === "Approve"
+                        ? "text-green-600"
+                        : row.status === "Rejected"
+                          ? "text-red-600"
+                      : "text-blue-600"
                 }`}
               >
                 {row.status}
