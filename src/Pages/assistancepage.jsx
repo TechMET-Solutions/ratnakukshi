@@ -1,18 +1,26 @@
 import axios from "axios";
 import {
-    CheckCircle,
-    Eye,
-    FileText,
-    Search,
-    User,
-    X,
-    XCircle,
+  CheckCircle,
+  Eye,
+  FileText,
+  Search,
+  User,
+  X,
+  XCircle,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { API } from "../api/BaseURL";
+import { useAuth } from "../context/AuthContext";
+
+const asArray = (value) => {
+  if (Array.isArray(value)) return value;
+  if (value && typeof value === "object") return [value];
+  return [];
+};
 
 const AssistancePage = () => {
+  const { user } = useAuth();
   const [searchType, setSearchType] = useState("sadhu");
   const [searchText, setSearchText] = useState("");
   const [results, setResults] = useState([]);
@@ -25,22 +33,23 @@ const AssistancePage = () => {
   const [queriesReason, setQueriesReason] = useState("");
   const [actionError, setActionError] = useState("");
   const [isActionLoading, setIsActionLoading] = useState(false);
+  const role = String(user?.role || "").toLowerCase();
+  const isKaryakarta = role === "karyakarta";
+  const isCaseCoordinator = role === "case-coordinator";
 
   const fetchFamilyAccounting = async () => {
     try {
       const res = await axios.get(`${API}/api/familyAccounting-details`);
-      setTableData(res.data.data || []);
+      setTableData(asArray(res?.data?.data));
     } catch (error) {
       console.error("Failed to fetch family accounting details:", error);
+      setTableData([]);
     }
   };
 
   useEffect(() => {
     fetchFamilyAccounting();
   }, []);
-
-  console.log(familyDetails, "familyDetails");
-
   const navigate = useNavigate();
   const handleSearch = async (value) => {
     setSearchText(value);
@@ -53,9 +62,10 @@ const AssistancePage = () => {
       const res = await axios.get(
         `${API}/api/search-diksharthi?name=${value}`,
       );
-      setResults(res.data.data || []);
+      setResults(asArray(res?.data?.data));
     } catch (error) {
       console.error(error);
+      setResults([]);
     }
   };
 
@@ -67,9 +77,10 @@ const AssistancePage = () => {
       const res = await axios.get(
         `${API}/api/family-details/${item.id}`,
       );
-      setFamilyDetails(res.data.data || []);
+      setFamilyDetails(asArray(res?.data?.data));
     } catch (error) {
       console.error(error);
+      setFamilyDetails([]);
     }
   };
 
@@ -198,57 +209,59 @@ const AssistancePage = () => {
               const normalizedStatus = String(row.status || "").toLowerCase();
               const showOnlyView =
                 normalizedStatus === "approve" || normalizedStatus === "rejected";
+              const isPending = normalizedStatus === "pending";
+              const shouldShowActionButtons =
+                (isCaseCoordinator && isPending) || (!isCaseCoordinator && !isKaryakarta && !showOnlyView);
 
               return (
-            <tr key={index} className="hover:bg-slate-50 transition-colors">
-              <td className="p-4 text-slate-600">{row.diksharthi}</td>
-              <td className="p-4 text-slate-600">{row.member_name}</td>
-              <td className="p-4 text-slate-600">{row.head}</td>
+                <tr key={index} className="hover:bg-slate-50 transition-colors">
+                  <td className="p-4 text-slate-600">{row.diksharthi}</td>
+                  <td className="p-4 text-slate-600">{row.member_name}</td>
+                  <td className="p-4 text-slate-600">{row.head}</td>
 
-              <td className="p-4 text-slate-600">{row.type}</td>
-              <td
-                className={`p-4 font-semibold ${
-                  row.status === "Pending"
-                    ? "text-yellow-600"
-                      : row.status === "Approve"
-                        ? "text-green-600"
-                        : row.status === "Rejected"
-                          ? "text-red-600"
-                      : "text-blue-600"
-                }`}
-              >
-                {row.status}
-              </td>
-              <td className="p-4 text-slate-600">{row.renewal}</td>
-              <td className="p-4">
-                <div className="flex justify-center gap-2">
-                  <Eye
-                    size={18}
-                    className="text-yellow-500 cursor-pointer"
-                    onClick={() => navigate("/request-details", { state: row })}
-                  />
-                  {!showOnlyView && (
-                    <>
-                      <CheckCircle
+                  <td className="p-4 text-slate-600">{row.type}</td>
+                  <td
+                    className={`p-4 font-semibold ${row.status === "Pending"
+                        ? "text-yellow-600"
+                        : row.status === "Approve"
+                          ? "text-green-600"
+                          : row.status === "Rejected"
+                            ? "text-red-600"
+                            : "text-blue-600"
+                      }`}
+                  >
+                    {row.status}
+                  </td>
+                  <td className="p-4 text-slate-600">{row.renewal}</td>
+                  <td className="p-4">
+                    <div className="flex justify-center gap-2">
+                      <Eye
                         size={18}
-                        className="text-green-500 cursor-pointer"
-                        onClick={() => handleOpenActionModal(row, "approve")}
+                        className="text-yellow-500 cursor-pointer"
+                        onClick={() => navigate("/request-details", { state: row })}
                       />
-                      <XCircle
-                        size={18}
-                        className="text-red-500 cursor-pointer"
-                        onClick={() => handleOpenActionModal(row, "rejected")}
-                      />
-                      <FileText
-                        size={18}
-                        className="text-blue-500 cursor-pointer"
-                        onClick={() => handleOpenActionModal(row, "queries")}
-                      />
-                    </>
-                  )}
-                </div>
-              </td>
-            </tr>
+                      {shouldShowActionButtons && (
+                        <>
+                          <CheckCircle
+                            size={18}
+                            className="text-green-500 cursor-pointer"
+                            onClick={() => handleOpenActionModal(row, "approve")}
+                          />
+                          <XCircle
+                            size={18}
+                            className="text-red-500 cursor-pointer"
+                            onClick={() => handleOpenActionModal(row, "rejected")}
+                          />
+                          <FileText
+                            size={18}
+                            className="text-blue-500 cursor-pointer"
+                            onClick={() => handleOpenActionModal(row, "queries")}
+                          />
+                        </>
+                      )}
+                    </div>
+                  </td>
+                </tr>
               );
             })()
           ))}
@@ -328,76 +341,85 @@ const AssistancePage = () => {
 
         {selectedSadhu
           ? familyDetails.map((family) => (
-              <div key={family.id} className="space-y-6">
-                <div className="flex items-center gap-4 bg-white p-6 rounded-xl border border-slate-100 shadow-sm">
-                  <div className="bg-blue-100 p-3 rounded-full text-blue-600">
-                    <User size={32} />
-                  </div>
-                  <div>
-                    <h2 className="text-2xl font-bold text-slate-800">
-                      {selectedSadhu.sadhu_sadhvi_name}
-                    </h2>
-                    <p className="text-slate-500">
-                      Created At:{" "}
-                      {new Date(family.created_at).toLocaleDateString()}
-                    </p>
-                  </div>
+            <div key={family.id} className="space-y-6">
+              <div className="flex items-center gap-4 bg-white p-6 rounded-xl border border-slate-100 shadow-sm">
+                <div className="bg-blue-100 p-3 rounded-full text-blue-600">
+                  <User size={32} />
                 </div>
-
-                <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-6">
-                  <h3 className="text-lg font-bold text-slate-700 mb-6">
-                    Family Members
-                  </h3>
-
-                  <div className="space-y-4">
-                    {Object.keys(family.relation_details).map((relation) => {
-                      const member = family.relation_details[relation];
-
-                      return (
-                        <div
-                          key={relation}
-                          className="flex items-center justify-between p-4 border rounded-xl hover:bg-slate-50 transition-colors"
-                        >
-                          <div className="flex items-center gap-4">
-                            <div className="bg-slate-100 p-2 rounded-full text-slate-500">
-                              <User size={24} />
-                            </div>
-                            <div>
-                              <p className="font-semibold text-slate-700">
-                                {member.fullName || "N/A"} ({relation})
-                              </p>
-                              <p className="text-sm text-slate-500">
-                                Category:{" "}
-                                {family.assistance_data?.[relation]
-                                  ? Object.keys(
-                                      family.assistance_data[relation],
-                                    ).join(", ")
-                                  : "General"}{" "}
-                                Assistance
-                              </p>
-                            </div>
-                          </div>
-
-                          <div className="flex gap-3">
-                            <button
-                              onClick={() =>
-                                handleEdit(member, relation, family)
-                              }
-                              className="bg-[#f2a12a] hover:bg-[#d98d1f] text-white px-5 py-2 rounded-lg font-medium transition-colors text-sm"
-                            >
-                              Edit Assistance
-                            </button>
-                            <button className="bg-[#cc4b00] hover:bg-[#a63d00] text-white px-5 py-2 rounded-lg font-medium transition-colors text-sm">
-                              Close assistance
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-slate-800">
+                    {selectedSadhu.sadhu_sadhvi_name}
+                  </h2>
+                  <p className="text-slate-500">
+                    Created At:{" "}
+                    {new Date(family.created_at).toLocaleDateString()}
+                  </p>
                 </div>
               </div>
-            ))
+
+              <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-6">
+                <h3 className="text-lg font-bold text-slate-700 mb-6">
+                  Family Members
+                </h3>
+
+                <div className="space-y-4">
+                  {Object.keys(family?.relation_details || {}).map((relation) => {
+                    const member = family?.relation_details?.[relation];
+
+                    return (
+                      <div
+                        key={relation}
+                        className="flex items-center justify-between p-4 border rounded-xl hover:bg-slate-50 transition-colors"
+                      >
+                        <div className="flex items-center gap-4">
+                          <div className="bg-slate-100 p-2 rounded-full text-slate-500">
+                            <User size={24} />
+                          </div>
+                          <div>
+                            <p className="font-semibold text-slate-700">
+                              {member.fullName || "N/A"} ({relation})
+                            </p>
+                            <p className="text-sm text-slate-500">
+                              Category:{" "}
+                              {family.assistance_data?.[relation]
+                                ? Object.keys(
+                                  family.assistance_data[relation],
+                                ).join(", ")
+                                : "General"}{" "}
+                              Assistance
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex gap-3">
+                          <button
+                            onClick={() =>
+                              handleEdit(member, relation, family)
+                            }
+                            className="bg-[#f2a12a] hover:bg-[#d98d1f] text-white px-5 py-2 rounded-lg font-medium transition-colors text-sm"
+                          >
+                            Apply for Assistance
+                          </button>
+                          <button
+                            onClick={() =>
+                              handleEdit(member, relation, family)
+                            }
+                            className="bg-[#f2a12a] hover:bg-[#d98d1f] text-white px-5 py-2 rounded-lg font-medium transition-colors text-sm"
+                          >
+                            Edit Assistance
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {Object.keys(family?.relation_details || {}).length === 0 && (
+                  <p className="text-sm text-slate-500">No family members found.</p>
+                )}
+              </div>
+            </div>
+          ))
           : renderDefaultTable()}
 
         {isModalOpen && (

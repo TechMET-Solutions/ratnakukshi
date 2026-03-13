@@ -2,6 +2,7 @@ import { Plus, Search, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { API } from "../api/BaseURL";
+import { useAuth } from "../context/AuthContext";
 
 
 const DetailItem = ({ label, value }) => (
@@ -38,17 +39,9 @@ const normalizeUser = (item) => ({
 
 const DiksharthiListing = () => {
   const navigate = useNavigate();
-  const storedUser = localStorage.getItem("user");
-  let loggedInUser = null;
-  try {
-    loggedInUser = storedUser ? JSON.parse(storedUser) : null;
-  } catch {
-    loggedInUser = null;
-  }
+  const { user: loggedInUser } = useAuth();
 
-  const role = normalizeRole(
-    loggedInUser?.role || localStorage.getItem("role") || ""
-  );
+  const role = normalizeRole(loggedInUser?.role || "");
   const loggedInUserId = loggedInUser?.id ?? null;
 
   const [sendingId, setSendingId] = useState(null);
@@ -473,10 +466,10 @@ const DiksharthiListing = () => {
                           <>
                             <button
                               type="button"
-                              className="rounded-lg bg-gray-500 text-sm px-2 py-1 text-white cursor-default"
+                              className="rounded-lg text-sm px-2 py-1 text-green-600 cursor-default"
                               disabled
                             >
-                              Sent
+                             Send
                             </button>
                             <button
                               type="button"
@@ -498,7 +491,7 @@ const DiksharthiListing = () => {
                           </button>
                         )
                       ) : null}
-                      {role === "admin" && (
+                      {role === "admin" || role ==="karyakarta" && (
                         <button
                           className="rounded-lg bg-yellow-500 text-sm px-2 py-1 text-white"
                           onClick={() =>
@@ -523,6 +516,32 @@ const DiksharthiListing = () => {
                           >
                             View
                           </button>
+                          {/* <button
+                            className="rounded-lg bg-green-600 text-sm px-2 py-1 text-white"
+                            onClick={() =>
+                              navigate("/diksharthi-details-add", {
+                                state: {
+                                  mode: "edit",
+                                  diksharthiData: diksharthi,
+                                },
+                              })
+                            }
+                          >
+                            Edit
+                          </button> */}
+                          {isAdminUnassigned(diksharthi) && (
+                            <button
+                              className="rounded-lg bg-purple-600 text-sm px-2 py-1 text-white"
+                              onClick={() => openAssignAdminModal(diksharthi)}
+                            >
+                              Assign Karyakarta
+                            </button>
+                          )}
+                        </>
+                      )}
+                      {role === "staff" && (
+                        <>
+                          
                           <button
                             className="rounded-lg bg-green-600 text-sm px-2 py-1 text-white"
                             onClick={() =>
@@ -536,22 +555,15 @@ const DiksharthiListing = () => {
                           >
                             Edit
                           </button>
-                          {isAdminUnassigned(diksharthi) && (
-                            <button
-                              className="rounded-lg bg-purple-600 text-sm px-2 py-1 text-white"
-                              onClick={() => openAssignAdminModal(diksharthi)}
-                            >
-                              Assign Admin
-                            </button>
-                          )}
+                         
                         </>
                       )}
-                      {role === "admin" && queryItem && (
+                      {role === "karyakarta"  && queryItem && (
                         <button
                           className="rounded-lg bg-blue-600 text-sm px-2 py-1 text-white"
                           onClick={() => setQueryModalData(queryItem)}
                         >
-                          View
+                          Queries
                         </button>
                       )}
                     </td>
@@ -682,8 +694,15 @@ const DiksharthiListing = () => {
                             onError={(e) => { e.currentTarget.src = "/user.png"; }}
                             className="w-32 h-32 rounded-xl object-cover border-4 border-white shadow-md"
                           />
-                          <div className={`absolute -bottom-2 -right-2 px-2 py-1 rounded text-[10px] font-bold uppercase text-white shadow-sm ${viewModalData?.is_alive === 'No' ? 'bg-red-500' : 'bg-green-500'}`}>
-                            {viewModalData?.is_alive || "Status N/A"}
+                          <div
+                            className={`absolute -bottom-2 -right-2 px-2 py-1 rounded text-[10px] font-bold uppercase text-white shadow-sm ${viewModalData?.is_alive === "No" ? "bg-red-500" : "bg-green-500"
+                              }`}
+                          >
+                            {viewModalData?.is_alive === "Yes"
+                              ? "Alive"
+                              : viewModalData?.is_alive === "No"
+                                ? "Dead"
+                                : "Status N/A"}
                           </div>
                         </div>
                       </div>

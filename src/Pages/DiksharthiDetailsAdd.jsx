@@ -3,6 +3,7 @@ import { ChevronDown, FileText } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { API } from "../api/BaseURL";
+import { useAuth } from "../context/AuthContext";
 
 const initialFormData = {
   sadhu_sadhvi_name: "",
@@ -45,6 +46,7 @@ const mapDiksharthiToFormData = (record) => ({
 
 const DiksharthiDetailsAdd = () => {
   const location = useLocation();
+  const { user } = useAuth();
   const editRecord = location?.state?.mode === "edit" ? location?.state?.diksharthiData : null;
   const editId = editRecord?.id || location?.state?.id || null;
   const isEditMode = Boolean(editId);
@@ -121,14 +123,7 @@ const DiksharthiDetailsAdd = () => {
     if (!validate()) return;
 
     try {
-      const storedUser = localStorage.getItem("user");
-      let parsedUser = null;
-      try {
-        parsedUser = storedUser ? JSON.parse(storedUser) : null;
-      } catch {
-        parsedUser = null;
-      }
-      const loggedInUserId = parsedUser?.id || null;
+      const loggedInUserId = user?.id || null;
 
       const data = new FormData();
       Object.keys(formData).forEach((key) => data.append(key, formData[key]));
@@ -146,9 +141,7 @@ const DiksharthiDetailsAdd = () => {
           });
 
       const diksharthi = response?.data?.data || editRecord;
-
-      // Get role
-      const role = localStorage.getItem("role");
+      const role = String(user?.role || "").toLowerCase();
 
       // 1. Set the ID and show modal
       setSavedId(diksharthi?.diksharthi_code || diksharthi?.id || editRecord?.id);

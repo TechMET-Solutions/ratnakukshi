@@ -53,6 +53,7 @@ const UserFormModal = ({
                             >
                                 <option value="admin">Admin</option>
                                 <option value="staff">Staff</option>
+                                <option value="karyakarta">Karyakarta</option>
                                 <option value="operations-manager">Operations Manager</option>
                                 <option value="case-coordinator">Case Co-ordinator</option>
                             </select>
