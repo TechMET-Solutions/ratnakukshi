@@ -258,11 +258,18 @@ const DiksharthiListing = () => {
     if (!schedule) return null;
 
     return {
+      diksharthi_name:
+        schedule?.diksharthi_name ||
+        schedule?.sadhu_sadhvi_name ||
+        schedule?.name ||
+        "",
       name: schedule?.name || schedule?.person_name || "",
       address: schedule?.address || schedule?.visit_address || "",
       mobile: schedule?.mobile || schedule?.mobile_no || schedule?.phone || "",
       date: schedule?.date || schedule?.visit_date || schedule?.scheduled_date || "",
       time: schedule?.time || schedule?.visit_time || schedule?.scheduled_time || "",
+      diksharthi_code: schedule?.diksharthi_code || "",
+      scheduled_by: schedule?.scheduled_by || schedule?.user_id || "",
     };
   };
 
@@ -270,14 +277,16 @@ const DiksharthiListing = () => {
     if (!diksharthiId) return null;
 
     try {
-      const response = await fetch(`${API}/api/visit-schedule/${diksharthiId}`);
+      const response = await fetch(`${API}/api/visit-schedule/list/${diksharthiId}`);
       const result = await response.json().catch(() => ({}));
 
       if (!response.ok) {
         return null;
       }
 
-      const rawSchedule = result?.data || result?.schedule || result;
+      const rawSchedule = Array.isArray(result?.data)
+        ? result.data[0]
+        : result?.data || result?.schedule || result;
       return normalizeVisitSchedule(rawSchedule);
     } catch (error) {
       console.error("Failed to fetch visit schedule", error);
@@ -316,13 +325,13 @@ const DiksharthiListing = () => {
       const rows = Array.isArray(result?.data) ? result.data : [];
       const normalizedUsers = rows.map(normalizeUser);
       setUserDirectory(normalizedUsers);
-      const admins = normalizedUsers.filter(
-        (user) => String(user?.role || "").toLowerCase() === "admin"
+      const Karyakarta = normalizedUsers.filter(
+        (user) => String(user?.role || "").toLowerCase() === "karyakarta"
       );
-      setAdminUsers(admins);
+      setAdminUsers(Karyakarta);
     } catch (error) {
       console.error(error);
-      alert("Failed to fetch admin list");
+      alert("Failed to fetch Karyakarta list");
     } finally {
       setIsAdminListLoading(false);
     }
@@ -382,7 +391,7 @@ const DiksharthiListing = () => {
     try {
       setIsSchedulingVisit(true);
 
-      const response = await fetch(`${API}/api/schedule-visit`, {
+      const response = await fetch(`${API}/api/visit-schedule/create`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -485,16 +494,16 @@ const DiksharthiListing = () => {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to assign admin");
+        throw new Error("Failed to assign Karyakarta");
       }
 
-      alert("Admin assigned successfully");
+      alert("Karyakarta assigned successfully");
       setAssignModalData(null);
       setSelectedAdminId("");
       await fetchDiksharthiList();
     } catch (error) {
       console.error(error);
-      alert("Failed to assign admin");
+      alert("Failed to assign Karyakarta");
     } finally {
       setIsAssigningAdmin(false);
     }
@@ -654,13 +663,7 @@ const DiksharthiListing = () => {
                             >
                              Send
                             </button>
-                            <button
-                              type="button"
-                              className="rounded-lg bg-blue-600 text-sm px-2 py-1 text-white"
-                              onClick={() => openViewModal(diksharthi)}
-                            >
-                              View
-                            </button>
+                            
                           </>
                         ) : (
                           <button
@@ -732,7 +735,13 @@ const DiksharthiListing = () => {
                       )}
                       {role === "staff" && (
                         <>
-                          
+                          <button
+                            type="button"
+                            className="rounded-lg bg-blue-600 text-sm px-2 py-1 text-white"
+                            onClick={() => openViewModal(diksharthi)}
+                          >
+                            View
+                          </button>
                           <button
                             className="rounded-lg bg-green-600 text-sm px-2 py-1 text-white"
                             onClick={() =>
@@ -746,6 +755,8 @@ const DiksharthiListing = () => {
                           >
                             Edit
                           </button>
+
+                          
                          
                         </>
                       )}
@@ -920,7 +931,9 @@ const DiksharthiListing = () => {
                       <DetailItem label="Gaachh" value={viewModalData?.gaachh} />
                       <DetailItem label="Gadipati" value={viewModalData?.gadipati} />
 
-                      <DetailItem label="Current Vihar Location" value={viewModalData?.vihar_location || viewModalData?.viharLocation} />
+                      {getAliveStatus(viewModalData) === "yes" && (
+                        <DetailItem label="Current Vihar Location" value={viewModalData?.vihar_location || viewModalData?.viharLocation} />
+                      )}
 
                       {/* Conditional Samadhi Info */}
                       {getAliveStatus(viewModalData) === "no" && (
@@ -941,7 +954,7 @@ const DiksharthiListing = () => {
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-md">
             <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-              <h3 className="text-lg font-semibold text-gray-800">Assign Admin</h3>
+              <h3 className="text-lg font-semibold text-gray-800">Assign Karyakarta</h3>
               <button
                 type="button"
                 className="p-1 rounded hover:bg-gray-100"
@@ -956,14 +969,14 @@ const DiksharthiListing = () => {
                 {assignModalData?.sadhu_sadhvi_name || "-"}
               </p>
               <label className="block">
-                <span className="font-semibold">Admin</span>
+                <span className="font-semibold">Karyakarta :</span>
                 <select
                   value={selectedAdminId}
                   onChange={(e) => setSelectedAdminId(e.target.value)}
                   className="mt-2 w-full p-2 border border-slate-300 rounded-md outline-none"
                   disabled={isAdminListLoading}
                 >
-                  <option value="">Select Admin</option>
+                  <option value="">Select Karyakarta</option>
                   {adminUsers.map((admin) => (
                     <option key={admin.id} value={admin.id}>
                       {admin.name || admin.email || `Admin #${admin.id}`}
@@ -1041,8 +1054,12 @@ const DiksharthiListing = () => {
                 <input
                   type="text"
                   name="mobile"
+                  maxLength={10}
                   value={scheduleForm.mobile}
-                  onChange={handleScheduleFormChange}
+                  onChange={(e) => {
+                    const onlyNumbers = e.target.value.replace(/\D/g, "");
+                    handleScheduleFormChange({ target: { name: "mobile", value: onlyNumbers } });
+                  }}
                   className="w-full p-2 border border-slate-300 rounded-md outline-none"
                 />
               </div>
@@ -1117,7 +1134,9 @@ const DiksharthiListing = () => {
                 <>
                   <p>
                     <span className="font-semibold">Name:</span>{" "}
-                    {viewScheduleModalData.schedule.name || "-"}
+                    {viewScheduleModalData.schedule.diksharthi_name ||
+                      viewScheduleModalData.diksharthi?.sadhu_sadhvi_name ||
+                      "-"}
                   </p>
                   <p>
                     <span className="font-semibold">Address:</span>{" "}

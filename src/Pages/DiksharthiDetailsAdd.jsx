@@ -87,10 +87,22 @@ const DiksharthiDetailsAdd = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
 
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setFormData((prev) => {
+      if (name === "isAlive") {
+        return {
+          ...prev,
+          [name]: value,
+          viharLocation: value === "Yes" ? prev.viharLocation : "",
+          samadhiDate: value === "No" ? prev.samadhiDate : "",
+          samadhiPlace: value === "No" ? prev.samadhiPlace : "",
+        };
+      }
+
+      return {
+        ...prev,
+        [name]: value,
+      };
+    });
   };
 
   const validate = () => {
@@ -107,7 +119,9 @@ const DiksharthiDetailsAdd = () => {
     if (!formData.gaachh) newErrors.gaachh = "Required";
     if (!formData.gadipati) newErrors.gadipati = "Required";
     if (!formData.isAlive) newErrors.isAlive = "Required";
-    if (!formData.viharLocation) newErrors.viharLocation = "Required";
+    if (formData.isAlive === "Yes" && !formData.viharLocation) {
+      newErrors.viharLocation = "Required";
+    }
 
     if (formData.isAlive === "No") {
       if (!formData.samadhiDate) newErrors.samadhiDate = "Required";
@@ -169,7 +183,7 @@ const DiksharthiDetailsAdd = () => {
           navigate("/diksharthi-details");
         }
 
-      }, isEditMode ? 500 : 5000);
+      }, isEditMode ? 500 : 500);
 
     } catch (error) {
       console.error(error);
@@ -423,23 +437,25 @@ const DiksharthiDetailsAdd = () => {
           </div>
 
           {/* Location */}
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
-              Current Vihar Location<span className="text-red-500">*</span>
-            </label>
+          {formData.isAlive === "Yes" && (
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">
+                Current Vihar Location<span className="text-red-500">*</span>
+              </label>
 
-            <input
-              name="viharLocation"
-              value={formData.viharLocation}
-              onChange={handleChange}
-              type="text"
-              className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
-            />
+              <input
+                name="viharLocation"
+                value={formData.viharLocation}
+                onChange={handleChange}
+                type="text"
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
+              />
 
-            {errors.viharLocation && (
-              <p className="text-red-500 text-xs">{errors.viharLocation}</p>
-            )}
-          </div>
+              {errors.viharLocation && (
+                <p className="text-red-500 text-xs">{errors.viharLocation}</p>
+              )}
+            </div>
+          )}
 
           {/* Photo of P. Pujya. Sadhu/ Sadhvi Ji */}
 
@@ -451,6 +467,7 @@ const DiksharthiDetailsAdd = () => {
 
             <input
               type="file"
+               accept=".jpg,.jpeg,.png,image/jpeg,image/png"
               onChange={(e) => setPhoto(e.target.files[0])}
               className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
             />
