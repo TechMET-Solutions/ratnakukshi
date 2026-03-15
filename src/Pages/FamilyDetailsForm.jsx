@@ -677,7 +677,7 @@ const FamilyDetailsForm = () => {
                 Pin Code<span className="text-red-500">*</span>
               </label>
               <input
-                type="text"
+                type="number"
                 value={formData.pinCode}
                 onChange={(e) =>
                   setFormData({ ...formData, pinCode: e.target.value })
@@ -740,7 +740,7 @@ const FamilyDetailsForm = () => {
                 Maintenance Cost<span className="text-red-500">*</span>
               </label>
               <input
-                type="text"
+                type="number"
                 value={formData.maintenanceCost}
                 onChange={(e) =>
                   setFormData({ ...formData, maintenanceCost: e.target.value })
@@ -757,7 +757,7 @@ const FamilyDetailsForm = () => {
                   Rent Cost<span className="text-red-500">*</span>
                 </label>
                 <input
-                  type="text"
+                  type="number"
                   value={formData.rentCost}
                   onChange={(e) =>
                     setFormData({ ...formData, rentCost: e.target.value })
@@ -773,7 +773,7 @@ const FamilyDetailsForm = () => {
                 Light Bill cost<span className="text-red-500">*</span>
               </label>
               <input
-                type="text"
+                type="number"
                 value={formData.lightBillCost}
                 onChange={(e) =>
                   setFormData({ ...formData, lightBillCost: e.target.value })
@@ -1797,7 +1797,7 @@ const FamilyDetailsForm = () => {
                                         Other Expenses
                                       </label>
                                       <input
-                                        type="text"
+                                        type="number"
                                         value={
                                           assistanceData[rel]?.Education
                                             ?.minorityNumber || ""

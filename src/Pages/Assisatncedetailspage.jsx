@@ -25,13 +25,24 @@ const AssistanceDetails = () => {
     "Housing",
     "Vaiyavacch",
     "EmergencyExpenses",
+    "Business",
   ];
+
+  const includesValue = (list, value) =>
+    Array.isArray(list) ? list.includes(value) : false;
+  const normalizeAssistanceCategories = (data) =>
+    Object.keys(data || {}).map((category) =>
+      category === "BusinessSupport" ? "Business" : category,
+    );
 
   const fetchFamilyDetails = async () => {
     try {
       const res = await axios.get(`${API}/api/family-details/${selectedSadhu}`);
 
-      const family = res?.data?.data?.[0];
+      const families = Array.isArray(res?.data?.data) ? res.data.data : [];
+      const family =
+        families.find((item) => String(item?.id) === String(familyId)) ||
+        families[0];
 
       const existingAssistance = family?.assistance_data?.[relation] || {};
 
@@ -39,7 +50,7 @@ const AssistanceDetails = () => {
         [relation]: existingAssistance,
       });
 
-      const categories = Object.keys(existingAssistance || {});
+      const categories = normalizeAssistanceCategories(existingAssistance);
 
       setRelationDetails({
         [relation]: {
@@ -52,10 +63,26 @@ const AssistanceDetails = () => {
   };
 
   useEffect(() => {
+    if (!relation) return;
+
+    const categories = normalizeAssistanceCategories(existingAssistance);
+
+    setAssistanceData({
+      [relation]: existingAssistance,
+    });
+
+    setRelationDetails({
+      [relation]: {
+        assistanceCategories: categories,
+      },
+    });
+  }, [existingAssistance, relation]);
+
+  useEffect(() => {
     if (familyId && relation) {
       fetchFamilyDetails();
     }
-  }, [familyId, relation]);
+  }, [familyId, relation, selectedSadhu]);
   /* -------------------- Checkbox Toggle -------------------- */
 
   //   const handleCategoryToggle = (rel, category) => {
@@ -87,6 +114,9 @@ const AssistanceDetails = () => {
         // UNCHECK → remove category
         updatedCategories = currentCategories.filter((c) => c !== category);
         delete updatedData[category];
+        if (category === "Business") {
+          delete updatedData.BusinessSupport;
+        }
       } else {
         // CHECK → add category
         updatedCategories = [...currentCategories, category];
@@ -210,8 +240,8 @@ const AssistanceDetails = () => {
       ...prev,
       [relation]: {
         ...prev[relation],
-        Business: {
-          ...prev[relation]?.Business,
+        BusinessSupport: {
+          ...prev[relation]?.BusinessSupport,
           [field]: value,
         },
       },
@@ -270,7 +300,8 @@ const AssistanceDetails = () => {
             <label key={type} className="flex gap-2 items-center">
               <input
                 type="checkbox"
-                checked={relationDetails[rel]?.assistanceCategories?.includes(
+                checked={includesValue(
+                  relationDetails[rel]?.assistanceCategories,
                   type,
                 )}
                 onChange={() => handleCategoryToggle(rel, type)}
@@ -1016,9 +1047,10 @@ const AssistanceDetails = () => {
                   >
                     <input
                       type="checkbox"
-                      checked={assistanceData[
-                        rel
-                      ]?.Job?.preferredJobType?.includes(type)}
+                      checked={includesValue(
+                        assistanceData[rel]?.Job?.preferredJobType,
+                        type,
+                      )}
                       onChange={(e) => {
                         const currentTypes =
                           assistanceData[rel]?.Job?.preferredJobType || [];
@@ -1071,7 +1103,8 @@ const AssistanceDetails = () => {
                   >
                     <input
                       type="checkbox"
-                      checked={assistanceData[rel]?.Job?.interests?.includes(
+                      checked={includesValue(
+                        assistanceData[rel]?.Job?.interests,
                         place,
                       )}
                       onChange={(e) => {
@@ -1161,7 +1194,8 @@ const AssistanceDetails = () => {
                   >
                     <input
                       type="checkbox"
-                      checked={assistanceData[rel]?.Food?.foodType?.includes(
+                      checked={includesValue(
+                        assistanceData[rel]?.Food?.foodType,
                         type,
                       )}
                       onChange={(e) => {
@@ -1463,9 +1497,10 @@ const AssistanceDetails = () => {
                   <label key={type} className="flex items-center gap-2 text-sm">
                     <input
                       type="checkbox"
-                      checked={assistanceData[
-                        rel
-                      ]?.Housing?.assistanceType?.includes(type)}
+                      checked={includesValue(
+                        assistanceData[rel]?.Housing?.assistanceType,
+                        type,
+                      )}
                       onChange={(e) => {
                         const currentTypes =
                           assistanceData[rel]?.Housing?.assistanceType || [];

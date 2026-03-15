@@ -4,7 +4,6 @@ import { Link, useNavigate } from "react-router-dom";
 import { API } from "../api/BaseURL";
 import { useAuth } from "../context/AuthContext";
 
-
 const DetailItem = ({ label, value }) => (
   <div className="flex flex-col">
     <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-tight">{label}</span>
@@ -37,6 +36,14 @@ const normalizeUser = (item) => ({
   role: String(item?.role || "").toLowerCase(),
 });
 
+const emptyScheduleForm = {
+  name: "",
+  address: "",
+  mobile: "",
+  date: "",
+  time: "",
+};
+
 const DiksharthiListing = () => {
   const navigate = useNavigate();
   const { user: loggedInUser } = useAuth();
@@ -55,6 +62,12 @@ const DiksharthiListing = () => {
   const [selectedAdminId, setSelectedAdminId] = useState("");
   const [isAssigningAdmin, setIsAssigningAdmin] = useState(false);
   const [isAdminListLoading, setIsAdminListLoading] = useState(false);
+  const [visitSchedules, setVisitSchedules] = useState({});
+  const [scheduleVisitModalData, setScheduleVisitModalData] = useState(null);
+  const [viewScheduleModalData, setViewScheduleModalData] = useState(null);
+  const [scheduleForm, setScheduleForm] = useState(emptyScheduleForm);
+  const [isSchedulingVisit, setIsSchedulingVisit] = useState(false);
+  const [isViewScheduleLoading, setIsViewScheduleLoading] = useState(false);
   const itemsPerPage = 10;
 
   const [diksharthiList, setDiksharthiList] = useState([]);
@@ -115,6 +128,11 @@ const DiksharthiListing = () => {
       }
 
       setDiksharthiList(filteredRecords);
+      if (role === "operations-manager" || role === "karyakarta") {
+        await fetchVisitSchedulesForList(filteredRecords);
+      } else {
+        setVisitSchedules({});
+      }
 
     } catch (error) {
       console.error(error);
@@ -231,6 +249,65 @@ const DiksharthiListing = () => {
     return matchedUser?.name || matchedUser?.email || String(userId);
   };
 
+  const getVisitSchedule = (diksharthi) => {
+    if (!diksharthi?.id) return null;
+    return visitSchedules[String(diksharthi.id)] || null;
+  };
+
+  const normalizeVisitSchedule = (schedule) => {
+    if (!schedule) return null;
+
+    return {
+      name: schedule?.name || schedule?.person_name || "",
+      address: schedule?.address || schedule?.visit_address || "",
+      mobile: schedule?.mobile || schedule?.mobile_no || schedule?.phone || "",
+      date: schedule?.date || schedule?.visit_date || schedule?.scheduled_date || "",
+      time: schedule?.time || schedule?.visit_time || schedule?.scheduled_time || "",
+    };
+  };
+
+  const fetchVisitScheduleById = async (diksharthiId) => {
+    if (!diksharthiId) return null;
+
+    try {
+      const response = await fetch(`${API}/api/visit-schedule/${diksharthiId}`);
+      const result = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        return null;
+      }
+
+      const rawSchedule = result?.data || result?.schedule || result;
+      return normalizeVisitSchedule(rawSchedule);
+    } catch (error) {
+      console.error("Failed to fetch visit schedule", error);
+      return null;
+    }
+  };
+
+  const fetchVisitSchedulesForList = async (records) => {
+    try {
+      const entries = await Promise.all(
+        records.map(async (item) => {
+          const schedule = await fetchVisitScheduleById(item?.id);
+          return [String(item?.id), schedule];
+        })
+      );
+
+      const nextSchedules = entries.reduce((acc, [id, schedule]) => {
+        if (id && schedule) {
+          acc[id] = schedule;
+        }
+        return acc;
+      }, {});
+
+      setVisitSchedules(nextSchedules);
+    } catch (error) {
+      console.error("Failed to fetch visit schedules for list", error);
+      setVisitSchedules({});
+    }
+  };
+
   const fetchAdminUsers = async () => {
     try {
       setIsAdminListLoading(true);
@@ -255,6 +332,112 @@ const DiksharthiListing = () => {
     setAssignModalData(diksharthi);
     setSelectedAdminId("");
     await fetchAdminUsers();
+  };
+
+  const openScheduleVisitModal = (diksharthi) => {
+    const existingSchedule = getVisitSchedule(diksharthi);
+    setScheduleVisitModalData(diksharthi);
+    setScheduleForm(
+      existingSchedule || {
+        ...emptyScheduleForm,
+        name: diksharthi?.sadhu_sadhvi_name || "",
+      }
+    );
+  };
+
+  const handleScheduleFormChange = (e) => {
+    const { name, value } = e.target;
+    setScheduleForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleSaveVisitSchedule = async () => {
+    if (!scheduleVisitModalData?.id) return;
+
+    if (
+      !scheduleForm.name.trim() ||
+      !scheduleForm.address.trim() ||
+      !scheduleForm.mobile.trim() ||
+      !scheduleForm.date ||
+      !scheduleForm.time
+    ) {
+      alert("Please fill name, address, mobile number, date and time");
+      return;
+    }
+
+    const payload = {
+      diksharthi_id: scheduleVisitModalData.id,
+      diksharthi_code: scheduleVisitModalData.diksharthi_code || "",
+      diksharthi_name: scheduleVisitModalData.sadhu_sadhvi_name || "",
+      name: scheduleForm.name.trim(),
+      address: scheduleForm.address.trim(),
+      mobile: scheduleForm.mobile.trim(),
+      date: scheduleForm.date,
+      time: scheduleForm.time,
+      scheduled_by: loggedInUserId,
+    };
+
+    try {
+      setIsSchedulingVisit(true);
+
+      const response = await fetch(`${API}/api/schedule-visit`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const result = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(result?.message || "Failed to schedule visit");
+      }
+
+      const savedSchedule = result?.data || payload;
+      const normalizedSchedule = {
+        name: savedSchedule?.name || payload.name,
+        address: savedSchedule?.address || payload.address,
+        mobile: savedSchedule?.mobile || payload.mobile,
+        date: savedSchedule?.date || payload.date,
+        time: savedSchedule?.time || payload.time,
+      };
+
+      const updatedSchedules = {
+        ...visitSchedules,
+        [String(scheduleVisitModalData.id)]: normalizedSchedule,
+      };
+
+      setVisitSchedules(updatedSchedules);
+      setScheduleVisitModalData(null);
+      setScheduleForm(emptyScheduleForm);
+      alert(result?.message || "Visit scheduled successfully");
+    } catch (error) {
+      console.error(error);
+      alert(error?.message || "Failed to schedule visit");
+    } finally {
+      setIsSchedulingVisit(false);
+    }
+  };
+
+  const openViewScheduleModal = async (diksharthi) => {
+    setIsViewScheduleLoading(true);
+    setViewScheduleModalData({
+      diksharthi,
+      schedule: getVisitSchedule(diksharthi),
+    });
+
+    try {
+      const schedule = await fetchVisitScheduleById(diksharthi?.id);
+      setViewScheduleModalData({
+        diksharthi,
+        schedule,
+      });
+    } finally {
+      setIsViewScheduleLoading(false);
+    }
   };
 
   const openViewModal = async (diksharthi) => {
@@ -363,7 +546,7 @@ const DiksharthiListing = () => {
                 Diksharthi ID
               </th>
               <th className="px-6 py-4 text-sm font-semibold text-gray-700">
-                Sadhu/Sadhvi Name
+                Diksharthi Name
               </th>
               <th className="px-6 py-4 text-sm font-semibold text-gray-700">
                 Pad
@@ -491,7 +674,7 @@ const DiksharthiListing = () => {
                           </button>
                         )
                       ) : null}
-                      {role === "admin" || role ==="karyakarta" && (
+                      {(role === "admin" || role === "karyakarta") && (
                         <button
                           className="rounded-lg bg-yellow-500 text-sm px-2 py-1 text-white"
                           onClick={() =>
@@ -537,6 +720,14 @@ const DiksharthiListing = () => {
                               Assign Karyakarta
                             </button>
                           )}
+                          {!getVisitSchedule(diksharthi) && (
+                            <button
+                              className="rounded-lg bg-emerald-600 text-sm px-2 py-1 text-white"
+                              onClick={() => openScheduleVisitModal(diksharthi)}
+                            >
+                              Schedule Visit
+                            </button>
+                          )}
                         </>
                       )}
                       {role === "staff" && (
@@ -564,6 +755,14 @@ const DiksharthiListing = () => {
                           onClick={() => setQueryModalData(queryItem)}
                         >
                           Queries
+                        </button>
+                      )}
+                      {role === "karyakarta" && (
+                        <button
+                          className="rounded-lg bg-indigo-600 text-sm px-2 py-1 text-white"
+                          onClick={() => openViewScheduleModal(diksharthi)}
+                        >
+                          View Schedule
                         </button>
                       )}
                     </td>
@@ -788,6 +987,168 @@ const DiksharthiListing = () => {
                 disabled={isAssigningAdmin || !selectedAdminId}
               >
                 {isAssigningAdmin ? "Assigning..." : "Assign"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {role === "operations-manager" && scheduleVisitModalData && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 px-4">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+              <h3 className="text-lg font-semibold text-gray-800">Schedule Visit</h3>
+              <button
+                type="button"
+                className="p-1 rounded hover:bg-gray-100"
+                onClick={() => {
+                  setScheduleVisitModalData(null);
+                  setScheduleForm(emptyScheduleForm);
+                }}
+              >
+                <X size={18} className="text-gray-600" />
+              </button>
+            </div>
+            <div className="px-5 py-4 grid grid-cols-1 gap-4 text-sm">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Name
+                </label>
+                <input
+                  type="text"
+                  name="name"
+                  value={scheduleForm.name}
+                  onChange={handleScheduleFormChange}
+                  className="w-full p-2 border border-slate-300 rounded-md outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Address
+                </label>
+                <textarea
+                  name="address"
+                  value={scheduleForm.address}
+                  onChange={handleScheduleFormChange}
+                  rows={3}
+                  className="w-full p-2 border border-slate-300 rounded-md outline-none resize-none"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Mobile No
+                </label>
+                <input
+                  type="text"
+                  name="mobile"
+                  value={scheduleForm.mobile}
+                  onChange={handleScheduleFormChange}
+                  className="w-full p-2 border border-slate-300 rounded-md outline-none"
+                />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Date
+                  </label>
+                  <input
+                    type="date"
+                    name="date"
+                    value={scheduleForm.date}
+                    onChange={handleScheduleFormChange}
+                    className="w-full p-2 border border-slate-300 rounded-md outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Time
+                  </label>
+                  <input
+                    type="time"
+                    name="time"
+                    value={scheduleForm.time}
+                    onChange={handleScheduleFormChange}
+                    className="w-full p-2 border border-slate-300 rounded-md outline-none"
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="px-5 py-4 border-t border-gray-100 flex gap-2 justify-end">
+              <button
+                type="button"
+                className="rounded-lg bg-gray-200 text-sm px-4 py-2 text-gray-800"
+                onClick={() => {
+                  setScheduleVisitModalData(null);
+                  setScheduleForm(emptyScheduleForm);
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="rounded-lg bg-emerald-600 text-sm px-4 py-2 text-white disabled:opacity-60"
+                onClick={handleSaveVisitSchedule}
+                disabled={isSchedulingVisit}
+              >
+                {isSchedulingVisit ? "Saving..." : "Save Schedule"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {role === "karyakarta" && viewScheduleModalData && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 px-4">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+              <h3 className="text-lg font-semibold text-gray-800">Visit Schedule</h3>
+              <button
+                type="button"
+                className="p-1 rounded hover:bg-gray-100"
+                onClick={() => setViewScheduleModalData(null)}
+              >
+                <X size={18} className="text-gray-600" />
+              </button>
+            </div>
+            <div className="px-5 py-4 space-y-3 text-sm">
+              {isViewScheduleLoading ? (
+                <p className="text-gray-600">Loading visit schedule...</p>
+              ) : viewScheduleModalData?.schedule ? (
+                <>
+                  <p>
+                    <span className="font-semibold">Name:</span>{" "}
+                    {viewScheduleModalData.schedule.name || "-"}
+                  </p>
+                  <p>
+                    <span className="font-semibold">Address:</span>{" "}
+                    {viewScheduleModalData.schedule.address || "-"}
+                  </p>
+                  <p>
+                    <span className="font-semibold">Mobile No:</span>{" "}
+                    {viewScheduleModalData.schedule.mobile || "-"}
+                  </p>
+                  <p>
+                    <span className="font-semibold">Date:</span>{" "}
+                    {formatDate(viewScheduleModalData.schedule.date)}
+                  </p>
+                  <p>
+                    <span className="font-semibold">Time:</span>{" "}
+                    {viewScheduleModalData.schedule.time || "-"}
+                  </p>
+                </>
+              ) : (
+                <p className="text-gray-600">
+                  No visit schedule has been set for this diksharthi yet.
+                </p>
+              )}
+            </div>
+            <div className="px-5 py-4 border-t border-gray-100 flex justify-end">
+              <button
+                type="button"
+                className="rounded-lg bg-indigo-600 text-sm px-4 py-2 text-white"
+                onClick={() => setViewScheduleModalData(null)}
+              >
+                Close
               </button>
             </div>
           </div>
