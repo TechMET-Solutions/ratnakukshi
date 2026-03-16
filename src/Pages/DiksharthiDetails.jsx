@@ -54,7 +54,6 @@ const DiksharthiListing = () => {
   const [sendingId, setSendingId] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [queryModalData, setQueryModalData] = useState(null);
   const [viewModalData, setViewModalData] = useState(null);
   const [isViewLoading, setIsViewLoading] = useState(false);
   const [assignModalData, setAssignModalData] = useState(null);
@@ -329,6 +328,7 @@ const DiksharthiListing = () => {
         (user) => String(user?.role || "").toLowerCase() === "karyakarta"
       );
       setAdminUsers(Karyakarta);
+      console.log(Karyakarta, "Karyakarta")
     } catch (error) {
       console.error(error);
       alert("Failed to fetch Karyakarta list");
@@ -341,6 +341,8 @@ const DiksharthiListing = () => {
     setAssignModalData(diksharthi);
     setSelectedAdminId("");
     await fetchAdminUsers();
+
+    console.log(fetchAdminUsers)
   };
 
   const openScheduleVisitModal = (diksharthi) => {
@@ -760,14 +762,7 @@ const DiksharthiListing = () => {
                          
                         </>
                       )}
-                      {role === "karyakarta"  && queryItem && (
-                        <button
-                          className="rounded-lg bg-blue-600 text-sm px-2 py-1 text-white"
-                          onClick={() => setQueryModalData(queryItem)}
-                        >
-                          Queries
-                        </button>
-                      )}
+                      
                       {role === "karyakarta" && (
                         <button
                           className="rounded-lg bg-indigo-600 text-sm px-2 py-1 text-white"
@@ -809,50 +804,6 @@ const DiksharthiListing = () => {
           </div>
         </div>
       </div>
-
-      {role === "admin" && queryModalData && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-              <h3 className="text-lg font-semibold text-gray-800">Query Details</h3>
-              <button
-                type="button"
-                className="p-1 rounded hover:bg-gray-100"
-                onClick={() => setQueryModalData(null)}
-              >
-                <X size={18} className="text-gray-600" />
-              </button>
-            </div>
-            <div className="px-5 py-4 space-y-3 text-sm">
-              <p>
-                <span className="font-semibold">Relation:</span>{" "}
-                {queryModalData?.relation || "-"}
-              </p>
-              <p>
-                <span className="font-semibold">Type:</span>{" "}
-                {queryModalData?.type || "-"}
-              </p>
-              <p>
-                <span className="font-semibold">Status:</span>{" "}
-                {queryModalData?.status || "-"}
-              </p>
-              <p>
-                <span className="font-semibold">queriesReason:</span>{" "}
-                {queryModalData?.queriesReason || queryModalData?.remark || "-"}
-              </p>
-            </div>
-            <div className="px-5 py-4 border-t border-gray-100 flex justify-end">
-              <button
-                type="button"
-                className="rounded-lg bg-blue-600 text-sm px-4 py-2 text-white"
-                onClick={() => setQueryModalData(null)}
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {(role === "operations-manager" || role === "staff") &&
         (viewModalData || isViewLoading) && (

@@ -20,21 +20,12 @@ const asArray = (value) => {
   return [];
 };
 
-const generateUniqueCaseId = () => {
-  const now = new Date();
-  const datePart = [
-    now.getFullYear(),
-    String(now.getMonth() + 1).padStart(2, "0"),
-    String(now.getDate()).padStart(2, "0"),
-  ].join("");
-  const timePart = [
-    String(now.getHours()).padStart(2, "0"),
-    String(now.getMinutes()).padStart(2, "0"),
-    String(now.getSeconds()).padStart(2, "0"),
-  ].join("");
-  const randomPart = Math.random().toString(36).slice(2, 6).toUpperCase();
-
-  return `CASE-${datePart}-${timePart}-${randomPart}`;
+const asDisplayText = (value, fallback = "-") => {
+  if (value == null || value === "") return fallback;
+  if (typeof value === "string" || typeof value === "number") {
+    return String(value);
+  }
+  return fallback;
 };
 
 const AssistancePage = () => {
@@ -208,12 +199,6 @@ const AssistancePage = () => {
           type: activeRow?.type,
         };
 
-        if (actionType === "approve") {
-          const caseId = generateUniqueCaseId();
-          payload.case_id = caseId;
-          payload.caseId = caseId;
-        }
-
         await axios.put(`${API}/api/assistance-status/${actionType}`, payload);
       }
 
@@ -247,7 +232,10 @@ const AssistancePage = () => {
   };
 
   const getQueryText = (row) =>
-    row?.queriesReason || row?.query_reason || row?.remark || row?.remarks || "";
+    asDisplayText(
+      row?.queriesReason || row?.query_reason || row?.remark || row?.remarks,
+      "",
+    );
 
   const renderDefaultTable = () => (
     <div className="mt-8 overflow-hidden border border-blue-400 rounded-lg shadow-sm">
@@ -268,6 +256,9 @@ const AssistancePage = () => {
               Assistance
             </th>
             <th className="p-4 font-semibold text-slate-700 border-b">
+              Case ID
+            </th>
+            <th className="p-4 font-semibold text-slate-700 border-b">
               Status
             </th>
             <th className="p-4 font-semibold text-slate-700 border-b">
@@ -286,11 +277,22 @@ const AssistancePage = () => {
 
               return (
                 <tr key={index} className="hover:bg-slate-50 transition-colors">
-                  <td className="p-4 text-slate-600">{row.diksharthi}</td>
-                  <td className="p-4 text-slate-600">{row.member_name}</td>
-                  <td className="p-4 text-slate-600">{row.head}</td>
+                  <td className="p-4 text-slate-600">
+                    {asDisplayText(row.diksharthi)}
+                  </td>
+                  <td className="p-4 text-slate-600">
+                    {asDisplayText(row.member_name)}
+                  </td>
+                  <td className="p-4 text-slate-600">
+                    {asDisplayText(row.head)}
+                  </td>
 
-                  <td className="p-4 text-slate-600">{row.type}</td>
+                  <td className="p-4 text-slate-600">
+                    {asDisplayText(row.type)}
+                  </td>
+                  <td className="p-4 text-slate-600">
+                    {asDisplayText(row.case_id)}
+                  </td>
                   <td
                     className={`p-4 font-semibold ${row.status === "Pending"
                         ? "text-yellow-600"
@@ -301,9 +303,11 @@ const AssistancePage = () => {
                             : "text-blue-600"
                       }`}
                   >
-                    {row.status}
+                    {asDisplayText(row.status)}
                   </td>
-                  <td className="p-4 text-slate-600">{row.renewal}</td>
+                  <td className="p-4 text-slate-600">
+                    {asDisplayText(row.renewal)}
+                  </td>
                   <td className="p-4">
                     <div className="flex justify-center gap-2">
                       {(isKaryakarta || isCaseCoordinator) && (
@@ -317,7 +321,7 @@ const AssistancePage = () => {
                             View
                           </button>
 
-                          {isKaryakarta && hasQuery && (
+                          {(isKaryakarta || isCaseCoordinator) && hasQuery && (
                             <button
                               type="button"
                               className="inline-flex items-center gap-1 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-medium text-white"
@@ -328,26 +332,25 @@ const AssistancePage = () => {
                             </button>
                           )}
 
-                          {isCaseCoordinator && (
+                          {isCaseCoordinator && normalizedStatus === "pending" && (
                             <>
                               <button
-                                type="button"
                                 className="inline-flex items-center gap-1 rounded-lg bg-green-600 px-3 py-1.5 text-xs font-medium text-white"
                                 onClick={() => handleOpenActionModal(row, "approve")}
                               >
                                 <CheckCircle size={15} />
                                 Approve
                               </button>
+
                               <button
-                                type="button"
                                 className="inline-flex items-center gap-1 rounded-lg bg-red-600 px-3 py-1.5 text-xs font-medium text-white"
                                 onClick={() => handleOpenActionModal(row, "rejected")}
                               >
                                 <XCircle size={15} />
                                 Rejected
                               </button>
+
                               <button
-                                type="button"
                                 className="inline-flex items-center gap-1 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-medium text-white"
                                 onClick={() => handleOpenActionModal(row, "queries")}
                               >
@@ -543,7 +546,10 @@ const AssistancePage = () => {
 
                   <div className="text-center">
                     <h4 className="font-semibold text-lg text-slate-700">
-                      {activeRow?.member_name || activeRow?.member || "Request"}
+                      {asDisplayText(
+                        activeRow?.member_name || activeRow?.member,
+                        "Request",
+                      )}
                     </h4>
                     <p className="text-slate-500 text-sm">
                       Case ID: #{activeRow?.id || "-"}
@@ -624,7 +630,9 @@ const AssistancePage = () => {
                 <div>
                   <p className="text-sm text-slate-500">Member</p>
                   <p className="font-semibold text-slate-700">
-                    {viewQueryRow?.member_name || viewQueryRow?.member || "-"}
+                    {asDisplayText(
+                      viewQueryRow?.member_name || viewQueryRow?.member,
+                    )}
                   </p>
                 </div>
                 <div>

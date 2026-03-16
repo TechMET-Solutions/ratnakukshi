@@ -19,39 +19,6 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
-  // const login = async ({ email, password, role }) => {
-  //   const response = await fetch(`${API}/api/user/login`, {
-  //     method: "POST",
-  //     headers: {
-  //       "Content-Type": "application/json",
-  //     },
-  //     body: JSON.stringify({ email, password, role }),
-  //   });
-
-  //   const data = await response.json().catch(() => ({}));
-  //   if (!response.ok || !data?.success) {
-  //     throw new Error(data?.message || "Login failed");
-  //   }
-
-  //   const payload = data?.data || {};
-  //   const normalizedUser = {
-  //     id: payload?.id || null,
-  //     name: payload?.name || "",
-  //     role: String(payload?.role || role || "").toLowerCase(),
-  //     email: payload?.email || email,
-  //     mobile: payload?.mobile || "",
-  //     profilePhoto: payload?.profile_photo || payload?.profilePhoto || null,
-  //   };
-
-  //   setUser(normalizedUser);
-  //   sessionStorage.setItem("user", JSON.stringify(normalizedUser));
-  //   // sessionStorage.setItem("role", normalizedUser.role || "");
-  //   sessionStorage.setItem("token", data?.token);
-
-  //   return normalizedUser;
-  // };
-
-
   const login = async ({ email, password, role }) => {
     const response = await fetch(`${API}/api/user/login`, {
       method: "POST",
@@ -62,38 +29,72 @@ export const AuthProvider = ({ children }) => {
     });
 
     const data = await response.json().catch(() => ({}));
-
     if (!response.ok || !data?.success) {
       throw new Error(data?.message || "Login failed");
     }
 
     const payload = data?.data || {};
-
-    // normalize role
-    const serverRole = String(payload?.role || "").toLowerCase();
-    const selectedRole = String(role || "").toLowerCase();
-
-    // role comparison
-    if (serverRole !== selectedRole) {
-      throw new Error("You are not authorized for this role");
-    }
-
     const normalizedUser = {
       id: payload?.id || null,
       name: payload?.name || "",
-      role: serverRole,
+      role: String(payload?.role || role || "").toLowerCase(),
       email: payload?.email || email,
       mobile: payload?.mobile || "",
       profilePhoto: payload?.profile_photo || payload?.profilePhoto || null,
     };
 
     setUser(normalizedUser);
-
     sessionStorage.setItem("user", JSON.stringify(normalizedUser));
+    // sessionStorage.setItem("role", normalizedUser.role || "");
     sessionStorage.setItem("token", data?.token);
 
     return normalizedUser;
   };
+
+
+  // const login = async ({ email, password, role }) => {
+  //   const response = await fetch(`${API}/api/user/login`, {
+  //     method: "POST",
+  //     headers: {
+  //       "Content-Type": "application/json",
+  //     },
+  //     body: JSON.stringify({ email, password, role }),
+  //   });
+
+  //   const data = await response.json().catch(() => ({}));
+
+  //   if (!response.ok || !data?.success) {
+  //     throw new Error(data?.message || "Login failed");
+  //   }
+
+  //   const payload = data?.data || {};
+
+  //   // normalize role
+  //   const serverRole = String(payload?.role || "").toLowerCase();
+  //   const selectedRole = String(role || "").toLowerCase();
+
+  //   // role comparison
+  //   if (serverRole !== selectedRole) {
+  //     throw new Error("You are not authorized for this role");
+  //   }
+
+  //   const normalizedUser = {
+  //     id: payload?.id || null,
+  //     name: payload?.name || "",
+  //     role: payload?.role || "",
+  //     // role: serverRole,
+  //     email: payload?.email || email,
+  //     mobile: payload?.mobile || "",
+  //     profilePhoto: payload?.profile_photo || payload?.profilePhoto || null,
+  //   };
+
+  //   setUser(normalizedUser);
+
+  //   sessionStorage.setItem("user", JSON.stringify(normalizedUser));
+  //   sessionStorage.setItem("token", data?.token);
+
+  //   return normalizedUser;
+  // };
   
   const logout = () => {
     setUser(null);

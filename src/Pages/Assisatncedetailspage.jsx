@@ -35,48 +35,101 @@ const AssistanceDetails = () => {
       category === "BusinessSupport" ? "Business" : category,
     );
 
+  // const fetchFamilyDetails = async () => {
+  //   try {
+  //     const res = await axios.get(`${API}/api/family-details/${selectedSadhu}`);
+
+  //     const families = Array.isArray(res?.data?.data) ? res.data.data : [];
+  //     const family =
+  //       families.find((item) => String(item?.id) === String(familyId)) ||
+  //       families[0];
+
+  //     const existingAssistance = family?.assistance_data?.[relation] || {};
+
+  //     setAssistanceData({
+  //       [relation]: existingAssistance,
+  //     });
+
+  //     const categories = normalizeAssistanceCategories(existingAssistance);
+
+  //     setRelationDetails({
+  //       [relation]: {
+  //         assistanceCategories: categories,
+  //       },
+  //     });
+  //   } catch (error) {
+  //     console.log("Error fetching family details", error);
+  //   }
+  // };
+
+
   const fetchFamilyDetails = async () => {
     try {
       const res = await axios.get(`${API}/api/family-details/${selectedSadhu}`);
 
       const families = Array.isArray(res?.data?.data) ? res.data.data : [];
+
       const family =
         families.find((item) => String(item?.id) === String(familyId)) ||
         families[0];
 
       const existingAssistance = family?.assistance_data?.[relation] || {};
 
-      setAssistanceData({
+      // ✅ Assistance data set karo
+      setAssistanceData((prev) => ({
+        ...prev,
         [relation]: existingAssistance,
-      });
+      }));
 
-      const categories = normalizeAssistanceCategories(existingAssistance);
+      // ✅ Categories set karo
+      const categories = Object.keys(existingAssistance).map((cat) =>
+        cat === "BusinessSupport" ? "Business" : cat
+      );
 
-      setRelationDetails({
+      setRelationDetails((prev) => ({
+        ...prev,
         [relation]: {
           assistanceCategories: categories,
         },
-      });
+      }));
     } catch (error) {
       console.log("Error fetching family details", error);
     }
   };
 
   useEffect(() => {
-    if (!relation) return;
+    if (!relation || !existingAssistance) return;
 
     const categories = normalizeAssistanceCategories(existingAssistance);
 
-    setAssistanceData({
+    setAssistanceData((prev) => ({
+      ...prev,
       [relation]: existingAssistance,
-    });
+    }));
 
-    setRelationDetails({
+    setRelationDetails((prev) => ({
+      ...prev,
       [relation]: {
         assistanceCategories: categories,
       },
-    });
+    }));
   }, [existingAssistance, relation]);
+
+  // useEffect(() => {
+  //   if (!relation) return;
+
+  //   const categories = normalizeAssistanceCategories(existingAssistance);
+
+  //   setAssistanceData({
+  //     [relation]: existingAssistance,
+  //   });
+
+  //   setRelationDetails({
+  //     [relation]: {
+  //       assistanceCategories: categories,
+  //     },
+  //   });
+  // }, [existingAssistance, relation]);
 
   useEffect(() => {
     if (familyId && relation) {
@@ -535,7 +588,7 @@ const AssistanceDetails = () => {
             </div>
 
             {/* Row 5: Document Upload */}
-            {}
+            { }
             {assistanceData[rel]?.Medical?.repeatedAssistance && (
               <div className="col-span-full md:col-span-2">
                 <div className="flex gap-2">
@@ -1711,13 +1764,13 @@ const AssistanceDetails = () => {
       {relationDetails[rel]?.assistanceCategories?.includes(
         "EmergencyExpenses",
       ) && (
-        <div className="p-6 border rounded-lg bg-white shadow-sm mt-6">
-          <h3 className="text-xl font-semibold mb-6 text-gray-800">
-            Emergency expenses Assistance
-          </h3>
+          <div className="p-6 border rounded-lg bg-white shadow-sm mt-6">
+            <h3 className="text-xl font-semibold mb-6 text-gray-800">
+              Emergency expenses Assistance
+            </h3>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* <div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* <div>
                                 <label className="text-[11px] font-bold uppercase text-gray-500">
                                   Emergency Assistance Required*
                                 </label>
@@ -1742,101 +1795,101 @@ const AssistanceDetails = () => {
                                   <option value="Accident">Accident</option>
                                 </select>
                               </div> */}
-            <div>
-              <label className="text-[11px] font-bold uppercase text-gray-500">
-                Emergency Assistance Required For?
-              </label>
-              <input
-                type="text"
-                className="w-full border p-2 rounded mt-1 outline-none"
-                value={assistanceData[rel]?.EmergencyExpenses?.type || ""}
-                onChange={(e) =>
-                  handleEmergencyChange(rel, "type", e.target.value)
-                }
-              />
-            </div>
-            <div>
-              <label className="text-[11px] font-bold uppercase text-gray-500">
-                Estimated Amount Required*
-              </label>
-              <input
-                type="number"
-                className="w-full border p-2 rounded mt-1 outline-none"
-                value={assistanceData[rel]?.EmergencyExpenses?.amount || ""}
-                onChange={(e) =>
-                  handleEmergencyChange(rel, "amount", e.target.value)
-                }
-              />
-            </div>
-            <div>
-              <label className="text-[11px] font-bold uppercase text-gray-500">
-                Mobile Number.*
-              </label>
-              <input
-                type="text"
-                className="w-full border p-2 rounded mt-1 outline-none"
-                value={assistanceData[rel]?.EmergencyExpenses?.mobile || ""}
-                onChange={(e) =>
-                  handleEmergencyChange(rel, "mobile", e.target.value)
-                }
-              />
-            </div>
-          </div>
-
-          <div className="mt-6">
-            <label className="text-[11px] font-bold uppercase text-gray-500">
-              Briefly Describe the Emergency.
-            </label>
-            <textarea
-              className="w-full border p-2 rounded mt-1 h-24 outline-none resize-none"
-              placeholder="Write here..."
-              value={assistanceData[rel]?.EmergencyExpenses?.description || ""}
-              onChange={(e) =>
-                handleEmergencyChange(rel, "description", e.target.value)
-              }
-            ></textarea>
-          </div>
-
-          <div className="mt-6">
-            <label className="text-[11px] font-bold uppercase text-gray-500">
-              Upload Medical Documents
-            </label>
-            <div className="flex gap-2 mt-1">
-              <input
-                type="text"
-                placeholder="Document Name"
-                className="border p-2 rounded w-1/4 outline-none"
-                value={assistanceData[rel]?.EmergencyExpenses?.docName || ""}
-                onChange={(e) =>
-                  handleEmergencyChange(rel, "docName", e.target.value)
-                }
-              />
-              <div className="flex-1 flex border rounded overflow-hidden">
-                <label className="bg-gray-100 px-4 py-2 text-sm border-r cursor-pointer hover:bg-gray-200">
-                  Choose File
+              <div>
+                <label className="text-[11px] font-bold uppercase text-gray-500">
+                  Emergency Assistance Required For?
                 </label>
-                <span className="px-4 py-2 text-sm text-gray-400 flex-1">
-                  {assistanceData[rel]?.EmergencyExpenses?.file?.name ||
-                    "No file chosen"}
-                </span>
                 <input
-                  type="file"
-                  className="hidden"
+                  type="text"
+                  className="w-full border p-2 rounded mt-1 outline-none"
+                  value={assistanceData[rel]?.EmergencyExpenses?.type || ""}
                   onChange={(e) =>
-                    handleEmergencyChange(rel, "file", e.target.files[0])
+                    handleEmergencyChange(rel, "type", e.target.value)
                   }
                 />
               </div>
-              <button
-                type="button"
-                className="border rounded-full w-8 h-8 flex items-center justify-center text-gray-400 hover:bg-gray-100"
-              >
-                +
-              </button>
+              <div>
+                <label className="text-[11px] font-bold uppercase text-gray-500">
+                  Estimated Amount Required*
+                </label>
+                <input
+                  type="number"
+                  className="w-full border p-2 rounded mt-1 outline-none"
+                  value={assistanceData[rel]?.EmergencyExpenses?.amount || ""}
+                  onChange={(e) =>
+                    handleEmergencyChange(rel, "amount", e.target.value)
+                  }
+                />
+              </div>
+              <div>
+                <label className="text-[11px] font-bold uppercase text-gray-500">
+                  Mobile Number.*
+                </label>
+                <input
+                  type="text"
+                  className="w-full border p-2 rounded mt-1 outline-none"
+                  value={assistanceData[rel]?.EmergencyExpenses?.mobile || ""}
+                  onChange={(e) =>
+                    handleEmergencyChange(rel, "mobile", e.target.value)
+                  }
+                />
+              </div>
+            </div>
+
+            <div className="mt-6">
+              <label className="text-[11px] font-bold uppercase text-gray-500">
+                Briefly Describe the Emergency.
+              </label>
+              <textarea
+                className="w-full border p-2 rounded mt-1 h-24 outline-none resize-none"
+                placeholder="Write here..."
+                value={assistanceData[rel]?.EmergencyExpenses?.description || ""}
+                onChange={(e) =>
+                  handleEmergencyChange(rel, "description", e.target.value)
+                }
+              ></textarea>
+            </div>
+
+            <div className="mt-6">
+              <label className="text-[11px] font-bold uppercase text-gray-500">
+                Upload Medical Documents
+              </label>
+              <div className="flex gap-2 mt-1">
+                <input
+                  type="text"
+                  placeholder="Document Name"
+                  className="border p-2 rounded w-1/4 outline-none"
+                  value={assistanceData[rel]?.EmergencyExpenses?.docName || ""}
+                  onChange={(e) =>
+                    handleEmergencyChange(rel, "docName", e.target.value)
+                  }
+                />
+                <div className="flex-1 flex border rounded overflow-hidden">
+                  <label className="bg-gray-100 px-4 py-2 text-sm border-r cursor-pointer hover:bg-gray-200">
+                    Choose File
+                  </label>
+                  <span className="px-4 py-2 text-sm text-gray-400 flex-1">
+                    {assistanceData[rel]?.EmergencyExpenses?.file?.name ||
+                      "No file chosen"}
+                  </span>
+                  <input
+                    type="file"
+                    className="hidden"
+                    onChange={(e) =>
+                      handleEmergencyChange(rel, "file", e.target.files[0])
+                    }
+                  />
+                </div>
+                <button
+                  type="button"
+                  className="border rounded-full w-8 h-8 flex items-center justify-center text-gray-400 hover:bg-gray-100"
+                >
+                  +
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
       {relationDetails[rel]?.assistanceCategories?.includes("Business") && (
         <div className="p-6 border rounded-lg bg-white shadow-sm mt-6 font-sans">
@@ -2105,10 +2158,6 @@ const AssistanceDetails = () => {
           Update Application
         </button>
       </div>
-
-      {/* <pre className="bg-gray-900 text-green-400 p-4 rounded text-xs mt-6">
-        {JSON.stringify(assistanceData, null, 2)}
-      </pre> */}
     </div>
   );
 };

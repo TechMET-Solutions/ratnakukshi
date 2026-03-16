@@ -1816,12 +1816,12 @@ const FamilyDetailsForm = () => {
                                         type="number"
                                         value={
                                           assistanceData[rel]?.Education
-                                            ?.minorityNumber || ""
+                                            ?.otherExpenses || ""
                                         }
                                         onChange={(e) =>
                                           handleEducationChange(
                                             rel,
-                                            "OtherExpenses",
+                                            "otherExpenses",
                                             e.target.value,
                                           )
                                         }

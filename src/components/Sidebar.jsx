@@ -19,6 +19,7 @@ const Sidebar = () => {
   const { user, logout } = useAuth();
   const role = String(user?.role || "").toLowerCase();
   const isAdmin = role === "admin";
+  const isStaff = role === "staff";
   const isOperationsManager = role === "operations-manager";
   const isKaryakarta = role === "karyakarta";
   const isCaseCoordinator = role === "case-coordinator";
@@ -80,14 +81,22 @@ const Sidebar = () => {
         <NavItem isCollapsed={isCollapsed} to="/" icon={<LayoutDashboard size={22} />} label="Dashboard" />
         <NavItem isCollapsed={isCollapsed} to="/diksharthi-details" icon={<FileText size={22} />} label="Diksharthi Details" />
 
-        {(isAdmin || isKaryakarta || isCaseCoordinator) && (
+        {(isAdmin || isKaryakarta || isCaseCoordinator ) && (
           <>
             <NavItem isCollapsed={isCollapsed} to="/assistance" icon={<Handshake size={22} />} label="Assistance" />
-            {(isAdmin || isKaryakarta) && (
-              <NavItem isCollapsed={isCollapsed} to="/donor" icon={<FileText size={22} />} label="Donor" />
-            )}
+           
           </>
         )}
+
+        {(isAdmin || isKaryakarta || isStaff) && (
+          <NavItem
+            isCollapsed={isCollapsed}
+            to="/donor"
+            icon={<FileText size={22} />}
+            label="Donor"
+          />
+        )}
+        
 
         {isAdmin && (
           <>
