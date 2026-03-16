@@ -58,12 +58,7 @@ const Sidebar = () => {
           )}
         </div>
 
-        {!isCollapsed && (
-          <div className=" text-white px-2 py-1.5 rounded-full flex items-center gap-2 text-lg font-bold uppercase">
-            <div className="w-2 h-2" />
-            {user?.name || "User"}
-          </div>
-        )}
+     
         {!isCollapsed && (
           <div className="bg-white/10 backdrop-blur-md text-white px-4 py-1.5 rounded-full flex items-center gap-2 text-[10px]  uppercase tracking-wider border border-white/20">
             <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />

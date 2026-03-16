@@ -57,6 +57,15 @@ const normalizeRelationDetails = (details) =>
     }),
   );
 
+const buildRelationDetailsPayload = (details, headOfFamily) =>
+  Object.fromEntries(
+    Object.entries(details || {}).map(([relationKey, relationValue]) => {
+      const nextRelationValue = { ...(relationValue || {}) };
+      nextRelationValue.family_head = relationKey === headOfFamily;
+      return [relationKey, nextRelationValue];
+    }),
+  );
+
 const FamilyDetailsForm = () => {
 
   const navigate = useNavigate();
@@ -321,7 +330,12 @@ const FamilyDetailsForm = () => {
           matchedFamily?.assistanceData ?? matchedFamily?.assistance_data ?? {},
         ));
         const fetchedHeadOfFamily =
-          matchedFamily?.headOfFamily ?? matchedFamily?.head_of_family ?? null;
+          matchedFamily?.headOfFamily ??
+          matchedFamily?.head_of_family ??
+          Object.entries(fetchedRelationDetails).find(
+            ([, relationValue]) => relationValue?.family_head === true,
+          )?.[0] ??
+          null;
 
         const nestedFormData = parseMaybeJson(
           matchedFamily?.formData ?? matchedFamily?.form_data,
@@ -417,7 +431,9 @@ const FamilyDetailsForm = () => {
       const payload = {
         diksharthi_id: id,
         formData: formData,
-        relationDetails: sanitizeRelationDetailsForPayload(relationDetails),
+        relationDetails: sanitizeRelationDetailsForPayload(
+          buildRelationDetailsPayload(relationDetails, headOfFamily),
+        ),
         additionalRelations: additionalRelations,
         expandedRelations: expandedRelations,
         headOfFamily: headOfFamily,

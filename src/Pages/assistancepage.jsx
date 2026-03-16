@@ -1,4 +1,5 @@
 import axios from "axios";
+import JoditEditor from "jodit-react";
 import {
   CheckCircle,
   Eye,
@@ -19,6 +20,23 @@ const asArray = (value) => {
   return [];
 };
 
+const generateUniqueCaseId = () => {
+  const now = new Date();
+  const datePart = [
+    now.getFullYear(),
+    String(now.getMonth() + 1).padStart(2, "0"),
+    String(now.getDate()).padStart(2, "0"),
+  ].join("");
+  const timePart = [
+    String(now.getHours()).padStart(2, "0"),
+    String(now.getMinutes()).padStart(2, "0"),
+    String(now.getSeconds()).padStart(2, "0"),
+  ].join("");
+  const randomPart = Math.random().toString(36).slice(2, 6).toUpperCase();
+
+  return `CASE-${datePart}-${timePart}-${randomPart}`;
+};
+
 const AssistancePage = () => {
   const { user } = useAuth();
   const [searchType, setSearchType] = useState("sadhu");
@@ -31,11 +49,40 @@ const AssistancePage = () => {
   const [activeRow, setActiveRow] = useState(null);
   const [actionType, setActionType] = useState("");
   const [queriesReason, setQueriesReason] = useState("");
+  const [queryFile, setQueryFile] = useState(null);
   const [actionError, setActionError] = useState("");
   const [isActionLoading, setIsActionLoading] = useState(false);
+  const [viewQueryRow, setViewQueryRow] = useState(null);
   const role = String(user?.role || "").toLowerCase();
   const isKaryakarta = role === "karyakarta";
   const isCaseCoordinator = role === "case-coordinator";
+  const queryEditorConfig = {
+    readonly: false,
+    minHeight: 220,
+    toolbarAdaptive: false,
+    askBeforePasteHTML: false,
+    askBeforePasteFromWord: false,
+    buttons: [
+      "bold",
+      "italic",
+      "underline",
+      "|",
+      "ul",
+      "ol",
+      "|",
+      "font",
+      "fontsize",
+      "paragraph",
+      "|",
+      "align",
+      "|",
+      "link",
+      "table",
+      "|",
+      "undo",
+      "redo",
+    ],
+  };
 
   const fetchFamilyAccounting = async () => {
     try {
@@ -106,6 +153,7 @@ const AssistancePage = () => {
     setActiveRow(row);
     setActionType(type);
     setQueriesReason("");
+    setQueryFile(null);
     setActionError("");
     setIsModalOpen(true);
   };
@@ -114,6 +162,7 @@ const AssistancePage = () => {
     setIsModalOpen(false);
     setActionType("");
     setQueriesReason("");
+    setQueryFile(null);
     setActionError("");
     setActiveRow(null);
   };
@@ -130,20 +179,43 @@ const AssistancePage = () => {
       setIsActionLoading(true);
       setActionError("");
 
-      const payload = {
-        id: activeRow?.id,
-        assistance_id: activeRow?.id,
-        diksharthi_id: activeRow?.diksharthi_id,
-        relation: activeRow?.relation,
-        type: activeRow?.type,
-      };
-
       if (actionType === "queries") {
-        payload.queriesReason = queriesReason.trim();
-        payload.remark = queriesReason.trim();
-      }
+        const payload = new FormData();
+        payload.append("id", activeRow?.id || "");
+        payload.append("assistance_id", activeRow?.id || "");
+        payload.append("diksharthi_id", activeRow?.diksharthi_id || "");
+        payload.append("relation", activeRow?.relation || "");
+        payload.append("type", activeRow?.type || "");
+        payload.append("queriesReason", queriesReason.trim());
+        // payload.append("remark", queriesReason.trim());
 
-      await axios.put(`${API}/api/assistance-status/${actionType}`, payload);
+        if (queryFile) {
+          payload.append("file", queryFile);
+          // payload.append("attachment", queryFile);
+        }
+
+        await axios.put(`${API}/api/assistance-status/${actionType}`, payload, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        });
+      } else {
+        const payload = {
+          id: activeRow?.id,
+          assistance_id: activeRow?.id,
+          diksharthi_id: activeRow?.diksharthi_id,
+          relation: activeRow?.relation,
+          type: activeRow?.type,
+        };
+
+        if (actionType === "approve") {
+          const caseId = generateUniqueCaseId();
+          payload.case_id = caseId;
+          payload.caseId = caseId;
+        }
+
+        await axios.put(`${API}/api/assistance-status/${actionType}`, payload);
+      }
 
       await fetchFamilyAccounting();
       handleCloseActionModal();
@@ -174,6 +246,9 @@ const AssistancePage = () => {
     queries: "Please provide queriesReason for the query.",
   };
 
+  const getQueryText = (row) =>
+    row?.queriesReason || row?.query_reason || row?.remark || row?.remarks || "";
+
   const renderDefaultTable = () => (
     <div className="mt-8 overflow-hidden border border-blue-400 rounded-lg shadow-sm">
       <table className="w-full text-left border-collapse bg-white">
@@ -186,7 +261,7 @@ const AssistancePage = () => {
               Family Member
             </th>
             <th className="p-4 font-semibold text-slate-700 border-b">
-              Family Head
+              Family Head Name
             </th>
 
             <th className="p-4 font-semibold text-slate-700 border-b">
@@ -207,11 +282,7 @@ const AssistancePage = () => {
           {tableData.map((row, index) => (
             (() => {
               const normalizedStatus = String(row.status || "").toLowerCase();
-              const showOnlyView =
-                normalizedStatus === "approve" || normalizedStatus === "rejected";
-              const isPending = normalizedStatus === "pending";
-              const shouldShowActionButtons =
-                (isCaseCoordinator && isPending) || (!isCaseCoordinator && !isKaryakarta && !showOnlyView);
+              const hasQuery = Boolean(getQueryText(row));
 
               return (
                 <tr key={index} className="hover:bg-slate-50 transition-colors">
@@ -235,28 +306,56 @@ const AssistancePage = () => {
                   <td className="p-4 text-slate-600">{row.renewal}</td>
                   <td className="p-4">
                     <div className="flex justify-center gap-2">
-                      <Eye
-                        size={18}
-                        className="text-yellow-500 cursor-pointer"
-                        onClick={() => navigate("/request-details", { state: row })}
-                      />
-                      {shouldShowActionButtons && (
+                      {(isKaryakarta || isCaseCoordinator) && (
                         <>
-                          <CheckCircle
-                            size={18}
-                            className="text-green-500 cursor-pointer"
-                            onClick={() => handleOpenActionModal(row, "approve")}
-                          />
-                          <XCircle
-                            size={18}
-                            className="text-red-500 cursor-pointer"
-                            onClick={() => handleOpenActionModal(row, "rejected")}
-                          />
-                          <FileText
-                            size={18}
-                            className="text-blue-500 cursor-pointer"
-                            onClick={() => handleOpenActionModal(row, "queries")}
-                          />
+                          <button
+                            type="button"
+                            className="inline-flex items-center gap-1 rounded-lg bg-yellow-500 px-3 py-1.5 text-xs font-medium text-white"
+                            onClick={() => navigate("/request-details", { state: row })}
+                          >
+                            <Eye size={15} />
+                            View
+                          </button>
+
+                          {isKaryakarta && hasQuery && (
+                            <button
+                              type="button"
+                              className="inline-flex items-center gap-1 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-medium text-white"
+                              onClick={() => setViewQueryRow(row)}
+                            >
+                              <FileText size={15} />
+                              View Query
+                            </button>
+                          )}
+
+                          {isCaseCoordinator && (
+                            <>
+                              <button
+                                type="button"
+                                className="inline-flex items-center gap-1 rounded-lg bg-green-600 px-3 py-1.5 text-xs font-medium text-white"
+                                onClick={() => handleOpenActionModal(row, "approve")}
+                              >
+                                <CheckCircle size={15} />
+                                Approve
+                              </button>
+                              <button
+                                type="button"
+                                className="inline-flex items-center gap-1 rounded-lg bg-red-600 px-3 py-1.5 text-xs font-medium text-white"
+                                onClick={() => handleOpenActionModal(row, "rejected")}
+                              >
+                                <XCircle size={15} />
+                                Rejected
+                              </button>
+                              <button
+                                type="button"
+                                className="inline-flex items-center gap-1 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-medium text-white"
+                                onClick={() => handleOpenActionModal(row, "queries")}
+                              >
+                                <FileText size={15} />
+                                Query Set
+                              </button>
+                            </>
+                          )}
                         </>
                       )}
                     </div>
@@ -456,16 +555,29 @@ const AssistancePage = () => {
                   </p>
 
                   {actionType === "queries" && (
-                    <div>
+                    <div className="space-y-3 text-left">
                       <label className="block text-sm font-medium text-slate-700 mb-1">
                         Reasons | Remark
                       </label>
-                      <textarea
+                      <JoditEditor
                         value={queriesReason}
-                        onChange={(e) => setQueriesReason(e.target.value)}
-                        placeholder="Enter queriesReason..."
-                        className="w-full h-28 border border-slate-300 rounded-lg p-3 text-sm outline-none focus:ring-2 focus:ring-blue-200"
+                        config={queryEditorConfig}
+                        onBlur={(newValue) => setQueriesReason(newValue)}
+                        onChange={() => {}}
                       />
+                      <div>
+                        <label className="mb-1 block text-sm font-medium text-slate-700">
+                          Upload File
+                        </label>
+                        <input
+                          type="file"
+                          onChange={(e) => setQueryFile(e.target.files?.[0] || null)}
+                          className="w-full rounded-lg border border-slate-300 p-2 text-sm outline-none focus:ring-2 focus:ring-blue-200"
+                        />
+                        <p className="mt-1 text-xs text-slate-500">
+                          {queryFile?.name || "No file chosen"}
+                        </p>
+                      </div>
                     </div>
                   )}
 
@@ -489,6 +601,49 @@ const AssistancePage = () => {
                   {isActionLoading
                     ? "Processing..."
                     : actionButtonLabelMap[actionType] || "Confirm"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {viewQueryRow && (
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
+            <div className="w-full max-w-2xl rounded-2xl bg-white shadow-2xl">
+              <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
+                <h3 className="text-xl font-bold text-slate-800">View Query</h3>
+                <button
+                  type="button"
+                  onClick={() => setViewQueryRow(null)}
+                  className="rounded-full p-1 hover:bg-slate-100"
+                >
+                  <X size={24} className="text-slate-500" />
+                </button>
+              </div>
+              <div className="space-y-4 px-6 py-5">
+                <div>
+                  <p className="text-sm text-slate-500">Member</p>
+                  <p className="font-semibold text-slate-700">
+                    {viewQueryRow?.member_name || viewQueryRow?.member || "-"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-slate-500">Remark</p>
+                  <div
+                    className="min-h-32 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700"
+                    dangerouslySetInnerHTML={{
+                      __html: getQueryText(viewQueryRow) || "<p>-</p>",
+                    }}
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end border-t border-slate-100 px-6 py-4">
+                <button
+                  type="button"
+                  onClick={() => setViewQueryRow(null)}
+                  className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white"
+                >
+                  Close
                 </button>
               </div>
             </div>
