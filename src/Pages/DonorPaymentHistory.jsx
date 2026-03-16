@@ -2,6 +2,7 @@ import { Search } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { API } from "../api/BaseURL";
+import axios from "axios";
 
 function DonorPaymentHistory() {
   const location = useLocation();
@@ -88,6 +89,51 @@ function DonorPaymentHistory() {
     );
   });
 
+  // const downloadReceipt = async (id) => {
+  //   try {
+  //     const response = await axios.get(
+  //       `${API}/api/donor/donation-receipt/${id}`,
+  //       { responseType: "blob" }
+  //     );
+
+  //     const url = window.URL.createObjectURL(new Blob([response.data]));
+  //     const link = document.createElement("a");
+
+  //     link.href = url;
+  //     link.download = `donation-receipt-${id}.pdf`;
+
+  //     document.body.appendChild(link);
+  //     link.click();
+
+  //     link.remove();
+  //   } catch (error) {
+  //     console.error("Download error:", error);
+  //   }
+  // };
+
+  const downloadReceipt = async (donorId, installmentId, index) => {
+    try {
+      const response = await axios.get(
+        `${API}/api/donor/donation-receipt/${donorId}/${installmentId}`,
+        { responseType: "blob" }
+      );
+
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+
+      link.href = url;
+      link.download = `donation-receipt-${index + 1}.pdf`;
+
+      document.body.appendChild(link);
+      link.click();
+
+      link.remove();
+
+    } catch (error) {
+      console.error("Download error:", error);
+    }
+  };
+
   return (
     <div className="p-8 min-h-screen bg-gray-50 relative">
       <div className="flex justify-between items-center mb-6">
@@ -121,6 +167,7 @@ function DonorPaymentHistory() {
               <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">Date Installment Received</th>
               <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">Mode of Payment</th>
               <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">UTR Number</th>
+              <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">Recipt</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-50">
@@ -160,6 +207,14 @@ function DonorPaymentHistory() {
                     </td>
                     <td className="px-6 py-4 text-sm font-mono text-gray-500 uppercase tracking-tight">
                       {utr}
+                    </td>
+                    <td className="px-6 py-4 text-sm">
+                      <button
+                        onClick={() => downloadReceipt(donorId, payment.id, index)}
+                        className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs"
+                      >
+                        Download
+                      </button>
                     </td>
                   </tr>
                 );

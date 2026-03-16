@@ -64,6 +64,8 @@ const DiksharthiListing = () => {
   const [visitSchedules, setVisitSchedules] = useState({});
   const [scheduleVisitModalData, setScheduleVisitModalData] = useState(null);
   const [viewScheduleModalData, setViewScheduleModalData] = useState(null);
+  const [familyDetailsModalData, setFamilyDetailsModalData] = useState(null);
+  const [isFamilyDetailsLoading, setIsFamilyDetailsLoading] = useState(false);
   const [scheduleForm, setScheduleForm] = useState(emptyScheduleForm);
   const [isSchedulingVisit, setIsSchedulingVisit] = useState(false);
   const [isViewScheduleLoading, setIsViewScheduleLoading] = useState(false);
@@ -116,7 +118,7 @@ const DiksharthiListing = () => {
           (item) => String(item?.status).toLowerCase() === "send"
         );
 
-      } else if (role === "admin") {
+      } else if (role === "karyakarta") {
         // Admin sees only assigned records
         filteredRecords = allRecords.filter(
           (item) => String(item?.admin_id) === String(loggedInUserId)
@@ -433,6 +435,26 @@ const DiksharthiListing = () => {
     }
   };
 
+  const openFamilyDetailsModal = async (diksharthi) => {
+    if (!diksharthi?.id) return;
+    setIsFamilyDetailsLoading(true);
+    setFamilyDetailsModalData({ diksharthi, details: null });
+    try {
+      const response = await fetch(`${API}/api/family-details/${diksharthi.id}`);
+      const result = await response.json().catch(() => ({}));
+      if (response.ok && result?.success) {
+        setFamilyDetailsModalData({ diksharthi, details: result?.data });
+      } else {
+        setFamilyDetailsModalData({ diksharthi, details: null });
+      }
+    } catch (error) {
+      console.error("Failed to fetch family details", error);
+      setFamilyDetailsModalData({ diksharthi, details: null });
+    } finally {
+      setIsFamilyDetailsLoading(false);
+    }
+  };
+
   const openViewScheduleModal = async (diksharthi) => {
     setIsViewScheduleLoading(true);
     setViewScheduleModalData({
@@ -663,9 +685,9 @@ const DiksharthiListing = () => {
                               className="rounded-lg text-sm px-2 py-1 text-green-600 cursor-default"
                               disabled
                             >
-                             Send
+                              Send
                             </button>
-                            
+
                           </>
                         ) : (
                           <button
@@ -680,21 +702,31 @@ const DiksharthiListing = () => {
                         )
                       ) : null}
                       {(role === "admin" || role === "karyakarta") && (
-                        <button
-                          className="rounded-lg bg-yellow-500 text-sm px-2 py-1 text-white"
-                          onClick={() =>
-                            navigate("/family-details", {
-                              state: {
-                                id: diksharthi.id,
-                                diksharthi_code: diksharthi.diksharthi_code,
-                                sadhu_sadhvi_name: diksharthi.sadhu_sadhvi_name,
-                                gender: diksharthi.gender,
-                              },
-                            })
-                          }
-                        >
-                          Add Family Details
-                        </button>
+                        <>
+                          <button
+                            className="rounded-lg bg-yellow-500 text-sm px-2 py-1 text-white"
+                            onClick={() =>
+                              navigate("/family-details", {
+                                state: {
+                                  id: diksharthi.id,
+                                  diksharthi_code: diksharthi.diksharthi_code,
+                                  sadhu_sadhvi_name: diksharthi.sadhu_sadhvi_name,
+                                  gender: diksharthi.gender,
+                                },
+                              })
+                            }
+                          >
+                            {diksharthi.family_details ? "Update Family Details" : "Add Family Details"}
+                          </button>
+                          {diksharthi.family_details && (
+                            <button
+                              className="rounded-lg bg-teal-600 text-sm px-2 py-1 text-white"
+                              onClick={() => openFamilyDetailsModal(diksharthi)}
+                            >
+                              View Family Details
+                            </button>
+                          )}
+                        </>
                       )}
                       {role === "operations-manager" && (
                         <>
@@ -758,12 +790,12 @@ const DiksharthiListing = () => {
                             Edit
                           </button>
 
-                          
-                         
+
+
                         </>
                       )}
-                      
-                      {role === "karyakarta" && (
+
+                      {role === "karyakarta" && getVisitSchedule(diksharthi) && (
                         <button
                           className="rounded-lg bg-indigo-600 text-sm px-2 py-1 text-white"
                           onClick={() => openViewScheduleModal(diksharthi)}
@@ -1117,6 +1149,143 @@ const DiksharthiListing = () => {
                 type="button"
                 className="rounded-lg bg-indigo-600 text-sm px-4 py-2 text-white"
                 onClick={() => setViewScheduleModalData(null)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {familyDetailsModalData && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 px-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
+            <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-gray-100">
+              <h3 className="text-xl font-bold text-gray-800">Family Details</h3>
+              <button
+                type="button"
+                className="p-2 rounded-full hover:bg-gray-200 transition-colors"
+                onClick={() => setFamilyDetailsModalData(null)}
+              >
+                <X size={20} className="text-gray-500" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto px-6 pb-6 pt-4">
+              {isFamilyDetailsLoading ? (
+                <div className="flex justify-center py-10">
+                  <p className="text-gray-500 animate-pulse">Loading family details...</p>
+                </div>
+              ) : familyDetailsModalData?.details ? (
+                  <div className="space-y-5 text-sm">
+
+                    {/* Basic Family Info */}
+                    <div>
+                      <h4 className="text-sm font-bold text-gray-700 mb-3 uppercase tracking-wide">
+                        Family Information
+                      </h4>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <DetailItem label="Head of Family" value={familyDetailsModalData.details.head_of_family} />
+                        <DetailItem label="Permanent Address" value={familyDetailsModalData.details.permanent_address} />
+                        <DetailItem label="Current Address" value={familyDetailsModalData.details.current_address} />
+                        <DetailItem label="Village" value={familyDetailsModalData.details.village} />
+                        <DetailItem label="Taluka" value={familyDetailsModalData.details.taluka} />
+                        <DetailItem label="District" value={familyDetailsModalData.details.district} />
+                        <DetailItem label="State" value={familyDetailsModalData.details.states} />
+                        <DetailItem label="Pin Code" value={familyDetailsModalData.details.pin_code} />
+                        <DetailItem label="House Details" value={familyDetailsModalData.details.house_details} />
+                        <DetailItem label="Type of House" value={familyDetailsModalData.details.type_of_house} />
+                        <DetailItem label="Maintenance Cost" value={familyDetailsModalData.details.maintenance_cost} />
+                        <DetailItem label="Light Bill Cost" value={familyDetailsModalData.details.light_bill_cost} />
+                        <DetailItem label="Rent Cost" value={familyDetailsModalData.details.rent_cost} />
+                        <DetailItem label="Mediclaim" value={familyDetailsModalData.details.mediclaim === "1" ? "Yes" : "No"} />
+                        <DetailItem label="Family Mediclaim Amount" value={familyDetailsModalData.details.family_mediclaim_amount} />
+                        <DetailItem label="NGO Assistance" value={familyDetailsModalData.details.ngo_assistance} />
+                      </div>
+                    </div>
+
+
+                    {/* Relation Details */}
+                    {familyDetailsModalData.details.relation_details &&
+                      Object.keys(familyDetailsModalData.details.relation_details).length > 0 && (
+                        <div>
+                          <h4 className="text-sm font-bold text-gray-700 mb-3 uppercase tracking-wide">
+                            Relation Details
+                          </h4>
+
+                          <div className="space-y-4">
+                            {Object.entries(familyDetailsModalData.details.relation_details).map(
+                              ([relation, info]) => (
+                                <div
+                                  key={relation}
+                                  className="border border-gray-100 rounded-lg p-4 bg-gray-50"
+                                >
+                                  <p className="font-semibold text-gray-700 capitalize mb-3">
+                                    {relation}
+                                  </p>
+
+                                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+
+                                    <DetailItem label="Full Name" value={info?.fullName} />
+                                    <DetailItem label="Aadhar Number" value={info?.aadharNumber} />
+                                    <DetailItem label="PAN Number" value={info?.panNumber} />
+
+                                    <DetailItem
+                                      label="Ayushman Card"
+                                      value={info?.ayushman ? "Yes" : "No"}
+                                    />
+
+                                    <DetailItem
+                                      label="Mediclaim"
+                                      value={info?.mediclaim ? "Yes" : "No"}
+                                    />
+
+                                    <DetailItem
+                                      label="Need Assistance"
+                                      value={info?.needAssistance ? "Yes" : "No"}
+                                    />
+
+                                    <DetailItem
+                                      label="Family Head"
+                                      value={info?.family_head ? "Yes" : "No"}
+                                    />
+
+                                    {info?.assistanceCategories && (
+                                      <DetailItem
+                                        label="Assistance Categories"
+                                        value={info.assistanceCategories.join(", ")}
+                                      />
+                                    )}
+
+                                  </div>
+
+                                  {info?.photo && (
+                                    <img
+                                      src={info.photo}
+                                      alt={relation}
+                                      className="mt-3 w-20 h-20 rounded-lg object-cover border"
+                                      onError={(e) => {
+                                        e.currentTarget.style.display = "none";
+                                      }}
+                                    />
+                                  )}
+                                </div>
+                              )
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                  </div>
+              ) : (
+                <p className="text-gray-500 py-6 text-center">No family details available.</p>
+              )}
+            </div>
+            <div className="px-6 py-4 border-t border-gray-100 flex justify-end">
+              <button
+                type="button"
+                className="rounded-lg bg-teal-600 text-sm px-4 py-2 text-white"
+                onClick={() => setFamilyDetailsModalData(null)}
               >
                 Close
               </button>

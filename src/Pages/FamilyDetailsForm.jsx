@@ -4,6 +4,12 @@ import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { API } from "../api/BaseURL";
 // import placeholder from "../assets/placeholder.png";
+import {
+  useFetchDistrictsByState,
+  useFetchStates,
+  useFetchSubDistrictsByDistrict,
+  useFetchVillagesBySubDistrict
+} from "../utils/useLocationData";
 
 
 const INITIAL_FORM_DATA = {
@@ -12,6 +18,7 @@ const INITIAL_FORM_DATA = {
   village: "",
   taluka: "",
   district: "",
+  state: "",
   pinCode: "",
   houseDetails: "",
   typeOfHouse: "",
@@ -81,7 +88,13 @@ const FamilyDetailsForm = () => {
   console.log("Name:", name);
   console.log("Gender:", gender);
 
+  const states = useFetchStates();
+
   const [formData, setFormData] = useState(INITIAL_FORM_DATA);
+
+  const district = useFetchDistrictsByState(formData.state);
+  const taluka = useFetchSubDistrictsByDistrict(formData.state, formData.district);
+  const village = useFetchVillagesBySubDistrict(formData.state, formData.district, formData.taluka);
 
   console.log(formData, "formData");
   const [relationDetails, setRelationDetails] = useState({});
@@ -129,6 +142,7 @@ const FamilyDetailsForm = () => {
           mediclaim: null,
           needAssistance: null,
           assistanceCategories: [],
+          isMarried: null,
         },
       }));
     }
@@ -232,6 +246,7 @@ const FamilyDetailsForm = () => {
         mediclaim: null,
         needAssistance: null,
         assistanceCategories: [],
+        isMarried: null,
       },
     }));
 
@@ -343,7 +358,13 @@ const FamilyDetailsForm = () => {
         const fallbackRelations = Object.keys(fetchedRelationDetails);
         const normalizedFormData =
           nestedFormData && typeof nestedFormData === "object"
-            ? nestedFormData
+            ? {
+              state: matchedFamily?.state ?? "",
+              village: matchedFamily?.village ?? "",
+              taluka: matchedFamily?.taluka ?? "",
+              district: matchedFamily?.district ?? "",
+              ...nestedFormData,
+            }
             : {
               permanentAddress:
                 matchedFamily?.permanentAddress ??
@@ -356,6 +377,7 @@ const FamilyDetailsForm = () => {
               village: matchedFamily?.village ?? "",
               taluka: matchedFamily?.taluka ?? "",
               district: matchedFamily?.district ?? "",
+              state: matchedFamily?.state ?? "",
               pinCode: matchedFamily?.pinCode ?? matchedFamily?.pin_code ?? "",
               houseDetails:
                 matchedFamily?.houseDetails ?? matchedFamily?.house_details ?? "",
@@ -442,8 +464,8 @@ const FamilyDetailsForm = () => {
 
       console.log(payload, "Sending Data");
 
-      const response = await axios.post(
-        `${API}/api/create-family-details`,
+      const response = await axios.put(
+        `${API}/api/update-family-details/${id}`,
         payload
       );
 
@@ -651,43 +673,86 @@ const FamilyDetailsForm = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">
-                Village<span className="text-red-500">*</span>
+                State<span className="text-red-500">*</span>
               </label>
-              <input
-                type="text"
-                value={formData.village}
+              <select
+                value={formData.state}
                 onChange={(e) =>
-                  setFormData({ ...formData, village: e.target.value })
+                  setFormData({ ...formData, state: e.target.value, district: "", taluka: "", village: "" })
                 }
                 className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
-                Taluka<span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={formData.taluka}
-                onChange={(e) =>
-                  setFormData({ ...formData, taluka: e.target.value })
-                }
-                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
-              />
+              >
+                <option value="">Select State</option>
+                {states.map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
+              </select>
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">
                 District<span className="text-red-500">*</span>
               </label>
-              <input
-                type="text"
+
+              <select
                 value={formData.district}
                 onChange={(e) =>
-                  setFormData({ ...formData, district: e.target.value })
+                  setFormData({ ...formData, district: e.target.value, taluka: "", village: "" })
                 }
                 className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
-              />
+              >
+                <option value="">Select district</option>
+                {district.map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
+              </select>
             </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">
+                Taluka<span className="text-red-500">*</span>
+              </label>
+              <select
+                value={formData.taluka}
+                onChange={(e) =>
+                  setFormData({ ...formData, taluka: e.target.value, village: "" })
+                }
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
+              >
+                <option value="">Select taluka</option>
+                {taluka.map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">
+                Village<span className="text-red-500">*</span>
+              </label>
+
+              <select
+                value={formData.village}
+                onChange={(e) =>
+                  setFormData({ ...formData, village: e.target.value })
+                }
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
+              >
+                <option value="">Select village</option>
+                {village.map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* House Details Row */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-end">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">
                 Pin Code<span className="text-red-500">*</span>
@@ -701,10 +766,6 @@ const FamilyDetailsForm = () => {
                 className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
               />
             </div>
-          </div>
-
-          {/* House Details Row */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">
                 House Details<span className="text-red-500">*</span>
@@ -869,45 +930,81 @@ const FamilyDetailsForm = () => {
                     <div className="flex p-4 border-t border-slate-300 space-y-4">
                       <div className="w-[85%]">
                         {/* Head of Family Member - Exclusive */}
-                        <div className="mb-4 p-3 w-[180px] bg-blue-50 rounded-md">
-                          <label className="flex items-center gap-2 cursor-pointer">
-                            <input
-                              type="checkbox"
-                              checked={headOfFamily === rel}
-                              disabled={headOfFamily && headOfFamily !== rel}
-                              onChange={() => handleHeadOfFamilyChange(rel)}
-                              className="w-5 h-5 border-slate-400 rounded"
-                            />
-                            <span className="font-semibold text-slate-700">
-                              Head of Family
-                            </span>
-                          </label>
-                        </div>
-
-                        {/* Conditional Fields for "Other" Relation */}
-                        {rel === "Other" && (
-                          <div className="flex gap-6 mb-4">
-                            <div>
-                              <label className="block text-sm font-medium text-slate-700 mb-1">
-                                Relation Name
-                                <span className="text-red-500">*</span>
-                              </label>
+                        <div className="flex gap-4">
+                          <div className="mb-4 p-3 w-[180px] bg-blue-50 rounded-md">
+                            <label className="flex items-center gap-2 cursor-pointer">
                               <input
-                                type="text"
-                                placeholder="e.g., Cousin, Uncle, Aunt"
-                                value={relationDetails[rel]?.relationName || ""}
-                                onChange={(e) =>
-                                  handleRelationDetailChange(
-                                    rel,
-                                    "relationName",
-                                    e.target.value,
-                                  )
-                                }
-                                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
+                                type="checkbox"
+                                checked={headOfFamily === rel}
+                                disabled={headOfFamily && headOfFamily !== rel}
+                                onChange={() => handleHeadOfFamilyChange(rel)}
+                                className="w-5 h-5 border-slate-400 rounded"
                               />
-                            </div>
+                              <span className="font-semibold text-slate-700">
+                                Head of Family
+                              </span>
+                            </label>
                           </div>
-                        )}
+
+                          {/* Conditional Fields for "Other" Relation */}
+                          {rel === "Other" && (
+                            <div className="flex gap-6 mb-4">
+                              <div>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">
+                                  Relation Name
+                                  <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                  type="text"
+                                  placeholder="e.g., Cousin, Uncle, Aunt"
+                                  value={relationDetails[rel]?.relationName || ""}
+                                  onChange={(e) =>
+                                    handleRelationDetailChange(
+                                      rel,
+                                      "relationName",
+                                      e.target.value,
+                                    )
+                                  }
+                                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
+                                />
+                              </div>
+                            </div>
+                          )}
+                          {(rel === "Sister" || rel === "Daughter") && (
+                            <div className="flex gap-6 mb-4">
+                              <div>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">
+                                  is marriage ?
+                                  <span className="text-red-500">*</span>
+                                </label>
+                                <div className="flex gap-8">
+                                  <label className="flex items-center gap-2">
+                                    <input
+                                      type="radio"
+                                      name={`isMarried-${rel}`}
+                                      checked={relationDetails[rel]?.isMarried === true}
+                                      onChange={() =>
+                                        handleRelationDetailChange(rel, "isMarried", true)
+                                      }
+                                    />
+                                    Yes
+                                  </label>
+                                  <label className="flex items-center gap-2">
+                                    <input
+                                      type="radio"
+                                      name={`isMarried-${rel}`}
+                                      checked={relationDetails[rel]?.isMarried === false}
+                                      onChange={() =>
+                                        handleRelationDetailChange(rel, "isMarried", false)
+                                      }
+                                    />
+                                    No
+                                  </label>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
 
                         <div className="flex  gap-4">
                           {/* Full Name */}
@@ -935,20 +1032,6 @@ const FamilyDetailsForm = () => {
                               Aadhar Number
                               <span className="text-red-500">*</span>
                             </label>
-                            {/* <input
-                              type="text"
-                              value={relationDetails[rel]?.aadharNumber || ""}
-                              maxLength={12}
-                              onChange={(e) =>
-                                 const onlyNumbers = e.target.value.replace(/\D/g, "");
-                                handleRelationDetailChange(
-                                  rel,
-                                  "aadharNumber",
-                                  e.target.value,
-                                )
-                              }
-                              className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
-                            /> */}
 
                             <input
                               type="text"
@@ -971,15 +1054,17 @@ const FamilyDetailsForm = () => {
                               type="text"
                               value={relationDetails[rel]?.panNumber || ""}
                               maxLength={10}
-                              onChange={(e) =>
-                                handleRelationDetailChange(
-                                  rel,
-                                  "panNumber",
-                                  e.target.value,
-                                )
-                              }
+                              onChange={(e) => {
+                                const value = e.target.value
+                                  .toUpperCase()                 // convert to uppercase
+                                  .replace(/[^A-Z0-9]/g, "");    // allow only A-Z and 0-9
+
+                                handleRelationDetailChange(rel, "panNumber", value);
+                              }}
                               className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                             />
+
+
                           </div>
                         </div>
 
@@ -1072,50 +1157,55 @@ const FamilyDetailsForm = () => {
                             </div>
                           </div>
 
-                          <div>
-                            <p className="text-sm font-medium text-slate-700 mb-2">
-                              Need Assistance
-                              <span className="text-red-500">*</span>
-                            </p>
-                            <div className="flex gap-4">
-                              <label className="flex items-center gap-2">
-                                <input
-                                  type="radio"
-                                  name={`needAssistance-${rel}`}
-                                  checked={
-                                    relationDetails[rel]?.needAssistance ===
-                                    true
-                                  }
-                                  onChange={() =>
-                                    handleRelationDetailChange(
-                                      rel,
-                                      "needAssistance",
-                                      true,
-                                    )
-                                  }
-                                />
-                                Yes
-                              </label>
-                              <label className="flex items-center gap-2">
-                                <input
-                                  type="radio"
-                                  name={`needAssistance-${rel}`}
-                                  checked={
-                                    relationDetails[rel]?.needAssistance ===
-                                    false
-                                  }
-                                  onChange={() =>
-                                    handleRelationDetailChange(
-                                      rel,
-                                      "needAssistance",
-                                      false,
-                                    )
-                                  }
-                                />
-                                No
-                              </label>
-                            </div>
-                          </div>
+                          {!(
+                            (rel === "Sister" || rel === "Daughter") &&
+                            relationDetails[rel]?.isMarried === true
+                          ) && (
+                              <div>
+                                <p className="text-sm font-medium text-slate-700 mb-2">
+                                  Need Assistance
+                                  <span className="text-red-500">*</span>
+                                </p>
+                                <div className="flex gap-4">
+                                  <label className="flex items-center gap-2">
+                                    <input
+                                      type="radio"
+                                      name={`needAssistance-${rel}`}
+                                      checked={
+                                        relationDetails[rel]?.needAssistance ===
+                                        true
+                                      }
+                                      onChange={() =>
+                                        handleRelationDetailChange(
+                                          rel,
+                                          "needAssistance",
+                                          true,
+                                        )
+                                      }
+                                    />
+                                    Yes
+                                  </label>
+                                  <label className="flex items-center gap-2">
+                                    <input
+                                      type="radio"
+                                      name={`needAssistance-${rel}`}
+                                      checked={
+                                        relationDetails[rel]?.needAssistance ===
+                                        false
+                                      }
+                                      onChange={() =>
+                                        handleRelationDetailChange(
+                                          rel,
+                                          "needAssistance",
+                                          false,
+                                        )
+                                      }
+                                    />
+                                    No
+                                  </label>
+                                </div>
+                              </div>
+                            )}
                         </div>
                         {/* Amount - Conditional Render */}
                         <div className="flex gap-5">

@@ -165,6 +165,7 @@ function AddDonor() {
             const existing = prev.paymentDetails?.installments?.[index];
             return (
               existing || {
+                id: Date.now() + index,
                 amount: "",
                 dueDate: "",
                 fundDate: "",
