@@ -497,14 +497,17 @@ function AddDonor() {
                   </label>
                   <input
                     type="text"
+                    maxLength={10}
                     value={formData.personalDetails.mobileNumber}
-                    onChange={(e) =>
+                    onChange={(e) => {
+                      const onlyNumbers = e.target.value.replace(/\D/g, "");
+
                       handleChange(
                         "personalDetails",
                         "mobileNumber",
-                        e.target.value,
-                      )
-                    }
+                        onlyNumbers
+                      );
+                    }}
                     className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                   />
                 </div>
@@ -514,14 +517,17 @@ function AddDonor() {
                   </label>
                   <input
                     type="text"
+                    maxLength={10}
                     value={formData.personalDetails.altMobileNumber}
-                    onChange={(e) =>
+                    onChange={(e) => {
+                      const onlyNumbers = e.target.value.replace(/\D/g, "");
+
                       handleChange(
                         "personalDetails",
                         "altMobileNumber",
-                        e.target.value,
-                      )
-                    }
+                        onlyNumbers
+                      );
+                    }}
                     className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                   />
                 </div>
@@ -542,18 +548,28 @@ function AddDonor() {
                   <label className="block text-sm font-medium text-slate-700 mb-1">
                     Blood Group<span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="text"
+
+                  <select
                     value={formData.personalDetails.bloodGroup}
                     onChange={(e) =>
                       handleChange(
                         "personalDetails",
                         "bloodGroup",
-                        e.target.value,
+                        e.target.value
                       )
                     }
                     className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
-                  />
+                  >
+                    <option value="">Select Blood Group</option>
+                    <option value="A+">A+</option>
+                    <option value="A-">A-</option>
+                    <option value="B+">B+</option>
+                    <option value="B-">B-</option>
+                    <option value="AB+">AB+</option>
+                    <option value="AB-">AB-</option>
+                    <option value="O+">O+</option>
+                    <option value="O-">O-</option>
+                  </select>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -652,14 +668,16 @@ function AddDonor() {
                     </label>
                     <input
                       type="text"
+                      maxLength={10}
                       value={formData.contactPerson.contactPersonMobile}
-                      onChange={(e) =>
+                      onChange={(e) => {
+                        const onlyNumbers = e.target.value.replace(/\D/g, "");
                         handleChange(
                           "contactPerson",
                           "contactPersonMobile",
-                          e.target.value
+                          onlyNumbers
                         )
-                      }
+                      }}
                       className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                     />
                   </div>
@@ -731,9 +749,16 @@ function AddDonor() {
                     <input
                       type="text"
                       value={formData.residentialAddress.contactNumber}
-                      onChange={(e) =>
-                        handleChange("residentialAddress", "contactNumber", e.target.value)
-                      }
+                      maxLength={10}
+                      onChange={(e) => {
+                        const onlyNumbers = e.target.value.replace(/\D/g, "");
+
+                        handleChange(
+                          "residentialAddress",
+                          "contactNumber",
+                          onlyNumbers
+                        );
+                      }}
                       className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                     />
                   </div>
@@ -842,10 +867,12 @@ function AddDonor() {
                     </label>
                     <input
                       type="text"
+                      maxLength={10}
                       value={formData.companyDetails.companyNumber}
-                      onChange={(e) =>
-                        handleChange("companyDetails", "companyNumber", e.target.value)
-                      }
+                      onChange={(e) => {
+                        const onlyNumbers = e.target.value.replace(/\D/g, "");
+                        handleChange("companyDetails", "companyNumber", onlyNumbers)
+                      }}
                       className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                     />
                   </div>
@@ -921,14 +948,24 @@ function AddDonor() {
                     <label className="block text-sm font-medium text-slate-700 mb-1">
                       Spouse Blood Group<span className="text-red-500">*</span>
                     </label>
-                    <input
-                      type="text"
+                    <select
                       value={formData.familyDetails.spouseBloodGroup}
                       onChange={(e) =>
                         handleChange("familyDetails", "spouseBloodGroup", e.target.value)
                       }
                       className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
-                    />
+                    >
+                      <option value="">Select Blood Group</option>
+                      <option value="A+">A+</option>
+                      <option value="A-">A-</option>
+                      <option value="B+">B+</option>
+                      <option value="B-">B-</option>
+                      <option value="AB+">AB+</option>
+                      <option value="AB-">AB-</option>
+                      <option value="O+">O+</option>
+                      <option value="O-">O-</option>
+                    </select>
+                    
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -1082,8 +1119,8 @@ function AddDonor() {
                             <label className="block text-sm font-medium text-slate-700 mb-1">
                               Blood Group<span className="text-red-500">*</span>
                             </label>
-                            <input
-                              type="text"
+
+                            <select
                               value={child.bloodGroup}
                               onChange={(e) =>
                                 handleChildChange(
@@ -1093,7 +1130,17 @@ function AddDonor() {
                                 )
                               }
                               className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
-                            />
+                            >
+                              <option value="">Select Blood Group</option>
+                              <option value="A+">A+</option>
+                              <option value="A-">A-</option>
+                              <option value="B+">B+</option>
+                              <option value="B-">B-</option>
+                              <option value="AB+">AB+</option>
+                              <option value="AB-">AB-</option>
+                              <option value="O+">O+</option>
+                              <option value="O-">O-</option>
+                            </select>
                           </div>
                           <div className="w-[200px]">
                             <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -1157,14 +1204,18 @@ function AddDonor() {
                   </label>
                   <input
                     type="text"
+                    maxLength={10}
                     value={formData.nomineeDetails.nomineeContact}
-                    onChange={(e) =>
-                      handleChange(
-                        "nomineeDetails",
-                        "nomineeContact",
-                        e.target.value,
-                      )
-                    }
+                    onChange={(e) => {
+                      const onlyNumbers = e.target.value.replace(/\D/g, "");
+                      if (onlyNumbers.length <= 10) {
+                        handleChange(
+                          "nomineeDetails",
+                          "nomineeContact",
+                          onlyNumbers,
+                        );
+                      }
+                    }}
                     className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                   />
                 </div>
@@ -1290,14 +1341,16 @@ function AddDonor() {
                   </label>
                   <input
                     type="text"
+                    maxLength={10}
                     value={formData.nomineeDetails.nomineeofficeContact}
-                    onChange={(e) =>
+                    onChange={(e) => {
+                      const onlyNumbers = e.target.value.replace(/\D/g, "");
                       handleChange(
                         "nomineeDetails",
                         "nomineeofficeContact",
-                        e.target.value,
+                        onlyNumbers,
                       )
-                    }
+                    }}
                     className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                   />
                 </div>

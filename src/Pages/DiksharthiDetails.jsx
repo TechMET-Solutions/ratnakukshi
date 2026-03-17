@@ -44,6 +44,10 @@ const emptyScheduleForm = {
   time: "",
 };
 
+const emptyFeedbackForm = {
+  feedback: "",
+};
+
 const DiksharthiListing = () => {
   const navigate = useNavigate();
   const { user: loggedInUser } = useAuth();
@@ -69,10 +73,48 @@ const DiksharthiListing = () => {
   const [scheduleForm, setScheduleForm] = useState(emptyScheduleForm);
   const [isSchedulingVisit, setIsSchedulingVisit] = useState(false);
   const [isViewScheduleLoading, setIsViewScheduleLoading] = useState(false);
+
+  // Feedback states
+  const [feedbackModalData, setFeedbackModalData] = useState(null);
+  const [feedbackForm, setFeedbackForm] = useState(emptyFeedbackForm);
+  const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
+  const [viewFeedbackModalData, setViewFeedbackModalData] = useState(null);
+  const [isFeedbackLoading, setIsFeedbackLoading] = useState(false);
+  const [isAddingFeedbackToDiksharthi, setIsAddingFeedbackToDiksharthi] = useState(false);
+
   const itemsPerPage = 10;
 
   const [diksharthiList, setDiksharthiList] = useState([]);
   const [userDirectory, setUserDirectory] = useState([]);
+  const [feedbackStatus, setFeedbackStatus] = useState({});
+
+  const fetchFeedbackStatus = async (records) => {
+  try {
+
+    const results = await Promise.all(
+      records.map(async (item) => {
+
+        const res = await fetch(`${API}/api/feedback/view/${item.id}`);
+        const data = await res.json();
+
+        const hasFeedback =
+          Array.isArray(data?.data) && data.data.length > 0;
+
+        return [item.id, hasFeedback];
+      })
+    );
+
+    const statusMap = results.reduce((acc, [id, value]) => {
+      acc[id] = value;
+      return acc;
+    }, {});
+
+    setFeedbackStatus(statusMap);
+
+  } catch (error) {
+    console.error("Feedback status fetch failed", error);
+  }
+};
 
   const fetchDiksharthiList = async () => {
     try {
@@ -80,28 +122,7 @@ const DiksharthiListing = () => {
       const data = await res.json();
       const allRecords = Array.isArray(data?.data) ? data.data : [];
 
-      // let filteredRecords = [];
-
-      // if (role === "staff") {
-      //   // Staff: only own records + pending
-      //   filteredRecords = allRecords.filter(
-      //     (item) =>
-      //       String(item?.user_id ?? "") === String(loggedInUserId ?? "")
-      //       // &&
-      //       // String(item?.status ?? "").toLowerCase() === "pending"
-      //   );
-      // } else if (role === "admin") {
-      //   // Admin: only send records
-      //   filteredRecords = allRecords.filter(
-      //     (item) => String(item?.admin_id ?? "").toLowerCase() === "1"
-      //   );
-      // } else if (role === "operations-manager") {
-      //   // Operations manager: see all staff/admin assigned records
-      //   filteredRecords = allRecords;
-      // } else {
-      //   // fallback
-      //   filteredRecords = allRecords;
-      // }
+      
 
 
       let filteredRecords = [];
@@ -533,6 +554,99 @@ const DiksharthiListing = () => {
     }
   };
 
+  // Feedback handlers
+  const openFeedbackModal = (diksharthi) => {
+    setFeedbackModalData(diksharthi);
+    setFeedbackForm(emptyFeedbackForm);
+  };
+
+  const handleFeedbackFormChange = (e) => {
+    const { name, value } = e.target;
+    setFeedbackForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmitFeedback = async () => {
+    if (!feedbackModalData?.id) return;
+    if (!feedbackForm.feedback.trim()) {
+      alert("Please enter feedback");
+      return;
+    }
+    try {
+      setIsSubmittingFeedback(true);
+      const payload = {
+        diksharthi_id: feedbackModalData.id,
+        diksharthi_code: feedbackModalData.diksharthi_code || "",
+        diksharthi_name: feedbackModalData.sadhu_sadhvi_name || "",
+        feedback: feedbackForm.feedback.trim(),
+        submitted_by: loggedInUserId,
+      };
+      const response = await fetch(`${API}/api/feedback/create`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(result?.message || "Failed to submit feedback");
+      }
+      alert(result?.message || "Feedback submitted successfully");
+      setFeedbackModalData(null);
+      setFeedbackForm(emptyFeedbackForm);
+    } catch (error) {
+      console.error(error);
+      alert(error?.message || "Failed to submit feedback");
+    } finally {
+      setIsSubmittingFeedback(false);
+    }
+  };
+
+  const openViewFeedbackModal = async (diksharthi) => {
+    if (!diksharthi?.id) return;
+    setIsFeedbackLoading(true);
+    setViewFeedbackModalData({ diksharthi, feedbacks: [] });
+    try {
+      const response = await fetch(`${API}/api/feedback/view/${diksharthi.id}`);
+      const result = await response.json().catch(() => ({}));
+      const feedbacks = Array.isArray(result?.data) ? result.data : result?.data ? [result.data] : [];
+      setViewFeedbackModalData({ diksharthi, feedbacks });
+    } catch (error) {
+      console.error("Failed to fetch feedback", error);
+      setViewFeedbackModalData({ diksharthi, feedbacks: [] });
+    } finally {
+      setIsFeedbackLoading(false);
+    }
+  };
+
+  const handleAddFeedbackToDiksharthi = async (feedbackItem) => {
+    if (!viewFeedbackModalData?.diksharthi?.id || !feedbackItem) return;
+    try {
+      setIsAddingFeedbackToDiksharthi(true);
+      const response = await fetch(
+        `${API}/api/diksharthi-feedback/approve/${feedbackItem.id || feedbackItem.feedback_id}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            diksharthi_id: viewFeedbackModalData.diksharthi.id,
+            feedback: feedbackItem.feedback,
+            approved_by: loggedInUserId,
+          }),
+        }
+      );
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(result?.message || "Failed to add feedback to diksharthi");
+      }
+      alert(result?.message || "Feedback added to diksharthi details successfully");
+      setViewFeedbackModalData(null);
+    } catch (error) {
+      console.error(error);
+      alert(error?.message || "Failed to add feedback to diksharthi");
+    } finally {
+      setIsAddingFeedbackToDiksharthi(false);
+    }
+  };
+
   return (
     <div className="p-8 min-h-screen">
       {/* Header Section */}
@@ -801,6 +915,23 @@ const DiksharthiListing = () => {
                           onClick={() => openViewScheduleModal(diksharthi)}
                         >
                           View Schedule
+                        </button>
+                      )}
+                      {role === "karyakarta" && (
+                        <button
+                          className="rounded-lg bg-orange-500 text-sm px-2 py-1 text-white flex items-center gap-1"
+                          onClick={() => openFeedbackModal(diksharthi)}
+                        >
+                          <Plus size={14} />
+                          Add Feedback
+                        </button>
+                      )}
+                      {role === "operations-manager" && (
+                        <button
+                          className="rounded-lg bg-orange-500 text-sm px-2 py-1 text-white"
+                          onClick={() => openViewFeedbackModal(diksharthi)}
+                        >
+                          View Feedback
                         </button>
                       )}
                     </td>
@@ -1157,6 +1288,122 @@ const DiksharthiListing = () => {
         </div>
       )}
 
+      {role === "karyakarta" && feedbackModalData && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 px-4">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+              <h3 className="text-lg font-semibold text-gray-800">Add Feedback</h3>
+              <button
+                type="button"
+                className="p-1 rounded hover:bg-gray-100"
+                onClick={() => {
+                  setFeedbackModalData(null);
+                  setFeedbackForm(emptyFeedbackForm);
+                }}
+              >
+                <X size={18} className="text-gray-600" />
+              </button>
+            </div>
+            <div className="px-5 py-4 space-y-3 text-sm">
+              <p>
+                <span className="font-semibold">Diksharthi:</span>{" "}
+                {feedbackModalData?.sadhu_sadhvi_name || "-"}
+              </p>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Feedback
+                </label>
+                <textarea
+                  name="feedback"
+                  value={feedbackForm.feedback}
+                  onChange={handleFeedbackFormChange}
+                  rows={4}
+                  placeholder="Write your feedback here..."
+                  className="w-full p-2 border border-slate-300 rounded-md outline-none resize-none"
+                />
+              </div>
+            </div>
+            <div className="px-5 py-4 border-t border-gray-100 flex gap-2 justify-end">
+              <button
+                type="button"
+                className="rounded-lg bg-gray-200 text-sm px-4 py-2 text-gray-800"
+                onClick={() => {
+                  setFeedbackModalData(null);
+                  setFeedbackForm(emptyFeedbackForm);
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="rounded-lg bg-orange-500 text-sm px-4 py-2 text-white disabled:opacity-60"
+                onClick={handleSubmitFeedback}
+                disabled={isSubmittingFeedback}
+              >
+                {isSubmittingFeedback ? "Submitting..." : "Submit Feedback"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {role === "operations-manager" && viewFeedbackModalData && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 px-4">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col overflow-hidden">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+              <h3 className="text-lg font-semibold text-gray-800">Feedback</h3>
+              <button
+                type="button"
+                className="p-1 rounded hover:bg-gray-100"
+                onClick={() => setViewFeedbackModalData(null)}
+              >
+                <X size={18} className="text-gray-600" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3 text-sm">
+              <p>
+                <span className="font-semibold">Diksharthi:</span>{" "}
+                {viewFeedbackModalData.diksharthi?.sadhu_sadhvi_name || "-"}
+              </p>
+              {isFeedbackLoading ? (
+                <p className="text-gray-500 animate-pulse">Loading feedback...</p>
+              ) : viewFeedbackModalData.feedbacks.length === 0 ? (
+                <p className="text-gray-500 py-4 text-center">No feedback available for this diksharthi.</p>
+              ) : (
+                <div className="space-y-3">
+                  {viewFeedbackModalData.feedbacks.map((item, index) => (
+                    <div
+                      key={item.id || item.feedback_id || index}
+                      className="border border-gray-200 rounded-lg p-4 bg-gray-50 space-y-2"
+                    >
+                      <p className="text-gray-800">{item.feedback || item.feedback_text || "-"}</p>
+                      {(item.submitted_by_name || item.karyakarta_name) && (
+                        <p className="text-xs text-gray-500">
+                          By: {item.submitted_by_name || item.karyakarta_name}
+                        </p>
+                      )}
+                      {item.created_at && (
+                        <p className="text-xs text-gray-400">{formatDate(item.created_at)}</p>
+                      )}
+                      
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="px-5 py-4 border-t border-gray-100 flex justify-end">
+              <button
+                type="button"
+                className="rounded-lg bg-gray-200 text-sm px-4 py-2 text-gray-800"
+                onClick={() => setViewFeedbackModalData(null)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {familyDetailsModalData && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 px-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
@@ -1176,107 +1423,107 @@ const DiksharthiListing = () => {
                   <p className="text-gray-500 animate-pulse">Loading family details...</p>
                 </div>
               ) : familyDetailsModalData?.details ? (
-                  <div className="space-y-5 text-sm">
+                <div className="space-y-5 text-sm">
 
-                    {/* Basic Family Info */}
-                    <div>
-                      <h4 className="text-sm font-bold text-gray-700 mb-3 uppercase tracking-wide">
-                        Family Information
-                      </h4>
+                  {/* Basic Family Info */}
+                  <div>
+                    <h4 className="text-sm font-bold text-gray-700 mb-3 uppercase tracking-wide">
+                      Family Information
+                    </h4>
 
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <DetailItem label="Head of Family" value={familyDetailsModalData.details.head_of_family} />
-                        <DetailItem label="Permanent Address" value={familyDetailsModalData.details.permanent_address} />
-                        <DetailItem label="Current Address" value={familyDetailsModalData.details.current_address} />
-                        <DetailItem label="Village" value={familyDetailsModalData.details.village} />
-                        <DetailItem label="Taluka" value={familyDetailsModalData.details.taluka} />
-                        <DetailItem label="District" value={familyDetailsModalData.details.district} />
-                        <DetailItem label="State" value={familyDetailsModalData.details.states} />
-                        <DetailItem label="Pin Code" value={familyDetailsModalData.details.pin_code} />
-                        <DetailItem label="House Details" value={familyDetailsModalData.details.house_details} />
-                        <DetailItem label="Type of House" value={familyDetailsModalData.details.type_of_house} />
-                        <DetailItem label="Maintenance Cost" value={familyDetailsModalData.details.maintenance_cost} />
-                        <DetailItem label="Light Bill Cost" value={familyDetailsModalData.details.light_bill_cost} />
-                        <DetailItem label="Rent Cost" value={familyDetailsModalData.details.rent_cost} />
-                        <DetailItem label="Mediclaim" value={familyDetailsModalData.details.mediclaim === "1" ? "Yes" : "No"} />
-                        <DetailItem label="Family Mediclaim Amount" value={familyDetailsModalData.details.family_mediclaim_amount} />
-                        <DetailItem label="NGO Assistance" value={familyDetailsModalData.details.ngo_assistance} />
-                      </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      <DetailItem label="Head of Family" value={familyDetailsModalData.details.head_of_family} />
+                      <DetailItem label="Permanent Address" value={familyDetailsModalData.details.permanent_address} />
+                      <DetailItem label="Current Address" value={familyDetailsModalData.details.current_address} />
+                      <DetailItem label="Village" value={familyDetailsModalData.details.village} />
+                      <DetailItem label="Taluka" value={familyDetailsModalData.details.taluka} />
+                      <DetailItem label="District" value={familyDetailsModalData.details.district} />
+                      <DetailItem label="State" value={familyDetailsModalData.details.states} />
+                      <DetailItem label="Pin Code" value={familyDetailsModalData.details.pin_code} />
+                      <DetailItem label="House Details" value={familyDetailsModalData.details.house_details} />
+                      <DetailItem label="Type of House" value={familyDetailsModalData.details.type_of_house} />
+                      <DetailItem label="Maintenance Cost" value={familyDetailsModalData.details.maintenance_cost} />
+                      <DetailItem label="Light Bill Cost" value={familyDetailsModalData.details.light_bill_cost} />
+                      <DetailItem label="Rent Cost" value={familyDetailsModalData.details.rent_cost} />
+                      <DetailItem label="Mediclaim" value={familyDetailsModalData.details.mediclaim === "1" ? "Yes" : "No"} />
+                      <DetailItem label="Family Mediclaim Amount" value={familyDetailsModalData.details.family_mediclaim_amount} />
+                      <DetailItem label="NGO Assistance" value={familyDetailsModalData.details.ngo_assistance} />
                     </div>
+                  </div>
 
 
-                    {/* Relation Details */}
-                    {familyDetailsModalData.details.relation_details &&
-                      Object.keys(familyDetailsModalData.details.relation_details).length > 0 && (
-                        <div>
-                          <h4 className="text-sm font-bold text-gray-700 mb-3 uppercase tracking-wide">
-                            Relation Details
-                          </h4>
+                  {/* Relation Details */}
+                  {familyDetailsModalData.details.relation_details &&
+                    Object.keys(familyDetailsModalData.details.relation_details).length > 0 && (
+                      <div>
+                        <h4 className="text-sm font-bold text-gray-700 mb-3 uppercase tracking-wide">
+                          Relation Details
+                        </h4>
 
-                          <div className="space-y-4">
-                            {Object.entries(familyDetailsModalData.details.relation_details).map(
-                              ([relation, info]) => (
-                                <div
-                                  key={relation}
-                                  className="border border-gray-100 rounded-lg p-4 bg-gray-50"
-                                >
-                                  <p className="font-semibold text-gray-700 capitalize mb-3">
-                                    {relation}
-                                  </p>
+                        <div className="space-y-4">
+                          {Object.entries(familyDetailsModalData.details.relation_details).map(
+                            ([relation, info]) => (
+                              <div
+                                key={relation}
+                                className="border border-gray-100 rounded-lg p-4 bg-gray-50"
+                              >
+                                <p className="font-semibold text-gray-700 capitalize mb-3">
+                                  {relation}
+                                </p>
 
-                                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
 
-                                    <DetailItem label="Full Name" value={info?.fullName} />
-                                    <DetailItem label="Aadhar Number" value={info?.aadharNumber} />
-                                    <DetailItem label="PAN Number" value={info?.panNumber} />
+                                  <DetailItem label="Full Name" value={info?.fullName} />
+                                  <DetailItem label="Aadhar Number" value={info?.aadharNumber} />
+                                  <DetailItem label="PAN Number" value={info?.panNumber} />
 
+                                  <DetailItem
+                                    label="Ayushman Card"
+                                    value={info?.ayushman ? "Yes" : "No"}
+                                  />
+
+                                  <DetailItem
+                                    label="Mediclaim"
+                                    value={info?.mediclaim ? "Yes" : "No"}
+                                  />
+
+                                  <DetailItem
+                                    label="Need Assistance"
+                                    value={info?.needAssistance ? "Yes" : "No"}
+                                  />
+
+                                  <DetailItem
+                                    label="Family Head"
+                                    value={info?.family_head ? "Yes" : "No"}
+                                  />
+
+                                  {info?.assistanceCategories && (
                                     <DetailItem
-                                      label="Ayushman Card"
-                                      value={info?.ayushman ? "Yes" : "No"}
-                                    />
-
-                                    <DetailItem
-                                      label="Mediclaim"
-                                      value={info?.mediclaim ? "Yes" : "No"}
-                                    />
-
-                                    <DetailItem
-                                      label="Need Assistance"
-                                      value={info?.needAssistance ? "Yes" : "No"}
-                                    />
-
-                                    <DetailItem
-                                      label="Family Head"
-                                      value={info?.family_head ? "Yes" : "No"}
-                                    />
-
-                                    {info?.assistanceCategories && (
-                                      <DetailItem
-                                        label="Assistance Categories"
-                                        value={info.assistanceCategories.join(", ")}
-                                      />
-                                    )}
-
-                                  </div>
-
-                                  {info?.photo && (
-                                    <img
-                                      src={info.photo}
-                                      alt={relation}
-                                      className="mt-3 w-20 h-20 rounded-lg object-cover border"
-                                      onError={(e) => {
-                                        e.currentTarget.style.display = "none";
-                                      }}
+                                      label="Assistance Categories"
+                                      value={info.assistanceCategories.join(", ")}
                                     />
                                   )}
-                                </div>
-                              )
-                            )}
-                          </div>
-                        </div>
-                      )}
 
-                  </div>
+                                </div>
+
+                                {info?.photo && (
+                                  <img
+                                    src={info.photo}
+                                    alt={relation}
+                                    className="mt-3 w-20 h-20 rounded-lg object-cover border"
+                                    onError={(e) => {
+                                      e.currentTarget.style.display = "none";
+                                    }}
+                                  />
+                                )}
+                              </div>
+                            )
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                </div>
               ) : (
                 <p className="text-gray-500 py-6 text-center">No family details available.</p>
               )}
