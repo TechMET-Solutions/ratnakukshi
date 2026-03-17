@@ -117,6 +117,7 @@ const FamilyDetailsForm = () => {
 
   console.log(additionalRelations, "additionalRelations");
   const [headOfFamily, setHeadOfFamily] = useState(null);
+  const [familyRecordId, setFamilyRecordId] = useState(null);
   console.log(headOfFamily, "headOfFamily");
   const handleCheckbox = (relation) => {
     setFormData((prev) => ({
@@ -417,6 +418,7 @@ const FamilyDetailsForm = () => {
         setExpandedRelations(fetchedExpandedRelations);
         setAssistanceData(fetchedAssistanceData);
         setHeadOfFamily(fetchedHeadOfFamily);
+        setFamilyRecordId(matchedFamily?.id ?? null);
       } catch (error) {
         console.error("Error fetching family details by id:", error);
       }
@@ -464,10 +466,9 @@ const FamilyDetailsForm = () => {
 
       console.log(payload, "Sending Data");
 
-      const response = await axios.put(
-        `${API}/api/update-family-details/${id}`,
-        payload
-      );
+      const response = familyRecordId
+        ? await axios.put(`${API}/api/update-family-details/${id}`, payload)
+        : await axios.post(`${API}/api/create-family-details`, payload);
 
       console.log(response.data);
 

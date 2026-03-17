@@ -135,9 +135,9 @@ function DonorList() {
               <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">
                 Actions
               </th>
-              <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase text-center">
+              {/* <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase text-center">
                 Receipt
-              </th>
+              </th> */}
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-50">
@@ -204,12 +204,12 @@ function DonorList() {
                    </button>
                  </div>
                </td>
-               <td className="px-6 py-4 text-sm text-center">
+               {/* <td className="px-6 py-4 text-sm text-center">
                  <button className="text-yellow-600 hover:text-yellow-700 inline-flex items-center gap-1 font-medium">
                    <FileText size={16} />
                    View
                  </button>
-               </td>
+               </td> */}
                 </tr>
               ))
             ) : (
