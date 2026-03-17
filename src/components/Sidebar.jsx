@@ -88,7 +88,7 @@ const Sidebar = () => {
           </>
         )}
 
-        {(isAdmin || isKaryakarta || isStaff) && (
+        {(isAdmin || isStaff) && (
           <NavItem
             isCollapsed={isCollapsed}
             to="/donor"

@@ -1,8 +1,8 @@
+import axios from "axios";
 import { Search } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { API } from "../api/BaseURL";
-import axios from "axios";
 
 function DonorPaymentHistory() {
   const location = useLocation();
@@ -260,18 +260,21 @@ function DonorPaymentHistory() {
                       {utr}
                     </td>
                     <td className="px-6 py-4 text-sm">
-                      <button
-                        onClick={() => openEditModal(payment)}
-                        className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded text-xs"
-                      >
-                        Pay
-                      </button>
-                      <button
-                        onClick={() => downloadReceipt(donorId, payment.id, index)}
-                        className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs"
-                      >
-                        Download
-                      </button>
+                      {payment.status === "Completed" ? (
+                        <button
+                          onClick={() => downloadReceipt(donorId, payment.id, index)}
+                          className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs"
+                        >
+                          Download
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => openEditModal(payment)}
+                          className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded text-xs"
+                        >
+                          Pay
+                        </button>
+                      )}
                     </td>
                   </tr>
                 );

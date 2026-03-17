@@ -161,7 +161,7 @@ function DonorList() {
                   </td>
 
                   <td className="px-6 py-4 text-sm font-semibold text-gray-700">
-                    ₹{donor.totalDonation?.toLocaleString() || 0}
+                    ₹{donor.paymentDetails?.totalInstallmentsAmount?.toLocaleString() || 0}
                   </td>
 
                   <td className="px-6 py-4 text-sm">

@@ -597,7 +597,7 @@ const DiksharthiListing = () => {
               )}
               {role === "operations-manager" && (
                 <th className="px-6 py-4 text-sm font-semibold text-gray-700">
-                  Admin Name
+                  Karyakarta Name
                 </th>
               )}
               {role === "admin" && (
