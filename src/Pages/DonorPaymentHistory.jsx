@@ -13,6 +13,33 @@ function DonorPaymentHistory() {
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const [showModal, setShowModal] = useState(false);
+  const [selectedPayment, setSelectedPayment] = useState(null);
+
+  const [formData, setFormData] = useState({
+    amount: "",
+    dueDate: "",
+    fundDate: "",
+    paymentMode: "",
+    utrNo: "",
+    status: "Completed",
+  });
+
+  const openEditModal = (payment) => {
+    setSelectedPayment(payment);
+
+    setFormData({
+      amount: payment.amount || "",
+      dueDate: payment.dueDate || payment.due_date || "",
+      fundDate: payment.fundDate || "",
+      paymentMode: payment.paymentMode || "",
+      utrNo: payment.utrNo || "",
+      status: payment.status || "Completed",
+    });
+
+    setShowModal(true);
+  };
+
   useEffect(() => {
     if (!donorId) return;
 
@@ -88,6 +115,28 @@ function DonorPaymentHistory() {
       utr.toLowerCase().includes(searchTerm.toLowerCase())
     );
   });
+
+
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  const updateInstallment = async () => {
+    try {
+      await axios.put(
+        `${API}/api/donor/update-installment/${donorId}/${selectedPayment.id}`,
+        formData
+      );
+
+      setShowModal(false);
+      window.location.reload(); // simple refresh
+    } catch (error) {
+      console.error("Update error:", error);
+    }
+  };
 
   // const downloadReceipt = async (id) => {
   //   try {
@@ -167,7 +216,9 @@ function DonorPaymentHistory() {
               <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">Date Installment Received</th>
               <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">Mode of Payment</th>
               <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">UTR Number</th>
-              <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">Recipt</th>
+              <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">
+                Action
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-50">
@@ -210,6 +261,12 @@ function DonorPaymentHistory() {
                     </td>
                     <td className="px-6 py-4 text-sm">
                       <button
+                        onClick={() => openEditModal(payment)}
+                        className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded text-xs"
+                      >
+                        Pay
+                      </button>
+                      <button
                         onClick={() => downloadReceipt(donorId, payment.id, index)}
                         className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs"
                       >
@@ -229,6 +286,127 @@ function DonorPaymentHistory() {
           </tbody>
         </table>
       </div>
+
+      {showModal && (
+        <div className="fixed inset-0 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-[500px] overflow-hidden border border-slate-200">
+
+            {/* Header */}
+            <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50">
+              <h2 className="text-xl font-semibold text-slate-800">Pay Installment</h2>
+            </div>
+
+            {/* Form Body */}
+            <div className="px-6 space-y-4">
+
+              {/* Amount Field */}
+              <div className="grid grid-cols-1 gap-1.5">
+                <label className="text-sm font-medium text-slate-700">Amount</label>
+                <input
+                  type="number"
+                  name="amount"
+                  placeholder="0.00"
+                  value={formData.amount}
+                  onChange={handleChange}
+                  className="w-full border border-slate-300 p-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                />
+              </div>
+
+              {/* Date Row */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-1.5">
+                  <label className="text-sm font-medium text-slate-700">Due Date</label>
+                  <input
+                    type="date"
+                    name="dueDate"
+                    value={formData.dueDate}
+                    onChange={handleChange}
+                    className="w-full border border-slate-300 p-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                  />
+                </div>
+                <div className="grid grid-cols-1 gap-1.5">
+                  <label className="text-sm font-medium text-slate-700">Fund Date</label>
+                  <input
+                    type="date"
+                    name="fundDate"
+                    value={formData.fundDate}
+                    onChange={handleChange}
+                    className="w-full border border-slate-300 p-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                  />
+                </div>
+              </div>
+
+              {/* Payment Info Row */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-1.5">
+                  <label className="text-sm font-medium text-slate-700">Payment Mode</label>
+                  <select
+                    name="paymentMode"
+                    value={formData.paymentMode}
+                    onChange={handleChange}
+                    className="w-full border border-slate-300 p-2.5 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 outline-none appearance-none"
+                  >
+                    <option value="">Select</option>
+                    <option value="Bank Transfer">
+                      Bank Transfer
+                    </option>
+                    <option value="Card">Card</option>
+                    <option value="Cheque">Cheque</option>
+                    <option value="Cash">Cash</option>
+                    <option value="UPI">UPI</option>
+                  </select>
+                </div>
+                <div className="grid grid-cols-1 gap-1.5">
+                  <label className="text-sm font-medium text-slate-700">UTR Number</label>
+                  <input
+                    type="text"
+                    name="utrNo"
+                    placeholder="Transaction ID"
+                    value={formData.utrNo}
+                    onChange={handleChange}
+                    className="w-ll border border-slate-300 p-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                  />
+                </div>
+              </div>
+
+              {/* Status Field */}
+              <div className="grid grid-cols-1 gap-1.5">
+                <label className="text-sm font-medium text-slate-700">Status</label>
+                <select
+                  name="status"
+                  value={formData.status}
+                  onChange={handleChange}
+                  className="w-full border border-slate-300 p-2.5 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 outline-none appearance-none"
+                >
+                  <option value="">Select</option>
+                  <option value="Pending">Pending</option>
+                  <option value="Completed">Completed</option>
+                  <option value="Failed">Failed</option>
+                  <option value="Cancelled">Cancelled</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Footer Actions */}
+            <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
+              <button
+                onClick={() => setShowModal(false)}
+                className="px-5 py-2 text-sm font-medium text-slate-600 hover:bg-slate-200 rounded-lg transition-colors"
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={updateInstallment}
+                className="px-5 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-sm shadow-blue-200 transition-all active:scale-95"
+              >
+                Pay Installment
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
     </div>
   );
 }

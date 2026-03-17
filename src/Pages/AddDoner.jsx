@@ -89,6 +89,7 @@ function AddDonor() {
     },
 
     paymentDetails: {
+      totalInstallmentsAmount: "",
       installments: [],
     },
   });
@@ -1339,6 +1340,27 @@ function AddDonor() {
                       <option value="10">10</option>
                     </select>
                   </div>
+                  <div className="">
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      Total Installments Amount
+                      <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.paymentDetails.totalInstallmentsAmount || ""}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          paymentDetails: {
+                            ...prev.paymentDetails,
+                            totalInstallmentsAmount: e.target.value,
+                          },
+                        }))
+                      }
+                      placeholder="Total Installments Amount"
+                      className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
+                    />
+                  </div>
                 </div>
 
                 {/* SECTION: Installment Tables - Conditional */}
@@ -1387,73 +1409,7 @@ function AddDonor() {
                                 className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                               />
                             </div>
-                            <div>
-                              <label className="block text-sm font-medium text-slate-700 mb-1">
-                                Date Fund Received
-                                <span className="text-red-500">*</span>
-                              </label>
-                              <input
-                                type="date"
-                                value={formData.paymentDetails.installments[index]?.fundDate || ""}
-                                onChange={(e) =>
-                                  handleInstallmentChange(index, "fundDate", e.target.value)
-                                }
-                                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
-                              />
-                            </div>
-                            <div>
-                              <label className="block text-sm font-medium text-slate-700 mb-1">
-                                Mode of Payment
-                                <span className="text-red-500">*</span>
-                              </label>
-                              <select
-                                value={formData.paymentDetails.installments[index]?.paymentMode || ""}
-                                onChange={(e) =>
-                                  handleInstallmentChange(index, "paymentMode", e.target.value)
-                                }
-                                className="w-full p-2 border border-slate-300 rounded-md outline-none focus:ring-2 focus:ring-blue-100">
-                                <option value="">Select</option>
-                                <option value="Bank Transfer">
-                                  Bank Transfer
-                                </option>
-                                <option value="Card">Card</option>
-                                <option value="Cheque">Cheque</option>
-                                <option value="Cash">Cash</option>
-                              </select>
-                            </div>
-                            <div>
-                              <label className="block text-sm font-medium text-slate-700 mb-1">
-                                UTR Number
-                                <span className="text-red-500">*</span>
-                              </label>
-                              <input
-                                type="text"
-                                value={formData.paymentDetails.installments[index]?.utrNo || ""}
-                                onChange={(e) =>
-                                  handleInstallmentChange(index, "utrNo", e.target.value)
-                                }
-                                placeholder="Enter UTR"
-                                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
-                              />
-                            </div>
-                            <div>
-                              <label className="block text-sm font-medium text-slate-700 mb-1">
-                                Status<span className="text-red-500">*</span>
-                              </label>
-                              <select
-                                value={formData.paymentDetails.installments[index]?.status || ""}
-                                onChange={(e) =>
-                                  handleInstallmentChange(index, "status", e.target.value)
-                                }
-                                className="w-full p-2 border border-slate-300 rounded-md outline-none focus:ring-2 focus:ring-blue-100"
-                              >
-                                <option value="">Select</option>
-                                <option value="Pending">Pending</option>
-                                <option value="Completed">Completed</option>
-                                <option value="Failed">Failed</option>
-                                <option value="Cancelled">Cancelled</option>
-                              </select>
-                            </div>
+                           
                           </div>
                         </div>
                       ),
@@ -1508,3 +1464,4 @@ function AddDonor() {
 }
 
 export default AddDonor;
+
