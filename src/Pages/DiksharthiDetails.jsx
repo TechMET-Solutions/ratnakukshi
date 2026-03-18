@@ -89,32 +89,32 @@ const DiksharthiListing = () => {
   const [feedbackStatus, setFeedbackStatus] = useState({});
 
   const fetchFeedbackStatus = async (records) => {
-  try {
+    try {
 
-    const results = await Promise.all(
-      records.map(async (item) => {
+      const results = await Promise.all(
+        records.map(async (item) => {
 
-        const res = await fetch(`${API}/api/feedback/view/${item.id}`);
-        const data = await res.json();
+          const res = await fetch(`${API}/api/feedback/view/${item.id}`);
+          const data = await res.json();
 
-        const hasFeedback =
-          Array.isArray(data?.data) && data.data.length > 0;
+          const hasFeedback =
+            Array.isArray(data?.data) && data.data.length > 0;
 
-        return [item.id, hasFeedback];
-      })
-    );
+          return [item.id, hasFeedback];
+        })
+      );
 
-    const statusMap = results.reduce((acc, [id, value]) => {
-      acc[id] = value;
-      return acc;
-    }, {});
+      const statusMap = results.reduce((acc, [id, value]) => {
+        acc[id] = value;
+        return acc;
+      }, {});
 
-    setFeedbackStatus(statusMap);
+      setFeedbackStatus(statusMap);
 
-  } catch (error) {
-    console.error("Feedback status fetch failed", error);
-  }
-};
+    } catch (error) {
+      console.error("Feedback status fetch failed", error);
+    }
+  };
 
   const fetchDiksharthiList = async () => {
     try {
@@ -122,7 +122,7 @@ const DiksharthiListing = () => {
       const data = await res.json();
       const allRecords = Array.isArray(data?.data) ? data.data : [];
 
-      
+
 
 
       let filteredRecords = [];
@@ -190,7 +190,7 @@ const DiksharthiListing = () => {
         throw new Error("Failed to update diksharthi status");
       }
 
-      await fetchDiksharthiList();
+      await fetchDiksharthiList(filteredRecords);
     } catch (error) {
       console.error(error);
       alert("Failed to send to admin");
@@ -545,7 +545,7 @@ const DiksharthiListing = () => {
       alert("Karyakarta assigned successfully");
       setAssignModalData(null);
       setSelectedAdminId("");
-      await fetchDiksharthiList();
+      await fetchDiksharthiList(filteredRecords);
     } catch (error) {
       console.error(error);
       alert("Failed to assign Karyakarta");
@@ -917,7 +917,7 @@ const DiksharthiListing = () => {
                           View Schedule
                         </button>
                       )}
-                      {role === "karyakarta" && (
+                      {role === "karyakarta" && !feedbackStatus[diksharthi.id] && (
                         <button
                           className="rounded-lg bg-orange-500 text-sm px-2 py-1 text-white flex items-center gap-1"
                           onClick={() => openFeedbackModal(diksharthi)}
@@ -926,7 +926,7 @@ const DiksharthiListing = () => {
                           Add Feedback
                         </button>
                       )}
-                      {role === "operations-manager" && (
+                      {role === "operations-manager" && feedbackStatus[diksharthi.id] && (
                         <button
                           className="rounded-lg bg-orange-500 text-sm px-2 py-1 text-white"
                           onClick={() => openViewFeedbackModal(diksharthi)}
@@ -1385,7 +1385,7 @@ const DiksharthiListing = () => {
                       {item.created_at && (
                         <p className="text-xs text-gray-400">{formatDate(item.created_at)}</p>
                       )}
-                      
+
                     </div>
                   ))}
                 </div>

@@ -151,6 +151,8 @@ function AddDonor() {
     }
   };
 
+
+
   const [numInstallments, setNumInstallments] = useState("");
   const [photo, setPhoto] = useState(null);
 
@@ -611,8 +613,9 @@ function AddDonor() {
                   </label>
                   <input
                     type="file"
-                    onChange={(e) => setPhoto(e.target.files[0])}
-                    // value={}
+                    onChange={(e) =>
+                      handleChange("personalDetails", "aadhar", e.target.files[0])
+                    }
                     className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                   />
                 </div>
@@ -622,7 +625,9 @@ function AddDonor() {
                   </label>
                   <input
                     type="file"
-                    onChange={(e) => setPhoto(e.target.files[0])}
+                    onChange={(e) =>
+                      handleChange("personalDetails", "pan", e.target.files[0])
+                    }
                     className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                   />
                 </div>
@@ -632,7 +637,9 @@ function AddDonor() {
                   </label>
                   <input
                     type="file"
-                    onChange={(e) => setPhoto(e.target.files[0])}
+                    onChange={(e) =>
+                      handleChange("personalDetails", "photo", e.target.files[0])
+                    }
                     className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                   />
                 </div>
