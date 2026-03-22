@@ -34,11 +34,13 @@ const Login = () => {
       <div className="w-full mx-auto max-w-[400px] bg-white rounded-xl shadow-2xl overflow-hidden">
         <div className="h-2 bg-[#4285f4] w-full"></div>
 
-        <div className="px-8 pt-10 pb-12 flex flex-col items-center">
-          <div className="w-20 h-12 bg-gray-300 rounded-sm mb-6"></div>
+        <div className="px-8 py-6 flex flex-col items-center">
+          <div className="mb-6">
+            <img src="/ratnakukshi_logo.jpg" alt="logo" className="h-28" />
+          </div>
 
           <h1 className="text-[#4285f4] text-2xl font-semibold mb-2">
-            Karyakarta Login
+            Login
           </h1>
 
           <p className="text-gray-500 text-sm mb-8 text-center">

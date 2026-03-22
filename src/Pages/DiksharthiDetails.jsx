@@ -11,6 +11,15 @@ const DetailItem = ({ label, value }) => (
   </div>
 );
 
+const MenuItem = ({ children, onClick }) => (
+  <button
+    onClick={onClick}
+    className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+  >
+    {children}
+  </button>
+);
+
 const normalizeRole = (value) => {
   const rawRole = String(value || "").trim().toLowerCase();
 
@@ -51,6 +60,8 @@ const emptyFeedbackForm = {
 const DiksharthiListing = () => {
   const navigate = useNavigate();
   const { user: loggedInUser } = useAuth();
+
+  const [openMenuId, setOpenMenuId] = useState(null);
 
   const role = normalizeRole(loggedInUser?.role || "");
   const loggedInUserId = loggedInUser?.id ?? null;
@@ -173,7 +184,8 @@ const DiksharthiListing = () => {
     setCurrentPage(1);
   }, [searchTerm, diksharthiList.length]);
 
-  const handleSendToAdmin = async (id) => {
+  const handleSendToOpManager = async (id) => {
+    debugger
     try {
       setSendingId(id);
       const res = await fetch(`${API}/api/update-diksharthi-status/${id}`, {
@@ -186,14 +198,16 @@ const DiksharthiListing = () => {
         }),
       });
 
-      if (!res.ok) {
-        throw new Error("Failed to update diksharthi status");
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || "Failed to update diksharthi status");
       }
 
-      await fetchDiksharthiList(filteredRecords);
+      await fetchDiksharthiList();
     } catch (error) {
       console.error(error);
-      alert("Failed to send to admin");
+      alert("Failed to send to Operations Manager");
     } finally {
       setSendingId(null);
     }
@@ -545,7 +559,7 @@ const DiksharthiListing = () => {
       alert("Karyakarta assigned successfully");
       setAssignModalData(null);
       setSelectedAdminId("");
-      await fetchDiksharthiList(filteredRecords);
+      await fetchDiksharthiList();
     } catch (error) {
       console.error(error);
       alert("Failed to assign Karyakarta");
@@ -685,41 +699,41 @@ const DiksharthiListing = () => {
         </div>
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="bg-gray-50 border-b border-gray-100">
-              <th className="px-6 py-4 text-sm font-semibold text-gray-700">
+            <tr className="bg-gray-50 border-b border-gray-100 ">
+              <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">
                 Photo
               </th>
-              <th className="px-6 py-4 text-sm font-semibold text-gray-700">
+              <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">
                 Diksharthi ID
               </th>
-              <th className="px-6 py-4 text-sm font-semibold text-gray-700">
+              <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">
                 Diksharthi Name
               </th>
-              <th className="px-6 py-4 text-sm font-semibold text-gray-700">
+              <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">
                 Pad
               </th>
-              <th className="px-6 py-4 text-sm font-semibold text-gray-700">
+              <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">
                 Sect
               </th>
-              <th className="px-6 py-4 text-sm font-semibold text-gray-700">
+              <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">
                 Alive Status
               </th>
               {role === "operations-manager" && (
-                <th className="px-6 py-4 text-sm font-semibold text-gray-700">
+                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">
                   Staff Name
                 </th>
               )}
               {role === "operations-manager" && (
-                <th className="px-6 py-4 text-sm font-semibold text-gray-700">
+                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">
                   Karyakarta Name
                 </th>
               )}
               {role === "admin" && (
-                <th className="px-6 py-4 text-sm font-semibold text-gray-700">
+                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">
                   Status
                 </th>
               )}
-              <th className="px-6 py-4 text-sm font-semibold text-gray-700">
+              <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">
                 Actions
               </th>
             </tr>
@@ -790,32 +804,197 @@ const DiksharthiListing = () => {
                     )}
 
                     {/* Actions */}
-                    <td className="px-6 py-3 flex gap-3">
-                      {role === "staff" ? (
-                        getDiksharthiStatus(diksharthi) === "send" ? (
-                          <>
-                            <button
-                              type="button"
-                              className="rounded-lg text-sm px-2 py-1 text-green-600 cursor-default"
-                              disabled
-                            >
-                              Send
-                            </button>
+                    {/* <td className="px-6 py-3 relative">
 
-                          </>
-                        ) : (
+                      <button
+                        onClick={() =>
+                          setOpenMenuId(openMenuId === diksharthi.id ? null : diksharthi.id)
+                        }
+                        className="p-2 rounded-full hover:bg-gray-200"
+                      >
+                        ⋯
+                      </button>
+
+                      {openMenuId === diksharthi.id && (
+                        <div className="absolute right-6 mt-2 w-52 bg-white border rounded-lg shadow-lg z-50">
+
+                          {role === "staff" && (
+                            <>
+                              <MenuItem onClick={() => openViewModal(diksharthi)}>View</MenuItem>
+                              <MenuItem
+                                onClick={() =>
+                                  navigate("/diksharthi-details-add", {
+                                    state: { mode: "edit", diksharthiData: diksharthi },
+                                  })
+                                }
+                              >
+                                Edit
+                              </MenuItem>
+
+                              {getDiksharthiStatus(diksharthi) !== "send" && (
+                                <MenuItem
+                                  onClick={() => handleSendToOpManager(diksharthi.id)}
+                                >
+                                  Send to Operations Manager
+                                </MenuItem>
+                              )}
+                            </>
+                          )}
+
+                          {role === "operations-manager" && (
+                            <>
+                              <MenuItem onClick={() => openViewModal(diksharthi)}>View</MenuItem>
+
+                              {isAdminUnassigned(diksharthi) && (
+                                <MenuItem onClick={() => openAssignAdminModal(diksharthi)}>
+                                  Assign Karyakarta
+                                </MenuItem>
+                              )}
+
+                              {!getVisitSchedule(diksharthi) && (
+                                <MenuItem onClick={() => openScheduleVisitModal(diksharthi)}>
+                                  Schedule Visit
+                                </MenuItem>
+                              )}
+
+                              {feedbackStatus[diksharthi.id] && (
+                                <MenuItem onClick={() => openViewFeedbackModal(diksharthi)}>
+                                  View Feedback
+                                </MenuItem>
+                              )}
+                            </>
+                          )}
+
+                          {role === "karyakarta" && (
+                            <>
+                              <MenuItem
+                                onClick={() =>
+                                  navigate("/family-details", {
+                                    state: {
+                                      id: diksharthi.id,
+                                      diksharthi_code: diksharthi.diksharthi_code,
+                                      sadhu_sadhvi_name: diksharthi.sadhu_sadhvi_name,
+                                      gender: diksharthi.gender,
+                                    },
+                                  })
+                                }
+                              >
+                                {diksharthi.family_details
+                                  ? "Update Family Details"
+                                  : "Add Family Details"}
+                              </MenuItem>
+
+                              {diksharthi.family_details && (
+                                <MenuItem onClick={() => openFamilyDetailsModal(diksharthi)}>
+                                  View Family Details
+                                </MenuItem>
+                              )}
+
+                              {getVisitSchedule(diksharthi) && (
+                                <MenuItem onClick={() => openViewScheduleModal(diksharthi)}>
+                                  View Schedule
+                                </MenuItem>
+                              )}
+
+                              {!feedbackStatus[diksharthi.id] && (
+                                <MenuItem onClick={() => openFeedbackModal(diksharthi)}>
+                                  Add Feedback
+                                </MenuItem>
+                              )}
+                            </>
+                          )}
+
+                          {(role === "admin" || role === "case-coordinator") && (
+                            <>
+                              <MenuItem onClick={() => openViewModal(diksharthi)}>View</MenuItem>
+
+                              {diksharthi.family_details && (
+                                <MenuItem onClick={() => openFamilyDetailsModal(diksharthi)}>
+                                  View Family Details
+                                </MenuItem>
+                              )}
+                            </>
+                          )}
+                        </div>
+                      )}
+                    </td> */}
+
+
+                    <td className="px-6 py-3 flex gap-3 flex-wrap">
+
+                      {/* ================= STAFF ================= */}
+                      {role === "staff" && (
+                        <>
                           <button
                             className="rounded-lg bg-blue-600 text-sm px-2 py-1 text-white"
-                            onClick={() => handleSendToAdmin(diksharthi.id)}
-                            disabled={sendingId === diksharthi.id}
+                            onClick={() => openViewModal(diksharthi)}
                           >
-                            {sendingId === diksharthi.id
-                              ? "Sending..."
-                              : "Send to Operations Manager"}
+                            View
                           </button>
-                        )
-                      ) : null}
-                      {(role === "admin" || role === "karyakarta") && (
+
+                          <button
+                            className="rounded-lg bg-green-600 text-sm px-2 py-1 text-white"
+                            onClick={() =>
+                              navigate("/diksharthi-details-add", {
+                                state: { mode: "edit", diksharthiData: diksharthi },
+                              })
+                            }
+                          >
+                            Edit
+                          </button>
+
+                          {getDiksharthiStatus(diksharthi) !== "send" && (
+                            <button
+                              className="rounded-lg bg-blue-600 text-sm px-2 py-1 text-white"
+                              onClick={() => handleSendToOpManager(diksharthi.id)}
+                            >
+                              Send to Operations Manager
+                            </button>
+                          )}
+                        </>
+                      )}
+
+                      {/* ================= OPERATIONS MANAGER ================= */}
+                      {role === "operations-manager" && (
+                        <>
+                          <button
+                            className="rounded-lg bg-blue-600 text-sm px-2 py-1 text-white"
+                            onClick={() => openViewModal(diksharthi)}
+                          >
+                            View
+                          </button>
+
+                          {isAdminUnassigned(diksharthi) && (
+                            <button
+                              className="rounded-lg bg-purple-600 text-sm px-2 py-1 text-white"
+                              onClick={() => openAssignAdminModal(diksharthi)}
+                            >
+                              Assign Karyakarta
+                            </button>
+                          )}
+
+                          {!getVisitSchedule(diksharthi) && (
+                            <button
+                              className="rounded-lg bg-emerald-600 text-sm px-2 py-1 text-white"
+                              onClick={() => openScheduleVisitModal(diksharthi)}
+                            >
+                              Schedule Visit
+                            </button>
+                          )}
+
+                          {feedbackStatus[diksharthi.id] && (
+                            <button
+                              className="rounded-lg bg-orange-500 text-sm px-2 py-1 text-white"
+                              onClick={() => openViewFeedbackModal(diksharthi)}
+                            >
+                              View Feedback
+                            </button>
+                          )}
+                        </>
+                      )}
+
+                      {/* ================= KARYAKARTA ================= */}
+                      {role === "karyakarta" && (
                         <>
                           <button
                             className="rounded-lg bg-yellow-500 text-sm px-2 py-1 text-white"
@@ -830,8 +1009,50 @@ const DiksharthiListing = () => {
                               })
                             }
                           >
-                            {diksharthi.family_details ? "Update Family Details" : "Add Family Details"}
+                            {diksharthi.family_details
+                              ? "Update Family Details"
+                              : "Add Family Details"}
                           </button>
+
+                          {diksharthi.family_details && (
+                            <button
+                              className="rounded-lg bg-teal-600 text-sm px-2 py-1 text-white"
+                              onClick={() => openFamilyDetailsModal(diksharthi)}
+                            >
+                              View Family Details
+                            </button>
+                          )}
+
+                          {getVisitSchedule(diksharthi) && (
+                            <button
+                              className="rounded-lg bg-indigo-600 text-sm px-2 py-1 text-white"
+                              onClick={() => openViewScheduleModal(diksharthi)}
+                            >
+                              View Schedule
+                            </button>
+                          )}
+
+                          {!feedbackStatus[diksharthi.id] && (
+                            <button
+                              className="rounded-lg bg-orange-500 text-sm px-2 py-1 text-white"
+                              onClick={() => openFeedbackModal(diksharthi)}
+                            >
+                              Add Feedback
+                            </button>
+                          )}
+                        </>
+                      )}
+
+                      {/* ================= ADMIN / CASE COORDINATOR ================= */}
+                      {(role === "admin" || role === "case-coordinator") && (
+                        <>
+                          <button
+                            className="rounded-lg bg-blue-600 text-sm px-2 py-1 text-white"
+                            onClick={() => openViewModal(diksharthi)}
+                          >
+                            View
+                          </button>
+
                           {diksharthi.family_details && (
                             <button
                               className="rounded-lg bg-teal-600 text-sm px-2 py-1 text-white"
@@ -842,98 +1063,7 @@ const DiksharthiListing = () => {
                           )}
                         </>
                       )}
-                      {role === "operations-manager" && (
-                        <>
-                          <button
-                            className="rounded-lg bg-blue-600 text-sm px-2 py-1 text-white"
-                            onClick={() => openViewModal(diksharthi)}
-                          >
-                            View
-                          </button>
-                          {/* <button
-                            className="rounded-lg bg-green-600 text-sm px-2 py-1 text-white"
-                            onClick={() =>
-                              navigate("/diksharthi-details-add", {
-                                state: {
-                                  mode: "edit",
-                                  diksharthiData: diksharthi,
-                                },
-                              })
-                            }
-                          >
-                            Edit
-                          </button> */}
-                          {isAdminUnassigned(diksharthi) && (
-                            <button
-                              className="rounded-lg bg-purple-600 text-sm px-2 py-1 text-white"
-                              onClick={() => openAssignAdminModal(diksharthi)}
-                            >
-                              Assign Karyakarta
-                            </button>
-                          )}
-                          {!getVisitSchedule(diksharthi) && (
-                            <button
-                              className="rounded-lg bg-emerald-600 text-sm px-2 py-1 text-white"
-                              onClick={() => openScheduleVisitModal(diksharthi)}
-                            >
-                              Schedule Visit
-                            </button>
-                          )}
-                        </>
-                      )}
-                      {role === "staff" && (
-                        <>
-                          <button
-                            type="button"
-                            className="rounded-lg bg-blue-600 text-sm px-2 py-1 text-white"
-                            onClick={() => openViewModal(diksharthi)}
-                          >
-                            View
-                          </button>
-                          <button
-                            className="rounded-lg bg-green-600 text-sm px-2 py-1 text-white"
-                            onClick={() =>
-                              navigate("/diksharthi-details-add", {
-                                state: {
-                                  mode: "edit",
-                                  diksharthiData: diksharthi,
-                                },
-                              })
-                            }
-                          >
-                            Edit
-                          </button>
 
-
-
-                        </>
-                      )}
-
-                      {role === "karyakarta" && getVisitSchedule(diksharthi) && (
-                        <button
-                          className="rounded-lg bg-indigo-600 text-sm px-2 py-1 text-white"
-                          onClick={() => openViewScheduleModal(diksharthi)}
-                        >
-                          View Schedule
-                        </button>
-                      )}
-                      {role === "karyakarta" && !feedbackStatus[diksharthi.id] && (
-                        <button
-                          className="rounded-lg bg-orange-500 text-sm px-2 py-1 text-white flex items-center gap-1"
-                          onClick={() => openFeedbackModal(diksharthi)}
-                        >
-                          <Plus size={14} />
-                          Add Feedback
-                        </button>
-                      )}
-                      {role === "operations-manager" && feedbackStatus[diksharthi.id] && (
-                        <button
-                          className="rounded-lg bg-orange-500 text-sm px-2 py-1 text-white"
-                          onClick={() => openViewFeedbackModal(diksharthi)}
-                        >
-                          View Feedback
-                        </button>
-                      )}
                     </td>
                   </tr>
                 );
@@ -988,7 +1118,7 @@ const DiksharthiListing = () => {
               </div>
 
               {/* Modal Body */}
-              <div className="flex-1 overflow-y-auto px-6 pb-6">
+              <div className="flex-1 overflow-y-auto px-6 pb-6 mt-4">
                 {isViewLoading ? (
                   <div className="flex justify-center py-10">
                     <p className="text-gray-500 animate-pulse">Loading profile data...</p>
@@ -996,7 +1126,7 @@ const DiksharthiListing = () => {
                 ) : (
                   <div className="space-y-6">
                     {/* Top Section: Info + Image */}
-                    <div className="flex flex-col-reverse sm:flex-row gap-6 pb-2 border-b border-gray-100">
+                    <div className="flex flex-col-reverse sm:flex-row gap-6 pb-4 border-b border-gray-100">
                       <div className="flex-1 space-y-3">
                         <div>
                           <label className="text-xs font-bold text-blue-600 uppercase tracking-wider">Diksharthi Name</label>
@@ -1009,7 +1139,7 @@ const DiksharthiListing = () => {
                         </div>
                       </div>
 
-                      {/* Image on the Top Right */}
+                      {/* Image Section */}
                       <div className="flex-shrink-0 flex justify-center sm:justify-end">
                         <div className="relative">
                           <img
@@ -1019,14 +1149,9 @@ const DiksharthiListing = () => {
                             className="w-32 h-32 rounded-xl object-cover border-4 border-white shadow-md"
                           />
                           <div
-                            className={`absolute -bottom-2 -right-2 px-2 py-1 rounded text-[10px] font-bold uppercase text-white shadow-sm ${viewModalData?.is_alive === "No" ? "bg-red-500" : "bg-green-500"
-                              }`}
+                            className={`absolute -bottom-2 -right-2 px-2 py-1 rounded text-[10px] font-bold uppercase text-white shadow-sm ${viewModalData?.is_alive === "No" ? "bg-red-500" : "bg-green-500"}`}
                           >
-                            {viewModalData?.is_alive === "Yes"
-                              ? "Alive"
-                              : viewModalData?.is_alive === "No"
-                                ? "Dead"
-                                : "Status N/A"}
+                            {viewModalData?.is_alive === "Yes" ? "Alive" : viewModalData?.is_alive === "No" ? "Dead" : "N/A"}
                           </div>
                         </div>
                       </div>
@@ -1034,23 +1159,30 @@ const DiksharthiListing = () => {
 
                     {/* Detailed Data Grid */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
-                      {/* <DetailItem label="Staff ID" value={viewModalData?.user_id} /> */}
-                      {/* <DetailItem label="Admin ID" value={viewModalData?.admin_id} /> */}
                       <DetailItem label="Date of Birth" value={formatDate(viewModalData?.dob)} />
+                      {/* Fixed Age: Removed formatDate wrap since age is a number/string */}
+                      <DetailItem label="Age" value={viewModalData?.age || "N/A"} />
+
                       <DetailItem label="Gender" value={viewModalData?.gender} />
                       <DetailItem label="Pad" value={viewModalData?.pad} />
                       <DetailItem label="Samudaay" value={viewModalData?.samudaay} />
                       <DetailItem label="Guru Name" value={viewModalData?.guru_name || viewModalData?.guruName} />
                       <DetailItem label="Acharya" value={viewModalData?.acharya} />
-                      <DetailItem label="Gaachh" value={viewModalData?.gaachh} />
                       <DetailItem label="Gadipati" value={viewModalData?.gadipati} />
 
-                      {getAliveStatus(viewModalData) === "yes" && (
+                      {/* RBF Fields */}
+                      <DetailItem label="RBF Criteria" value={viewModalData?.rbf_criteria || viewModalData?.rbfCriteria || "No"} />
+                      {(viewModalData?.rbf_criteria === "Yes" || viewModalData?.rbfCriteria === "Yes") && (
+                        <DetailItem label="RBF Relation" value={viewModalData?.relation || "N/A"} />
+                      )}
+
+                      {/* Alive Specific Info */}
+                      {viewModalData?.is_alive === "Yes" && (
                         <DetailItem label="Current Vihar Location" value={viewModalData?.vihar_location || viewModalData?.viharLocation} />
                       )}
 
-                      {/* Conditional Samadhi Info */}
-                      {getAliveStatus(viewModalData) === "no" && (
+                      {/* Dead Specific Info */}
+                      {viewModalData?.is_alive === "No" && (
                         <>
                           <DetailItem label="Samadhi Date" value={formatDate(viewModalData?.samadhi_date || viewModalData?.samadhiDate)} />
                           <DetailItem label="Samadhi Place" value={viewModalData?.samadhi_place || viewModalData?.samadhiPlace} />
@@ -1473,7 +1605,8 @@ const DiksharthiListing = () => {
 
                                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
 
-                                  <DetailItem label="Full Name" value={info?.fullName} />
+                                  <DetailItem label="First Name" value={info?.firstName} />
+                                  <DetailItem label="Last Name" value={info?.lastName} />
                                   <DetailItem label="Aadhar Number" value={info?.aadharNumber} />
                                   <DetailItem label="PAN Number" value={info?.panNumber} />
 

@@ -18,7 +18,7 @@ const INITIAL_FORM_DATA = {
   village: "",
   taluka: "",
   district: "",
-  state: "",
+  state: "Maharashtra",
   pinCode: "",
   houseDetails: "",
   typeOfHouse: "",
@@ -110,7 +110,7 @@ const FamilyDetailsForm = () => {
     "Rent",
     "Housing",
     "Vaiyavacch",
-    "EmergencyExpenses",
+    "LivelihoodExpenses ",
 
   ]);
   const [additionalRelations, setAdditionalRelations] = useState({});
@@ -134,7 +134,8 @@ const FamilyDetailsForm = () => {
         [relation]: {
           relationName: "",
           relationDetailsName: "",
-          fullName: "",
+          firstName: "",
+          lastName: "",
           aadharNumber: "",
           photo: null,
           photoPreview: "",
@@ -186,21 +187,63 @@ const FamilyDetailsForm = () => {
   //   }
   // };
 
+  // const isAadharDuplicate = (currentRelation, value) => {
+  //   return Object.entries(relationDetails).some(([key, data]) => {
+  //     return key !== currentRelation && data?.aadharNumber === value;
+  //   });
+  // };
+
+  const validateAadharUnique = () => {
+    const aadharList = Object.values(relationDetails)
+      .map(r => r?.aadharNumber)
+      .filter(Boolean);
+
+    const uniqueSet = new Set(aadharList);
+
+    return aadharList.length === uniqueSet.size;
+  };
+
+
+  // const handleProfileUpload = (relation, event) => {
+  //   const file = event.target.files?.[0];
+  //   if (file) {
+  //     setRelationDetails((prev) => {
+  //       const currentPreview = prev[relation]?.photoPreview;
+  //       if (typeof currentPreview === "string" && currentPreview.startsWith("blob:")) {
+  //         URL.revokeObjectURL(currentPreview);
+  //       }
+
+  //       return {
+  //         ...prev,
+  //         [relation]: {
+  //           ...prev[relation],
+  //           photo: file,
+  //           photoPreview: URL.createObjectURL(file),
+  //         },
+  //       };
+  //     });
+  //   }
+  // };
 
 
   const handleProfileUpload = (relation, event) => {
     const file = event.target.files?.[0];
+
     if (file) {
       setRelationDetails((prev) => {
         const currentPreview = prev[relation]?.photoPreview;
-        if (typeof currentPreview === "string" && currentPreview.startsWith("blob:")) {
+
+        if (
+          typeof currentPreview === "string" &&
+          currentPreview.startsWith("blob:")
+        ) {
           URL.revokeObjectURL(currentPreview);
         }
 
         return {
           ...prev,
           [relation]: {
-            ...prev[relation],
+            ...(prev[relation] || {}), // ✅ FIX
             photo: file,
             photoPreview: URL.createObjectURL(file),
           },
@@ -238,7 +281,8 @@ const FamilyDetailsForm = () => {
       [newRelationId]: {
         relationName: "",
         relationDetailsName: "",
-        fullName: "",
+        firstName: "",
+        lastName: "",
         aadharNumber: "",
         photo: null,
         photoPreview: "",
@@ -450,38 +494,118 @@ const FamilyDetailsForm = () => {
       }),
     );
 
+  // const handleSave = async () => {
+  //   try {
+  //     if (!validateAadharUnique()) {
+  //       alert("Duplicate Aadhar numbers are not allowed");
+  //       return;
+  //     }
+
+  //     // 🔴 Head of Family validation
+  //     if (!headOfFamily) {
+  //       alert("Please select Head of Family");
+  //       return;
+  //     }
+
+  //     const headDetails = relationDetails[headOfFamily];
+
+  //     // 🔴 Photo validation
+  //     if (!headDetails?.photo && !headDetails?.photoPreview) {
+  //       alert("Head of Family photo is required");
+  //       return;
+  //     }
+
+  //     const payload = {
+  //       diksharthi_id: id,
+  //       formData: formData,
+  //       relationDetails: sanitizeRelationDetailsForPayload(
+  //         buildRelationDetailsPayload(relationDetails, headOfFamily),
+  //       ),
+  //       additionalRelations: additionalRelations,
+  //       expandedRelations: expandedRelations,
+  //       headOfFamily: headOfFamily,
+  //       assistanceData: assistanceData, // ✅ new field
+  //     };
+
+  //     console.log(payload, "Sending Data");
+
+  //     const response = familyRecordId
+  //       ? await axios.put(`${API}/api/update-family-details/${id}`, payload)
+  //       : await axios.post(`${API}/api/create-family-details`, payload);
+
+  //     console.log(response.data);
+
+  //     if (response.data.success) {
+  //       alert("Family details saved successfully");
+  //       resetForm();
+  //       navigate("/diksharthi-details");
+  //     }
+  //   } catch (error) {
+  //     console.error(error);
+  //     alert("Something went wrong");
+  //   }
+  // };
+
   const handleSave = async () => {
-    try {
-      const payload = {
-        diksharthi_id: id,
-        formData: formData,
-        relationDetails: sanitizeRelationDetailsForPayload(
-          buildRelationDetailsPayload(relationDetails, headOfFamily),
-        ),
-        additionalRelations: additionalRelations,
-        expandedRelations: expandedRelations,
-        headOfFamily: headOfFamily,
-        assistanceData: assistanceData, // ✅ new field
-      };
+  try {
+    const formDataToSend = new FormData();
 
-      console.log(payload, "Sending Data");
+    formDataToSend.append("diksharthi_id", id);
+    formDataToSend.append("formData", JSON.stringify(formData));
+    formDataToSend.append(
+      "relationDetails",
+      JSON.stringify(
+        sanitizeRelationDetailsForPayload(
+          buildRelationDetailsPayload(relationDetails, headOfFamily)
+        )
+      )
+    );
+    formDataToSend.append(
+      "additionalRelations",
+      JSON.stringify(additionalRelations)
+    );
+    formDataToSend.append(
+      "expandedRelations",
+      JSON.stringify(expandedRelations)
+    );
+    formDataToSend.append("headOfFamily", headOfFamily);
 
-      const response = familyRecordId
-        ? await axios.put(`${API}/api/update-family-details/${id}`, payload)
-        : await axios.post(`${API}/api/create-family-details`, payload);
+    // ✅ IMPORTANT: assistanceData bhi stringify
+    formDataToSend.append(
+      "assistanceData",
+      JSON.stringify(assistanceData)
+    );
 
-      console.log(response.data);
+    // ✅ FILES ADD KARO
+    Object.keys(assistanceData).forEach((rel) => {
+      const docs = assistanceData[rel]?.Medical?.documents || [];
 
-      if (response.data.success) {
-        alert("Family details saved successfully");
-        resetForm();
-        navigate("/diksharthi-details");
+      docs.forEach((file, index) => {
+        if (file instanceof File) {
+          formDataToSend.append(
+            `documents_${rel}_${index}`,
+            file
+          );
+        }
+      });
+    });
+
+    const response = await axios.post(
+      `${API}/api/create-family-details`,
+      formDataToSend,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
       }
-    } catch (error) {
-      console.error(error);
-      alert("Something went wrong");
-    }
-  };
+    );
+
+    console.log(response.data);
+  } catch (err) {
+    console.error(err);
+  }
+};
+
   const handleMedicalChange = (relation, field, value) => {
     setAssistanceData((prev) => ({
       ...prev,
@@ -582,8 +706,8 @@ const FamilyDetailsForm = () => {
       ...prev,
       [relation]: {
         ...prev[relation],
-        EmergencyExpenses: {
-          ...prev[relation]?.EmergencyExpenses,
+        LivelihoodExpenses: {
+          ...prev[relation]?.LivelihoodExpenses,
           [field]: value,
           status: "Pending",
         },
@@ -642,10 +766,30 @@ const FamilyDetailsForm = () => {
         <form className="space-y-6">
           {/* Address Row */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Permanent Address */}
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
-                Address (Permanent)<span className="text-red-500">*</span>
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Permanent Address <span className="text-red-500">*</span>
+                </label>
+                {/* Checkbox Logic */}
+                <label className="flex items-center gap-1.5 text-xs text-blue-600 cursor-pointer select-none font-semibold">
+                  <input
+                    type="checkbox"
+                    className="w-3.5 h-3.5 rounded border-gray-300"
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setFormData({
+                          ...formData,
+                          currentAddress: formData.permanentAddress
+                        });
+                      }
+                    }}
+                  />
+                  Same as Permanent
+                </label>
+              </div>
+
               <input
                 type="text"
                 value={formData.permanentAddress}
@@ -655,10 +799,14 @@ const FamilyDetailsForm = () => {
                 className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
               />
             </div>
+
+            {/* Current Address */}
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
-                Address (Current)<span className="text-red-500">*</span>
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-sm font-medium text-slate-700">
+                  Current Address <span className="text-red-500">*</span>
+                </label>
+              </div>
               <input
                 type="text"
                 value={formData.currentAddress}
@@ -713,7 +861,7 @@ const FamilyDetailsForm = () => {
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">
-                Taluka<span className="text-red-500">*</span>
+                Taluka
               </label>
               <select
                 value={formData.taluka}
@@ -732,7 +880,7 @@ const FamilyDetailsForm = () => {
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">
-                Village<span className="text-red-500">*</span>
+                Village
               </label>
 
               <select
@@ -753,7 +901,7 @@ const FamilyDetailsForm = () => {
           </div>
 
           {/* House Details Row */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-end">
+          {/* <div className="grid grid-cols-1 md:grid-cols-5 gap-6 items-end">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">
                 Pin Code<span className="text-red-500">*</span>
@@ -802,7 +950,7 @@ const FamilyDetailsForm = () => {
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">
-                Type Of House<span className="text-red-500">*</span>
+                Type Of House 
               </label>
               <input
                 type="text"
@@ -814,41 +962,41 @@ const FamilyDetailsForm = () => {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
-                Maintenance Cost<span className="text-red-500">*</span>
-              </label>
-              <input
-                type="number"
-                value={formData.maintenanceCost}
-                onChange={(e) =>
-                  setFormData({ ...formData, maintenanceCost: e.target.value })
-                }
-                className="w-full p-2 border border-slate-300 rounded-md outline-none"
-              />
+              {formData.houseDetails === "own" && (
+                <div className="">
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Maintenance Cost
+                  </label>
+                  <input
+                    type="number"
+                    value={formData.maintenanceCost}
+                    onChange={(e) =>
+                      setFormData({ ...formData, maintenanceCost: e.target.value })
+                    }
+                    className="w-full p-2 border border-slate-300 rounded-md outline-none"
+                  />
+                </div>
+              )}
+              
+              {formData.houseDetails === "rented" && (
+                <div className="w-full ">
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Rent Cost
+                  </label>
+                  <input
+                    type="number"
+                    value={formData.rentCost}
+                    onChange={(e) =>
+                      setFormData({ ...formData, rentCost: e.target.value })
+                    }
+                    className="w-full p-2 border border-slate-300 rounded-md outline-none"
+                  />
+                </div>
+              )}
             </div>
-          </div>
-          <div className="flex flex-wrap gap-6">
-            {/* Rent Cost - Conditional Render */}
-            {formData.houseDetails === "rented" && (
-              <div className="w-full md:w-1/3">
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Rent Cost<span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="number"
-                  value={formData.rentCost}
-                  onChange={(e) =>
-                    setFormData({ ...formData, rentCost: e.target.value })
-                  }
-                  className="w-full p-2 border border-slate-300 rounded-md outline-none"
-                />
-              </div>
-            )}
-
-            {/* Light Bill */}
-            <div className="w-full md:w-1/3">
+            <div className="">
               <label className="block text-sm font-medium text-slate-700 mb-1">
-                Light Bill cost<span className="text-red-500">*</span>
+                Light Bill cost
               </label>
               <input
                 type="number"
@@ -856,6 +1004,112 @@ const FamilyDetailsForm = () => {
                 onChange={(e) =>
                   setFormData({ ...formData, lightBillCost: e.target.value })
                 }
+                className="w-full p-2 border border-slate-300 rounded-md outline-none"
+              />
+            </div>
+          </div> */}
+
+
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-6 items-start">
+            {/* 1. Pin Code */}
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">
+                Pin Code<span className="text-red-500">*</span>
+              </label>
+              <input
+                type="number"
+                value={formData.pinCode}
+                onChange={(e) => setFormData({ ...formData, pinCode: e.target.value })}
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
+              />
+            </div>
+
+            {/* 2. House Details (Radio) */}
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-3">
+                House Details<span className="text-red-500">*</span>
+              </label>
+              <div className="flex gap-4 pt-1">
+                <label className="flex items-center gap-2 cursor-pointer text-sm">
+                  <input
+                    type="radio"
+                    name="house"
+                    value="own"
+                    checked={formData.houseDetails === "own"}
+                    onChange={(e) => setFormData({ ...formData, houseDetails: e.target.value, rentCost: "" })}
+                    className="w-4 h-4 text-blue-600"
+                  />
+                  Own
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer text-sm">
+                  <input
+                    type="radio"
+                    name="house"
+                    value="rented"
+                    checked={formData.houseDetails === "rented"}
+                    onChange={(e) => setFormData({ ...formData, houseDetails: e.target.value, maintenanceCost: "" })}
+                    className="w-4 h-4 text-blue-600"
+                  />
+                  Rented
+                </label>
+              </div>
+            </div>
+
+            {/* 3. Type Of House */}
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">
+                Type Of House
+              </label>
+              <input
+                type="text"
+                placeholder="e.g. Apartment, Villa"
+                value={formData.typeOfHouse}
+                onChange={(e) => setFormData({ ...formData, typeOfHouse: e.target.value })}
+                className="w-full p-2 border border-slate-300 rounded-md outline-none"
+              />
+            </div>
+
+            {/* 4. Conditional Cost Field */}
+            <div>
+              {formData.houseDetails === "own" ? (
+                <>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Maintenance Cost
+                  </label>
+                  <input
+                    type="number"
+                    value={formData.maintenanceCost}
+                    onChange={(e) => setFormData({ ...formData, maintenanceCost: e.target.value })}
+                    className="w-full p-2 border border-slate-300 rounded-md outline-none"
+                  />
+                </>
+              ) : formData.houseDetails === "rented" ? (
+                <>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Rent Cost
+                  </label>
+                  <input
+                    type="number"
+                    value={formData.rentCost}
+                    onChange={(e) => setFormData({ ...formData, rentCost: e.target.value })}
+                    className="w-full p-2 border border-slate-300 rounded-md outline-none"
+                  />
+                </>
+              ) : (
+                /* Placeholder to keep grid alignment when nothing is selected */
+                <div className="h-[62px]"></div>
+              )}
+            </div>
+
+            {/* 5. Light Bill */}
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">
+                Light Bill Cost
+              </label>
+              <input
+                type="number"
+                value={formData.lightBillCost}
+                onChange={(e) => setFormData({ ...formData, lightBillCost: e.target.value })}
                 className="w-full p-2 border border-slate-300 rounded-md outline-none"
               />
             </div>
@@ -1009,17 +1263,34 @@ const FamilyDetailsForm = () => {
 
                         <div className="flex  gap-4">
                           {/* Full Name */}
-                          <div className="w-[350px]">
+                          <div className="w-[200px]">
                             <label className="block text-sm font-medium text-slate-700 mb-1">
-                              Full Name<span className="text-red-500">*</span>
+                              First Name<span className="text-red-500">*</span>
                             </label>
                             <input
                               type="text"
-                              value={relationDetails[rel]?.fullName || ""}
+                              value={relationDetails[rel]?.firstName || ""}
                               onChange={(e) =>
                                 handleRelationDetailChange(
                                   rel,
-                                  "fullName",
+                                  "firstName",
+                                  e.target.value,
+                                )
+                              }
+                              className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
+                            />
+                          </div>
+                          <div className="w-[200px]">
+                            <label className="block text-sm font-medium text-slate-700 mb-1">
+                              Last Name<span className="text-red-500">*</span>
+                            </label>
+                            <input
+                              type="text"
+                              value={relationDetails[rel]?.lastName || ""}
+                              onChange={(e) =>
+                                handleRelationDetailChange(
+                                  rel,
+                                  "lastName",
                                   e.target.value,
                                 )
                               }
@@ -1038,6 +1309,16 @@ const FamilyDetailsForm = () => {
                               type="text"
                               value={relationDetails[rel]?.aadharNumber || ""}
                               maxLength={12}
+                              // onChange={(e) => {
+                              //   const onlyNumbers = e.target.value.replace(/\D/g, "");
+
+                              //   if (onlyNumbers.length === 12 && isAadharDuplicate(rel, onlyNumbers)) {
+                              //     alert("Aadhar number must be unique");
+                              //     return;
+                              //   }
+
+                              //   handleRelationDetailChange(rel, "aadharNumber", onlyNumbers);
+                              // }}
                               onChange={(e) => {
                                 const onlyNumbers = e.target.value.replace(/\D/g, "");
                                 handleRelationDetailChange(rel, "aadharNumber", onlyNumbers);
@@ -1047,9 +1328,9 @@ const FamilyDetailsForm = () => {
                           </div>
 
                           {/* Pan Number */}
-                          <div>
+                          <div className="w-[200px]">
                             <label className="block text-sm font-medium text-slate-700 mb-1">
-                              Pan Number<span className="text-red-500">*</span>
+                              Pan Number
                             </label>
                             <input
                               type="text"
@@ -1588,14 +1869,6 @@ const FamilyDetailsForm = () => {
                                       </div>
                                     </div>
 
-
-
-
-
-                                    {/* Row 5: Document Upload */}
-                                    {
-
-                                    }
                                     {assistanceData[rel]?.Medical?.repeatedAssistance && (
                                       <div className="col-span-full md:col-span-2">
                                         <div className="flex gap-2">
@@ -1611,9 +1884,14 @@ const FamilyDetailsForm = () => {
                                                 handleMedicalChange(rel, "frequency", e.target.value)
                                               }
                                             >
-                                              <option value="">Select</option>
-                                              <option value="Weekly">Weekly</option>
-                                              <option value="Monthly">Monthly</option>
+                                            <option value="">Select</option>
+                                            <option value="Daily">Daily</option>
+                                            <option value="Alternate Days">Alternate Days</option>
+                                            <option value="Weekly">Weekly</option>
+                                            <option value="Bi-Weekly">Bi-Weekly</option>
+                                            <option value="Monthly">Monthly</option>
+                                            <option value="Quarterly">Quarterly</option>
+                                            <option value="Yearly">Yearly</option>
                                             </select>
                                           </div>
 
@@ -1654,7 +1932,6 @@ const FamilyDetailsForm = () => {
                                         Upload Medical Documents
                                       </label>
                                       <div className="flex gap-2 mt-1">
-                                        {/* Document Name Input */}
                                         <input
                                           type="text"
                                           placeholder="Document Name"
@@ -1672,25 +1949,28 @@ const FamilyDetailsForm = () => {
                                           className="border p-2 rounded w-1/2 outline-none"
                                         />
 
-                                        {/* Hidden File Input */}
                                         <input
                                           type="file"
-                                          id={`file-upload-${rel}`}
+                                        id={`file-upload-${rel}`}
+                                        multiple
                                           className="hidden"
-                                          accept="image/*,.pdf"
-                                          onChange={(e) => {
-                                            const file = e.target.files[0];
-                                            if (file) {
-                                              handleMedicalChange(
-                                                rel,
-                                                "documentFile",
-                                                file,
-                                              );
-                                            }
-                                          }}
+                                        accept="image/*,.pdf"
+                                        onChange={(e) => {
+                                          const files = Array.from(e.target.files);
+                                          handleMedicalChange(rel, "documents", files);
+                                        }}
+                                          // onChange={(e) => {
+                                          //   const file = e.target.files[0];
+                                          //   if (file) {
+                                          //     handleMedicalChange(
+                                          //       rel,
+                                          //       "documentFile",
+                                          //       file,
+                                          //     );
+                                          //   }
+                                          // }}
                                         />
 
-                                        {/* Trigger Button */}
                                         <button
                                           type="button"
                                           onClick={() =>
@@ -1705,19 +1985,26 @@ const FamilyDetailsForm = () => {
                                           Upload Document
                                         </button>
 
-                                        {/* Display File Name */}
-                                        <span className="text-gray-400 text-sm self-center truncate max-w-[150px]">
+                                        {/* <span className="text-gray-400 text-sm self-center truncate max-w-[150px]">
                                           {assistanceData[rel]?.Medical
                                             ?.documentFile?.name ||
                                             "No File Chosen"}
-                                        </span>
+                                        </span> */}
+                                      
+                                      <div className="mt-2">
+                                        {assistanceData[rel]?.Medical?.documents?.map((file, index) => (
+                                          <div key={index} className="text-sm text-gray-600">
+                                            {file.name}
+                                          </div>
+                                        ))}
+                                      </div>
 
-                                        <button
+                                        {/* <button
                                           type="button"
                                           className="border rounded-full w-8 h-8 flex items-center justify-center text-gray-400 hover:bg-gray-100"
                                         >
                                           +
-                                        </button>
+                                        </button> */}
                                       </div>
                                     </div>
 
@@ -1762,7 +2049,6 @@ const FamilyDetailsForm = () => {
                                     </div>
                                   </div>
 
-                                  {/* Remark Section */}
                                   <div className="mt-8 flex flex-col gap-1">
                                     <label className="text-[11px] font-bold uppercase text-gray-500">
                                       Remark*
@@ -1796,28 +2082,7 @@ const FamilyDetailsForm = () => {
                                     {/* Row 1 */}
                                     <div className="flex flex-col gap-1">
                                       <label className="text-[11px] font-bold uppercase text-gray-500">
-                                        Name of School/ College *
-                                      </label>
-                                      <input
-                                        type="text"
-                                        value={
-                                          assistanceData[rel]?.Education
-                                            ?.schoolName || ""
-                                        }
-                                        onChange={(e) =>
-                                          handleEducationChange(
-                                            rel,
-                                            "schoolName",
-                                            e.target.value,
-                                          )
-                                        }
-                                        className="border p-2 rounded outline-none focus:border-blue-500"
-                                      />
-                                    </div>
-
-                                    <div className="flex flex-col gap-1">
-                                      <label className="text-[11px] font-bold uppercase text-gray-500">
-                                        Class / Grade *
+                                        Class  *
                                       </label>
                                       <input
                                         type="text"
@@ -1838,40 +2103,18 @@ const FamilyDetailsForm = () => {
 
                                     <div className="flex flex-col gap-1">
                                       <label className="text-[11px] font-bold uppercase text-gray-500">
-                                        Medium of Education *
+                                        Prev Year Grade / Marks
                                       </label>
                                       <input
                                         type="text"
                                         value={
                                           assistanceData[rel]?.Education
-                                            ?.medium || ""
+                                            ?.marks || ""
                                         }
                                         onChange={(e) =>
                                           handleEducationChange(
                                             rel,
-                                            "medium",
-                                            e.target.value,
-                                          )
-                                        }
-                                        className="border p-2 rounded outline-none focus:border-blue-500"
-                                      />
-                                    </div>
-
-                                    {/* Row 2 */}
-                                    <div className="flex flex-col gap-1">
-                                      <label className="text-[11px] font-bold uppercase text-gray-500">
-                                        School / College Fees*
-                                      </label>
-                                      <input
-                                        type="number"
-                                        value={
-                                          assistanceData[rel]?.Education?.fees ||
-                                          ""
-                                        }
-                                        onChange={(e) =>
-                                          handleEducationChange(
-                                            rel,
-                                            "fees",
+                                            "marks",
                                             e.target.value,
                                           )
                                         }
@@ -1881,212 +2124,47 @@ const FamilyDetailsForm = () => {
 
                                     <div className="flex flex-col gap-1">
                                       <label className="text-[11px] font-bold uppercase text-gray-500">
-                                        Fee Books / Stationery Expenses*
+                                        Total Approx annual fees *
                                       </label>
                                       <input
                                         type="number"
                                         value={
                                           assistanceData[rel]?.Education
-                                            ?.stationeryExpenses || ""
+                                            ?.annualfees || ""
                                         }
                                         onChange={(e) =>
                                           handleEducationChange(
                                             rel,
-                                            "stationeryExpenses",
+                                            "annualfees",
                                             e.target.value,
                                           )
                                         }
                                         className="border p-2 rounded outline-none focus:border-blue-500"
                                       />
                                     </div>
-                                    <div className="flex flex-col gap-1">
-                                      <label className="text-[11px] font-bold uppercase text-gray-500">
-                                        Other Expenses
-                                      </label>
-                                      <input
-                                        type="number"
-                                        value={
-                                          assistanceData[rel]?.Education
-                                            ?.otherExpenses || ""
-                                        }
-                                        onChange={(e) =>
-                                          handleEducationChange(
-                                            rel,
-                                            "otherExpenses",
-                                            e.target.value,
-                                          )
-                                        }
-                                        className="border p-2 rounded outline-none focus:border-blue-500"
-                                      />
-                                    </div>
-                                    <div className="flex flex-col gap-1">
-                                      <label className="text-[11px] font-bold uppercase text-gray-500">
-                                        Total Expenses*
-                                      </label>
-                                      <input
-                                        type="number"
-                                        value={
-                                          assistanceData[rel]?.Education
-                                            ?.totalExpenses || ""
-                                        }
-                                        onChange={(e) =>
-                                          handleEducationChange(
-                                            rel,
-                                            "totalExpenses",
-                                            e.target.value,
-                                          )
-                                        }
-                                        className="border p-2 rounded outline-none focus:border-blue-500"
-                                      />
-                                    </div>
+                                  <div className="flex flex-col gap-1">
+                                    <label className="text-[11px] font-bold uppercase text-gray-500">
+                                      Forward To School / College *
+                                    </label>
 
-                                    {/* Row 3 */}
-
-
-                                    <div className="flex flex-col gap-1">
-                                      <label className="text-[11px] font-bold uppercase text-gray-500">
-                                        Government Scholarship / Benefit*
-                                      </label>
-                                      <div className="flex gap-4 mt-2">
-                                        {["Yes", "No"].map((opt) => (
-                                          <label
-                                            key={opt}
-                                            className="flex items-center gap-2 text-sm"
-                                          >
-                                            <input
-                                              type="radio"
-                                              name={`scholarship-${rel}`}
-                                              checked={
-                                                assistanceData[rel]?.Education
-                                                  ?.hasScholarship === opt
-                                              }
-                                              onChange={() =>
-                                                handleEducationChange(
-                                                  rel,
-                                                  "hasScholarship",
-                                                  opt,
-                                                )
-                                              }
-                                            />{" "}
-                                            {opt}
-                                          </label>
-                                        ))}
-                                      </div>
-                                    </div>
-
-                                    <div className="flex flex-col gap-1">
-                                      <label className="text-[11px] font-bold uppercase text-gray-500">
-                                        Estimated Support Amount*
-                                      </label>
-                                      <input
-                                        type="number"
-                                        value={
-                                          assistanceData[rel]?.Education
-                                            ?.supportAmount || ""
-                                        }
-                                        onChange={(e) =>
-                                          handleEducationChange(
-                                            rel,
-                                            "supportAmount",
-                                            e.target.value,
-                                          )
-                                        }
-                                        className="border p-2 rounded outline-none focus:border-blue-500"
-                                      />
-                                    </div>
-
-                                    {/* Row 4 */}
-                                    <div className="flex flex-col gap-1">
-                                      <label className="text-[11px] font-bold uppercase text-gray-500">
-                                        Support Duration*
-                                      </label>
-                                      <div className="flex gap-4 mt-2">
-                                        {["One Time", "Yearly"].map((dur) => (
-                                          <label
-                                            key={dur}
-                                            className="flex items-center gap-2 text-sm"
-                                          >
-                                            <input
-                                              type="radio"
-                                              name={`duration-${rel}`}
-                                              checked={
-                                                assistanceData[rel]?.Education
-                                                  ?.supportDuration === dur
-                                              }
-                                              onChange={() =>
-                                                handleEducationChange(
-                                                  rel,
-                                                  "supportDuration",
-                                                  dur,
-                                                )
-                                              }
-                                            />{" "}
-                                            {dur}
-                                          </label>
-                                        ))}
-                                      </div>
-                                    </div>
-
-                                    <div className="flex flex-col gap-1">
-                                      <label className="text-[11px] font-bold uppercase text-gray-500">
-                                        Urgency Level?*
-                                      </label>
-                                      <div className="flex gap-4 mt-2">
-                                        {["High", "Medium", "Low"].map(
-                                          (level) => (
-                                            <label
-                                              key={level}
-                                              className="flex items-center gap-2 text-sm"
-                                            >
-                                              <input
-                                                type="radio"
-                                                name={`edu-urgency-${rel}`}
-                                                checked={
-                                                  assistanceData[rel]?.Education
-                                                    ?.urgency === level
-                                                }
-                                                onChange={() =>
-                                                  handleEducationChange(
-                                                    rel,
-                                                    "urgency",
-                                                    level,
-                                                  )
-                                                }
-                                              />{" "}
-                                              {level}
-                                            </label>
-                                          ),
-                                        )}
-                                      </div>
-                                    </div>
-
-                                    {/* File Upload Field */}
-                                    <div className="flex flex-col gap-1">
-                                      <label className="text-[11px] font-bold uppercase text-gray-500">
-                                        Upload School/ College ID*
-                                      </label>
-                                      <div className="flex items-center border rounded mt-1 overflow-hidden">
-                                        <label className="bg-gray-100 px-3 py-2 border-r text-sm cursor-pointer hover:bg-gray-200 transition">
-                                          Choose File
-                                          <input
-                                            type="file"
-                                            className="hidden"
-                                            onChange={(e) =>
-                                              handleEducationChange(
-                                                rel,
-                                                "idCardFile",
-                                                e.target.files[0],
-                                              )
-                                            }
-                                          />
-                                        </label>
-                                        <span className="px-3 text-sm text-gray-500 truncate">
-                                          {assistanceData[rel]?.Education
-                                            ?.idCardFile?.name ||
-                                            "No file chosen"}
-                                        </span>
-                                      </div>
-                                    </div>
+                                    <select
+                                      value={assistanceData[rel]?.Education?.forwardTo || ""}
+                                      onChange={(e) =>
+                                        handleEducationChange(
+                                          rel,
+                                          "forwardTo",
+                                          e.target.value
+                                        )
+                                      }
+                                      className="border p-2 rounded outline-none focus:border-blue-500 bg-white"
+                                    >
+                                      <option value="">Select</option>
+                                      <option value="jeap">JEAP</option>
+                                      <option value="seed">SEED</option>
+                                      <option value="smjv">SMJV</option>
+                                      <option value="jeet">JEET</option>
+                                    </select>
+                                  </div>
                                   </div>
 
                                   {/* Remark Section */}
@@ -2123,26 +2201,6 @@ const FamilyDetailsForm = () => {
 
                                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-6">
                                     {/* Row 1 */}
-                                    {/* <div className="flex flex-col gap-1">
-                                    <label className="text-[11px] font-bold uppercase text-gray-500">
-                                      Current Employment Status*
-                                    </label>
-                                    <input
-                                      type="text"
-                                      value={
-                                        assistanceData[rel]?.Job
-                                          ?.employmentStatus || ""
-                                      }
-                                      onChange={(e) =>
-                                        handleJobChange(
-                                          rel,
-                                          "employmentStatus",
-                                          e.target.value,
-                                        )
-                                      }
-                                      className="border p-2 rounded outline-none focus:border-blue-500"
-                                    />
-                                  </div> */}
                                     <div className="flex flex-col gap-1">
                                       <label className="text-[11px] font-bold uppercase text-gray-500">
                                         Current Employment Status*
@@ -2160,7 +2218,37 @@ const FamilyDetailsForm = () => {
                                         <option value="unemployed">Unemployed</option>
                                       </select>
                                     </div>
+                                    {assistanceData[rel]?.Job?.employmentStatus === "employed" && (
+                                      <>
+                                        <div className="flex flex-col gap-1">
+                                          <label className="text-[11px] font-bold uppercase text-gray-500">
+                                            Current Salary*
+                                          </label>
+                                          <input
+                                            type="number"
+                                            value={assistanceData[rel]?.Job?.currentSalary || ""}
+                                            onChange={(e) =>
+                                              handleJobChange(rel, "currentSalary", e.target.value)
+                                            }
+                                            className="border p-2 rounded outline-none focus:border-blue-500"
+                                          />
+                                        </div>
 
+                                        <div className="flex flex-col gap-1">
+                                          <label className="text-[11px] font-bold uppercase text-gray-500">
+                                            Expected Salary*
+                                          </label>
+                                          <input
+                                            type="number"
+                                            value={assistanceData[rel]?.Job?.expectedSalary || ""}
+                                            onChange={(e) =>
+                                              handleJobChange(rel, "expectedSalary", e.target.value)
+                                            }
+                                            className="border p-2 rounded outline-none focus:border-blue-500"
+                                          />
+                                        </div>
+                                      </>
+                                    )}
 
                                     <div className="flex flex-col gap-1">
                                       <label className="text-[11px] font-bold uppercase text-gray-500">
@@ -2302,6 +2390,29 @@ const FamilyDetailsForm = () => {
                                         <option value="Remote">Remote</option>
                                         <option value="Hybrid">Hybrid</option>
                                       </select>
+                                    </div>
+
+
+                                    <div className="flex flex-col gap-1">
+                                      <label className="text-[11px] font-bold uppercase text-gray-500">
+                                        Upload Resume*
+                                      </label>
+                                      <div className="flex items-center border rounded mt-1 overflow-hidden">
+                                        <label className="bg-gray-100 px-3 py-2 border-r text-sm cursor-pointer hover:bg-gray-200 transition">
+                                          Choose File
+                                          <input
+                                            type="file"
+                                            className="hidden"
+                                            accept=".pdf,.doc,.docx"
+                                            onChange={(e) =>
+                                              handleJobChange(rel, "resumeFile", e.target.files[0])
+                                            }
+                                          />
+                                        </label>
+                                        <span className="px-3 text-sm text-gray-500 truncate">
+                                          {assistanceData[rel]?.Job?.resumeFile?.name || "No file chosen"}
+                                        </span>
+                                      </div>
                                     </div>
 
                                     {/* Row 3 - Checkbox Group */}
@@ -2478,105 +2589,49 @@ const FamilyDetailsForm = () => {
                                     </div>
 
                                     {/* Row 2 */}
-                                    <div className="flex flex-col gap-1">
-                                      <label className="text-[11px] font-bold uppercase text-gray-500">
-                                        Frequency
-                                      </label>
-                                      <select
-                                        className="border p-2 rounded bg-white outline-none focus:border-blue-500 text-gray-700"
-                                        value={
-                                          assistanceData[rel]?.Food?.duration ||
-                                          ""
-                                        }
-                                        onChange={(e) =>
-                                          handleFoodChange(
-                                            rel,
-                                            "duration",
-                                            e.target.value,
-                                          )
-                                        }
-                                      >
-                                        <option value="Daily">Daily</option>
-                                        <option value="Monthly">Monthly</option>
-                                        <option value="Weekly">Weekly</option>
-                                        <option value="One-time">One-time</option>
-                                        <option value="One-time">Temporary</option>
-                                      </select>
-                                    </div>
-
-                                    <div className="flex flex-col gap-1">
-                                      <label className="text-[11px] font-bold uppercase text-gray-500">
-                                        Duration(Days/Month)?*
-                                      </label>
-                                      <input
-                                        type="text"
-                                        value={
-                                          assistanceData[rel]?.Food
-                                            ?.FrequencyDuration || ""
-                                        }
-                                        onChange={(e) =>
-                                          handleFoodChange(
-                                            rel,
-                                            "FrequencyDuration",
-                                            e.target.value,
-                                          )
-                                        }
-                                        className="border p-2 rounded outline-none focus:border-blue-500"
-                                      />
-                                    </div>
-
-                                    {/* <div className="flex flex-col gap-1">
+                                  <div className="flex flex-col gap-1">
                                     <label className="text-[11px] font-bold uppercase text-gray-500">
-                                      Any Special Dietary Requirement?*
+                                      Frequency
                                     </label>
-                                    <div className="flex gap-4 mt-2">
-                                      {["Yes", "No"].map((opt) => (
-                                        <label
-                                          key={opt}
-                                          className="flex items-center gap-2 text-sm text-gray-600"
+
+                                    {(() => {
+                                      const selectedFoodTypes =
+                                        assistanceData[rel]?.Food?.foodType || [];
+
+                                      let frequencyOptions = [];
+
+                                      // ✅ Dry ration options
+                                      if (selectedFoodTypes.includes("Dry ration")) {
+                                        frequencyOptions.push("Monthly", "6 Months", "Yearly");
+                                      }
+
+                                      // ✅ Cooked meals options
+                                      if (selectedFoodTypes.includes("Cooked meals")) {
+                                        frequencyOptions.push("One-meals", "Two-meals", "Three-meals");
+                                      }
+
+                                      return (
+                                        <select
+                                          className="border p-2 rounded bg-white outline-none focus:border-blue-500 text-gray-700"
+                                          value={assistanceData[rel]?.Food?.duration || ""}
+                                          onChange={(e) =>
+                                            handleFoodChange(rel, "duration", e.target.value)
+                                          }
                                         >
-                                          <input
-                                            type="radio"
-                                            name={`dietary-${rel}`}
-                                            checked={
-                                              assistanceData[rel]?.Food
-                                                ?.specialDietary === opt
-                                            }
-                                            onChange={() =>
-                                              handleFoodChange(
-                                                rel,
-                                                "specialDietary",
-                                                opt,
-                                              )
-                                            }
-                                          />{" "}
-                                          {opt}
-                                        </label>
-                                      ))}
-                                    </div>
-                                  </div> */}
+                                          <option value="">Select</option>
+
+                                          {frequencyOptions.map((opt) => (
+                                            <option key={opt} value={opt}>
+                                              {opt}
+                                            </option>
+                                          ))}
+                                        </select>
+                                      );
+                                    })()}
+                                  </div>
                                   </div>
 
-                                  {/* Reason Section */}
-                                  <div className="mt-8 flex flex-col gap-1">
-                                    <label className="text-[11px] font-bold uppercase text-gray-500">
-                                      Reason for Food Support?*
-                                    </label>
-                                    <textarea
-                                      placeholder="Write here..."
-                                      className="border p-2 rounded w-full h-24 outline-none focus:border-blue-500 resize-none"
-                                      value={
-                                        assistanceData[rel]?.Food?.reason || ""
-                                      }
-                                      onChange={(e) =>
-                                        handleFoodChange(
-                                          rel,
-                                          "reason",
-                                          e.target.value,
-                                        )
-                                      }
-                                    ></textarea>
-                                  </div>
+                              
 
                                   {/* Remark Section */}
                                   <div className="mt-6 flex flex-col gap-1">
@@ -3148,39 +3203,14 @@ const FamilyDetailsForm = () => {
                               )}
 
                             {relationDetails[rel]?.assistanceCategories?.includes(
-                              "EmergencyExpenses",
+                              "LivelihoodExpenses ",
                             ) && (
                                 <div className="p-6 border rounded-lg bg-white shadow-sm mt-6">
                                   <h3 className="text-xl font-semibold mb-6 text-gray-800">
-                                    Emergency expenses Assistance
+                                    Livelihood Expenses Assistance
                                   </h3>
 
                                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                    {/* <div>
-                                <label className="text-[11px] font-bold uppercase text-gray-500">
-                                  Emergency Assistance Required*
-                                </label>
-                                <select
-                                  className="w-full border p-2 rounded mt-1 text-gray-500 outline-none"
-                                  value={
-                                    assistanceData[rel]?.EmergencyExpenses
-                                      ?.type || ""
-                                  }
-                                  onChange={(e) =>
-                                    handleEmergencyChange(
-                                      rel,
-                                      "type",
-                                      e.target.value,
-                                    )
-                                  }
-                                >
-                                  <option value="">Select</option>
-                                  <option value="Hospitalization">
-                                    Hospitalization
-                                  </option>
-                                  <option value="Accident">Accident</option>
-                                </select>
-                              </div> */}
                                     <div>
                                       <label className="text-[11px] font-bold uppercase text-gray-500">
                                         Emergency Assistance Required For?
@@ -3189,7 +3219,7 @@ const FamilyDetailsForm = () => {
                                         type="text"
                                         className="w-full border p-2 rounded mt-1 outline-none"
                                         value={
-                                          assistanceData[rel]?.EmergencyExpenses
+                                          assistanceData[rel]?.LivelihoodExpenses
                                             ?.type || ""
                                         }
                                         onChange={(e) =>
@@ -3209,7 +3239,7 @@ const FamilyDetailsForm = () => {
                                         type="number"
                                         className="w-full border p-2 rounded mt-1 outline-none"
                                         value={
-                                          assistanceData[rel]?.EmergencyExpenses
+                                          assistanceData[rel]?.LivelihoodExpenses
                                             ?.amount || ""
                                         }
                                         onChange={(e) =>
@@ -3229,7 +3259,7 @@ const FamilyDetailsForm = () => {
                                         type="text"
                                         className="w-full border p-2 rounded mt-1 outline-none"
                                         value={
-                                          assistanceData[rel]?.EmergencyExpenses
+                                          assistanceData[rel]?.LivelihoodExpenses
                                             ?.mobile || ""
                                         }
                                         onChange={(e) =>
@@ -3251,7 +3281,7 @@ const FamilyDetailsForm = () => {
                                       className="w-full border p-2 rounded mt-1 h-24 outline-none resize-none"
                                       placeholder="Write here..."
                                       value={
-                                        assistanceData[rel]?.EmergencyExpenses
+                                        assistanceData[rel]?.LivelihoodExpenses
                                           ?.description || ""
                                       }
                                       onChange={(e) =>
@@ -3274,7 +3304,7 @@ const FamilyDetailsForm = () => {
                                         placeholder="Document Name"
                                         className="border p-2 rounded w-1/4 outline-none"
                                         value={
-                                          assistanceData[rel]?.EmergencyExpenses
+                                          assistanceData[rel]?.LivelihoodExpenses
                                             ?.docName || ""
                                         }
                                         onChange={(e) =>
@@ -3290,7 +3320,7 @@ const FamilyDetailsForm = () => {
                                           Choose File
                                         </label>
                                         <span className="px-4 py-2 text-sm text-gray-400 flex-1">
-                                          {assistanceData[rel]?.EmergencyExpenses
+                                          {assistanceData[rel]?.LivelihoodExpenses
                                             ?.file?.name || "No file chosen"}
                                         </span>
                                         <input
@@ -3656,10 +3686,17 @@ const FamilyDetailsForm = () => {
                         <div className="relative flex-shrink-0 group">
                           <img
                             src={
-                              relationDetails[rel]?.photoPreview ||
-                              resolvePhotoUrl(relationDetails[rel]?.photo) ||
-                              "/user.png"
+                              relationDetails[rel]?.photoPreview
+                                ? relationDetails[rel].photoPreview
+                                : typeof relationDetails[rel]?.photo === "string"
+                                  ? resolvePhotoUrl(relationDetails[rel].photo)
+                                  : "/user.png"
                             }
+                            // src={
+                            //   relationDetails[rel]?.photoPreview ||
+                            //   resolvePhotoUrl(relationDetails[rel]?.photo) ||
+                            //   "/user.png"
+                            // }
                             alt="profile"
                             className="w-[120px] h-[120px] border-2 border-gray-400 rounded object-cover"
                           />
@@ -3686,23 +3723,6 @@ const FamilyDetailsForm = () => {
                       </div>
                     </div>
                   )}
-
-                  {/* Action Buttons */}
-                  <div className="flex gap-3 justify-end p-4 border-t border-slate-300 bg-slate-50">
-                    {/* <button
-                                            type="button"
-                                            className="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold rounded-md"
-                                        >
-                                            Cancel
-                                        </button> */}
-                    {/* <button
-  type="button"
-  onClick={handleSave}
-  className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-md"
->
-  Save
-</button> */}
-                  </div>
                 </div>
               );
             })}
@@ -3778,26 +3798,7 @@ const FamilyDetailsForm = () => {
                 </label>
               </div>
 
-              {formData.mediclaim && (
-                <div className="w-[200px] mt-4">
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Family Mediclaim policy Amount
-                    <span className="text-red-500">*</span>
-                  </label>
 
-                  <input
-                    type="text"
-                    value={formData.Family_mediclaim_amount || ""}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        Family_mediclaim_amount: e.target.value,
-                      })
-                    }
-                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
-                  />
-                </div>
-              )}
             </div>
             <div>
               <p className="text-sm font-medium text-slate-700 mb-2">
@@ -3828,9 +3829,92 @@ const FamilyDetailsForm = () => {
                   No
                 </label>
               </div>
+
+
             </div>
           </div>
-          <div className="flex flex-col sm:flex-row justify-between gap-4 pt-8 border-t border-dashed border-blue-200">
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+
+            {formData.mediclaim && (
+              <div className="w-[200px]">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Family Mediclaim policy Amount
+                  <span className="text-red-500">*</span>
+                </label>
+
+                <input
+                  type="text"
+                  value={formData.Family_mediclaim_amount || ""}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      Family_mediclaim_amount: e.target.value,
+                    })
+                  }
+                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
+                />
+              </div>
+            )}
+            {formData.ngoAssistance && (
+              <div className=" grid grid-cols-1 md:grid-cols-3 gap-4">
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Sangh Name <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.sanghName || ""}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        sanghName: e.target.value,
+                      })
+                    }
+                    className="w-full p-2 border border-slate-300 rounded-md outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Amount <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    value={formData.ngoAmount || ""}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        ngoAmount: e.target.value,
+                      })
+                    }
+                    className="w-full p-2 border border-slate-300 rounded-md outline-none"
+                  />
+                </div>
+
+                <div className="md:col-span-3">
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Details / Remark
+                  </label>
+                  <textarea
+                    value={formData.ngoRemark || ""}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        ngoRemark: e.target.value,
+                      })
+                    }
+                    className="w-full p-2 border border-slate-300 rounded-md outline-none resize-none"
+                    rows={2}
+                  />
+                </div>
+
+              </div>
+            )}
+          </div>
+
+          <div className="flex flex-col sm:flex-row justify-between gap-4 pt-8">
             <div className="flex gap-4"></div>
             <button
               type="button"
