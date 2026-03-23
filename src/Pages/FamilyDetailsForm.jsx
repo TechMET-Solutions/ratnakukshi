@@ -4111,12 +4111,93 @@ const serializeValueForJsonPayload = async (value) => {
   return value;
 };
 
+const buildUploadedFileReference = (file, uploadField) => ({
+  name: file.name,
+  type: file.type,
+  size: file.size,
+  uploadField,
+});
+
+const buildRelationDetailsPayloadWithUploads = (details, formData) =>
+  Object.fromEntries(
+    Object.entries(details || {}).map(([relationKey, relationValue]) => {
+      const nextRelationValue = { ...(relationValue || {}) };
+
+      if (isFileLike(nextRelationValue.photo)) {
+        const uploadField = `relation_photo_${relationKey}`;
+        formData.append(uploadField, nextRelationValue.photo);
+        nextRelationValue.photo = buildUploadedFileReference(
+          nextRelationValue.photo,
+          uploadField
+        );
+      }
+
+      return [relationKey, nextRelationValue];
+    })
+  );
+
+const buildAssistanceDataPayloadWithUploads = (assistanceDataValue, formData) =>
+  Object.fromEntries(
+    Object.entries(assistanceDataValue || {}).map(([relationKey, relationValue]) => {
+      const nextRelationValue = { ...(relationValue || {}) };
+
+      if (nextRelationValue?.Medical) {
+        const medicalDocuments = Array.isArray(
+          nextRelationValue.Medical.medicalDocuments
+        )
+          ? nextRelationValue.Medical.medicalDocuments.map((documentItem, docIndex) => {
+              const nextDocumentItem = { ...(documentItem || {}) };
+              const files = Array.isArray(nextDocumentItem.files)
+                ? nextDocumentItem.files
+                : [];
+
+              nextDocumentItem.files = files.map((file, fileIndex) => {
+                if (!isFileLike(file)) return file;
+
+                const uploadField = `medical_document_${relationKey}_${docIndex}_${fileIndex}`;
+                formData.append(uploadField, file);
+                return buildUploadedFileReference(file, uploadField);
+              });
+
+              return nextDocumentItem;
+            })
+          : nextRelationValue.Medical.medicalDocuments;
+
+        nextRelationValue.Medical = {
+          ...nextRelationValue.Medical,
+          medicalDocuments,
+        };
+      }
+
+      if (nextRelationValue?.Job?.resumeFile && isFileLike(nextRelationValue.Job.resumeFile)) {
+        const uploadField = `job_resume_${relationKey}`;
+        formData.append(uploadField, nextRelationValue.Job.resumeFile);
+        nextRelationValue.Job = {
+          ...nextRelationValue.Job,
+          resumeFile: buildUploadedFileReference(
+            nextRelationValue.Job.resumeFile,
+            uploadField
+          ),
+        };
+      }
+
+      return [relationKey, nextRelationValue];
+    })
+  );
+
 const resolvePhotoUrl = (photo) => {
-  if (!photo || typeof photo !== "string") return "/user.png";
-  if (/^blob:/i.test(photo) || /^data:image\//i.test(photo)) return photo;
-  if (/^https?:\/\//i.test(photo)) return photo;
-  if (photo.startsWith("/")) return `${API}${photo}`;
-  return `${API}/uploads/${photo}`;
+  if (!photo) return "/user.png";
+
+  const normalizedPhoto =
+    typeof photo === "object"
+      ? photo.url || photo.path || photo.fileUrl || photo.storedName || photo.filename || ""
+      : photo;
+
+  if (!normalizedPhoto || typeof normalizedPhoto !== "string") return "/user.png";
+  if (/^blob:/i.test(normalizedPhoto) || /^data:image\//i.test(normalizedPhoto)) return normalizedPhoto;
+  if (/^https?:\/\//i.test(normalizedPhoto)) return normalizedPhoto;
+  if (normalizedPhoto.startsWith("/")) return `${API}${normalizedPhoto}`;
+  return `${API}/upload/familyUploads/${normalizedPhoto}`;
 };
 
 const normalizeRelationDetails = (details) =>
@@ -4749,25 +4830,30 @@ const FamilyDetailsForm = () => {
 
   const handleSave = async () => {
     try {
+      const formDataToSend = new FormData();
       const normalizedAssistanceData =
         normalizeAssistanceDataForPayload(assistanceData);
       const sanitizedRelationDetails = sanitizeRelationDetailsForPayload(
         buildRelationDetailsPayload(relationDetails, headOfFamily)
       );
-      const serializedRelationDetails =
-        await serializeValueForJsonPayload(sanitizedRelationDetails);
-      const serializedAssistanceData =
-        await serializeValueForJsonPayload(normalizedAssistanceData);
+      const uploadedRelationDetails = buildRelationDetailsPayloadWithUploads(
+        sanitizedRelationDetails,
+        formDataToSend
+      );
+      const uploadedAssistanceData = buildAssistanceDataPayloadWithUploads(
+        normalizedAssistanceData,
+        formDataToSend
+      );
 
       const payload = {
         diksharthi_id: id,
         formData,
-        relationDetails: serializedRelationDetails,
+        relationDetails: uploadedRelationDetails,
         additionalRelations,
         expandedRelations,
         headOfFamily,
-        assistanceData: serializedAssistanceData,
-        assistance_data: serializedAssistanceData,
+        assistanceData: uploadedAssistanceData,
+        assistance_data: uploadedAssistanceData,
       };
 
 
@@ -4784,10 +4870,38 @@ const FamilyDetailsForm = () => {
 
       const method = familyRecordId ? "put" : "post";
 
+      formDataToSend.append("payload", JSON.stringify(payload));
+      formDataToSend.append("diksharthi_id", id);
+      formDataToSend.append("formData", JSON.stringify(formData));
+      formDataToSend.append(
+        "relationDetails",
+        JSON.stringify(uploadedRelationDetails)
+      );
+      formDataToSend.append(
+        "additionalRelations",
+        JSON.stringify(additionalRelations)
+      );
+      formDataToSend.append(
+        "expandedRelations",
+        JSON.stringify(expandedRelations)
+      );
+      formDataToSend.append("headOfFamily", headOfFamily);
+      formDataToSend.append(
+        "assistanceData",
+        JSON.stringify(uploadedAssistanceData)
+      );
+      formDataToSend.append(
+        "assistance_data",
+        JSON.stringify(uploadedAssistanceData)
+      );
+
       const response = await axios({
         method,
         url,
-        data: payload,
+        data: formDataToSend,
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
       });
 
       console.log(response.data);
