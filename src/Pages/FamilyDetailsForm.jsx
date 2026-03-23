@@ -4066,29 +4066,49 @@ const normalizeAssistanceDataForPayload = (value) => {
   }, {});
 };
 
-const appendNestedFormValue = (formData, key, value) => {
-  if (value === undefined || value === null || isFileLike(value)) return;
+const readFileAsDataUrl = (file) =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
+
+const serializeFileForJsonPayload = async (file) => ({
+  name: file.name,
+  type: file.type,
+  size: file.size,
+  lastModified: file.lastModified,
+  data: await readFileAsDataUrl(file),
+});
+
+const serializeValueForJsonPayload = async (value) => {
+  if (value === undefined) return undefined;
+  if (value === null) return null;
+  if (isFileLike(value)) return serializeFileForJsonPayload(value);
 
   if (Array.isArray(value)) {
-    value.forEach((item, index) => {
-      appendNestedFormValue(formData, `${key}[${index}]`, item);
-    });
-    return;
+    return Promise.all(value.map((item) => serializeValueForJsonPayload(item)));
   }
 
   if (value instanceof Date) {
-    formData.append(key, value.toISOString());
-    return;
+    return value.toISOString();
   }
 
   if (typeof value === "object") {
-    Object.entries(value).forEach(([childKey, childValue]) => {
-      appendNestedFormValue(formData, `${key}[${childKey}]`, childValue);
-    });
-    return;
+    const serializedEntries = await Promise.all(
+      Object.entries(value).map(async ([key, childValue]) => [
+        key,
+        await serializeValueForJsonPayload(childValue),
+      ])
+    );
+
+    return Object.fromEntries(
+      serializedEntries.filter(([, childValue]) => childValue !== undefined)
+    );
   }
 
-  formData.append(key, value);
+  return value;
 };
 
 const resolvePhotoUrl = (photo) => {
@@ -4611,10 +4631,6 @@ const FamilyDetailsForm = () => {
         const nextRelationValue = { ...(relationValue || {}) };
         delete nextRelationValue.photoPreview;
 
-        if (isFileLike(nextRelationValue.photo)) {
-          nextRelationValue.photo = nextRelationValue.photo.name;
-        }
-
         return [relationKey, nextRelationValue];
       }),
     );
@@ -4733,55 +4749,33 @@ const FamilyDetailsForm = () => {
 
   const handleSave = async () => {
     try {
-      const formDataToSend = new FormData();
       const normalizedAssistanceData =
         normalizeAssistanceDataForPayload(assistanceData);
-
-      formDataToSend.append("diksharthi_id", id);
-      formDataToSend.append("formData", JSON.stringify(formData));
-
-      formDataToSend.append(
-        "relationDetails",
-        JSON.stringify(
-          sanitizeRelationDetailsForPayload(
-            buildRelationDetailsPayload(relationDetails, headOfFamily)
-          )
-        )
+      const sanitizedRelationDetails = sanitizeRelationDetailsForPayload(
+        buildRelationDetailsPayload(relationDetails, headOfFamily)
       );
+      const serializedRelationDetails =
+        await serializeValueForJsonPayload(sanitizedRelationDetails);
+      const serializedAssistanceData =
+        await serializeValueForJsonPayload(normalizedAssistanceData);
 
-      formDataToSend.append(
-        "additionalRelations",
-        JSON.stringify(additionalRelations)
-      );
+      const payload = {
+        diksharthi_id: id,
+        formData,
+        relationDetails: serializedRelationDetails,
+        additionalRelations,
+        expandedRelations,
+        headOfFamily,
+        assistanceData: serializedAssistanceData,
+        assistance_data: serializedAssistanceData,
+      };
 
-      formDataToSend.append(
-        "expandedRelations",
-        JSON.stringify(expandedRelations)
-      );
 
-      formDataToSend.append("headOfFamily", headOfFamily);
 
-      formDataToSend.append(
-        "assistanceData",
-        JSON.stringify(normalizedAssistanceData)
-      );
+
 
       // ✅ FILES ADD KARO
-      appendNestedFormValue(
-        formDataToSend,
-        "assistance_data",
-        normalizedAssistanceData
-      );
 
-      Object.keys(normalizedAssistanceData).forEach((rel) => {
-        const docs = normalizedAssistanceData[rel]?.Medical?.documents || [];
-
-        docs.forEach((file, index) => {
-          if (file instanceof File) {
-            formDataToSend.append(`documents_${rel}_${index}`, file);
-          }
-        });
-      });
 
       // 🔥 MAIN LOGIC (CREATE vs UPDATE)
       const url = familyRecordId
@@ -4793,10 +4787,7 @@ const FamilyDetailsForm = () => {
       const response = await axios({
         method,
         url,
-        data: formDataToSend,
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
+        data: payload,
       });
 
       console.log(response.data);
