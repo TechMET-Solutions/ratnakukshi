@@ -20,7 +20,7 @@ const Login = () => {
     setIsSubmitting(true);
 
     try {
-      await login({ email: email.trim(), password, role });
+      await login({ email: email.trim(), password, role: role.trim() });
       navigate("/");
     } catch (err) {
       setError(err.message || "Invalid credentials");
@@ -62,7 +62,7 @@ const Login = () => {
               >
                 <option value="admin">Admin</option>
                 <option value="staff">Staff</option>
-                <option value="Karyakarta ">Karyakarta </option>
+                <option value="karyakarta">Karyakarta</option>
                 <option value="operations-manager">Operations Manager</option>
                 <option value="case-coordinator">Case Coordinator</option>
               </select>

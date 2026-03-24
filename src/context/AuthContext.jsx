@@ -20,12 +20,14 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async ({ email, password, role }) => {
+    const normalizedRole = String(role || "").trim().toLowerCase();
+
     const response = await fetch(`${API}/api/user/login`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ email, password, role }),
+      body: JSON.stringify({ email, password, role: normalizedRole }),
     });
 
     const data = await response.json().catch(() => ({}));
@@ -37,7 +39,7 @@ export const AuthProvider = ({ children }) => {
     const normalizedUser = {
       id: payload?.id || null,
       name: payload?.name || "",
-      role: String(payload?.role || role || "").toLowerCase(),
+      role: String(payload?.role || normalizedRole || "").trim().toLowerCase(),
       email: payload?.email || email,
       mobile: payload?.mobile || "",
       profilePhoto: payload?.profile_photo || payload?.profilePhoto || null,
