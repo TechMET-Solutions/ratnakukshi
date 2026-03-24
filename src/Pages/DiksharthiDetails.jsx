@@ -101,6 +101,10 @@ const DiksharthiListing = () => {
 
   const fetchFeedbackStatus = async (records) => {
     try {
+      if (!Array.isArray(records) || records.length === 0) {
+        setFeedbackStatus({});
+        return;
+      }
 
       const results = await Promise.all(
         records.map(async (item) => {
@@ -161,6 +165,7 @@ const DiksharthiListing = () => {
       }
 
       setDiksharthiList(filteredRecords);
+      await fetchFeedbackStatus(filteredRecords);
       if (role === "operations-manager" || role === "karyakarta") {
         await fetchVisitSchedulesForList(filteredRecords);
       } else {
@@ -570,6 +575,10 @@ const DiksharthiListing = () => {
 
   // Feedback handlers
   const openFeedbackModal = (diksharthi) => {
+    if (feedbackStatus[diksharthi?.id]) {
+      openViewFeedbackModal(diksharthi);
+      return;
+    }
     setFeedbackModalData(diksharthi);
     setFeedbackForm(emptyFeedbackForm);
   };
@@ -604,6 +613,10 @@ const DiksharthiListing = () => {
         throw new Error(result?.message || "Failed to submit feedback");
       }
       alert(result?.message || "Feedback submitted successfully");
+      setFeedbackStatus((prev) => ({
+        ...prev,
+        [feedbackModalData.id]: true,
+      }));
       setFeedbackModalData(null);
       setFeedbackForm(emptyFeedbackForm);
     } catch (error) {
@@ -901,6 +914,12 @@ const DiksharthiListing = () => {
                                   Add Feedback
                                 </MenuItem>
                               )}
+
+                              {feedbackStatus[diksharthi.id] && (
+                                <MenuItem onClick={() => openViewFeedbackModal(diksharthi)}>
+                                  View Feedback
+                                </MenuItem>
+                              )}
                             </>
                           )}
 
@@ -1038,6 +1057,15 @@ const DiksharthiListing = () => {
                               onClick={() => openFeedbackModal(diksharthi)}
                             >
                               Add Feedback
+                            </button>
+                          )}
+
+                          {feedbackStatus[diksharthi.id] && (
+                            <button
+                              className="rounded-lg bg-orange-500 text-sm px-2 py-1 text-white"
+                              onClick={() => openViewFeedbackModal(diksharthi)}
+                            >
+                              View Feedback
                             </button>
                           )}
                         </>
@@ -1479,7 +1507,7 @@ const DiksharthiListing = () => {
         </div>
       )}
 
-      {role === "operations-manager" && viewFeedbackModalData && (
+      {(role === "operations-manager" || role === "karyakarta") && viewFeedbackModalData && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 px-4">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col overflow-hidden">
             <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
