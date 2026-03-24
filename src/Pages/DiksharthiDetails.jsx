@@ -25,6 +25,9 @@ const normalizeRole = (value) => {
 
   if (
     [
+      "case coordinator",
+      "case cordinator",
+      "case-coordinator",
       "operations-manager",
       "operations manager",
       "operation manage",
@@ -92,6 +95,7 @@ const DiksharthiListing = () => {
   const [viewFeedbackModalData, setViewFeedbackModalData] = useState(null);
   const [isFeedbackLoading, setIsFeedbackLoading] = useState(false);
   const [isAddingFeedbackToDiksharthi, setIsAddingFeedbackToDiksharthi] = useState(false);
+  const [downloadingPdfId, setDownloadingPdfId] = useState(null);
 
   const itemsPerPage = 10;
 
@@ -583,6 +587,42 @@ const DiksharthiListing = () => {
     setFeedbackForm(emptyFeedbackForm);
   };
 
+  const canDownloadApplicationPdf =
+    role === "admin" || role === "karyakarta" || role === "case-coordinator";
+
+  const handleDownloadApplicationPdf = async (diksharthi) => {
+    if (!diksharthi?.id) return;
+
+    try {
+      setDownloadingPdfId(diksharthi.id);
+
+      const response = await fetch(
+        `${API}/api/report/generateDikshartiReport/${diksharthi.id}`
+      );
+
+      if (!response.ok) {
+        const result = await response.json().catch(() => ({}));
+        throw new Error(result?.message || "Failed to download application PDF");
+      }
+
+      const blob = await response.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+
+      link.href = downloadUrl;
+      link.download = `Diksharthi_Application_${diksharthi.id}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(downloadUrl);
+    } catch (error) {
+      console.error(error);
+      alert(error?.message || "Failed to download application PDF");
+    } finally {
+      setDownloadingPdfId(null);
+    }
+  };
+
   const handleFeedbackFormChange = (e) => {
     const { name, value } = e.target;
     setFeedbackForm((prev) => ({ ...prev, [name]: value }));
@@ -1015,6 +1055,16 @@ const DiksharthiListing = () => {
                       {/* ================= KARYAKARTA ================= */}
                       {role === "karyakarta" && (
                         <>
+                          {canDownloadApplicationPdf && (
+                            <button
+                              className="rounded-lg bg-rose-600 text-sm px-2 py-1 text-white disabled:opacity-60"
+                              onClick={() => handleDownloadApplicationPdf(diksharthi)}
+                              disabled={downloadingPdfId === diksharthi.id}
+                            >
+                              {downloadingPdfId === diksharthi.id ? "Downloading..." : "Application PDF"}
+                            </button>
+                          )}
+
                           <button
                             className="rounded-lg bg-yellow-500 text-sm px-2 py-1 text-white"
                             onClick={() =>
@@ -1074,6 +1124,16 @@ const DiksharthiListing = () => {
                       {/* ================= ADMIN / CASE COORDINATOR ================= */}
                       {(role === "admin" || role === "case-coordinator") && (
                         <>
+                          {canDownloadApplicationPdf && (
+                            <button
+                              className="rounded-lg bg-rose-600 text-sm px-2 py-1 text-white disabled:opacity-60"
+                              onClick={() => handleDownloadApplicationPdf(diksharthi)}
+                              disabled={downloadingPdfId === diksharthi.id}
+                            >
+                              {downloadingPdfId === diksharthi.id ? "Downloading..." : "Application PDF"}
+                            </button>
+                          )}
+
                           <button
                             className="rounded-lg bg-blue-600 text-sm px-2 py-1 text-white"
                             onClick={() => openViewModal(diksharthi)}
