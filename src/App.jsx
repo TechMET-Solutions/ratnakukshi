@@ -16,6 +16,7 @@ import KaryakartaList from "./pages/KaryakartaList";
 import KaryakartaDetails from "./pages/KaryakartaDetails";
 import DonorPaymentHistory from "./pages/DonorPaymentHistory";
 import UserList from "./pages/UserList";
+import KaryakartaDetailsAdd from "./pages/KaryakartaDetailsAdd";
 
 const Layout = ({ children }) => {
   return (
@@ -163,6 +164,16 @@ function App() {
             <ProtectedRoute>
               <Layout>
                 <KaryakartaList />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/karyakarta-add"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <KaryakartaDetailsAdd />
               </Layout>
             </ProtectedRoute>
           }

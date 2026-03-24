@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Plus, Search, Trash2, Edit } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { API } from "../api/BaseURL";
 import DeleteModal from "../components/DeleteModal";
 import UserFormModal from "../components/UserFormModal";
@@ -91,6 +92,7 @@ const buildUserFormData = (values, isUpdate = false) => {
 
 
 function UserList() {
+    const navigate = useNavigate();
     const [users, setUsers] = useState([]);
     const [searchTerm, setSearchTerm] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
@@ -190,6 +192,14 @@ function UserList() {
         setApiError("");
         setSelectedUser(user);
         setIsDeleteModalOpen(true);
+    };
+
+    const handleViewDetails = (user) => {
+        navigate("/karyakarta-add", {
+            state: {
+                user,
+            },
+        });
     };
 
     const closeAddModal = () => {
@@ -493,6 +503,16 @@ function UserList() {
                                             >
                                                 <Trash2 size={18} />
                                             </button>
+                                            {/* 👉 DETAILS BUTTON (ONLY for karyakarta) */}
+                                            {user.role === "karyakarta" && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleViewDetails(user)}
+                                                    className="text-green-600 hover:text-green-800 text-xs font-semibold border border-green-600 px-2 py-1 rounded"
+                                                >
+                                                   Add Details
+                                                </button>
+                                            )}
                                         </div>
                                     </td>
                                 </tr>
