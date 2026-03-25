@@ -4185,6 +4185,54 @@ const buildAssistanceDataPayloadWithUploads = (assistanceDataValue, formData) =>
         };
       }
 
+      if (Array.isArray(nextRelationValue?.Rent?.rentProofDocuments)) {
+        nextRelationValue.Rent = {
+          ...nextRelationValue.Rent,
+          rentProofDocuments: nextRelationValue.Rent.rentProofDocuments.map(
+            (documentItem, docIndex) => {
+              const nextDocumentItem = { ...(documentItem || {}) };
+              const files = Array.isArray(nextDocumentItem.files)
+                ? nextDocumentItem.files
+                : [];
+
+              nextDocumentItem.files = files.map((file, fileIndex) => {
+                if (!isFileLike(file)) return file;
+
+                const uploadField = `rent_proof_${relationKey}_${docIndex}_${fileIndex}`;
+                formData.append(uploadField, file);
+                return buildUploadedFileReference(file, uploadField);
+              });
+
+              return nextDocumentItem;
+            }
+          ),
+        };
+      }
+
+      if (Array.isArray(nextRelationValue?.Housing?.supportingDocuments)) {
+        nextRelationValue.Housing = {
+          ...nextRelationValue.Housing,
+          supportingDocuments: nextRelationValue.Housing.supportingDocuments.map(
+            (documentItem, docIndex) => {
+              const nextDocumentItem = { ...(documentItem || {}) };
+              const files = Array.isArray(nextDocumentItem.files)
+                ? nextDocumentItem.files
+                : [];
+
+              nextDocumentItem.files = files.map((file, fileIndex) => {
+                if (!isFileLike(file)) return file;
+
+                const uploadField = `housing_document_${relationKey}_${docIndex}_${fileIndex}`;
+                formData.append(uploadField, file);
+                return buildUploadedFileReference(file, uploadField);
+              });
+
+              return nextDocumentItem;
+            }
+          ),
+        };
+      }
+
       return [relationKey, nextRelationValue];
     })
   );
@@ -4280,6 +4328,44 @@ const FamilyDetailsForm = () => {
     docs[index][field] = value;
 
     handleMedicalChange(rel, "medicalDocuments", docs);
+  };
+
+  const handleAddRentDocument = (rel) => {
+    const prevDocs = assistanceData[rel]?.Rent?.rentProofDocuments || [];
+
+    handleRentChange(rel, "rentProofDocuments", [
+      ...prevDocs,
+      { documentName: "", files: [] },
+    ]);
+  };
+
+  const handleRentDocumentChange = (rel, index, field, value) => {
+    const docs = [...(assistanceData[rel]?.Rent?.rentProofDocuments || [])];
+    docs[index] = {
+      ...(docs[index] || {}),
+      [field]: value,
+    };
+
+    handleRentChange(rel, "rentProofDocuments", docs);
+  };
+
+  const handleAddHousingDocument = (rel) => {
+    const prevDocs = assistanceData[rel]?.Housing?.supportingDocuments || [];
+
+    handleHousingChange(rel, "supportingDocuments", [
+      ...prevDocs,
+      { documentName: "", files: [] },
+    ]);
+  };
+
+  const handleHousingDocumentChange = (rel, index, field, value) => {
+    const docs = [...(assistanceData[rel]?.Housing?.supportingDocuments || [])];
+    docs[index] = {
+      ...(docs[index] || {}),
+      [field]: value,
+    };
+
+    handleHousingChange(rel, "supportingDocuments", docs);
   };
 
   console.log(additionalRelations, "additionalRelations");
@@ -7260,32 +7346,89 @@ const FamilyDetailsForm = () => {
                                       </div>
                                     </div>
 
-                                    {/* Row 3 - File Upload */}
-                                    <div className="flex flex-col gap-1">
+                                    <div className="col-span-full md:col-span-2 lg:col-span-3">
                                       <label className="text-[11px] font-bold uppercase text-gray-500">
-                                        Upload Rent Proof (If Yes)
+                                        Upload Rent Proof Documents
                                       </label>
-                                      <div className="flex items-center border rounded mt-1 overflow-hidden">
-                                        <label className="bg-gray-100 px-3 py-2 border-r text-sm cursor-pointer hover:bg-gray-200 transition">
-                                          Choose File
-                                          <input
-                                            type="file"
-                                            className="hidden"
-                                            onChange={(e) =>
-                                              handleRentChange(
-                                                rel,
-                                                "rentProofFile",
-                                                e.target.files[0],
-                                              )
-                                            }
-                                          />
-                                        </label>
-                                        <span className="px-3 text-sm text-gray-500 truncate">
-                                          {assistanceData[rel]?.Rent
-                                            ?.rentProofFile?.name ||
-                                            "No file chosen"}
-                                        </span>
-                                      </div>
+
+                                      {(assistanceData[rel]?.Rent?.rentProofDocuments || []).map(
+                                        (doc, index) => (
+                                          <div key={index} className="flex gap-2 mt-2 items-center">
+                                            <input
+                                              type="text"
+                                              placeholder="Document Name"
+                                              value={doc.documentName || ""}
+                                              onChange={(e) =>
+                                                handleRentDocumentChange(
+                                                  rel,
+                                                  index,
+                                                  "documentName",
+                                                  e.target.value,
+                                                )
+                                              }
+                                              className="border p-2 rounded w-1/3"
+                                            />
+
+                                            <input
+                                              type="file"
+                                              id={`rent-file-upload-${rel}-${index}`}
+                                              multiple
+                                              className="hidden"
+                                              accept="image/*,.pdf"
+                                              onChange={(e) =>
+                                                handleRentDocumentChange(
+                                                  rel,
+                                                  index,
+                                                  "files",
+                                                  Array.from(e.target.files || []),
+                                                )
+                                              }
+                                            />
+
+                                            <button
+                                              type="button"
+                                              onClick={() =>
+                                                document
+                                                  .getElementById(`rent-file-upload-${rel}-${index}`)
+                                                  .click()
+                                              }
+                                              className="border-2 border-blue-500 text-blue-500 px-3 py-2 rounded"
+                                            >
+                                              Upload
+                                            </button>
+
+                                            <div className="text-sm text-gray-500 max-w-[150px] truncate">
+                                              {doc.files?.length
+                                                ? doc.files.map((file) => file.name).join(", ")
+                                                : "No file"}
+                                            </div>
+
+                                            <button
+                                              type="button"
+                                              onClick={() => {
+                                                const docs =
+                                                  assistanceData[rel]?.Rent?.rentProofDocuments || [];
+                                                handleRentChange(
+                                                  rel,
+                                                  "rentProofDocuments",
+                                                  docs.filter((_, i) => i !== index),
+                                                );
+                                              }}
+                                              className="text-red-500 text-lg"
+                                            >
+                                              x
+                                            </button>
+                                          </div>
+                                        )
+                                      )}
+
+                                      <button
+                                        type="button"
+                                        onClick={() => handleAddRentDocument(rel)}
+                                        className="mt-3 text-white px-2 py-1 flex items-center justify-center rounded-lg bg-blue-500"
+                                      >
+                                        <Plus /> Document
+                                      </button>
                                     </div>
                                   </div>
 
@@ -7320,6 +7463,17 @@ const FamilyDetailsForm = () => {
                                     House purchase/repair Assistance
                                   </h3>
 
+                                  {(() => {
+                                    const housingTypes =
+                                      assistanceData[rel]?.Housing?.assistanceType || [];
+                                    const isHousePurchaseSelected =
+                                      housingTypes.includes("House purchase");
+                                    const hasOwnContribution =
+                                      assistanceData[rel]?.Housing?.ownContribution === "Yes";
+                                    const hasLoanSupport =
+                                      assistanceData[rel]?.Housing?.hasOtherSupport === "Yes";
+
+                                    return (
                                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-6">
                                     {/* Row 1: Type of Housing Assistance */}
                                     <div className="col-span-full md:col-span-2 lg:col-span-1 flex flex-col gap-1">
@@ -7504,6 +7658,29 @@ const FamilyDetailsForm = () => {
                                       </div>
                                     </div>
 
+                                        {hasOwnContribution && (
+                                          <div className="flex flex-col gap-1">
+                                            <label className="text-[11px] font-bold uppercase text-gray-500">
+                                              Own Contribution Amount
+                                            </label>
+                                            <input
+                                              type="number"
+                                              value={
+                                                assistanceData[rel]?.Housing
+                                                  ?.ownContributionAmount || ""
+                                              }
+                                              onChange={(e) =>
+                                                handleHousingChange(
+                                                  rel,
+                                                  "ownContributionAmount",
+                                                  e.target.value,
+                                                )
+                                              }
+                                              className="border p-2 rounded outline-none focus:border-blue-500"
+                                            />
+                                          </div>
+                                        )}
+
                                     <div className="flex flex-col gap-1">
                                       <label className="text-[11px] font-bold uppercase text-gray-500">
                                         Any Loan or Other Support?*
@@ -7534,7 +7711,165 @@ const FamilyDetailsForm = () => {
                                         ))}
                                       </div>
                                     </div>
+
+
+
+                                    {isHousePurchaseSelected && hasLoanSupport && (
+                                      <>
+                                        <div className="flex flex-col gap-1">
+                                          <label className="text-[11px] font-bold uppercase text-gray-500">
+                                            Loan Amount
+                                          </label>
+                                          <input
+                                            type="number"
+                                            value={
+                                              assistanceData[rel]?.Housing
+                                                ?.loanAmount || ""
+                                            }
+                                            onChange={(e) =>
+                                              handleHousingChange(
+                                                rel,
+                                                "loanAmount",
+                                                e.target.value,
+                                              )
+                                            }
+                                            className="border p-2 rounded outline-none focus:border-blue-500"
+                                          />
+                                        </div>
+
+                                        <div className="flex flex-col gap-1">
+                                          <label className="text-[11px] font-bold uppercase text-gray-500">
+                                            EMI Amount Monthly
+                                          </label>
+                                          <input
+                                            type="number"
+                                            value={
+                                              assistanceData[rel]?.Housing
+                                                ?.emiAmountMonthly || ""
+                                            }
+                                            onChange={(e) =>
+                                              handleHousingChange(
+                                                rel,
+                                                "emiAmountMonthly",
+                                                e.target.value,
+                                              )
+                                            }
+                                            className="border p-2 rounded outline-none focus:border-blue-500"
+                                          />
+                                        </div>
+
+                                        <div className="flex flex-col gap-1">
+                                          <label className="text-[11px] font-bold uppercase text-gray-500">
+                                            Company Name
+                                          </label>
+                                          <input
+                                            type="text"
+                                            value={
+                                              assistanceData[rel]?.Housing
+                                                ?.companyName || ""
+                                            }
+                                            onChange={(e) =>
+                                              handleHousingChange(
+                                                rel,
+                                                "companyName",
+                                                e.target.value,
+                                              )
+                                            }
+                                            className="border p-2 rounded outline-none focus:border-blue-500"
+                                          />
+                                        </div>
+                                      </>
+                                    )}
+
+                                    {isHousePurchaseSelected && (
+                                      <div className="col-span-full md:col-span-2 lg:col-span-3">
+                                        <label className="text-[11px] font-bold uppercase text-gray-500">
+                                          Upload Agreement / Other Proofs
+                                        </label>
+
+                                        {(assistanceData[rel]?.Housing?.supportingDocuments || []).map(
+                                          (doc, index) => (
+                                            <div key={index} className="flex gap-2 mt-2 items-center">
+                                              <input
+                                                type="text"
+                                                placeholder="Document Name"
+                                                value={doc.documentName || ""}
+                                                onChange={(e) =>
+                                                  handleHousingDocumentChange(
+                                                    rel,
+                                                    index,
+                                                    "documentName",
+                                                    e.target.value,
+                                                  )
+                                                }
+                                                className="border p-2 rounded w-1/3"
+                                              />
+
+                                              <input
+                                                type="file"
+                                                id={`housing-file-upload-${rel}-${index}`}
+                                                multiple
+                                                className="hidden"
+                                                accept="image/*,.pdf"
+                                                onChange={(e) =>
+                                                  handleHousingDocumentChange(
+                                                    rel,
+                                                    index,
+                                                    "files",
+                                                    Array.from(e.target.files || []),
+                                                  )
+                                                }
+                                              />
+
+                                              <button
+                                                type="button"
+                                                onClick={() =>
+                                                  document
+                                                    .getElementById(`housing-file-upload-${rel}-${index}`)
+                                                    .click()
+                                                }
+                                                className="border-2 border-blue-500 text-blue-500 px-3 py-2 rounded"
+                                              >
+                                                Upload
+                                              </button>
+
+                                              <div className="text-sm text-gray-500 max-w-[150px] truncate">
+                                                {doc.files?.length
+                                                  ? doc.files.map((file) => file.name).join(", ")
+                                                  : "No file"}
+                                              </div>
+
+                                              <button
+                                                type="button"
+                                                onClick={() => {
+                                                  const docs =
+                                                    assistanceData[rel]?.Housing?.supportingDocuments || [];
+                                                  handleHousingChange(
+                                                    rel,
+                                                    "supportingDocuments",
+                                                    docs.filter((_, i) => i !== index),
+                                                  );
+                                                }}
+                                                className="text-red-500 text-lg"
+                                              >
+                                                x
+                                              </button>
+                                            </div>
+                                          )
+                                        )}
+
+                                        <button
+                                          type="button"
+                                          onClick={() => handleAddHousingDocument(rel)}
+                                          className="mt-3 text-white px-2 py-1 flex items-center justify-center rounded-lg bg-blue-500"
+                                        >
+                                          <Plus /> Document
+                                        </button>
+                                      </div>
+                                    )}
                                   </div>
+                                    );
+                                  })()}
 
                                   {/* Remark Section */}
                                   <div className="mt-8 flex flex-col gap-1">
