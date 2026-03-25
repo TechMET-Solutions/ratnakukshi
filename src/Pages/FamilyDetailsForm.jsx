@@ -5154,7 +5154,7 @@ const FamilyDetailsForm = () => {
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">
-                District<span className="text-red-500">*</span>
+                District / City<span className="text-red-500">*</span>
               </label>
 
               <select
@@ -5196,7 +5196,16 @@ const FamilyDetailsForm = () => {
                 Village
               </label>
 
-              <select
+              <input
+                type="text"
+                value={formData.village}
+                onChange={(e) =>
+                  setFormData({ ...formData, village: e.target.value })
+                }
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
+              />
+
+              {/* <select
                 value={formData.village}
                 onChange={(e) =>
                   setFormData({ ...formData, village: e.target.value })
@@ -5209,7 +5218,7 @@ const FamilyDetailsForm = () => {
                     {s}
                   </option>
                 ))}
-              </select>
+              </select> */}
             </div>
           </div>
 

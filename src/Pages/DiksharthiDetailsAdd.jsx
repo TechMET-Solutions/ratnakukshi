@@ -22,6 +22,7 @@ const initialFormData = {
   samadhiPlace: "", // Optional
   rbfCriteria: "",
   relation: "",
+  relationName: "",
 };
 
 // Helper to calculate age from DOB
@@ -62,6 +63,7 @@ const mapDiksharthiToFormData = (record) => ({
   samadhiPlace: record?.samadhiPlace || record?.samadhi_place || "",
   rbfCriteria: record?.rbfCriteria || record?.rbf_criteria || "",
   relation: record?.relation || "",
+  relationName: record?.relationName || record?.relation_name || "",
 });
 
 const DiksharthiDetailsAdd = () => {
@@ -113,6 +115,7 @@ const DiksharthiDetailsAdd = () => {
       }
       if (name === "rbfCriteria" && value === "No") {
         nextState.relation = "";
+        nextState.relationName = "";
       }
       return nextState;
     });
@@ -132,6 +135,9 @@ const DiksharthiDetailsAdd = () => {
 
     if (formData.rbfCriteria === "Yes" && !formData.relation) {
       newErrors.relation = "Required for RBF";
+    }
+    if (formData.rbfCriteria === "Yes" && !formData.relationName) {
+      newErrors.relationName = "Required for RBF";
     }
 
     if (formData.isAlive === "Yes" && !formData.viharLocation) {
@@ -264,6 +270,14 @@ const DiksharthiDetailsAdd = () => {
               <label className="block text-sm font-medium text-slate-700 mb-1">Relation <span className="text-red-500">*</span></label>
               <input name="relation" value={formData.relation} onChange={handleChange} type="text" className="w-full p-2 border border-slate-300 rounded-md outline-none" />
               {errors.relation && <p className="text-red-500 text-xs">{errors.relation}</p>}
+            </div>
+          )}
+
+          {formData.rbfCriteria === "Yes" && (
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Relation Name <span className="text-red-500">*</span></label>
+              <input name="relationName" value={formData.relationName} onChange={handleChange} type="text" className="w-full p-2 border border-slate-300 rounded-md outline-none" />
+              {errors.relationName && <p className="text-red-500 text-xs">{errors.relationName}</p>}
             </div>
           )}
 

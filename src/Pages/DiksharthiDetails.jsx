@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { API } from "../api/BaseURL";
 import { useAuth } from "../context/AuthContext";
+import { formatIndianDate } from "../utils/formatIndianDate";
 
 const DetailItem = ({ label, value }) => (
   <div className="flex flex-col">
@@ -227,6 +228,7 @@ const DiksharthiListing = () => {
     if (!search) return true;
 
     return [
+      diksharthi?.id,
       diksharthi?.diksharthi_code,
       diksharthi?.sadhu_sadhvi_name,
       diksharthi?.pad,
@@ -260,13 +262,6 @@ const DiksharthiListing = () => {
       status: queryItem?.status || assistanceItems[0]?.status || "Pending",
       queryItem,
     };
-  };
-
-  const formatDate = (value) => {
-    if (!value) return "-";
-    const parsed = new Date(value);
-    if (Number.isNaN(parsed.getTime())) return String(value);
-    return parsed.toLocaleDateString();
   };
 
   const getDiksharthiStatus = (diksharthi) =>
@@ -303,6 +298,7 @@ const DiksharthiListing = () => {
     if (!schedule) return null;
 
     return {
+      diksharthi_id: schedule?.diksharthi_id || "",
       diksharthi_name:
         schedule?.diksharthi_name ||
         schedule?.sadhu_sadhvi_name ||
@@ -313,7 +309,7 @@ const DiksharthiListing = () => {
       mobile: schedule?.mobile || schedule?.mobile_no || schedule?.phone || "",
       date: schedule?.date || schedule?.visit_date || schedule?.scheduled_date || "",
       time: schedule?.time || schedule?.visit_time || schedule?.scheduled_time || "",
-      diksharthi_code: schedule?.diksharthi_code || "",
+      diksharthi_code: schedule?.diksharthi_code || schedule?.diksharthi_id || "",
       scheduled_by: schedule?.scheduled_by || schedule?.user_id || "",
     };
   };
@@ -397,7 +393,7 @@ const DiksharthiListing = () => {
     setScheduleForm(
       existingSchedule || {
         ...emptyScheduleForm,
-        name: diksharthi?.sadhu_sadhvi_name || "",
+        // name: diksharthi?.sadhu_sadhvi_name || "",
       }
     );
   };
@@ -426,7 +422,7 @@ const DiksharthiListing = () => {
 
     const payload = {
       diksharthi_id: scheduleVisitModalData.id,
-      diksharthi_code: scheduleVisitModalData.diksharthi_code || "",
+      diksharthi_code: String(scheduleVisitModalData.id || ""),
       diksharthi_name: scheduleVisitModalData.sadhu_sadhvi_name || "",
       name: scheduleForm.name.trim(),
       address: scheduleForm.address.trim(),
@@ -455,11 +451,19 @@ const DiksharthiListing = () => {
 
       const savedSchedule = result?.data || payload;
       const normalizedSchedule = {
+        diksharthi_id:
+          savedSchedule?.diksharthi_id || payload.diksharthi_id,
+        diksharthi_name:
+          savedSchedule?.diksharthi_name || payload.diksharthi_name,
         name: savedSchedule?.name || payload.name,
         address: savedSchedule?.address || payload.address,
         mobile: savedSchedule?.mobile || payload.mobile,
         date: savedSchedule?.date || payload.date,
         time: savedSchedule?.time || payload.time,
+        diksharthi_code:
+          savedSchedule?.diksharthi_code || payload.diksharthi_code,
+        scheduled_by:
+          savedSchedule?.scheduled_by || payload.scheduled_by,
       };
 
       const updatedSchedules = {
@@ -771,6 +775,9 @@ const DiksharthiListing = () => {
               <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">
                 Alive Status
               </th>
+              <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">
+                Date
+              </th>
               {role === "operations-manager" && (
                 <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">
                   Staff Name
@@ -797,10 +804,10 @@ const DiksharthiListing = () => {
                 <td
                   colSpan={
                     role === "operations-manager"
-                      ? "9"
+                      ? "10"
                       : role === "admin"
-                        ? "8"
-                        : "7"
+                        ? "9"
+                        : "8"
                   }
                   className="px-6 py-20 text-center text-gray-500 text-sm italic"
                 >
@@ -826,7 +833,8 @@ const DiksharthiListing = () => {
                     </td>
 
                     {/* ID */}
-                    <td className="px-6 py-3">{diksharthi.diksharthi_code}</td>
+                    <td className="px-6 py-3">{diksharthi.id}</td>
+
 
                     {/* Name */}
                     <td className="px-6 py-3">{diksharthi.sadhu_sadhvi_name}</td>
@@ -839,6 +847,9 @@ const DiksharthiListing = () => {
 
                     {/* Alive */}
                     <td className="px-6 py-3">{diksharthi.is_alive}</td>
+
+                    {/* Date */}
+                    <td className="px-6 py-3">{formatIndianDate(diksharthi.created_at)}</td>
 
                     {role === "operations-manager" && (
                       <td className="px-6 py-3">
@@ -1032,7 +1043,7 @@ const DiksharthiListing = () => {
                             </button>
                           )}
 
-                          {!getVisitSchedule(diksharthi) && (
+                          {!isAdminUnassigned(diksharthi) && !getVisitSchedule(diksharthi) && (
                             <button
                               className="rounded-lg bg-emerald-600 text-sm px-2 py-1 text-white"
                               onClick={() => openScheduleVisitModal(diksharthi)}
@@ -1223,7 +1234,7 @@ const DiksharthiListing = () => {
                           </h2>
                         </div>
                         <div className="inline-block bg-gray-100 px-3 py-1 rounded-full">
-                          <span className="text-sm font-medium text-gray-600">ID: {viewModalData?.diksharthi_code || "-"}</span>
+                          <span className="text-sm font-medium text-gray-600">ID: {viewModalData?.id || "-"}</span>
                         </div>
                       </div>
 
@@ -1247,8 +1258,8 @@ const DiksharthiListing = () => {
 
                     {/* Detailed Data Grid */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
-                      <DetailItem label="Date of Birth" value={formatDate(viewModalData?.dob)} />
-                      {/* Fixed Age: Removed formatDate wrap since age is a number/string */}
+                      <DetailItem label="Date of Birth" value={formatIndianDate(viewModalData?.dob)} />
+                      {/* Fixed Age: Removed formatIndianDate wrap since age is a number/string */}
                       <DetailItem label="Age" value={viewModalData?.age || "N/A"} />
 
                       <DetailItem label="Gender" value={viewModalData?.gender} />
@@ -1261,7 +1272,10 @@ const DiksharthiListing = () => {
                       {/* RBF Fields */}
                       <DetailItem label="RBF Criteria" value={viewModalData?.rbf_criteria || viewModalData?.rbfCriteria || "No"} />
                       {(viewModalData?.rbf_criteria === "Yes" || viewModalData?.rbfCriteria === "Yes") && (
-                        <DetailItem label="RBF Relation" value={viewModalData?.relation || "N/A"} />
+                        <>
+                          <DetailItem label="RBF Relation" value={viewModalData?.relation || "N/A"} />
+                          <DetailItem label="Relation Name" value={viewModalData?.relation_name || viewModalData?.relationName || "N/A"} />
+                        </>
                       )}
 
                       {/* Alive Specific Info */}
@@ -1272,7 +1286,7 @@ const DiksharthiListing = () => {
                       {/* Dead Specific Info */}
                       {viewModalData?.is_alive === "No" && (
                         <>
-                          <DetailItem label="Samadhi Date" value={formatDate(viewModalData?.samadhi_date || viewModalData?.samadhiDate)} />
+                          <DetailItem label="Samadhi Date" value={formatIndianDate(viewModalData?.samadhi_date || viewModalData?.samadhiDate)} />
                           <DetailItem label="Samadhi Place" value={viewModalData?.samadhi_place || viewModalData?.samadhiPlace} />
                         </>
                       )}
@@ -1482,7 +1496,7 @@ const DiksharthiListing = () => {
                   </p>
                   <p>
                     <span className="font-semibold">Date:</span>{" "}
-                    {formatDate(viewScheduleModalData.schedule.date)}
+                    {formatIndianDate(viewScheduleModalData.schedule.date)}
                   </p>
                   <p>
                     <span className="font-semibold">Time:</span>{" "}
@@ -1603,7 +1617,7 @@ const DiksharthiListing = () => {
                         </p>
                       )}
                       {item.created_at && (
-                        <p className="text-xs text-gray-400">{formatDate(item.created_at)}</p>
+                        <p className="text-xs text-gray-400">{formatIndianDate(item.created_at)}</p>
                       )}
 
                     </div>
