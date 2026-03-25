@@ -93,12 +93,19 @@ const AssistancePage = () => {
     setSearchText(value);
     if (value.length < 2) {
       setResults([]);
+      setSelectedSadhu(null);
+      setFamilyDetails([]);
       return;
     }
     try {
-      // Tuza actual API endpoint vapar
       const res = await axios.get(
-        `${API}/api/search-diksharthi?name=${value}`,
+        `${API}/api/search-diksharthi`,
+        {
+          params: {
+            name: value,
+            type: searchType,
+          },
+        },
       );
       setResults(asArray(res?.data?.data));
     } catch (error) {
@@ -110,7 +117,11 @@ const AssistancePage = () => {
   const handleSelectSadhu = async (item) => {
     setSelectedSadhu(item);
     setResults([]);
-    setSearchText(item.sadhu_sadhvi_name);
+    setSearchText(
+      searchType === "family" && item.head_of_family
+        ? `${item.head_of_family} - ${item.sadhu_sadhvi_name}`
+        : item.sadhu_sadhvi_name,
+    );
     try {
       const res = await axios.get(
         `${API}/api/family-details/${item.id}`,
@@ -383,7 +394,13 @@ const AssistancePage = () => {
                 name="searchType"
                 className="w-4 h-4 accent-blue-600"
                 checked={searchType === "sadhu"}
-                onChange={() => setSearchType("sadhu")}
+                onChange={() => {
+                  setSearchType("sadhu");
+                  setSearchText("");
+                  setResults([]);
+                  setSelectedSadhu(null);
+                  setFamilyDetails([]);
+                }}
               />
               <span className="font-medium text-slate-700">
                 Sadhu/Sadhvi Name
@@ -395,7 +412,13 @@ const AssistancePage = () => {
                 name="searchType"
                 className="w-4 h-4 accent-blue-600"
                 checked={searchType === "family"}
-                onChange={() => setSearchType("family")}
+                onChange={() => {
+                  setSearchType("family");
+                  setSearchText("");
+                  setResults([]);
+                  setSelectedSadhu(null);
+                  setFamilyDetails([]);
+                }}
               />
               <span className="font-medium text-slate-700">
                 Family Head Details
@@ -419,26 +442,29 @@ const AssistancePage = () => {
               }
               className="w-full pl-14 pr-6 py-4 rounded-full border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 text-lg"
             />
+
+            {results.length > 0 && (
+              <div className="w-full max-w-2xl mt-4 border rounded-lg shadow bg-white absolute z-10 top-[50px]">
+                {results.map((item) => (
+                  <div
+                    key={item.id}
+                    onClick={() => handleSelectSadhu(item)}
+                    className="p-4 border-b cursor-pointer hover:bg-slate-50"
+                  >
+                    <p className="font-medium text-slate-700">
+                      {item.sadhu_sadhvi_name}
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      {searchType === "family" && item.head_of_family
+                        ? `Head: ${item.head_of_family}`
+                        : item.diksharthi_code}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
-          {results.length > 0 && (
-            <div className="w-full max-w-2xl mt-4 border rounded-lg shadow bg-white absolute z-10 top-[320px]">
-              {results.map((item) => (
-                <div
-                  key={item.id}
-                  onClick={() => handleSelectSadhu(item)}
-                  className="p-4 border-b cursor-pointer hover:bg-slate-50"
-                >
-                  <p className="font-medium text-slate-700">
-                    {item.sadhu_sadhvi_name}
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    {item.diksharthi_code}
-                  </p>
-                </div>
-              ))}
-            </div>
-          )}
         </div>
 
         {selectedSadhu

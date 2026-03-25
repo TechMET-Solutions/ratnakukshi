@@ -11,6 +11,21 @@ const calculateMedicalTotal = (medical = {}) => {
   return String(costPerSession * sessionsCount);
 };
 
+const getRelationAssistanceData = (allAssistanceData = {}, relation = "") => {
+  if (!allAssistanceData || typeof allAssistanceData !== "object") return {};
+  if (allAssistanceData[relation]) return allAssistanceData[relation];
+
+  const normalizedRelation = String(relation || "").trim().toLowerCase();
+  const matchedKey = Object.keys(allAssistanceData).find(
+    (key) => String(key || "").trim().toLowerCase() === normalizedRelation,
+  );
+
+  return matchedKey ? allAssistanceData[matchedKey] || {} : {};
+};
+
+const pickPreferredAssistance = (primaryData = {}, fallbackData = {}) =>
+  Object.keys(primaryData || {}).length > 0 ? primaryData : fallbackData || {};
+
 const AssistanceDetails = () => {
   const location = useLocation();
 
@@ -81,22 +96,30 @@ const AssistanceDetails = () => {
         families.find((item) => String(item?.id) === String(familyId)) ||
         families[0];
 
-      const existingAssistance = family?.assistance_data?.[relation] || {};
+      const fetchedAssistance = getRelationAssistanceData(
+        family?.assistance_data,
+        relation,
+      );
+      const resolvedAssistance = pickPreferredAssistance(
+        fetchedAssistance,
+        existingAssistance,
+      );
 
       // ✅ Assistance data set karo
       setAssistanceData((prev) => ({
         ...prev,
-        [relation]: existingAssistance,
+        [relation]: resolvedAssistance,
       }));
 
       // ✅ Categories set karo
-      const categories = Object.keys(existingAssistance).map((cat) =>
+      const categories = Object.keys(resolvedAssistance).map((cat) =>
         cat === "BusinessSupport" ? "Business" : cat
       );
 
       setRelationDetails((prev) => ({
         ...prev,
         [relation]: {
+          ...prev[relation],
           assistanceCategories: categories,
         },
       }));
@@ -106,18 +129,23 @@ const AssistanceDetails = () => {
   };
 
   useEffect(() => {
-    if (!relation || !existingAssistance) return;
+    if (!relation) return;
 
-    const categories = normalizeAssistanceCategories(existingAssistance);
+    const resolvedAssistance = getRelationAssistanceData(
+      { [relation]: existingAssistance, ...existingAssistance },
+      relation,
+    );
+    const categories = normalizeAssistanceCategories(resolvedAssistance);
 
     setAssistanceData((prev) => ({
       ...prev,
-      [relation]: existingAssistance,
+      [relation]: resolvedAssistance,
     }));
 
     setRelationDetails((prev) => ({
       ...prev,
       [relation]: {
+        ...prev[relation],
         assistanceCategories: categories,
       },
     }));
