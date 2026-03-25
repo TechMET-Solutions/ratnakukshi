@@ -194,14 +194,6 @@ function UserList() {
         setIsDeleteModalOpen(true);
     };
 
-    const handleViewDetails = (user) => {
-        navigate("/karyakarta-add", {
-            state: {
-                user,
-            },
-        });
-    };
-
     const closeAddModal = () => {
         setIsAddModalOpen(false);
         resetForm();
@@ -504,15 +496,6 @@ function UserList() {
                                                 <Trash2 size={18} />
                                             </button>
                                             {/* 👉 DETAILS BUTTON (ONLY for karyakarta) */}
-                                            {user.role === "karyakarta" && (
-                                                <button
-                                                    type="button"
-                                                    onClick={() => handleViewDetails(user)}
-                                                    className="text-green-600 hover:text-green-800 text-xs font-semibold border border-green-600 px-2 py-1 rounded"
-                                                >
-                                                   Add Details
-                                                </button>
-                                            )}
                                         </div>
                                     </td>
                                 </tr>

@@ -17,6 +17,7 @@ import KaryakartaDetails from "./pages/KaryakartaDetails";
 import DonorPaymentHistory from "./pages/DonorPaymentHistory";
 import UserList from "./pages/UserList";
 import KaryakartaDetailsAdd from "./pages/KaryakartaDetailsAdd";
+import Pofile from "./pages/Pofile";
 
 const Layout = ({ children }) => {
   return (
@@ -174,6 +175,16 @@ function App() {
             <ProtectedRoute>
               <Layout>
                 <KaryakartaDetailsAdd />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <Pofile />
               </Layout>
             </ProtectedRoute>
           }

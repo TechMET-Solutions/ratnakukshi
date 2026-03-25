@@ -81,6 +81,10 @@ const Sidebar = () => {
         <NavItem isCollapsed={isCollapsed} to="/" icon={<LayoutDashboard size={22} />} label="Dashboard" />
         <NavItem isCollapsed={isCollapsed} to="/diksharthi-details" icon={<FileText size={22} />} label="Diksharthi Details" />
 
+        {isKaryakarta && (
+          <NavItem isCollapsed={isCollapsed} to="/profile" icon={<UserCircle size={22} />} label="Profile" />
+        )}
+
         {(isAdmin || isKaryakarta || isCaseCoordinator ) && (
           <>
             <NavItem isCollapsed={isCollapsed} to="/assistance" icon={<Handshake size={22} />} label="Assistance" />

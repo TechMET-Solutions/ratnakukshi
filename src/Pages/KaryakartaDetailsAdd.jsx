@@ -1,13 +1,15 @@
-import React, { useMemo, useState } from "react";
+import axios from "axios";
+import React, { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, CheckCircle2 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import { API } from "../api/BaseURL";
 
 const steps = [
     { id: 1, title: "Personal Details" },
     { id: 2, title: "Company Details" },
     { id: 3, title: "Family Details" },
     { id: 4, title: "Social Activity Details" },
-    { id: 5, title: "Dum" },
 ];
 
 const createInitialForm = (user) => ({
@@ -64,6 +66,39 @@ const createInitialForm = (user) => ({
     },
 });
 
+const mergeWithInitialForm = (user, existingDetails) => {
+    const initialForm = createInitialForm(user);
+
+    if (!existingDetails) {
+        return initialForm;
+    }
+
+    return {
+        ...initialForm,
+        ...existingDetails,
+        personalDetails: {
+            ...initialForm.personalDetails,
+            ...(existingDetails.personalDetails || {}),
+        },
+        companyDetails: {
+            ...initialForm.companyDetails,
+            ...(existingDetails.companyDetails || {}),
+        },
+        familyDetails: {
+            ...initialForm.familyDetails,
+            ...(existingDetails.familyDetails || {}),
+            members:
+                existingDetails?.familyDetails?.members?.length
+                    ? existingDetails.familyDetails.members
+                    : initialForm.familyDetails.members,
+        },
+        socialActivityDetails: {
+            ...initialForm.socialActivityDetails,
+            ...(existingDetails.socialActivityDetails || {}),
+        },
+    };
+};
+
 const fieldClassName =
     "w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-rose-300 focus:ring-2 focus:ring-rose-100";
 
@@ -83,18 +118,67 @@ const Field = ({
 function KaryakartaDetailsAdd() {
     const navigate = useNavigate();
     const location = useLocation();
-    const user = location.state?.user || null;
+    const { user: authUser } = useAuth();
+    const routeUser = location.state?.user || null;
+    const user = routeUser || authUser || null;
+    const source = location.state?.source || "";
+    const existingDetails = location.state?.existingDetails || null;
 
     const [currentStep, setCurrentStep] = useState(1);
-    const [formData, setFormData] = useState(() => createInitialForm(user));
+    const [formData, setFormData] = useState(() =>
+        mergeWithInitialForm(user, existingDetails)
+    );
+    const [detailsId, setDetailsId] = useState(existingDetails?.id || null);
+    const [loading, setLoading] = useState(Boolean(user?.id));
+    const [saving, setSaving] = useState(false);
 
     const pageTitle = useMemo(
         () =>
             user?.name
-                ? `Add Karyakarta Details for ${user.name}`
-                : "Add Karyakarta Details",
-        [user]
+                ? existingDetails
+                    ? `Edit Karyakarta Details for ${user.name}`
+                    : `Add Karyakarta Details for ${user.name}`
+                : existingDetails
+                    ? "Edit Karyakarta Details"
+                    : "Add Karyakarta Details",
+        [existingDetails, user]
     );
+
+    useEffect(() => {
+        if (!user?.id) {
+            setLoading(false);
+            return;
+        }
+
+        let ignore = false;
+
+        const fetchDetails = async () => {
+            try {
+                setLoading(true);
+                const response = await axios.get(`${API}/api/karyakarta-details/${user.id}`);
+                const data = response?.data?.data;
+
+                if (!ignore && data) {
+                    setDetailsId(data.id || null);
+                    setFormData(mergeWithInitialForm(user, data));
+                }
+            } catch (error) {
+                if (error?.response?.status !== 404) {
+                    console.error("Failed to fetch karyakarta details:", error);
+                }
+            } finally {
+                if (!ignore) {
+                    setLoading(false);
+                }
+            }
+        };
+
+        fetchDetails();
+
+        return () => {
+            ignore = true;
+        };
+    }, [user]);
 
     const updateSection = (section, field, value) => {
         setFormData((prev) => ({
@@ -114,11 +198,32 @@ function KaryakartaDetailsAdd() {
         setCurrentStep((prev) => Math.max(prev - 1, 1));
     };
 
-    const handleSubmit = (event) => {
+    const handleSubmit = async (event) => {
         event.preventDefault();
-        console.log("Karyakarta details form data:", formData);
-        alert("Karyakarta details saved in form state. Backend integration can be added next.");
-        navigate("/user");
+        if (!user?.id) return;
+
+        try {
+            setSaving(true);
+            const response = await axios.post(`${API}/api/karyakarta-details/upsert`, {
+                user_id: user.id,
+                personalDetails: formData.personalDetails,
+                companyDetails: formData.companyDetails,
+                familyDetails: formData.familyDetails,
+                socialActivityDetails: formData.socialActivityDetails,
+            });
+
+            const savedData = response?.data?.data;
+            setDetailsId(savedData?.id || null);
+            setFormData(mergeWithInitialForm(user, savedData || formData));
+        } catch (error) {
+            console.error("Failed to save karyakarta details:", error);
+            alert(error?.response?.data?.message || "Failed to save karyakarta details.");
+            return;
+        } finally {
+            setSaving(false);
+        }
+
+        navigate(source === "profile" || user?.role === "karyakarta" ? "/profile" : "/user");
     };
 
     const addFamilyMember = () => {
@@ -187,6 +292,11 @@ function KaryakartaDetailsAdd() {
                         <p className="mt-2 text-sm text-slate-500">
                             Fill the personal, company, and family details for this karyakarta.
                         </p>
+                        {detailsId ? (
+                            <p className="mt-2 text-xs font-medium uppercase tracking-wide text-emerald-600">
+                                Editing saved profile
+                            </p>
+                        ) : null}
                     </div>
 
                     <div className="border-b border-slate-100 px-6 py-5 md:px-8">
@@ -231,6 +341,11 @@ function KaryakartaDetailsAdd() {
                         </div>
                     </div>
 
+                    {loading ? (
+                        <div className="px-6 py-10 text-sm text-slate-500 md:px-8">
+                            Loading karyakarta details...
+                        </div>
+                    ) : (
                     <form onSubmit={handleSubmit} className="px-6 py-6 md:px-8">
                         {currentStep === 1 && (
                             <div className="space-y-6">
@@ -826,14 +941,16 @@ function KaryakartaDetailsAdd() {
                                 ) : (
                                     <button
                                         type="submit"
+                                        disabled={saving}
                                         className="rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-emerald-700"
                                     >
-                                        Save Details
+                                        {saving ? "Saving..." : "Save Details"}
                                     </button>
                                 )}
                             </div>
                         </div>
                     </form>
+                    )}
                 </div>
             </div>
         </div>
