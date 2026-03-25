@@ -4030,7 +4030,11 @@ const INITIAL_FORM_DATA = {
   relations: [],
   mediclaim: null,
   Family_mediclaim_amount: null,
+  mediclaimPremiumAmount: null,
   ngoAssistance: null,
+  sanghName: "",
+  ngoAmount: "",
+  ngoRemark: "",
 };
 
 const parseMaybeJson = (value) => {
@@ -4668,10 +4672,26 @@ const FamilyDetailsForm = () => {
                 matchedFamily?.Family_mediclaim_amount ??
                 matchedFamily?.family_mediclaim_amount ??
                 null,
+              mediclaimPremiumAmount:
+                matchedFamily?.mediclaimPremiumAmount ??
+                matchedFamily?.mediclaim_premium_amount ??
+                null,
               ngoAssistance:
                 matchedFamily?.ngoAssistance ??
                 matchedFamily?.ngo_assistance ??
                 null,
+              sanghName:
+                matchedFamily?.sanghName ??
+                matchedFamily?.ngo_sangh_name ??
+                "",
+              ngoAmount:
+                matchedFamily?.ngoAmount ??
+                matchedFamily?.ngo_amount ??
+                "",
+              ngoRemark:
+                matchedFamily?.ngoRemark ??
+                matchedFamily?.ngo_remark ??
+                "",
               relations: fallbackRelations,
             };
 
@@ -5396,7 +5416,7 @@ const FamilyDetailsForm = () => {
               {formData.houseDetails === "own" ? (
                 <>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Maintenance Cost
+                    Maintenance Cost (Monthly)
                   </label>
                   <input
                     type="number"
@@ -5408,7 +5428,7 @@ const FamilyDetailsForm = () => {
               ) : formData.houseDetails === "rented" ? (
                 <>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Rent Cost
+                    Rent Cost (Monthly)
                   </label>
                   <input
                     type="number"
@@ -7615,7 +7635,7 @@ const FamilyDetailsForm = () => {
                                   </h3>
 
                                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                    <div>
+                                    {/* <div>
                                       <label className="text-[11px] font-bold uppercase text-gray-500">
                                         Emergency Assistance Required For?
                                       </label>
@@ -7634,7 +7654,7 @@ const FamilyDetailsForm = () => {
                                           )
                                         }
                                       />
-                                    </div>
+                                    </div> */}
                                     <div>
                                       <label className="text-[11px] font-bold uppercase text-gray-500">
                                         Estimated Amount Required*
@@ -7698,7 +7718,7 @@ const FamilyDetailsForm = () => {
                                     ></textarea>
                                   </div>
 
-                                  <div className="mt-6">
+                                  {/* <div className="mt-6">
                                     <label className="text-[11px] font-bold uppercase text-gray-500">
                                       Upload Medical Documents
                                     </label>
@@ -7746,7 +7766,7 @@ const FamilyDetailsForm = () => {
                                         +
                                       </button>
                                     </div>
-                                  </div>
+                                  </div> */}
                                 </div>
                               )}
 
@@ -8241,23 +8261,42 @@ const FamilyDetailsForm = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
 
             {formData.mediclaim && (
-              <div className="w-[200px]">
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Family Mediclaim policy Amount
-                  <span className="text-red-500">*</span>
-                </label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Family Mediclaim policy Amount
+                    <span className="text-red-500">*</span>
+                  </label>
 
-                <input
-                  type="text"
-                  value={formData.Family_mediclaim_amount || ""}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      Family_mediclaim_amount: e.target.value,
-                    })
-                  }
-                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
-                />
+                  <input
+                    type="text"
+                    value={formData.Family_mediclaim_amount || ""}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        Family_mediclaim_amount: e.target.value,
+                      })
+                    }
+                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Mediclaim premium Amount
+                    <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.mediclaimPremiumAmount || ""}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        mediclaimPremiumAmount: e.target.value,
+                      })
+                    }
+                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
+                  />
+                </div>
               </div>
             )}
             {formData.ngoAssistance && (

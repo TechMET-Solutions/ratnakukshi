@@ -1681,7 +1681,11 @@ const DiksharthiListing = () => {
                       <DetailItem label="Rent Cost" value={familyDetailsModalData.details.rent_cost} />
                       <DetailItem label="Mediclaim" value={familyDetailsModalData.details.mediclaim === "1" ? "Yes" : "No"} />
                       <DetailItem label="Family Mediclaim Amount" value={familyDetailsModalData.details.family_mediclaim_amount} />
+                      <DetailItem label="Mediclaim Premium Amount" value={familyDetailsModalData.details.mediclaim_premium_amount} />
                       <DetailItem label="NGO Assistance" value={familyDetailsModalData.details.ngo_assistance} />
+                      <DetailItem label="NGO Sangh Name" value={familyDetailsModalData.details.ngo_sangh_name} />
+                      <DetailItem label="NGO Amount" value={familyDetailsModalData.details.ngo_amount} />
+                      <DetailItem label="NGO Remark" value={familyDetailsModalData.details.ngo_remark} />
                     </div>
                   </div>
 
