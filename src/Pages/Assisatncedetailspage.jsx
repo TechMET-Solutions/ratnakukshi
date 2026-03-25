@@ -3,6 +3,14 @@ import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { API } from "../api/BaseURL";
 
+const calculateMedicalTotal = (medical = {}) => {
+  const costPerSession = Number(medical?.costPerSession) || 0;
+  const sessionsCount = Number(medical?.sessionsCount) || 0;
+
+  if (!costPerSession || !sessionsCount) return "";
+  return String(costPerSession * sessionsCount);
+};
+
 const AssistanceDetails = () => {
   const location = useLocation();
 
@@ -188,16 +196,22 @@ const AssistanceDetails = () => {
   /* -------------------- Handlers -------------------- */
 
   const handleMedicalChange = (relation, field, value) => {
-    setAssistanceData((prev) => ({
-      ...prev,
-      [relation]: {
-        ...prev[relation],
-        Medical: {
-          ...prev[relation]?.Medical,
-          [field]: value,
+    setAssistanceData((prev) => {
+      const nextMedical = {
+        ...prev[relation]?.Medical,
+        [field]: value,
+      };
+
+      nextMedical.totalEstimatedCost = calculateMedicalTotal(nextMedical);
+
+      return {
+        ...prev,
+        [relation]: {
+          ...prev[relation],
+          Medical: nextMedical,
         },
-      },
-    }));
+      };
+    });
   };
   const handleEducationChange = (relation, field, value) => {
     setAssistanceData((prev) => ({
@@ -514,29 +528,6 @@ const AssistanceDetails = () => {
 
             <div className="flex flex-col gap-1">
               <label className="text-[11px] font-bold uppercase text-gray-500">
-                Any Insurance / Ayushman Card*
-              </label>
-              <div className="flex gap-4 mt-2">
-                {["Yes", "No"].map((opt) => (
-                  <label key={opt} className="flex items-center gap-2 text-sm">
-                    <input
-                      type="radio"
-                      name={`insurance-${rel}`}
-                      checked={
-                        assistanceData[rel]?.Medical?.hasInsurance === opt
-                      }
-                      onChange={() =>
-                        handleMedicalChange(rel, "hasInsurance", opt)
-                      }
-                    />{" "}
-                    {opt}
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-1">
-              <label className="text-[11px] font-bold uppercase text-gray-500">
                 Assistance Required For*
               </label>
               <input
@@ -604,8 +595,13 @@ const AssistanceDetails = () => {
                       }
                     >
                       <option value="">Select</option>
+                      <option value="Daily">Daily</option>
+                      <option value="Alternate Days">Alternate Days</option>
                       <option value="Weekly">Weekly</option>
+                      <option value="Bi-Weekly">Bi-Weekly</option>
                       <option value="Monthly">Monthly</option>
+                      <option value="Quarterly">Quarterly</option>
+                      <option value="Yearly">Yearly</option>
                     </select>
                   </div>
 
@@ -642,6 +638,20 @@ const AssistanceDetails = () => {
                         )
                       }
                       className="border p-2 rounded outline-none focus:border-blue-500"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[11px] font-bold uppercase text-gray-500">
+                      Calculated Total
+                    </label>
+                    <input
+                      type="number"
+                      readOnly
+                      value={
+                        assistanceData[rel]?.Medical?.totalEstimatedCost || ""
+                      }
+                      className="border p-2 rounded bg-gray-50 text-gray-600 outline-none"
                     />
                   </div>
                 </div>

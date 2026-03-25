@@ -1727,6 +1727,16 @@ const DiksharthiListing = () => {
                                   />
 
                                   <DetailItem
+                                    label="Mediclaim Amount"
+                                    value={info?.mediclaim_amount}
+                                  />
+
+                                  <DetailItem
+                                    label="Yearly Premium"
+                                    value={info?.mediclaim_yearly_premium}
+                                  />
+
+                                  <DetailItem
                                     label="Need Assistance"
                                     value={info?.needAssistance ? "Yes" : "No"}
                                   />

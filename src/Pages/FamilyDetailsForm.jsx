@@ -4051,6 +4051,14 @@ const asObject = (value) => (value && typeof value === "object" ? value : {});
 const isFileLike = (value) =>
   typeof File !== "undefined" && value instanceof File;
 
+const calculateMedicalTotal = (medical = {}) => {
+  const costPerSession = Number(medical?.costPerSession) || 0;
+  const sessionsCount = Number(medical?.sessionsCount) || 0;
+
+  if (!costPerSession || !sessionsCount) return "";
+  return String(costPerSession * sessionsCount);
+};
+
 const normalizeAssistanceDataForPayload = (value) => {
   const parsedValue = parseMaybeJson(value);
 
@@ -5026,17 +5034,23 @@ const FamilyDetailsForm = () => {
   };
 
   const handleMedicalChange = (relation, field, value) => {
-    setAssistanceData((prev) => ({
-      ...prev,
-      [relation]: {
-        ...prev[relation],
-        Medical: {
-          ...prev[relation]?.Medical,
-          [field]: value,
-          status: "Pending",
+    setAssistanceData((prev) => {
+      const nextMedical = {
+        ...prev[relation]?.Medical,
+        [field]: value,
+        status: "Pending",
+      };
+
+      nextMedical.totalEstimatedCost = calculateMedicalTotal(nextMedical);
+
+      return {
+        ...prev,
+        [relation]: {
+          ...prev[relation],
+          Medical: nextMedical,
         },
-      },
-    }));
+      };
+    });
   };
   const handleEducationChange = (relation, field, value) => {
     setAssistanceData((prev) => ({
@@ -5617,9 +5631,9 @@ const FamilyDetailsForm = () => {
                           <div className="mb-4 p-3 w-[180px] bg-blue-50 rounded-md">
                             <label className="flex items-center gap-2 cursor-pointer">
                               <input
-                                type="checkbox"
+                                type="radio"
+                                name="headOfFamily"
                                 checked={headOfFamily === rel}
-                                disabled={headOfFamily && headOfFamily !== rel}
                                 onChange={() => handleHeadOfFamilyChange(rel)}
                                 className="w-5 h-5 border-slate-400 rounded"
                               />
@@ -5942,25 +5956,47 @@ const FamilyDetailsForm = () => {
                             </div>
                           )}
                           {relationDetails[rel]?.mediclaim === true && (
-                            <div className="w-[200px] mt-4">
-                              <label className="block text-sm font-medium text-slate-700 mb-1">
-                                mediclaim Amount
-                                <span className="text-red-500">*</span>
-                              </label>
-                              <input
-                                type="text"
-                                value={
-                                  relationDetails[rel]?.mediclaim_amount || ""
-                                }
-                                onChange={(e) =>
-                                  handleRelationDetailChange(
-                                    rel,
-                                    "mediclaim_amount",
-                                    e.target.value,
-                                  )
-                                }
-                                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
-                              />
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                              <div className="w-[200px]">
+                                <label className="block text-sm font-medium text-slate-700 mb-1">
+                                  mediclaim Amount
+                                  <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                  type="text"
+                                  value={
+                                    relationDetails[rel]?.mediclaim_amount || ""
+                                  }
+                                  onChange={(e) =>
+                                    handleRelationDetailChange(
+                                      rel,
+                                      "mediclaim_amount",
+                                      e.target.value,
+                                    )
+                                  }
+                                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
+                                />
+                              </div>
+                              <div className="w-[200px]">
+                                <label className="block text-sm font-medium text-slate-700 mb-1">
+                                  Yearly Premium
+                                  <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                  type="text"
+                                  value={
+                                    relationDetails[rel]?.mediclaim_yearly_premium || ""
+                                  }
+                                  onChange={(e) =>
+                                    handleRelationDetailChange(
+                                      rel,
+                                      "mediclaim_yearly_premium",
+                                      e.target.value,
+                                    )
+                                  }
+                                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
+                                />
+                              </div>
                             </div>
                           )}
                         </div>
@@ -6201,38 +6237,6 @@ const FamilyDetailsForm = () => {
 
                                     <div className="flex flex-col gap-1">
                                       <label className="text-[11px] font-bold uppercase text-gray-500">
-                                        Any Insurance / Ayushman Card*
-                                      </label>
-                                      <div className="flex gap-4 mt-2">
-                                        {["Yes", "No"].map((opt) => (
-                                          <label
-                                            key={opt}
-                                            className="flex items-center gap-2 text-sm"
-                                          >
-                                            <input
-                                              type="radio"
-                                              name={`insurance-${rel}`}
-                                              checked={
-                                                assistanceData[rel]?.Medical
-                                                  ?.hasInsurance === opt
-                                              }
-                                              onChange={() =>
-                                                handleMedicalChange(
-                                                  rel,
-                                                  "hasInsurance",
-                                                  opt,
-                                                )
-                                              }
-                                            />{" "}
-                                            {opt}
-                                          </label>
-                                        ))}
-                                      </div>
-                                    </div>
-
-
-                                    <div className="flex flex-col gap-1">
-                                      <label className="text-[11px] font-bold uppercase text-gray-500">
                                         Assistance Required For*
                                       </label>
                                       <input
@@ -6348,6 +6352,20 @@ const FamilyDetailsForm = () => {
                                                 handleMedicalChange(rel, "sessionsCount", e.target.value)
                                               }
                                               className="border p-2 rounded outline-none focus:border-blue-500"
+                                            />
+                                          </div>
+
+                                          <div className="flex flex-col gap-1">
+                                            <label className="text-[11px] font-bold uppercase text-gray-500">
+                                              Calculated Total
+                                            </label>
+                                            <input
+                                              type="number"
+                                              readOnly
+                                              value={
+                                                assistanceData[rel]?.Medical?.totalEstimatedCost || ""
+                                              }
+                                              className="border p-2 rounded bg-gray-50 text-gray-600 outline-none"
                                             />
                                           </div>
 
@@ -7662,7 +7680,7 @@ const FamilyDetailsForm = () => {
                                           <div className="flex flex-col gap-1">
                                             <label className="text-[11px] font-bold uppercase text-gray-500">
                                               Own Contribution Amount
-                                            </label>
+                 l.                           </label>
                                             <input
                                               type="number"
                                               value={
@@ -8600,8 +8618,7 @@ const FamilyDetailsForm = () => {
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
                     Family Mediclaim policy Amount
-                    <span className="text-red-500">*</span>
-                  </label>
+                    </label>
 
                   <input
                     type="text"
@@ -8618,7 +8635,6 @@ const FamilyDetailsForm = () => {
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
                     Mediclaim premium Amount
-                    <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
