@@ -124,20 +124,55 @@ function AddDonor() {
         payload.donor_id = resolvedDonorId;
       }
 
+      const requestData = new FormData();
+      requestData.append(
+        "personalDetails",
+        JSON.stringify({
+          ...payload.personalDetails,
+          photo: undefined,
+          aadhar: undefined,
+          pan: undefined,
+        }),
+      );
+      requestData.append("contactPerson", JSON.stringify(payload.contactPerson));
+      requestData.append(
+        "residentialAddress",
+        JSON.stringify(payload.residentialAddress),
+      );
+      requestData.append(
+        "communicationAddress",
+        JSON.stringify(payload.communicationAddress),
+      );
+      requestData.append("companyDetails", JSON.stringify(payload.companyDetails));
+      requestData.append("familyDetails", JSON.stringify(payload.familyDetails));
+      requestData.append("nomineeDetails", JSON.stringify(payload.nomineeDetails));
+      requestData.append("paymentDetails", JSON.stringify(payload.paymentDetails));
+
+      if (formData.personalDetails.photo instanceof File) {
+        requestData.append("photo", formData.personalDetails.photo);
+      }
+      if (formData.personalDetails.aadhar instanceof File) {
+        requestData.append("aadhar", formData.personalDetails.aadhar);
+      }
+      if (formData.personalDetails.pan instanceof File) {
+        requestData.append("pan", formData.personalDetails.pan);
+      }
+
       const response = await fetch(
         isEditMode
           ? `${API}/api/donor/update/${resolvedDonorId}`
           : `${API}/api/donor/create`,
         {
           method: isEditMode ? "PUT" : "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
+          body: requestData,
         },
       );
 
       const data = await response.json();
+
+      if (!response.ok || data?.success === false) {
+        throw new Error(data?.message || "Failed to save donor");
+      }
 
       alert(
         isEditMode ? "Donor Updated Successfully" : "Donor Created Successfully",
@@ -148,6 +183,7 @@ function AddDonor() {
       console.log(data);
     } catch (error) {
       console.log(error);
+      alert(error.message || "Failed to save donor");
     }
   };
 

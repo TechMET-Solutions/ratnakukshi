@@ -54,7 +54,7 @@ function DonorList() {
 
   const filteredDonors = donors.filter((donor) => {
     const name = donor.personalDetails?.name?.toLowerCase() || "";
-    const mobile = donor.personalDetails?.mobile || "";
+    const mobile = donor.personalDetails?.mobileNumber || donor.personalDetails?.mobile || "";
 
     const matchesSearch =
       name.includes(searchTerm.toLowerCase()) ||
@@ -149,7 +149,20 @@ function DonorList() {
                   </td>
 
                   <td className="px-6 py-4 text-sm font-medium text-gray-800">
-                    {donor.personalDetails?.name}
+                    <div className="flex items-center gap-3">
+                      {donor.personalDetails?.photo ? (
+                        <img
+                          src={donor.personalDetails.photo}
+                          alt={donor.personalDetails?.name || "Donor"}
+                          className="h-10 w-10 rounded-full object-cover border border-gray-200"
+                        />
+                      ) : (
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-xs font-semibold text-gray-500">
+                          {(donor.personalDetails?.name || "D").charAt(0)}
+                        </div>
+                      )}
+                      <span>{donor.personalDetails?.name}</span>
+                    </div>
                   </td>
 
                   <td className="px-6 py-4 text-sm text-gray-600">
