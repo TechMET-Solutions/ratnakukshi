@@ -10,7 +10,7 @@ import {
   XCircle,
   EllipsisVertical
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { API } from "../api/BaseURL";
 import { useAuth } from "../context/AuthContext";
@@ -27,6 +27,68 @@ const asDisplayText = (value, fallback = "-") => {
     return String(value);
   }
   return fallback;
+};
+
+const normalizeWorkflowValue = (value) =>
+  String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .replace(/_/g, " ")
+    .replace(/-/g, " ");
+
+const STATUS_LABELS = {
+  pending: "Pending",
+  approve: "Approve",
+  rejected: "Rejected",
+  queries: "Queries",
+  send_to_committee_member: "Send to Committee Member",
+  send_to_expert_panel: "Send to Expert Panel",
+};
+
+const getStatusToneClass = (status) => {
+  const normalizedStatus = normalizeWorkflowValue(status);
+
+  if (normalizedStatus === "approve") return "text-green-600";
+  if (normalizedStatus === "rejected") return "text-red-600";
+  if (normalizedStatus === "queries") return "text-amber-600";
+  if (
+    normalizedStatus === "send to committee member" ||
+    normalizedStatus === "send to expert panel"
+  ) {
+    return "text-blue-600";
+  }
+
+  return "text-yellow-600";
+};
+
+const getAllowedActions = ({ role, status }) => {
+  const normalizedRole = normalizeWorkflowValue(role);
+  const normalizedStatus = normalizeWorkflowValue(status || STATUS_LABELS.pending);
+
+  if (normalizedRole === "case coordinator") {
+    if (normalizedStatus === "pending" || normalizedStatus === "queries") {
+      return ["approve", "queries", "send-to-committee-member", "rejected"];
+    }
+
+    if (normalizedStatus === "send to committee member") {
+      return ["send-to-expert-panel", "rejected"];
+    }
+  }
+
+  if (normalizedRole === "committee member") {
+    if (normalizedStatus === "send to committee member") {
+      return ["approve", "send-to-expert-panel", "rejected"];
+    }
+  }
+
+  if (normalizedRole === "expert panel") {
+    if (normalizedStatus === "send to expert panel") {
+      return ["approve", "rejected"];
+    }
+  }
+
+  return [];
 };
 
 const AssistancePage = () => {
@@ -46,6 +108,7 @@ const AssistancePage = () => {
   const [isActionLoading, setIsActionLoading] = useState(false);
   const [viewQueryRow, setViewQueryRow] = useState(null);
   const [openDropdownId, setOpenDropdownId] = useState(null);
+  const dropdownContainerRef = useRef(null);
 
   const role = String(user?.role || "").toLowerCase();
   const isKaryakarta = role === "karyakarta";
@@ -94,6 +157,22 @@ const AssistancePage = () => {
   useEffect(() => {
     fetchFamilyAccounting();
   }, []);
+
+  useEffect(() => {
+    if (!openDropdownId) return undefined;
+
+    const handleOutsideClick = (event) => {
+      if (!dropdownContainerRef.current?.contains(event.target)) {
+        setOpenDropdownId(null);
+      }
+    };
+
+    document.addEventListener("mousedown", handleOutsideClick);
+
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+    };
+  }, [openDropdownId]);
   const navigate = useNavigate();
   const handleSearch = async (value) => {
     setSearchText(value);
@@ -194,6 +273,7 @@ const AssistancePage = () => {
         payload.append("diksharthi_id", activeRow?.diksharthi_id || "");
         payload.append("relation", activeRow?.relation || "");
         payload.append("type", activeRow?.type || "");
+        payload.append("actorRole", role);
         payload.append("queriesReason", queriesReason.trim());
         // payload.append("remark", queriesReason.trim());
 
@@ -214,6 +294,7 @@ const AssistancePage = () => {
           diksharthi_id: activeRow?.diksharthi_id,
           relation: activeRow?.relation,
           type: activeRow?.type,
+          actorRole: role,
         };
 
         await axios.put(`${API}/api/assistance-status/${actionType}`, payload);
@@ -261,6 +342,18 @@ const AssistancePage = () => {
       row?.queriesReason || row?.query_reason || row?.remark || row?.remarks,
       "",
     );
+
+  const getRowActionKey = (row, index) =>
+    [
+      row?.id,
+      row?.diksharthi_id,
+      row?.relation,
+      row?.type,
+      row?.case_id,
+      index,
+    ]
+      .map((value) => String(value ?? ""))
+      .join("__");
 
   // const renderDefaultTable = () => (
   //   <div className="mt-8 overflow-hidden border border-blue-400 rounded-lg shadow-sm">
@@ -419,8 +512,9 @@ const AssistancePage = () => {
   // );
 
   const renderDefaultTable = () => (
-    <div className="mt-8 overflow-hidden border border-blue-400 rounded-lg shadow-sm">
-      <table className="w-full text-left border-collapse bg-white">
+    <div className="mt-8 overflow-visible rounded-lg border border-blue-400 shadow-sm">
+      <div className="overflow-x-auto overflow-y-visible">
+      <table className="w-full min-h-9xl text-left border-collapse bg-white">
         <thead>
           <tr className="bg-[#fdf2d7]">
             <th className="p-4 font-semibold text-slate-700 border-b">Diksharthi Name</th>
@@ -434,102 +528,116 @@ const AssistancePage = () => {
         </thead>
         <tbody className="divide-y divide-slate-100">
           {tableData.map((row, index) => {
-            const normalizedStatus = String(row.status || "").toLowerCase();
             const hasQuery = Boolean(getQueryText(row));
-            const isOpen = openDropdownId === row.id;
+            const rowActionKey = getRowActionKey(row, index);
+            const isOpen = openDropdownId === rowActionKey;
+            const allowedActions = getAllowedActions({ role, status: row.status });
+            const canTakeAction = allowedActions.length > 0;
 
             return (
-              <tr key={row.id || index} className="hover:bg-slate-50 transition-colors">
+              <tr key={rowActionKey} className="hover:bg-slate-50 transition-colors">
                 <td className="p-4 text-slate-600">{asDisplayText(row.diksharthi)}</td>
                 <td className="p-4 text-slate-600">{asDisplayText(row.member_name)}</td>
                 <td className="p-4 text-slate-600">{asDisplayText(row.head)}</td>
                 <td className="p-4 text-slate-600">{asDisplayText(row.type)}</td>
                 <td className="p-4 text-slate-600">{asDisplayText(row.case_id)}</td>
-                <td className={`p-4 font-semibold ${row.status === "Pending" ? "text-yellow-600" :
-                    row.status === "Approve" ? "text-green-600" :
-                      row.status === "Rejected" ? "text-red-600" : "text-blue-600"
-                  }`}>
+                <td className={`p-4 font-semibold ${getStatusToneClass(row.status)}`}>
                   {asDisplayText(row.status)}
                 </td>
 
-                <td className="p-4 text-center relative">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setOpenDropdownId(isOpen ? null : row.id);
-                    }}
-                    className="p-2 hover:bg-slate-100 rounded-full transition-colors inline-block"
+                <td className="relative p-4 text-center">
+                  <div
+                    ref={isOpen ? dropdownContainerRef : null}
+                    className="inline-block"
                   >
-                    <EllipsisVertical size={20} className="text-slate-600" />
-                  </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenDropdownId(isOpen ? null : rowActionKey);
+                      }}
+                      className="inline-block rounded-full p-2 transition-colors hover:bg-slate-100"
+                    >
+                      <EllipsisVertical size={20} className="text-slate-600" />
+                    </button>
 
-                  {/* Dropdown Menu */}
-                  {isOpen && (
-                    <div className="absolute right-4 mt-2 w-56 bg-white border border-slate-200 rounded-xl shadow-xl z-[50] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
-                      <div className="py-1">
-                        <button
-                          onClick={() => { navigate("/request-details", { state: row }); setOpenDropdownId(null); }}
-                          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
-                        >
-                          <Eye size={16} className="text-yellow-500" /> View Details
-                        </button>
-
-                        {hasQuery && (
+                    {isOpen && (
+                      <div className="absolute right-4 top-12 z-[120] w-56 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl animate-in fade-in slide-in-from-top-2 duration-200">
+                        <div className="py-1">
                           <button
-                            onClick={() => { setViewQueryRow(row); setOpenDropdownId(null); }}
+                            onClick={() => { navigate("/request-details", { state: row }); setOpenDropdownId(null); }}
                             className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
                           >
-                            <FileText size={16} className="text-blue-600" /> View Query
+                            <Eye size={16} className="text-yellow-500" /> View Details
                           </button>
-                        )}
 
-                        {isCaseCoordinator && normalizedStatus === "pending" && (
-                          <>
-                            <hr className="my-1 border-slate-100" />
+                          {hasQuery && (
                             <button
-                              onClick={() => { handleOpenActionModal(row, "approve"); setOpenDropdownId(null); }}
-                              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-green-600 hover:bg-green-50 transition-colors"
+                              onClick={() => { setViewQueryRow(row); setOpenDropdownId(null); }}
+                              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
                             >
-                              <CheckCircle size={16} /> Approve
+                              <FileText size={16} className="text-blue-600" /> View Query
                             </button>
-                            <button
-                              onClick={() => { handleOpenActionModal(row, "queries"); setOpenDropdownId(null); }}
-                              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-blue-600 hover:bg-blue-50 transition-colors"
-                            >
-                              <FileText size={16} /> Raise Query
-                            </button>
-                            <button
-                              onClick={() => { handleOpenActionModal(row, "send-to-committee-member"); setOpenDropdownId(null); }}
-                              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-indigo-600 hover:bg-indigo-50 transition-colors"
-                            >
-                              <FileText size={16} /> Send to Committee
-                            </button>
-                            <button
-                              onClick={() => { handleOpenActionModal(row, "send-to-expert-panel"); setOpenDropdownId(null); }}
-                              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-violet-600 hover:bg-violet-50 transition-colors"
-                            >
-                              <FileText size={16} /> Send to Expert
-                            </button>
-                            <button
-                              onClick={() => { handleOpenActionModal(row, "rejected"); setOpenDropdownId(null); }}
-                              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
-                            >
-                              <XCircle size={16} /> Reject Request
-                            </button>
-                          </>
-                        )}
+                          )}
+
+                          {canTakeAction && (
+                            <>
+                              <hr className="my-1 border-slate-100" />
+                              {allowedActions.includes("approve") && (
+                                <button
+                                  onClick={() => { handleOpenActionModal(row, "approve"); setOpenDropdownId(null); }}
+                                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-green-600 hover:bg-green-50 transition-colors"
+                                >
+                                  <CheckCircle size={16} /> Approve
+                                </button>
+                              )}
+                              {allowedActions.includes("queries") && (
+                                <button
+                                  onClick={() => { handleOpenActionModal(row, "queries"); setOpenDropdownId(null); }}
+                                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-blue-600 hover:bg-blue-50 transition-colors"
+                                >
+                                  <FileText size={16} /> Raise Query
+                                </button>
+                              )}
+                              {allowedActions.includes("send-to-committee-member") && (
+                                <button
+                                  onClick={() => { handleOpenActionModal(row, "send-to-committee-member"); setOpenDropdownId(null); }}
+                                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-indigo-600 hover:bg-indigo-50 transition-colors"
+                                >
+                                  <FileText size={16} /> Send to Committee
+                                </button>
+                              )}
+                              {allowedActions.includes("send-to-expert-panel") && (
+                                <button
+                                  onClick={() => { handleOpenActionModal(row, "send-to-expert-panel"); setOpenDropdownId(null); }}
+                                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-violet-600 hover:bg-violet-50 transition-colors"
+                                >
+                                  <FileText size={16} /> Send to Expert
+                                </button>
+                              )}
+                              {allowedActions.includes("rejected") && (
+                                <button
+                                  onClick={() => { handleOpenActionModal(row, "rejected"); setOpenDropdownId(null); }}
+                                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                                >
+                                  <XCircle size={16} /> Reject Request
+                                </button>
+                              )}
+                            </>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </td>
               </tr>
             );
           })}
         </tbody>
       </table>
+      </div>
     </div>
   );
-  
+
   return (
     <div className="flex h-screen bg-white">
       <main className="flex-1 p-12 overflow-y-auto">
