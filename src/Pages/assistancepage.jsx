@@ -8,6 +8,7 @@ import {
   User,
   X,
   XCircle,
+  EllipsisVertical
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -44,9 +45,14 @@ const AssistancePage = () => {
   const [actionError, setActionError] = useState("");
   const [isActionLoading, setIsActionLoading] = useState(false);
   const [viewQueryRow, setViewQueryRow] = useState(null);
+  const [openDropdownId, setOpenDropdownId] = useState(null);
+
   const role = String(user?.role || "").toLowerCase();
   const isKaryakarta = role === "karyakarta";
   const isCaseCoordinator = role === "case-coordinator";
+  const isExpertPanel = role === "expert-panel";
+  const isCommitteeMember = role === "committee-member";
+  const canAccessAssistance = isKaryakarta || isCaseCoordinator || isExpertPanel || isCommitteeMember;
   const queryEditorConfig = {
     readonly: false,
     minHeight: 220,
@@ -228,18 +234,26 @@ const AssistancePage = () => {
     approve: "Approve Request",
     rejected: "Reject Request",
     queries: "Raise Query",
+    "send-to-committee-member": "Send To Committee Member",
+    "send-to-expert-panel": "Send To Expert Panel",
   };
 
   const actionButtonLabelMap = {
     approve: "Approve",
     rejected: "Reject",
     queries: "Submit Query",
+    "send-to-committee-member": "Send",
+    "send-to-expert-panel": "Send",
   };
 
   const actionDescMap = {
     approve: "Are you sure you want to approve this request?",
     rejected: "Are you sure you want to reject this request?",
     queries: "Please provide queriesReason for the query.",
+    "send-to-committee-member":
+      "Are you sure you want to send this request to the committee member?",
+    "send-to-expert-panel":
+      "Are you sure you want to send this request to the expert panel?",
   };
 
   const getQueryText = (row) =>
@@ -248,140 +262,274 @@ const AssistancePage = () => {
       "",
     );
 
+  // const renderDefaultTable = () => (
+  //   <div className="mt-8 overflow-hidden border border-blue-400 rounded-lg shadow-sm">
+  //     <table className="w-full text-left border-collapse bg-white">
+  //       <thead>
+  //         <tr className="bg-[#fdf2d7]">
+  //           <th className="p-4 font-semibold text-slate-700 border-b">
+  //             Diksharthi Name
+  //           </th>
+  //           <th className="p-4 font-semibold text-slate-700 border-b">
+  //             Family Member
+  //           </th>
+  //           <th className="p-4 font-semibold text-slate-700 border-b">
+  //             Family Head Name
+  //           </th>
+
+  //           <th className="p-4 font-semibold text-slate-700 border-b">
+  //             Assistance
+  //           </th>
+  //           <th className="p-4 font-semibold text-slate-700 border-b">
+  //             Case ID
+  //           </th>
+  //           <th className="p-4 font-semibold text-slate-700 border-b">
+  //             Status
+  //           </th>
+  //           <th className="p-4 font-semibold text-slate-700 border-b">
+  //             Renewal
+  //           </th>
+  //           <th className="p-4 font-semibold text-slate-700 border-b text-center">
+  //             Action
+  //           </th>
+  //         </tr>
+  //       </thead>
+  //       <tbody className="divide-y divide-slate-100">
+  //         {tableData.map((row, index) => (
+  //           (() => {
+  //             const normalizedStatus = String(row.status || "").toLowerCase();
+  //             const hasQuery = Boolean(getQueryText(row));
+
+  //             return (
+  //               <tr key={index} className="hover:bg-slate-50 transition-colors">
+  //                 <td className="p-4 text-slate-600">
+  //                   {asDisplayText(row.diksharthi)}
+  //                 </td>
+  //                 <td className="p-4 text-slate-600">
+  //                   {asDisplayText(row.member_name)}
+  //                 </td>
+  //                 <td className="p-4 text-slate-600">
+  //                   {asDisplayText(row.head)}
+  //                 </td>
+
+  //                 <td className="p-4 text-slate-600">
+  //                   {asDisplayText(row.type)}
+  //                 </td>
+  //                 <td className="p-4 text-slate-600">
+  //                   {asDisplayText(row.case_id)}
+  //                 </td>
+  //                 <td
+  //                   className={`p-4 font-semibold ${row.status === "Pending"
+  //                       ? "text-yellow-600"
+  //                       : row.status === "Approve"
+  //                         ? "text-green-600"
+  //                         : row.status === "Rejected"
+  //                           ? "text-red-600"
+  //                           : "text-blue-600"
+  //                     }`}
+  //                 >
+  //                   {asDisplayText(row.status)}
+  //                 </td>
+  //                 <td className="p-4 text-slate-600">
+  //                   {asDisplayText(row.renewal)}
+  //                 </td>
+                 
+  //                 <td className="p-4">
+  //                   <div className="flex justify-center gap-2">
+  //                     {canAccessAssistance && (
+  //                       <>
+  //                         <button
+  //                           type="button"
+  //                           className="inline-flex items-center gap-1 rounded-lg bg-yellow-500 px-3 py-1.5 text-xs font-medium text-white"
+  //                           onClick={() => navigate("/request-details", { state: row })}
+  //                         >
+  //                           <Eye size={15} />
+  //                           View
+  //                         </button>
+
+  //                         {hasQuery && (
+  //                           <button
+  //                             type="button"
+  //                             className="inline-flex items-center gap-1 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-medium text-white"
+  //                             onClick={() => setViewQueryRow(row)}
+  //                           >
+  //                             <FileText size={15} />
+  //                             View Query
+  //                           </button>
+  //                         )}
+
+  //                         {isCaseCoordinator && normalizedStatus === "pending" && (
+  //                           <>
+  //                             <button
+  //                               className="inline-flex items-center gap-1 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white"
+  //                               onClick={() =>
+  //                                 handleOpenActionModal(row, "send-to-committee-member")
+  //                               }
+  //                             >
+  //                               <FileText size={15} />
+  //                               Send To Committee Member
+  //                             </button>
+
+  //                             <button
+  //                               className="inline-flex items-center gap-1 rounded-lg bg-violet-600 px-3 py-1.5 text-xs font-medium text-white"
+  //                               onClick={() =>
+  //                                 handleOpenActionModal(row, "send-to-expert-panel")
+  //                               }
+  //                             >
+  //                               <FileText size={15} />
+  //                               Send To Expert Panel
+  //                             </button>
+
+  //                             <button
+  //                               className="inline-flex items-center gap-1 rounded-lg bg-green-600 px-3 py-1.5 text-xs font-medium text-white"
+  //                               onClick={() => handleOpenActionModal(row, "approve")}
+  //                             >
+  //                               <CheckCircle size={15} />
+  //                               Approve
+  //                             </button>
+
+  //                             <button
+  //                               className="inline-flex items-center gap-1 rounded-lg bg-red-600 px-3 py-1.5 text-xs font-medium text-white"
+  //                               onClick={() => handleOpenActionModal(row, "rejected")}
+  //                             >
+  //                               <XCircle size={15} />
+  //                               Rejected
+  //                             </button>
+
+  //                             <button
+  //                               className="inline-flex items-center gap-1 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-medium text-white"
+  //                               onClick={() => handleOpenActionModal(row, "queries")}
+  //                             >
+  //                               <FileText size={15} />
+  //                               Query Set
+  //                             </button>
+  //                           </>
+  //                         )}
+  //                       </>
+  //                     )}
+  //                   </div>
+  //                 </td> 
+  //               </tr>
+  //             );
+  //           })()
+  //         ))}
+  //       </tbody>
+  //     </table>
+  //   </div>
+  // );
+
   const renderDefaultTable = () => (
     <div className="mt-8 overflow-hidden border border-blue-400 rounded-lg shadow-sm">
       <table className="w-full text-left border-collapse bg-white">
         <thead>
           <tr className="bg-[#fdf2d7]">
-            <th className="p-4 font-semibold text-slate-700 border-b">
-              Diksharthi Name
-            </th>
-            <th className="p-4 font-semibold text-slate-700 border-b">
-              Family Member
-            </th>
-            <th className="p-4 font-semibold text-slate-700 border-b">
-              Family Head Name
-            </th>
-
-            <th className="p-4 font-semibold text-slate-700 border-b">
-              Assistance
-            </th>
-            <th className="p-4 font-semibold text-slate-700 border-b">
-              Case ID
-            </th>
-            <th className="p-4 font-semibold text-slate-700 border-b">
-              Status
-            </th>
-            <th className="p-4 font-semibold text-slate-700 border-b">
-              Renewal
-            </th>
-            <th className="p-4 font-semibold text-slate-700 border-b text-center">
-              Action
-            </th>
+            <th className="p-4 font-semibold text-slate-700 border-b">Diksharthi Name</th>
+            <th className="p-4 font-semibold text-slate-700 border-b">Family Member</th>
+            <th className="p-4 font-semibold text-slate-700 border-b">Family Head Name</th>
+            <th className="p-4 font-semibold text-slate-700 border-b">Assistance</th>
+            <th className="p-4 font-semibold text-slate-700 border-b">Case ID</th>
+            <th className="p-4 font-semibold text-slate-700 border-b">Status</th>
+            <th className="p-4 font-semibold text-slate-700 border-b text-center">Action</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-100">
-          {tableData.map((row, index) => (
-            (() => {
-              const normalizedStatus = String(row.status || "").toLowerCase();
-              const hasQuery = Boolean(getQueryText(row));
+          {tableData.map((row, index) => {
+            const normalizedStatus = String(row.status || "").toLowerCase();
+            const hasQuery = Boolean(getQueryText(row));
+            const isOpen = openDropdownId === row.id;
 
-              return (
-                <tr key={index} className="hover:bg-slate-50 transition-colors">
-                  <td className="p-4 text-slate-600">
-                    {asDisplayText(row.diksharthi)}
-                  </td>
-                  <td className="p-4 text-slate-600">
-                    {asDisplayText(row.member_name)}
-                  </td>
-                  <td className="p-4 text-slate-600">
-                    {asDisplayText(row.head)}
-                  </td>
+            return (
+              <tr key={row.id || index} className="hover:bg-slate-50 transition-colors">
+                <td className="p-4 text-slate-600">{asDisplayText(row.diksharthi)}</td>
+                <td className="p-4 text-slate-600">{asDisplayText(row.member_name)}</td>
+                <td className="p-4 text-slate-600">{asDisplayText(row.head)}</td>
+                <td className="p-4 text-slate-600">{asDisplayText(row.type)}</td>
+                <td className="p-4 text-slate-600">{asDisplayText(row.case_id)}</td>
+                <td className={`p-4 font-semibold ${row.status === "Pending" ? "text-yellow-600" :
+                    row.status === "Approve" ? "text-green-600" :
+                      row.status === "Rejected" ? "text-red-600" : "text-blue-600"
+                  }`}>
+                  {asDisplayText(row.status)}
+                </td>
 
-                  <td className="p-4 text-slate-600">
-                    {asDisplayText(row.type)}
-                  </td>
-                  <td className="p-4 text-slate-600">
-                    {asDisplayText(row.case_id)}
-                  </td>
-                  <td
-                    className={`p-4 font-semibold ${row.status === "Pending"
-                        ? "text-yellow-600"
-                        : row.status === "Approve"
-                          ? "text-green-600"
-                          : row.status === "Rejected"
-                            ? "text-red-600"
-                            : "text-blue-600"
-                      }`}
+                <td className="p-4 text-center relative">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setOpenDropdownId(isOpen ? null : row.id);
+                    }}
+                    className="p-2 hover:bg-slate-100 rounded-full transition-colors inline-block"
                   >
-                    {asDisplayText(row.status)}
-                  </td>
-                  <td className="p-4 text-slate-600">
-                    {asDisplayText(row.renewal)}
-                  </td>
-                  <td className="p-4">
-                    <div className="flex justify-center gap-2">
-                      {(isKaryakarta || isCaseCoordinator) && (
-                        <>
+                    <EllipsisVertical size={20} className="text-slate-600" />
+                  </button>
+
+                  {/* Dropdown Menu */}
+                  {isOpen && (
+                    <div className="absolute right-4 mt-2 w-56 bg-white border border-slate-200 rounded-xl shadow-xl z-[50] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                      <div className="py-1">
+                        <button
+                          onClick={() => { navigate("/request-details", { state: row }); setOpenDropdownId(null); }}
+                          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+                        >
+                          <Eye size={16} className="text-yellow-500" /> View Details
+                        </button>
+
+                        {hasQuery && (
                           <button
-                            type="button"
-                            className="inline-flex items-center gap-1 rounded-lg bg-yellow-500 px-3 py-1.5 text-xs font-medium text-white"
-                            onClick={() => navigate("/request-details", { state: row })}
+                            onClick={() => { setViewQueryRow(row); setOpenDropdownId(null); }}
+                            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
                           >
-                            <Eye size={15} />
-                            View
+                            <FileText size={16} className="text-blue-600" /> View Query
                           </button>
+                        )}
 
-                          {(isKaryakarta || isCaseCoordinator) && hasQuery && (
+                        {isCaseCoordinator && normalizedStatus === "pending" && (
+                          <>
+                            <hr className="my-1 border-slate-100" />
                             <button
-                              type="button"
-                              className="inline-flex items-center gap-1 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-medium text-white"
-                              onClick={() => setViewQueryRow(row)}
+                              onClick={() => { handleOpenActionModal(row, "approve"); setOpenDropdownId(null); }}
+                              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-green-600 hover:bg-green-50 transition-colors"
                             >
-                              <FileText size={15} />
-                              View Query
+                              <CheckCircle size={16} /> Approve
                             </button>
-                          )}
-
-                          {isCaseCoordinator && normalizedStatus === "pending" && (
-                            <>
-                              <button
-                                className="inline-flex items-center gap-1 rounded-lg bg-green-600 px-3 py-1.5 text-xs font-medium text-white"
-                                onClick={() => handleOpenActionModal(row, "approve")}
-                              >
-                                <CheckCircle size={15} />
-                                Approve
-                              </button>
-
-                              <button
-                                className="inline-flex items-center gap-1 rounded-lg bg-red-600 px-3 py-1.5 text-xs font-medium text-white"
-                                onClick={() => handleOpenActionModal(row, "rejected")}
-                              >
-                                <XCircle size={15} />
-                                Rejected
-                              </button>
-
-                              <button
-                                className="inline-flex items-center gap-1 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-medium text-white"
-                                onClick={() => handleOpenActionModal(row, "queries")}
-                              >
-                                <FileText size={15} />
-                                Query Set
-                              </button>
-                            </>
-                          )}
-                        </>
-                      )}
+                            <button
+                              onClick={() => { handleOpenActionModal(row, "queries"); setOpenDropdownId(null); }}
+                              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-blue-600 hover:bg-blue-50 transition-colors"
+                            >
+                              <FileText size={16} /> Raise Query
+                            </button>
+                            <button
+                              onClick={() => { handleOpenActionModal(row, "send-to-committee-member"); setOpenDropdownId(null); }}
+                              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-indigo-600 hover:bg-indigo-50 transition-colors"
+                            >
+                              <FileText size={16} /> Send to Committee
+                            </button>
+                            <button
+                              onClick={() => { handleOpenActionModal(row, "send-to-expert-panel"); setOpenDropdownId(null); }}
+                              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-violet-600 hover:bg-violet-50 transition-colors"
+                            >
+                              <FileText size={16} /> Send to Expert
+                            </button>
+                            <button
+                              onClick={() => { handleOpenActionModal(row, "rejected"); setOpenDropdownId(null); }}
+                              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                            >
+                              <XCircle size={16} /> Reject Request
+                            </button>
+                          </>
+                        )}
+                      </div>
                     </div>
-                  </td>
-                </tr>
-              );
-            })()
-          ))}
+                  )}
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>
   );
+  
   return (
     <div className="flex h-screen bg-white">
       <main className="flex-1 p-12 overflow-y-auto">

@@ -65,6 +65,8 @@ const Login = () => {
                 <option value="karyakarta">Karyakarta</option>
                 <option value="operations-manager">Operations Manager</option>
                 <option value="case-coordinator">Case Coordinator</option>
+                <option value="expert-panel">Expert Panel</option>
+                <option value="committee-member">Committee Member</option>
               </select>
             </div>
 

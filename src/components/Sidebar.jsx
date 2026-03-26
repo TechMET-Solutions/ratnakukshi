@@ -23,6 +23,8 @@ const Sidebar = () => {
   const isOperationsManager = role === "operations-manager";
   const isKaryakarta = role === "karyakarta";
   const isCaseCoordinator = role === "case-coordinator";
+  const isExpertPanel = role === "expert-panel";
+  const isCommitteeMember = role === "committee-member";
 
   const handleLogout = (e) => {
     e.preventDefault();
@@ -71,7 +73,11 @@ const Sidebar = () => {
                   ? "Karyakarta"
                   : isCaseCoordinator
                     ? "Case Coordinator"
-                  : "Staff"}
+                    : isExpertPanel
+                      ? "Expert Panel"
+                      : isCommitteeMember
+                        ? "Committee Member"
+                        : "Staff"}
           </div>
         )}
       </div>
@@ -85,7 +91,7 @@ const Sidebar = () => {
           <NavItem isCollapsed={isCollapsed} to="/profile" icon={<UserCircle size={22} />} label="Profile" />
         )}
 
-        {(isAdmin || isKaryakarta || isCaseCoordinator ) && (
+        {(isAdmin || isKaryakarta || isCaseCoordinator || isExpertPanel || isCommitteeMember) && (
           <>
             <NavItem isCollapsed={isCollapsed} to="/assistance" icon={<Handshake size={22} />} label="Assistance" />
            
