@@ -1731,10 +1731,10 @@ const DiksharthiListing = () => {
                                     value={info?.mediclaim_amount}
                                   />
 
-                                  <DetailItem
+                                  {/* <DetailItem
                                     label="Yearly Premium"
                                     value={info?.mediclaim_yearly_premium}
-                                  />
+                                  /> */}
 
                                   <DetailItem
                                     label="Need Assistance"

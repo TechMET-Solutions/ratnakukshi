@@ -5977,7 +5977,7 @@ const FamilyDetailsForm = () => {
                                   className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                                 />
                               </div>
-                              <div className="w-[200px]">
+                              {/* <div className="w-[200px]">
                                 <label className="block text-sm font-medium text-slate-700 mb-1">
                                   Yearly Premium
                                   <span className="text-red-500">*</span>
@@ -5996,7 +5996,7 @@ const FamilyDetailsForm = () => {
                                   }
                                   className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                                 />
-                              </div>
+                              </div> */}
                             </div>
                           )}
                         </div>

@@ -316,7 +316,11 @@ const DiksharthiDetailsAdd = () => {
 
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Photo of P. Pujya. Sadhu/ Sadhvi Ji</label>
-            <input type="file" onChange={(e) => setPhoto(e.target.files[0])} className="w-full p-2 border border-slate-300 rounded-md" />
+            <input
+              type="file"
+              accept=".png, .jpg, .jpeg"
+              onChange={(e) => setPhoto(e.target.files[0])}
+              className="w-full p-2 border border-slate-300 rounded-md" />
           </div>
         </div>
 
