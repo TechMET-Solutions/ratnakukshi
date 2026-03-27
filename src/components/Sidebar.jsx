@@ -34,7 +34,7 @@ const Sidebar = () => {
 
   return (
     <div
-      className={`relative bg-[#1e88e5] text-white flex flex-col min-h-screen sticky top-0 transition-all duration-300 ease-in-out ${isCollapsed ? 'w-20' : 'w-64'
+      className={`relative bg-[#1e88e5] h-screen text-white flex flex-col min-h-screen sticky top-0 transition-all duration-300 ease-in-out ${isCollapsed ? 'w-20' : 'w-64'
         }`}
     >
       {/* Toggle Button */}
@@ -85,8 +85,15 @@ const Sidebar = () => {
       {/* Navigation */}
       <nav className="flex-1 mt-6 overflow-y-auto overflow-x-hidden custom-scrollbar">
         <NavItem isCollapsed={isCollapsed} to="/" icon={<LayoutDashboard size={22} />} label="Dashboard" />
-        <NavItem isCollapsed={isCollapsed} to="/diksharthi-details" icon={<FileText size={22} />} label="Diksharthi Details" />
-
+        <NavItem
+          isCollapsed={isCollapsed}
+          to="/diksharthi-details"
+          icon={<FileText size={22} />}
+          label={isOperationsManager
+            ? "Ratnakukshi Family Details"
+            : "Diksharthi Details"}
+        />
+        
         {isKaryakarta && (
           <NavItem isCollapsed={isCollapsed} to="/profile" icon={<UserCircle size={22} />} label="Profile" />
         )}

@@ -23,6 +23,8 @@ function DonorPaymentHistory() {
     paymentMode: "",
     utrNo: "",
     status: "Completed",
+    payFrom: "",
+    accountName: "",
   });
 
   const openEditModal = (payment) => {
@@ -338,6 +340,40 @@ function DonorPaymentHistory() {
                   />
                 </div>
               </div>
+
+              <div className="grid grid-cols-1 gap-1.5">
+                <label className="text-sm font-medium text-slate-700">
+                  Pay From
+                </label>
+
+                <select
+                  name="payFrom"
+                  value={formData.payFrom}
+                  onChange={handleChange}
+                  className="w-full border border-slate-300 p-2.5 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 outline-none"
+                >
+                  <option value="">Select</option>
+                  <option value="self">Self</option>
+                  <option value="third-party">Third Party</option>
+                </select>
+              </div>
+
+              {formData.payFrom === "third-party" && (
+                <div className="grid grid-cols-1 gap-1.5">
+                  <label className="text-sm font-medium text-slate-700">
+                    Account Name<span className="text-red-500">*</span>
+                  </label>
+
+                  <input
+                    type="text"
+                    name="accountName"
+                    value={formData.accountName}
+                    onChange={handleChange}
+                    placeholder="Enter Account Holder Name"
+                    className="w-full border border-slate-300 p-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                  />
+                </div>
+              )}
 
               {/* Payment Info Row */}
               <div className="grid grid-cols-2 gap-4">

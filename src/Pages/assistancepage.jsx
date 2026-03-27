@@ -38,7 +38,7 @@ const normalizeWorkflowValue = (value) =>
     .replace(/-/g, " ");
 
 const STATUS_LABELS = {
-  pending: "Pending",
+  pending: "Pending11",
   approve: "Approve",
   rejected: "Rejected",
   queries: "Queries",
@@ -62,29 +62,63 @@ const getStatusToneClass = (status) => {
   return "text-yellow-600";
 };
 
+// const getAllowedActions = ({ role, status }) => {
+//   const normalizedRole = normalizeWorkflowValue(role);
+//   const normalizedStatus = normalizeWorkflowValue(status || STATUS_LABELS.pending);
+
+//   console.log(normalizedStatus)
+
+//   if (normalizedRole === "case coordinator") {
+//     if (normalizedStatus === "pending" || normalizedStatus === "queries") {
+//       return ["approve", "queries", "send-to-committee-member", "rejected"];
+//     }
+
+//     if (normalizedStatus === "Committee Member") {
+//       return ["send-to-expert-panel", "rejected"];
+//     }
+//   }
+
+//   if (normalizedRole === "committee member") {
+//     if (normalizedStatus === "Committee Member") {
+//       return ["approve", "send-to-expert-panel", "rejected"];
+//     }
+//   }
+
+//   if (normalizedRole === "expert panel") {
+//     if (normalizedStatus === "send to expert panel") {
+//       return ["approve", "rejected"];
+//     }
+//   }
+
+//   return [];
+// };
+
 const getAllowedActions = ({ role, status }) => {
   const normalizedRole = normalizeWorkflowValue(role);
-  const normalizedStatus = normalizeWorkflowValue(status || STATUS_LABELS.pending);
+  const normalizedStatus = normalizeWorkflowValue(status);
 
+  // ✅ CASE COORDINATOR
   if (normalizedRole === "case coordinator") {
     if (normalizedStatus === "pending" || normalizedStatus === "queries") {
-      return ["approve", "queries", "send-to-committee-member", "rejected"];
+      return ["approve", "queries", "send-to-committee-member", "rejected","queries"];
     }
 
-    if (normalizedStatus === "send to committee member") {
-      return ["send-to-expert-panel", "rejected"];
+    if (normalizedStatus === "committee member") {
+      return ["send-to-expert-panel", "rejected","queries"];
     }
   }
 
+  // ✅ COMMITTEE MEMBER
   if (normalizedRole === "committee member") {
-    if (normalizedStatus === "send to committee member") {
-      return ["approve", "send-to-expert-panel", "rejected"];
+    if (normalizedStatus === "committee member") {
+      return ["approve", "send-to-expert-panel", "rejected","queries"];
     }
   }
 
+  // ✅ EXPERT PANEL
   if (normalizedRole === "expert panel") {
-    if (normalizedStatus === "send to expert panel") {
-      return ["approve", "rejected"];
+    if (normalizedStatus === "expert panel") {
+      return ["approve", "rejected","queries"];
     }
   }
 
@@ -254,61 +288,172 @@ const AssistancePage = () => {
     setActiveRow(null);
   };
 
+
+
+  // const handleStatusAction = async () => {
+  //   if (!activeRow || !actionType) return;
+
+  //   if (actionType === "queries" && !queriesReason.trim()) {
+  //     setActionError("Queries reason is required for queries.");
+  //     return;
+  //   }
+
+  //   try {
+  //     setIsActionLoading(true);
+  //     setActionError("");
+
+  //     if (actionType === "queries") {
+  //       const payload = new FormData();
+  //       payload.append("id", activeRow?.id || "");
+  //       payload.append("assistance_id", activeRow?.id || "");
+  //       payload.append("diksharthi_id", activeRow?.diksharthi_id || "");
+  //       payload.append("relation", activeRow?.relation || "");
+  //       payload.append("type", activeRow?.type || "");
+  //       payload.append("actorRole", role);
+  //       payload.append("queriesReason", queriesReason.trim());
+  //       // payload.append("remark", queriesReason.trim());
+
+  //       if (queryFile) {
+  //         payload.append("file", queryFile);
+  //         // payload.append("attachment", queryFile);
+  //       }
+
+  //       await axios.put(`${API}/api/assistance-status/${actionType}`, payload, {
+  //         headers: {
+  //           "Content-Type": "multipart/form-data",
+  //         },
+  //       });
+  //     } else {
+  //       const payload = {
+  //         id: activeRow?.id,
+  //         assistance_id: activeRow?.id,
+  //         diksharthi_id: activeRow?.diksharthi_id,
+  //         relation: activeRow?.relation,
+  //         type: activeRow?.type,
+  //         actorRole: role,
+  //       };
+
+  //       await axios.put(`${API}/api/assistance-status/${actionType}`, payload);
+  //     }
+
+  //     await fetchFamilyAccounting();
+  //     handleCloseActionModal();
+  //   } catch (error) {
+  //     setActionError(
+  //       error?.response?.data?.message || "Failed to update assistance status.",
+  //     );
+  //   } finally {
+  //     setIsActionLoading(false);
+  //   }
+  // };
+
+  // const actionTypeMap = {
+  //   "send-to-committee-member": "committee-member",
+  //   "send-to-expert-panel": "expert-panel",
+  // };
+
+  // const handleStatusAction = async () => {
+  //   if (!activeRow || !actionType) return;
+
+  //   const finalActionType = actionTypeMap[actionType] || actionType;
+
+  //   try {
+  //     setIsActionLoading(true);
+
+  //     const payload = {
+  //       id: activeRow?.id,
+  //       assistance_id: activeRow?.id,
+  //       diksharthi_id: activeRow?.diksharthi_id,
+  //       relation: activeRow?.relation,
+  //       type: activeRow?.type,
+  //       actorRole: role,
+  //     };
+
+  //     await axios.put(`${API}/api/assistance-status/${finalActionType}`, payload);
+
+  //     await fetchFamilyAccounting();
+  //     handleCloseActionModal();
+  //   } catch (error) {
+  //     setActionError("Failed to update assistance status.");
+  //   } finally {
+  //     setIsActionLoading(false);
+  //   }
+  // };
+
+  // const actionTypeMap = {
+  //   "send-to-committee-member": "SEND_TO_COMMITTEE_MEMBER",
+  //   "send-to-expert-panel": "SEND_TO_EXPERT_PANEL",
+  //   approve: "APPROVE",
+  //   rejected: "REJECTED",
+  //   queries: "QUERIES",
+  // };
+
   const handleStatusAction = async () => {
     if (!activeRow || !actionType) return;
 
-    if (actionType === "queries" && !queriesReason.trim()) {
-      setActionError("Queries reason is required for queries.");
-      return;
-    }
+    const actionTypeMap = {
+      "send-to-committee-member": "committee-member",
+      "send-to-expert-panel": "expert-panel",
+      approve: "approve",
+      rejected: "rejected",
+      queries: "queries",
+    };
+
+    const finalActionType = actionTypeMap[actionType] || actionType;
 
     try {
       setIsActionLoading(true);
-      setActionError("");
 
-      if (actionType === "queries") {
-        const payload = new FormData();
-        payload.append("id", activeRow?.id || "");
-        payload.append("assistance_id", activeRow?.id || "");
-        payload.append("diksharthi_id", activeRow?.diksharthi_id || "");
-        payload.append("relation", activeRow?.relation || "");
-        payload.append("type", activeRow?.type || "");
-        payload.append("actorRole", role);
-        payload.append("queriesReason", queriesReason.trim());
-        // payload.append("remark", queriesReason.trim());
+      const payload = {
+        id: activeRow?.id,
+        assistance_id: activeRow?.id,
+        diksharthi_id: activeRow?.diksharthi_id,
+        relation: activeRow?.relation,
+        type: activeRow?.type,
+        actorRole: role.replaceAll("-", " "), // 🔥 FIX
+      };
 
-        if (queryFile) {
-          payload.append("file", queryFile);
-          // payload.append("attachment", queryFile);
-        }
-
-        await axios.put(`${API}/api/assistance-status/${actionType}`, payload, {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        });
-      } else {
-        const payload = {
-          id: activeRow?.id,
-          assistance_id: activeRow?.id,
-          diksharthi_id: activeRow?.diksharthi_id,
-          relation: activeRow?.relation,
-          type: activeRow?.type,
-          actorRole: role,
-        };
-
-        await axios.put(`${API}/api/assistance-status/${actionType}`, payload);
-      }
+      await axios.put(
+        `${API}/api/assistance-status/${finalActionType}`,
+        payload
+      );
 
       await fetchFamilyAccounting();
       handleCloseActionModal();
     } catch (error) {
+      console.log(error?.response?.data); // 🔥 debug
       setActionError(
-        error?.response?.data?.message || "Failed to update assistance status.",
+        error?.response?.data?.message || "Failed to update assistance status."
       );
     } finally {
       setIsActionLoading(false);
     }
+  };
+
+  const getFilteredData = () => {
+    const normalizedRole = role.toLowerCase();
+
+    return tableData.filter((row) => {
+      const status = normalizeWorkflowValue(row.status);
+
+      if (normalizedRole === "karyakarta") {
+        return status === "pending";
+      }
+
+      if (normalizedRole === "case-coordinator") {
+        return true; // sab dikhana hai
+      }
+
+      if (normalizedRole === "committee-member") {
+        return status === "Committee Member";
+      }
+
+      if (normalizedRole === "expert-panel") {
+        return status === "send to expert panel";
+      }
+
+      return false;
+    });
   };
 
   const actionTitleMap = {
@@ -355,285 +500,129 @@ const AssistancePage = () => {
       .map((value) => String(value ?? ""))
       .join("__");
 
-  // const renderDefaultTable = () => (
-  //   <div className="mt-8 overflow-hidden border border-blue-400 rounded-lg shadow-sm">
-  //     <table className="w-full text-left border-collapse bg-white">
-  //       <thead>
-  //         <tr className="bg-[#fdf2d7]">
-  //           <th className="p-4 font-semibold text-slate-700 border-b">
-  //             Diksharthi Name
-  //           </th>
-  //           <th className="p-4 font-semibold text-slate-700 border-b">
-  //             Family Member
-  //           </th>
-  //           <th className="p-4 font-semibold text-slate-700 border-b">
-  //             Family Head Name
-  //           </th>
-
-  //           <th className="p-4 font-semibold text-slate-700 border-b">
-  //             Assistance
-  //           </th>
-  //           <th className="p-4 font-semibold text-slate-700 border-b">
-  //             Case ID
-  //           </th>
-  //           <th className="p-4 font-semibold text-slate-700 border-b">
-  //             Status
-  //           </th>
-  //           <th className="p-4 font-semibold text-slate-700 border-b">
-  //             Renewal
-  //           </th>
-  //           <th className="p-4 font-semibold text-slate-700 border-b text-center">
-  //             Action
-  //           </th>
-  //         </tr>
-  //       </thead>
-  //       <tbody className="divide-y divide-slate-100">
-  //         {tableData.map((row, index) => (
-  //           (() => {
-  //             const normalizedStatus = String(row.status || "").toLowerCase();
-  //             const hasQuery = Boolean(getQueryText(row));
-
-  //             return (
-  //               <tr key={index} className="hover:bg-slate-50 transition-colors">
-  //                 <td className="p-4 text-slate-600">
-  //                   {asDisplayText(row.diksharthi)}
-  //                 </td>
-  //                 <td className="p-4 text-slate-600">
-  //                   {asDisplayText(row.member_name)}
-  //                 </td>
-  //                 <td className="p-4 text-slate-600">
-  //                   {asDisplayText(row.head)}
-  //                 </td>
-
-  //                 <td className="p-4 text-slate-600">
-  //                   {asDisplayText(row.type)}
-  //                 </td>
-  //                 <td className="p-4 text-slate-600">
-  //                   {asDisplayText(row.case_id)}
-  //                 </td>
-  //                 <td
-  //                   className={`p-4 font-semibold ${row.status === "Pending"
-  //                       ? "text-yellow-600"
-  //                       : row.status === "Approve"
-  //                         ? "text-green-600"
-  //                         : row.status === "Rejected"
-  //                           ? "text-red-600"
-  //                           : "text-blue-600"
-  //                     }`}
-  //                 >
-  //                   {asDisplayText(row.status)}
-  //                 </td>
-  //                 <td className="p-4 text-slate-600">
-  //                   {asDisplayText(row.renewal)}
-  //                 </td>
-                 
-  //                 <td className="p-4">
-  //                   <div className="flex justify-center gap-2">
-  //                     {canAccessAssistance && (
-  //                       <>
-  //                         <button
-  //                           type="button"
-  //                           className="inline-flex items-center gap-1 rounded-lg bg-yellow-500 px-3 py-1.5 text-xs font-medium text-white"
-  //                           onClick={() => navigate("/request-details", { state: row })}
-  //                         >
-  //                           <Eye size={15} />
-  //                           View
-  //                         </button>
-
-  //                         {hasQuery && (
-  //                           <button
-  //                             type="button"
-  //                             className="inline-flex items-center gap-1 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-medium text-white"
-  //                             onClick={() => setViewQueryRow(row)}
-  //                           >
-  //                             <FileText size={15} />
-  //                             View Query
-  //                           </button>
-  //                         )}
-
-  //                         {isCaseCoordinator && normalizedStatus === "pending" && (
-  //                           <>
-  //                             <button
-  //                               className="inline-flex items-center gap-1 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white"
-  //                               onClick={() =>
-  //                                 handleOpenActionModal(row, "send-to-committee-member")
-  //                               }
-  //                             >
-  //                               <FileText size={15} />
-  //                               Send To Committee Member
-  //                             </button>
-
-  //                             <button
-  //                               className="inline-flex items-center gap-1 rounded-lg bg-violet-600 px-3 py-1.5 text-xs font-medium text-white"
-  //                               onClick={() =>
-  //                                 handleOpenActionModal(row, "send-to-expert-panel")
-  //                               }
-  //                             >
-  //                               <FileText size={15} />
-  //                               Send To Expert Panel
-  //                             </button>
-
-  //                             <button
-  //                               className="inline-flex items-center gap-1 rounded-lg bg-green-600 px-3 py-1.5 text-xs font-medium text-white"
-  //                               onClick={() => handleOpenActionModal(row, "approve")}
-  //                             >
-  //                               <CheckCircle size={15} />
-  //                               Approve
-  //                             </button>
-
-  //                             <button
-  //                               className="inline-flex items-center gap-1 rounded-lg bg-red-600 px-3 py-1.5 text-xs font-medium text-white"
-  //                               onClick={() => handleOpenActionModal(row, "rejected")}
-  //                             >
-  //                               <XCircle size={15} />
-  //                               Rejected
-  //                             </button>
-
-  //                             <button
-  //                               className="inline-flex items-center gap-1 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-medium text-white"
-  //                               onClick={() => handleOpenActionModal(row, "queries")}
-  //                             >
-  //                               <FileText size={15} />
-  //                               Query Set
-  //                             </button>
-  //                           </>
-  //                         )}
-  //                       </>
-  //                     )}
-  //                   </div>
-  //                 </td> 
-  //               </tr>
-  //             );
-  //           })()
-  //         ))}
-  //       </tbody>
-  //     </table>
-  //   </div>
-  // );
-
   const renderDefaultTable = () => (
     <div className="mt-8 overflow-visible rounded-lg border border-blue-400 shadow-sm">
-      <div className="overflow-x-auto overflow-y-visible">
-      <table className="w-full min-h-9xl text-left border-collapse bg-white">
-        <thead>
-          <tr className="bg-[#fdf2d7]">
-            <th className="p-4 font-semibold text-slate-700 border-b">Diksharthi Name</th>
-            <th className="p-4 font-semibold text-slate-700 border-b">Family Member</th>
-            <th className="p-4 font-semibold text-slate-700 border-b">Family Head Name</th>
-            <th className="p-4 font-semibold text-slate-700 border-b">Assistance</th>
-            <th className="p-4 font-semibold text-slate-700 border-b">Case ID</th>
-            <th className="p-4 font-semibold text-slate-700 border-b">Status</th>
-            <th className="p-4 font-semibold text-slate-700 border-b text-center">Action</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-slate-100">
-          {tableData.map((row, index) => {
-            const hasQuery = Boolean(getQueryText(row));
-            const rowActionKey = getRowActionKey(row, index);
-            const isOpen = openDropdownId === rowActionKey;
-            const allowedActions = getAllowedActions({ role, status: row.status });
-            const canTakeAction = allowedActions.length > 0;
+      <div className=" overflow-y-visible">
+        <table className="w-full h-9xl text-left border-collapse bg-white">
+          <thead>
+            <tr className="bg-[#fdf2d7]">
+              <th className="p-4 font-semibold text-slate-700 border-b">Diksharthi Name</th>
+              <th className="p-4 font-semibold text-slate-700 border-b">Family Member</th>
+              <th className="p-4 font-semibold text-slate-700 border-b">Family Head Name</th>
+              <th className="p-4 font-semibold text-slate-700 border-b">Assistance</th>
+              <th className="p-4 font-semibold text-slate-700 border-b">Case ID</th>
+              <th className="p-4 font-semibold text-slate-700 border-b">Status</th>
+              <th className="p-4 font-semibold text-slate-700 border-b text-center">Action</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {tableData.map((row, index) => {
+              const hasQuery = Boolean(getQueryText(row));
+              const rowActionKey = getRowActionKey(row, index);
+              const isOpen = openDropdownId === rowActionKey;
+              const allowedActions = getAllowedActions({ role, status: row.status });
+              const canTakeAction = allowedActions.length > 0;
 
-            return (
-              <tr key={rowActionKey} className="hover:bg-slate-50 transition-colors">
-                <td className="p-4 text-slate-600">{asDisplayText(row.diksharthi)}</td>
-                <td className="p-4 text-slate-600">{asDisplayText(row.member_name)}</td>
-                <td className="p-4 text-slate-600">{asDisplayText(row.head)}</td>
-                <td className="p-4 text-slate-600">{asDisplayText(row.type)}</td>
-                <td className="p-4 text-slate-600">{asDisplayText(row.case_id)}</td>
-                <td className={`p-4 font-semibold ${getStatusToneClass(row.status)}`}>
-                  {asDisplayText(row.status)}
-                </td>
+              return (
+                <tr key={rowActionKey} className="hover:bg-slate-50 transition-colors">
+                  <td className="p-4 text-slate-600">{asDisplayText(row.diksharthi)}</td>
+                  <td className="p-4 text-slate-600">{asDisplayText(row.member_name)}</td>
+                  <td className="p-4 text-slate-600">{asDisplayText(row.head)}</td>
+                  <td className="p-4 text-slate-600">{asDisplayText(row.type)}</td>
+                  <td className="p-4 text-slate-600">{asDisplayText(row.case_id)}</td>
+                  <td className={`p-4 font-semibold ${getStatusToneClass(row.status)}`}>
+                    {asDisplayText(row.status)}
+                  </td>
 
-                <td className="relative p-4 text-center">
-                  <div
-                    ref={isOpen ? dropdownContainerRef : null}
-                    className="inline-block"
-                  >
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setOpenDropdownId(isOpen ? null : rowActionKey);
-                      }}
-                      className="inline-block rounded-full p-2 transition-colors hover:bg-slate-100"
+                  <td className="relative p-4 text-center">
+                    <div
+                      ref={isOpen ? dropdownContainerRef : null}
+                      className="inline-block"
                     >
-                      <EllipsisVertical size={20} className="text-slate-600" />
-                    </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setOpenDropdownId(isOpen ? null : rowActionKey);
+                        }}
+                        className="inline-block rounded-full p-2 transition-colors hover:bg-slate-100"
+                      >
+                        <EllipsisVertical size={20} className="text-slate-600" />
+                      </button>
 
-                    {isOpen && (
-                      <div className="absolute right-4 top-12 z-[120] w-56 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl animate-in fade-in slide-in-from-top-2 duration-200">
-                        <div className="py-1">
-                          <button
-                            onClick={() => { navigate("/request-details", { state: row }); setOpenDropdownId(null); }}
-                            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
-                          >
-                            <Eye size={16} className="text-yellow-500" /> View Details
-                          </button>
-
-                          {hasQuery && (
+                      {isOpen && (
+                        <div className="absolute right-4 top-12 z-[120] w-56 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl animate-in fade-in slide-in-from-top-2 duration-200">
+                          <div className="py-1">
                             <button
-                              onClick={() => { setViewQueryRow(row); setOpenDropdownId(null); }}
+                              onClick={() => { navigate("/request-details", { state: row }); setOpenDropdownId(null); }}
                               className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
                             >
-                              <FileText size={16} className="text-blue-600" /> View Query
+                              <Eye size={16} className="text-yellow-500" /> View Details
                             </button>
-                          )}
 
-                          {canTakeAction && (
-                            <>
-                              <hr className="my-1 border-slate-100" />
-                              {allowedActions.includes("approve") && (
-                                <button
-                                  onClick={() => { handleOpenActionModal(row, "approve"); setOpenDropdownId(null); }}
-                                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-green-600 hover:bg-green-50 transition-colors"
-                                >
-                                  <CheckCircle size={16} /> Approve
-                                </button>
-                              )}
-                              {allowedActions.includes("queries") && (
-                                <button
-                                  onClick={() => { handleOpenActionModal(row, "queries"); setOpenDropdownId(null); }}
-                                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-blue-600 hover:bg-blue-50 transition-colors"
-                                >
-                                  <FileText size={16} /> Raise Query
-                                </button>
-                              )}
-                              {allowedActions.includes("send-to-committee-member") && (
-                                <button
-                                  onClick={() => { handleOpenActionModal(row, "send-to-committee-member"); setOpenDropdownId(null); }}
-                                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-indigo-600 hover:bg-indigo-50 transition-colors"
-                                >
-                                  <FileText size={16} /> Send to Committee
-                                </button>
-                              )}
-                              {allowedActions.includes("send-to-expert-panel") && (
-                                <button
-                                  onClick={() => { handleOpenActionModal(row, "send-to-expert-panel"); setOpenDropdownId(null); }}
-                                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-violet-600 hover:bg-violet-50 transition-colors"
-                                >
-                                  <FileText size={16} /> Send to Expert
-                                </button>
-                              )}
-                              {allowedActions.includes("rejected") && (
-                                <button
-                                  onClick={() => { handleOpenActionModal(row, "rejected"); setOpenDropdownId(null); }}
-                                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
-                                >
-                                  <XCircle size={16} /> Reject Request
-                                </button>
-                              )}
-                            </>
-                          )}
+                            {hasQuery && (
+                              <button
+                                onClick={() => { setViewQueryRow(row); setOpenDropdownId(null); }}
+                                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+                              >
+                                <FileText size={16} className="text-blue-600" /> View Query
+                              </button>
+                            )}
+
+                            {canTakeAction && (
+                              <>
+                                <hr className="my-1 border-slate-100" />
+                                {allowedActions.includes("approve") && (
+                                  <button
+                                    onClick={() => { handleOpenActionModal(row, "approve"); setOpenDropdownId(null); }}
+                                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-green-600 hover:bg-green-50 transition-colors"
+                                  >
+                                    <CheckCircle size={16} /> Approve
+                                  </button>
+                                )}
+                                {allowedActions.includes("queries") && (
+                                  <button
+                                    onClick={() => { handleOpenActionModal(row, "queries"); setOpenDropdownId(null); }}
+                                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-blue-600 hover:bg-blue-50 transition-colors"
+                                  >
+                                    <FileText size={16} /> Query
+                                  </button>
+                                )}
+                                {allowedActions.includes("send-to-committee-member") && (
+                                  <button
+                                    onClick={() => { handleOpenActionModal(row, "send-to-committee-member"); setOpenDropdownId(null); }}
+                                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-indigo-600 hover:bg-indigo-50 transition-colors"
+                                  >
+                                    <FileText size={16} /> Send to Committee
+                                  </button>
+                                )}
+                                {allowedActions.includes("send-to-expert-panel") && (
+                                  <button
+                                    onClick={() => { handleOpenActionModal(row, "send-to-expert-panel"); setOpenDropdownId(null); }}
+                                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-violet-600 hover:bg-violet-50 transition-colors"
+                                  >
+                                    <FileText size={16} /> Send to Expert
+                                  </button>
+                                )}
+                                {allowedActions.includes("rejected") && (
+                                  <button
+                                    onClick={() => { handleOpenActionModal(row, "rejected"); setOpenDropdownId(null); }}
+                                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                                  >
+                                    <XCircle size={16} /> Reject Request
+                                  </button>
+                                )}
+                              </>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    )}
-                  </div>
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
       </div>
     </div>
   );
@@ -851,7 +840,7 @@ const AssistancePage = () => {
                         value={queriesReason}
                         config={queryEditorConfig}
                         onBlur={(newValue) => setQueriesReason(newValue)}
-                        onChange={() => {}}
+                        onChange={() => { }}
                       />
                       <div>
                         <label className="mb-1 block text-sm font-medium text-slate-700">

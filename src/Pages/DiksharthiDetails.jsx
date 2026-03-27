@@ -757,8 +757,11 @@ const DiksharthiListing = () => {
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-gray-50 border-b border-gray-100 ">
-              <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">
+              {/* <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">
                 Photo
+              </th> */}
+              <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">
+                Date
               </th>
               <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">
                 Diksharthi ID
@@ -770,14 +773,12 @@ const DiksharthiListing = () => {
                 Pad
               </th>
               <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">
-                Sect
+                RBF Criteria
               </th>
-              <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">
+              {/* <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">
                 Alive Status
-              </th>
-              <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">
-                Date
-              </th>
+              </th> */}
+              
               {role === "operations-manager" && (
                 <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">
                   Staff Name
@@ -821,7 +822,7 @@ const DiksharthiListing = () => {
                 return (
                   <tr key={diksharthi.id} className="border-b border-gray-100">
                     {/* Photo */}
-                    <td className="px-6 py-3">
+                    {/* <td className="px-6 py-3">
                       <img
                         src={diksharthi.photo || "/user.png"}
                         alt="diksharthi"
@@ -830,7 +831,11 @@ const DiksharthiListing = () => {
                         }}
                         className="w-10 h-10 rounded-full object-cover"
                       />
-                    </td>
+                    </td> */}
+
+                    {/* Date */}
+                    <td className="px-6 py-3">{formatIndianDate(diksharthi.created_at)}</td>
+
 
                     {/* ID */}
                     <td className="px-6 py-3">{diksharthi.id}</td>
@@ -843,14 +848,12 @@ const DiksharthiListing = () => {
                     <td className="px-6 py-3">{diksharthi.pad}</td>
 
                     {/* Sect */}
-                    <td className="px-6 py-3">{diksharthi.samudaay}</td>
+                    {/* <td className="px-6 py-3">{diksharthi.samudaay}</td> */}
 
                     {/* Alive */}
-                    <td className="px-6 py-3">{diksharthi.is_alive}</td>
+                    <td className="px-6 py-3">{diksharthi.rbf_criteria}</td>
 
-                    {/* Date */}
-                    <td className="px-6 py-3">{formatIndianDate(diksharthi.created_at)}</td>
-
+                  
                     {role === "operations-manager" && (
                       <td className="px-6 py-3">
                         {getUserNameById(diksharthi.user_id)}
@@ -868,128 +871,6 @@ const DiksharthiListing = () => {
                     )}
 
                     {/* Actions */}
-                    {/* <td className="px-6 py-3 relative">
-
-                      <button
-                        onClick={() =>
-                          setOpenMenuId(openMenuId === diksharthi.id ? null : diksharthi.id)
-                        }
-                        className="p-2 rounded-full hover:bg-gray-200"
-                      >
-                        ⋯
-                      </button>
-
-                      {openMenuId === diksharthi.id && (
-                        <div className="absolute right-6 mt-2 w-52 bg-white border rounded-lg shadow-lg z-50">
-
-                          {role === "staff" && (
-                            <>
-                              <MenuItem onClick={() => openViewModal(diksharthi)}>View</MenuItem>
-                              <MenuItem
-                                onClick={() =>
-                                  navigate("/diksharthi-details-add", {
-                                    state: { mode: "edit", diksharthiData: diksharthi },
-                                  })
-                                }
-                              >
-                                Edit
-                              </MenuItem>
-
-                              {getDiksharthiStatus(diksharthi) !== "send" && (
-                                <MenuItem
-                                  onClick={() => handleSendToOpManager(diksharthi.id)}
-                                >
-                                  Send to Operations Manager
-                                </MenuItem>
-                              )}
-                            </>
-                          )}
-
-                          {role === "operations-manager" && (
-                            <>
-                              <MenuItem onClick={() => openViewModal(diksharthi)}>View</MenuItem>
-
-                              {isAdminUnassigned(diksharthi) && (
-                                <MenuItem onClick={() => openAssignAdminModal(diksharthi)}>
-                                  Assign Karyakarta
-                                </MenuItem>
-                              )}
-
-                              {!getVisitSchedule(diksharthi) && (
-                                <MenuItem onClick={() => openScheduleVisitModal(diksharthi)}>
-                                  Schedule Visit
-                                </MenuItem>
-                              )}
-
-                              {feedbackStatus[diksharthi.id] && (
-                                <MenuItem onClick={() => openViewFeedbackModal(diksharthi)}>
-                                  View Feedback
-                                </MenuItem>
-                              )}
-                            </>
-                          )}
-
-                          {role === "karyakarta" && (
-                            <>
-                              <MenuItem
-                                onClick={() =>
-                                  navigate("/family-details", {
-                                    state: {
-                                      id: diksharthi.id,
-                                      diksharthi_code: diksharthi.diksharthi_code,
-                                      sadhu_sadhvi_name: diksharthi.sadhu_sadhvi_name,
-                                      gender: diksharthi.gender,
-                                    },
-                                  })
-                                }
-                              >
-                                {diksharthi.family_details
-                                  ? "Update Family Details"
-                                  : "Add Family Details"}
-                              </MenuItem>
-
-                              {diksharthi.family_details && (
-                                <MenuItem onClick={() => openFamilyDetailsModal(diksharthi)}>
-                                  View Family Details
-                                </MenuItem>
-                              )}
-
-                              {getVisitSchedule(diksharthi) && (
-                                <MenuItem onClick={() => openViewScheduleModal(diksharthi)}>
-                                  View Schedule
-                                </MenuItem>
-                              )}
-
-                              {!feedbackStatus[diksharthi.id] && (
-                                <MenuItem onClick={() => openFeedbackModal(diksharthi)}>
-                                  Add Feedback
-                                </MenuItem>
-                              )}
-
-                              {feedbackStatus[diksharthi.id] && (
-                                <MenuItem onClick={() => openViewFeedbackModal(diksharthi)}>
-                                  View Feedback
-                                </MenuItem>
-                              )}
-                            </>
-                          )}
-
-                          {(role === "admin" || role === "case-coordinator") && (
-                            <>
-                              <MenuItem onClick={() => openViewModal(diksharthi)}>View</MenuItem>
-
-                              {diksharthi.family_details && (
-                                <MenuItem onClick={() => openFamilyDetailsModal(diksharthi)}>
-                                  View Family Details
-                                </MenuItem>
-                              )}
-                            </>
-                          )}
-                        </div>
-                      )}
-                    </td> */}
-
-
                     <td className="px-6 py-3 flex gap-3 flex-wrap">
 
                       {/* ================= STAFF ================= */}

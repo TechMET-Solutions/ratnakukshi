@@ -161,7 +161,9 @@ function DonorList() {
                           {(donor.personalDetails?.name || "D").charAt(0)}
                         </div>
                       )}
-                      <span>{donor.personalDetails?.name}</span>
+                      <span>
+                        {donor.personalDetails?.firstName} {donor.personalDetails?.lastName}
+                      </span>
                     </div>
                   </td>
 

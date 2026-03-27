@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { API } from "../api/BaseURL";
 import { useAuth } from "../context/AuthContext";
+import { getMaxDOB, getToday } from "../utils/validation";
 
 const initialFormData = {
   sadhu_sadhvi_name: "",
@@ -189,7 +190,7 @@ const DiksharthiDetailsAdd = () => {
           {/* DOB (Optional) */}
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Date of Birth of Maharaj saheb</label>
-            <input name="dob" value={formData.dob} onChange={handleChange} type="date" className="w-full p-2 border border-slate-300 rounded-md outline-none" />
+            <input name="dob" max={getMaxDOB()} value={formData.dob} onChange={handleChange} type="date" className="w-full p-2 border border-slate-300 rounded-md outline-none" />
           </div>
 
           {/* Age (Manual Input) */}
@@ -248,7 +249,7 @@ const DiksharthiDetailsAdd = () => {
 
           {/* Gadipati */}
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Name of Gachadhipati / Gadipati <span className="text-red-500">*</span></label>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Name of Gachadhipati <span className="text-red-500">*</span></label>
             <input name="gadipati" value={formData.gadipati} onChange={handleChange} type="text" className="w-full p-2 border border-slate-300 rounded-md outline-none" />
             {errors.gadipati && <p className="text-red-500 text-xs">{errors.gadipati}</p>}
           </div>
@@ -267,7 +268,7 @@ const DiksharthiDetailsAdd = () => {
           {/* Relation (Conditional) */}
           {formData.rbfCriteria === "Yes" && (
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Relation <span className="text-red-500">*</span></label>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Relation to MS <span className="text-red-500">*</span></label>
               <input name="relation" value={formData.relation} onChange={handleChange} type="text" className="w-full p-2 border border-slate-300 rounded-md outline-none" />
               {errors.relation && <p className="text-red-500 text-xs">{errors.relation}</p>}
             </div>
@@ -275,7 +276,7 @@ const DiksharthiDetailsAdd = () => {
 
           {formData.rbfCriteria === "Yes" && (
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Relation Name <span className="text-red-500">*</span></label>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Family Member Name<span className="text-red-500">*</span></label>
               <input name="relationName" value={formData.relationName} onChange={handleChange} type="text" className="w-full p-2 border border-slate-300 rounded-md outline-none" />
               {errors.relationName && <p className="text-red-500 text-xs">{errors.relationName}</p>}
             </div>

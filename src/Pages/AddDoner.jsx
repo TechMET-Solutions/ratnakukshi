@@ -2,6 +2,8 @@ import { ChevronLeft } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { API } from "../api/BaseURL";
+import { BLOOD_GROUP, GENDER, MOTHER_TONGUE } from "../utils/constants";
+import { isValidAadhaar, isValidPAN } from "../utils/validation";
 
 const parseMaybeJson = (value) => {
   if (typeof value !== "string") return value;
@@ -25,18 +27,21 @@ function AddDonor() {
   const [formData, setFormData] = useState({
     personalDetails: {
       salutation: "",
-      name: "",
+      firstName: "",
+      lastName: "",
       gender: "",
       dob: "",
       anniversary: "",
-      mobile: "",
-      altMobile: "",
+      mobileNumber: "",
+      altMobileNumber: "",
       email: "",
       bloodGroup: "",
       motherTongue: "",
       nativePlace: "",
-      aadhar: null,
-      pan: null,
+      aadhaarNumber: "",
+      aadhaarFile: null,
+      panNumber: "",
+      panFile: null,
       photo: null,
     },
 
@@ -82,6 +87,7 @@ function AddDonor() {
       nomineecity: "",
       nomineepincode: "",
       nomineerelation: "",
+      nomineehasCompany:"",
       nomineecompanyName: "",
       nomineeresidentialAddress: "",
       nomineeofficeAddress: "",
@@ -94,10 +100,148 @@ function AddDonor() {
     },
   });
 
+
+  const requiredFields = {
+    personalDetails: [
+      "salutation",
+      "firstName",
+      "lastName",
+      "gender",
+      "email",
+      "bloodGroup",
+      "motherTongue",
+      "nativePlace",
+      "aadhaarNumber",
+      "panNumber",
+    ],
+    contactPerson: ["contactPersonName", "contactPersonMobile"],
+    residentialAddress: [
+      "address1",
+      "city",
+      "pincode",
+      "contactCode",
+      "contactNumber",
+      "preferredAddress",
+    ],
+    nomineeDetails: [
+      "nomineeName",
+      "nomineeContact",
+      "nomineeAddress",
+      "nomineecity",
+      "nomineepincode",
+      "nomineerelation",
+      "nomineehasCompany",
+    ],
+  };
+
+  const validateRequiredFields = () => {
+    const newErrors = {};
+
+    Object.keys(requiredFields).forEach((section) => {
+      requiredFields[section].forEach((field) => {
+        const value = formData[section]?.[field];
+
+        if (!value || value === "") {
+          newErrors[field] = "This field is required";
+        }
+      });
+    });
+
+    setErrors((prev) => ({ ...prev, ...newErrors }));
+
+    return Object.keys(newErrors).length === 0;
+  };
+
+
+  const [errors, setErrors] = useState({});
+  const [installmentError, setInstallmentError] = useState("");
+
+  const validateStep1 = () => {
+    // debugger
+    const e = {};
+    const data = formData.personalDetails;
+
+    const today = new Date();
+    const dob = new Date(data.dob);
+
+    if (!data.dob) {
+      e.dob = "Date of Birth is required";
+    } else if (dob > today) {
+      e.dob = "DOB cannot be future date";
+    } else {
+      const age = today.getFullYear() - dob.getFullYear();
+      if (age < 18) {
+        e.dob = "Age must be at least 18 years";
+      }
+    }
+
+    // Mobile
+    if (!data.mobileNumber) {
+      e.mobileNumber = "Mobile Number required";
+    } else if (!/^\d{10}$/.test(data.mobileNumber)) {
+      e.mobileNumber = "Mobile must be 10 digits";
+    }
+
+    // Alt Mobile
+    if (data.altMobileNumber && !/^\d{10}$/.test(data.altMobileNumber)) {
+      e.altMobileNumber = "Alt mobile must be 10 digits";
+    }
+
+    // Email
+    if (!data.email) {
+      e.email = "Email is required";
+    } else if (!/^\S+@\S+\.\S+$/.test(data.email)) {
+      e.email = "Invalid email format";
+    }
+
+    // Aadhaar
+    if (!isValidAadhaar(data.aadhaarNumber)) {
+      e.aadhaarNumber = "Aadhaar must be 12 digits";
+    }
+
+    // PAN
+    if (!isValidPAN(data.panNumber)) {
+      e.panNumber = "Invalid PAN format (ABCDE1234F)";
+    }
+
+    // Required fields check
+    if (!data.firstName) e.firstName = "First name required";
+    if (!data.lastName) e.lastName = "Last name required";
+    if (!data.gender) e.gender = "Gender required";
+    if (!data.email) e.email = "Email required";
+    if (!data.bloodGroup) e.bloodGroup = "Blood Group required";
+    if (!data.motherTongue) e.motherTongue = "Mother Tongue required";
+    if (!data.nativePlace) e.nativePlace = "Native Place required";
+    if (!data.aadhaarNumber) e.aadhaarNumber = "Adhaar Number required";
+    if (!data.panNumber) e.panNumber = "Pan Number required";
+
+    setErrors(e);
+
+    return Object.keys(e).length === 0;
+  };
+
+
+
   const handleSubmit = async () => {
     try {
       const resolvedDonorId =
         editDonorId || formData?.id || formData?.donor_id || null;
+      
+      const error = validateInstallments();
+      if (error) {
+        alert(error);
+        return;
+      }
+      
+      if (!isValidAadhaar(formData.personalDetails.aadhaarNumber)) {
+        alert("Aadhaar must be 12 digits only");
+        return;
+      }
+
+      if (!isValidPAN(formData.personalDetails.panNumber)) {
+        alert("PAN must be in format AAAAA9999A");
+        return;
+      }
 
       const payload = {
         ...formData,
@@ -109,11 +253,11 @@ function AddDonor() {
         },
       };
 
-      delete payload.personalDetails.gender;
-      delete payload.personalDetails.dob;
-      delete payload.personalDetails.mobile;
-      delete payload.personalDetails.altMobile;
-      delete payload.familyDetails.spouseDob;
+      // delete payload.personalDetails.gender;
+      // delete payload.personalDetails.dob;
+      // delete payload.personalDetails.mobileNumber;
+      // delete payload.personalDetails.altMobileNumber;
+      // delete payload.familyDetails.spouseDob;
 
       if (isEditMode) {
         if (!resolvedDonorId) {
@@ -130,8 +274,8 @@ function AddDonor() {
         JSON.stringify({
           ...payload.personalDetails,
           photo: undefined,
-          aadhar: undefined,
-          pan: undefined,
+          panFile: undefined,
+          aadhaarFile: undefined,
         }),
       );
       requestData.append("contactPerson", JSON.stringify(payload.contactPerson));
@@ -151,11 +295,11 @@ function AddDonor() {
       if (formData.personalDetails.photo instanceof File) {
         requestData.append("photo", formData.personalDetails.photo);
       }
-      if (formData.personalDetails.aadhar instanceof File) {
-        requestData.append("aadhar", formData.personalDetails.aadhar);
+      if (formData.personalDetails.aadhaarFile instanceof File) {
+        requestData.append("aadhaarFile", formData.personalDetails.aadhaarFile);
       }
-      if (formData.personalDetails.pan instanceof File) {
-        requestData.append("pan", formData.personalDetails.pan);
+      if (formData.personalDetails.panFile instanceof File) {
+        requestData.append("panFile", formData.personalDetails.panFile);
       }
 
       const response = await fetch(
@@ -360,12 +504,30 @@ function AddDonor() {
     "Nominee Details",
     "Payment Details",
   ];
+  // const handleNext = (e) => {
+  //   e.preventDefault();
+
+  //   if (currentStep < steps.length) {
+  //     setCurrentStep((prev) => prev + 1);
+  //   }
+  // };
+
   const handleNext = (e) => {
+    debugger
     e.preventDefault();
 
-    if (currentStep < steps.length) {
-      setCurrentStep((prev) => prev + 1);
+    // if (currentStep === 1) {
+    //   const isValid = validateStep1();
+    //   if (!isValid) return; // ❌ STOP
+    // }
+
+
+    if (currentStep === 1) {
+      const isValidStep1 = validateStep1();
+      if (!isValidStep1) return;
     }
+
+    setCurrentStep((prev) => prev + 1);
   };
 
   const handlePrevious = (e) => {
@@ -410,6 +572,35 @@ function AddDonor() {
       },
     }));
   };
+
+  const getMaxDOB = () => {
+    const today = new Date();
+    today.setFullYear(today.getFullYear() - 18);
+
+    return today.toISOString().split("T")[0]; // YYYY-MM-DD
+  };
+
+  const validateInstallments = () => {
+    const totalAmount = Number(formData.paymentDetails.totalInstallmentsAmount || 0);
+
+    const installmentAmounts = formData.paymentDetails.installments || [];
+
+    const sum = installmentAmounts.reduce(
+      (acc, item) => acc + Number(item.amount || 0),
+      0
+    );
+
+    if (sum !== totalAmount) {
+      return "Total installment amount and sum of installments must be equal";
+    }
+
+    return "";
+  };
+
+  useEffect(() => {
+    const error = validateInstallments();
+    setInstallmentError(error);
+  }, [formData.paymentDetails]);
 
   
   return (
@@ -474,26 +665,55 @@ function AddDonor() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Name<span className="text-red-500">*</span>
+                    First Name<span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
-                    value={formData.personalDetails.name}
+                    value={formData.personalDetails.firstName}
                     className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                     onChange={(e) =>
-                      handleChange("personalDetails", "name", e.target.value)
+                      handleChange("personalDetails", "firstName", e.target.value)
                     }
                   />
+                  {errors.firstName && <p className="text-red-500 text-xs">{errors.firstName}</p>}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Last Name<span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.personalDetails.lastName}
+                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
+                    onChange={(e) =>
+                      handleChange("personalDetails", "lastName", e.target.value)
+                    }
+                  />
+                  {errors.lastName && <p className="text-red-500 text-xs">{errors.lastName}</p>}
+                  
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
                     Gender<span className="text-red-500">*</span>
                   </label>
-                  <select className="w-full p-2 border border-slate-300 rounded-md outline-none focus:ring-2 focus:ring-blue-100">
-                    <option value="">Select</option>
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
+                  <select
+                    value={formData.personalDetails.gender}
+                    onChange={(e) =>
+                      handleChange(
+                        "personalDetails",
+                        "gender",
+                        e.target.value
+                      )
+                    }
+                    className="w-full p-2 border border-slate-300 rounded-md outline-none focus:ring-2 focus:ring-blue-100">
+                    <option value="#">Select</option>
+                    {GENDER.map((item) => (
+                      <option key={item.value} value={item.value}>
+                        {item.label}
+                      </option>
+                    ))}
                   </select>
+                   {errors.gender && <p className="text-red-500 text-xs">{errors.gender}</p>}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -501,16 +721,18 @@ function AddDonor() {
                   </label>
                   <input
                     type="date"
-                    value={formData.personalDetails.dateOfBirth}
+                    max={getMaxDOB()} // 🔥 restrict future + under 18
+                    value={formData.personalDetails.dob}
                     onChange={(e) =>
                       handleChange(
                         "personalDetails",
-                        "dateOfBirth",
+                        "dob",
                         e.target.value,
                       )
                     }
                     className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                   />
+                  {errors.dob && <p className="text-red-500 text-xs">{errors.dob}</p>}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -548,6 +770,9 @@ function AddDonor() {
                     }}
                     className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                   />
+                  {errors.mobileNumber && (
+                    <p className="text-red-500 text-xs">{errors.mobileNumber}</p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -568,6 +793,9 @@ function AddDonor() {
                     }}
                     className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                   />
+                  {errors.altMobileNumber && (
+                    <p className="text-red-500 text-xs">{errors.altMobileNumber}</p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -581,6 +809,7 @@ function AddDonor() {
                     }
                     className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                   />
+                  {errors.email && <p className="text-red-500 text-xs">{errors.email}</p>}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -599,21 +828,41 @@ function AddDonor() {
                     className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                   >
                     <option value="">Select Blood Group</option>
-                    <option value="A+">A+</option>
-                    <option value="A-">A-</option>
-                    <option value="B+">B+</option>
-                    <option value="B-">B-</option>
-                    <option value="AB+">AB+</option>
-                    <option value="AB-">AB-</option>
-                    <option value="O+">O+</option>
-                    <option value="O-">O-</option>
+                    {BLOOD_GROUP.map((item) => (
+                      <option key={item.value} value={item.value}>
+                        {item.label}
+                      </option>
+                    ))}
                   </select>
+                  {errors.bloodGroup && <p className="text-red-500 text-xs">{errors.bloodGroup}</p>}
+
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
                     Mother Tongue<span className="text-red-500">*</span>
                   </label>
-                  <input
+                  <select
+                    value={formData.personalDetails.motherTongue}
+                    onChange={(e) =>
+                      handleChange(
+                        "personalDetails",
+                        "motherTongue",
+                        e.target.value
+                      )
+                    }
+                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
+                  >
+                    <option value="">Select </option>
+                    {MOTHER_TONGUE.map((item) => (
+                      <option key={item.value} value={item.value}>
+                        {item.label}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.motherTongue && <p className="text-red-500 text-xs">{errors.motherTongue}</p>}
+
+
+                  {/* <input
                     type="text"
                     value={formData.personalDetails.motherTongue}
                     onChange={(e) =>
@@ -624,7 +873,7 @@ function AddDonor() {
                       )
                     }
                     className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
-                  />
+                  /> */}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -642,29 +891,70 @@ function AddDonor() {
                     }
                     className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                   />
+                  {errors.nativePlace && <p className="text-red-500 text-xs">{errors.nativePlace}</p>}
+
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Aadhar Card<span className="text-red-500">*</span>
+                    Aadhaar Number<span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    maxLength={12}
+                    value={formData.personalDetails.aadhaarNumber || ""}
+                    onChange={(e) => {
+                      const onlyNumbers = e.target.value.replace(/\D/g, "");
+                      handleChange("personalDetails", "aadhaarNumber", onlyNumbers);
+                    }}
+                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
+                    placeholder="Enter 12 digit Aadhaar"
+                  />
+                  {errors.aadhaarNumber && <p className="text-red-500 text-xs">{errors.aadhaarNumber}</p>}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Aadhaar Upload<span className="text-red-500">*</span>
                   </label>
                   <input
                     type="file"
                     onChange={(e) =>
-                      handleChange("personalDetails", "aadhar", e.target.files[0])
+                      handleChange("personalDetails", "aadhaarFile", e.target.files[0])
                     }
-                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
+                    className="w-full p-2 border border-slate-300 rounded-md"
                   />
                 </div>
+
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Pan Card<span className="text-red-500">*</span>
+                    PAN Number<span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    maxLength={10}
+                    value={formData.personalDetails.panNumber || ""}
+                    onChange={(e) => {
+                      const value = e.target.value
+                        .toUpperCase()
+                        .replace(/[^A-Z0-9]/g, "");
+                      handleChange("personalDetails", "panNumber", value);
+                    }}
+                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
+                    placeholder="ABCDE1234F"
+                  />
+                  {errors.panNumber && <p className="text-red-500 text-xs">{errors.panNumber}</p>}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    PAN Upload<span className="text-red-500">*</span>
                   </label>
                   <input
                     type="file"
                     onChange={(e) =>
-                      handleChange("personalDetails", "pan", e.target.files[0])
+                      handleChange("personalDetails", "panFile", e.target.files[0])
                     }
-                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
+                    className="w-full p-2 border border-slate-300 rounded-md"
                   />
                 </div>
                 <div>
@@ -807,7 +1097,7 @@ function AddDonor() {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">
-                      Res. Proof<span className="text-red-500">*</span>
+                      Res. Proof
                     </label>
                     <div className="flex gap-2">
                       <select className="flex-1 p-2 border border-slate-300 rounded-md outline-none focus:ring-2 focus:ring-blue-100">
@@ -962,7 +1252,7 @@ function AddDonor() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">
-                      Spouse Name<span className="text-red-500">*</span>
+                      Spouse Name
                     </label>
                     <input
                       type="text"
@@ -976,7 +1266,6 @@ function AddDonor() {
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">
                       Spouse Date of Birth
-                      <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="date"
@@ -989,7 +1278,7 @@ function AddDonor() {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">
-                      Spouse Blood Group<span className="text-red-500">*</span>
+                      Spouse Blood Group
                     </label>
                     <select
                       value={formData.familyDetails.spouseBloodGroup}
@@ -1331,73 +1620,109 @@ function AddDonor() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Name of Company<span className="text-red-500">*</span>
+                    Do you have Company?<span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="text"
-                    value={formData.nomineeDetails.nomineecompanyName}
-                    onChange={(e) =>
-                      handleChange(
-                        "nomineeDetails",
-                        "nomineecompanyName",
-                        e.target.value,
-                      )
-                    }
-                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Residential Address<span className="text-red-500">*</span>
-                  </label>
-                  <textarea
-                    value={formData.nomineeDetails.nomineeresidentialAddress}
-                    onChange={(e) =>
-                      handleChange(
-                        "nomineeDetails",
-                        "nomineeresidentialAddress",
-                        e.target.value,
-                      )
-                    }
-                    className="w-full p-2 border h-[40px] border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Office Address<span className="text-red-500">*</span>
-                  </label>
-                  <textarea
-                    value={formData.nomineeDetails.nomineeofficeAddress}
-                    onChange={(e) =>
-                      handleChange(
-                        "nomineeDetails",
-                        "nomineeofficeAddress",
-                        e.target.value,
-                      )
-                    }
-                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none h-[40px]"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Office Contact Number<span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    maxLength={10}
-                    value={formData.nomineeDetails.nomineeofficeContact}
-                    onChange={(e) => {
-                      const onlyNumbers = e.target.value.replace(/\D/g, "");
-                      handleChange(
-                        "nomineeDetails",
-                        "nomineeofficeContact",
-                        onlyNumbers,
-                      )
-                    }}
-                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
-                  />
+
+                  <div className="flex gap-4 mt-2">
+                    <label>
+                      <input
+                        type="radio"
+                        value="Yes"
+                        checked={formData.nomineeDetails.nomineehasCompany === "Yes"}
+                        onChange={(e) =>
+                          handleChange("nomineeDetails", "nomineehasCompany", e.target.value)
+                        }
+                      />{" "}
+                      Yes
+                    </label>
+
+                    <label>
+                      <input
+                        type="radio"
+                        value="No"
+                        checked={formData.nomineeDetails.nomineehasCompany === "No"}
+                        onChange={(e) =>
+                          handleChange("nomineeDetails", "nomineehasCompany", e.target.value)
+                        }
+                      />{" "}
+                      No
+                    </label>
+                  </div>
                 </div>
               </div>
+              {formData.nomineeDetails.nomineehasCompany === "Yes" && (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Company Name</label>
+                      <input
+                        type="text"
+                        value={formData.nomineeDetails.nomineecompanyName}
+                        onChange={(e) =>
+                          handleChange(
+                            "nomineeDetails",
+                            "nomineecompanyName",
+                            e.target.value,
+                          )
+                        }
+                        className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">
+                        Residential Address
+                      </label>
+                      <textarea
+                        value={formData.nomineeDetails.nomineeresidentialAddress}
+                        onChange={(e) =>
+                          handleChange(
+                            "nomineeDetails",
+                            "nomineeresidentialAddress",
+                            e.target.value,
+                          )
+                        }
+                        className="w-full p-2 border h-[40px] border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">
+                        Office Address
+                      </label>
+                      <textarea
+                        value={formData.nomineeDetails.nomineeofficeAddress}
+                        onChange={(e) =>
+                          handleChange(
+                            "nomineeDetails",
+                            "nomineeofficeAddress",
+                            e.target.value,
+                          )
+                        }
+                        className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none h-[40px]"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">
+                        Office Contact Number
+                      </label>
+                      <input
+                        type="text"
+                        maxLength={10}
+                        value={formData.nomineeDetails.nomineeofficeContact}
+                        onChange={(e) => {
+                          const onlyNumbers = e.target.value.replace(/\D/g, "");
+                          handleChange(
+                            "nomineeDetails",
+                            "nomineeofficeContact",
+                            onlyNumbers,
+                          )
+                        }}
+                        className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
             </>
           )}
 
@@ -1457,6 +1782,12 @@ function AddDonor() {
                       className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                     />
                   </div>
+                  {/* ✅ Realtime Error */}
+                  {installmentError && (
+                    <p className="text-red-500 text-sm mt-1">
+                      {installmentError}
+                    </p>
+                  )}
                 </div>
 
                 {/* SECTION: Installment Tables - Conditional */}

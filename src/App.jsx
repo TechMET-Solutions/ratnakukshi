@@ -18,6 +18,7 @@ import DonorPaymentHistory from "./pages/DonorPaymentHistory";
 import UserList from "./pages/UserList";
 import KaryakartaDetailsAdd from "./pages/KaryakartaDetailsAdd";
 import Pofile from "./pages/Pofile";
+import Language from "./pages/Language";
 
 const Layout = ({ children }) => {
   return (
@@ -206,6 +207,16 @@ function App() {
             <ProtectedRoute>
               <Layout>
                 <Settings />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/language"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <Language />
               </Layout>
             </ProtectedRoute>
           }
