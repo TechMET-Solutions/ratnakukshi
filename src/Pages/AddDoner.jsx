@@ -18,8 +18,8 @@ const asObject = (value) => (value && typeof value === "object" ? value : {});
 
 function AddDonor() {
 
-    const navigate = useNavigate();
-  
+  const navigate = useNavigate();
+
   const location = useLocation();
   const editDonorId = location?.state?.id;
   const isEditMode = Boolean(editDonorId);
@@ -87,7 +87,7 @@ function AddDonor() {
       nomineecity: "",
       nomineepincode: "",
       nomineerelation: "",
-      nomineehasCompany:"",
+      nomineehasCompany: "",
       nomineecompanyName: "",
       nomineeresidentialAddress: "",
       nomineeofficeAddress: "",
@@ -161,6 +161,27 @@ function AddDonor() {
     const e = {};
     const data = formData.personalDetails;
 
+    // Required: Salutation
+    if (!data.salutation) {
+      e.salutation = "Salutation is required";
+    }
+
+    // Required: First Name
+    if (!data.firstName) {
+      e.firstName = "First name required";
+    }
+
+    // Required: Last Name
+    if (!data.lastName) {
+      e.lastName = "Last name required";
+    }
+
+    // Required: Gender
+    if (!data.gender || data.gender === "#") {
+      e.gender = "Gender required";
+    }
+
+    // Required: DOB with age check
     const today = new Date();
     const dob = new Date(data.dob);
 
@@ -175,64 +196,235 @@ function AddDonor() {
       }
     }
 
-    // Mobile
+    // Required: Anniversary
+    if (!data.anniversary) {
+      e.anniversary = "Anniversary date is required";
+    }
+
+    // Required: Mobile
     if (!data.mobileNumber) {
       e.mobileNumber = "Mobile Number required";
     } else if (!/^\d{10}$/.test(data.mobileNumber)) {
       e.mobileNumber = "Mobile must be 10 digits";
     }
 
-    // Alt Mobile
+    // Optional: Alt Mobile (but if provided, must be valid)
     if (data.altMobileNumber && !/^\d{10}$/.test(data.altMobileNumber)) {
       e.altMobileNumber = "Alt mobile must be 10 digits";
     }
 
-    // Email
+    // Required: Email
     if (!data.email) {
       e.email = "Email is required";
     } else if (!/^\S+@\S+\.\S+$/.test(data.email)) {
       e.email = "Invalid email format";
     }
 
-    // Aadhaar
-    if (!isValidAadhaar(data.aadhaarNumber)) {
+    // Required: Blood Group
+    if (!data.bloodGroup) {
+      e.bloodGroup = "Blood Group required";
+    }
+
+    // Required: Mother Tongue
+    if (!data.motherTongue) {
+      e.motherTongue = "Mother Tongue required";
+    }
+
+    // Required: Native Place
+    if (!data.nativePlace) {
+      e.nativePlace = "Native Place required";
+    }
+
+    // Required: Aadhaar Number
+    if (!data.aadhaarNumber) {
+      e.aadhaarNumber = "Aadhaar number required";
+    } else if (!isValidAadhaar(data.aadhaarNumber)) {
       e.aadhaarNumber = "Aadhaar must be 12 digits";
     }
 
-    // PAN
-    if (!isValidPAN(data.panNumber)) {
+    // Required: Aadhaar File
+    if (!data.aadhaarFile) {
+      e.aadhaarFile = "Aadhaar upload is required";
+    }
+
+    // Required: PAN Number
+    if (!data.panNumber) {
+      e.panNumber = "PAN number required";
+    } else if (!isValidPAN(data.panNumber)) {
       e.panNumber = "Invalid PAN format (ABCDE1234F)";
     }
 
-    // Required fields check
-    if (!data.firstName) e.firstName = "First name required";
-    if (!data.lastName) e.lastName = "Last name required";
-    if (!data.gender) e.gender = "Gender required";
-    if (!data.email) e.email = "Email required";
-    if (!data.bloodGroup) e.bloodGroup = "Blood Group required";
-    if (!data.motherTongue) e.motherTongue = "Mother Tongue required";
-    if (!data.nativePlace) e.nativePlace = "Native Place required";
-    if (!data.aadhaarNumber) e.aadhaarNumber = "Adhaar Number required";
-    if (!data.panNumber) e.panNumber = "Pan Number required";
+    // Required: PAN File
+    if (!data.panFile) {
+      e.panFile = "PAN upload is required";
+    }
+
+    // Required: Photo
+    if (!data.photo) {
+      e.photo = "Photo upload is required";
+    }
+
+    // Contact Person Details - Required
+    if (!formData.contactPerson.contactPersonName) {
+      e.contactPersonName = "Contact person name is required";
+    }
+
+    if (!formData.contactPerson.contactPersonMobile) {
+      e.contactPersonMobile = "Contact person mobile is required";
+    } else if (!/^\d{10}$/.test(formData.contactPerson.contactPersonMobile)) {
+      e.contactPersonMobile = "Contact person mobile must be 10 digits";
+    }
+
+    // Residential Address - Required fields
+    if (!formData.residentialAddress.address1) {
+      e.resAddress1 = "Residential address is required";
+    }
+    if (!formData.residentialAddress.city) {
+      e.resCity = "Residential city is required";
+    }
+    if (!formData.residentialAddress.pincode) {
+      e.resPincode = "Residential pincode is required";
+    }
+    if (!formData.residentialAddress.contactCode) {
+      e.resContactCode = "Contact code is required";
+    }
+    if (!formData.residentialAddress.contactNumber) {
+      e.resContactNumber = "Contact number is required";
+    }
+    if (!formData.residentialAddress.preferredAddress) {
+      e.preferredAddress = "Preferred address type is required";
+    }
 
     setErrors(e);
+    if (Object.keys(e).length > 0) {
+      alert("Please fill all required fields marked with *");
+    }
 
     return Object.keys(e).length === 0;
   };
 
+  const validateStep2 = () => {
+    const e = {};
+    const data = formData.familyDetails;
 
+    // Required: Father's Name
+    if (!data.fatherName) {
+      e.fatherName = "Father's name is required";
+    }
+
+    // Required: Has Children
+    if (!data.hasChildren) {
+      e.hasChildren = "Please select if you have children";
+    }
+
+    // If children exist, validate each child
+    if (data.hasChildren === "Yes" && data.children) {
+      data.children.forEach((child, index) => {
+        if (!child.name) {
+          e[`child_${index}_name`] = "Child name is required";
+        }
+        if (!child.relation) {
+          e[`child_${index}_relation`] = "Child relation is required";
+        }
+        if (!child.dob) {
+          e[`child_${index}_dob`] = "Child DOB is required";
+        }
+        if (!child.bloodGroup) {
+          e[`child_${index}_bloodGroup`] = "Child blood group is required";
+        }
+        if (!child.maritalStatus) {
+          e[`child_${index}_maritalStatus`] = "Child marital status is required";
+        }
+      });
+    }
+
+    setErrors(e);
+    if (Object.keys(e).length > 0) {
+      alert("Please fill all required fields in Family Details");
+    }
+
+    return Object.keys(e).length === 0;
+  };
+
+  const validateStep3 = () => {
+    const e = {};
+    const data = formData.nomineeDetails;
+
+    // Required fields
+    if (!data.nomineeName) {
+      e.nomineeName = "Nominee name is required";
+    }
+    if (!data.nomineeContact || !/^\d{10}$/.test(data.nomineeContact)) {
+      e.nomineeContact = "Valid 10-digit contact number is required";
+    }
+    if (!data.nomineeAddress) {
+      e.nomineeAddress = "Nominee address is required";
+    }
+    if (!data.nomineecity) {
+      e.nomineecity = "Nominee city is required";
+    }
+    if (!data.nomineepincode) {
+      e.nomineepincode = "Nominee pincode is required";
+    }
+    if (!data.nomineerelation) {
+      e.nomineerelation = "Nominee relation is required";
+    }
+    if (!data.nomineehasCompany) {
+      e.nomineehasCompany = "Please select if nominee has company";
+    }
+
+    setErrors(e);
+    if (Object.keys(e).length > 0) {
+      alert("Please fill all required fields in Nominee Details");
+    }
+
+    return Object.keys(e).length === 0;
+  };
+
+  const validateStep4 = () => {
+    const e = {};
+
+    // Check total amount
+    if (!formData.paymentDetails.totalInstallmentsAmount) {
+      e.totalInstallmentsAmount = "Total installment amount is required";
+    }
+
+    // Check if installments are added
+    if (!formData.paymentDetails.installments || formData.paymentDetails.installments.length === 0) {
+      e.installments = "Please add at least one installment";
+    }
+
+    // Validate installments sum
+    const installmentError = validateInstallments();
+    if (installmentError) {
+      e.installmentValidation = installmentError;
+    }
+
+    setErrors(e);
+    if (Object.keys(e).length > 0) {
+      alert(installmentError || "Please complete all payment details");
+    }
+
+    return Object.keys(e).length === 0;
+  };
 
   const handleSubmit = async () => {
     try {
+      // Validate Step 4 (Payment Details) before submission
+      const isValidStep4 = validateStep4();
+      if (!isValidStep4) {
+        return;
+      }
+
       const resolvedDonorId =
         editDonorId || formData?.id || formData?.donor_id || null;
-      
+
       const error = validateInstallments();
       if (error) {
         alert(error);
         return;
       }
-      
+
       if (!isValidAadhaar(formData.personalDetails.aadhaarNumber)) {
         alert("Aadhaar must be 12 digits only");
         return;
@@ -516,15 +708,16 @@ function AddDonor() {
     debugger
     e.preventDefault();
 
-    // if (currentStep === 1) {
-    //   const isValid = validateStep1();
-    //   if (!isValid) return; // ❌ STOP
-    // }
-
-
+    // Validate based on current step
     if (currentStep === 1) {
       const isValidStep1 = validateStep1();
       if (!isValidStep1) return;
+    } else if (currentStep === 2) {
+      const isValidStep2 = validateStep2();
+      if (!isValidStep2) return;
+    } else if (currentStep === 3) {
+      const isValidStep3 = validateStep3();
+      if (!isValidStep3) return;
     }
 
     setCurrentStep((prev) => prev + 1);
@@ -552,17 +745,17 @@ function AddDonor() {
   };
 
   const handleChildChange = (id, field, value) => {
-  setFormData((prev) => ({
-    ...prev,
-    familyDetails: {
-      ...prev.familyDetails,
-      children: prev.familyDetails.children.map((child) =>
-        child.id === id ? { ...child, [field]: value } : child
-      ),
-    },
-  }));
+    setFormData((prev) => ({
+      ...prev,
+      familyDetails: {
+        ...prev.familyDetails,
+        children: prev.familyDetails.children.map((child) =>
+          child.id === id ? { ...child, [field]: value } : child
+        ),
+      },
+    }));
   };
-  
+
   const handleChange = (section, field, value) => {
     setFormData((prev) => ({
       ...prev,
@@ -602,7 +795,7 @@ function AddDonor() {
     setInstallmentError(error);
   }, [formData.paymentDetails]);
 
-  
+
   return (
     <div className="min-h-screen bg-gray-50 flex p-6 justify-center">
       <div className="w-full max-w-6xl bg-white p-6 shadow-sm">
@@ -690,7 +883,7 @@ function AddDonor() {
                     }
                   />
                   {errors.lastName && <p className="text-red-500 text-xs">{errors.lastName}</p>}
-                  
+
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -713,7 +906,7 @@ function AddDonor() {
                       </option>
                     ))}
                   </select>
-                   {errors.gender && <p className="text-red-500 text-xs">{errors.gender}</p>}
+                  {errors.gender && <p className="text-red-500 text-xs">{errors.gender}</p>}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -1297,7 +1490,7 @@ function AddDonor() {
                       <option value="O+">O+</option>
                       <option value="O-">O-</option>
                     </select>
-                    
+
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -1836,7 +2029,7 @@ function AddDonor() {
                                 className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                               />
                             </div>
-                           
+
                           </div>
                         </div>
                       ),
