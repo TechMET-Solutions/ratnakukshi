@@ -31,7 +31,7 @@ const INITIAL_FORM_DATA = {
   family_mediclaim_type: null,
   Family_mediclaim_amount: null,
   mediclaimPremiumAmount: null,
-  family_mediclaim_companyName:null,
+  family_mediclaim_companyName: null,
   ngoAssistance: null,
   sanghName: "",
   ngoAmount: "",
@@ -589,6 +589,27 @@ const FamilyDetailsForm = () => {
           : [...(prev[relation]?.assistanceCategories || []), category],
       },
     }));
+
+    // Initialize Medical with one empty disease entry when Medical is selected
+    if (category === "Medical" && !assistanceData[relation]?.Medical?.diseases) {
+      setAssistanceData((prev) => ({
+        ...prev,
+        [relation]: {
+          ...prev[relation],
+          Medical: {
+            ...prev[relation]?.Medical,
+            diseases: [
+              {
+                diseaseName: "",
+                frequency: "",
+                sessions: "",
+                costPerSession: "",
+              },
+            ],
+          },
+        },
+      }));
+    }
   };
 
   const handleAddRelationRow = (baseRelation) => {
@@ -974,6 +995,28 @@ const FamilyDetailsForm = () => {
         }
       });
 
+      // Validate Mediclaim Premium vs Cover Amount
+      if (formData.mediclaimPremiumAmount) {
+        const premiumAmount = Number(formData.mediclaimPremiumAmount) || 0;
+        const coverAmount = Number(formData.Family_mediclaim_amount) || 0;
+
+        if (premiumAmount > coverAmount) {
+          errors["mediclaim_premium"] = `Mediclaim premium (₹${premiumAmount}) cannot exceed cover amount (₹${coverAmount})`;
+        }
+      }
+
+      // Validate EMI Amount vs Loan Amount for Housing Assistance
+      Object.entries(assistanceData).forEach(([rel, assistances]) => {
+        if (assistances?.Housing?.loanAmount && assistances?.Housing?.emiAmountMonthly) {
+          const loanAmount = Number(assistances.Housing.loanAmount) || 0;
+          const emiAmount = Number(assistances.Housing.emiAmountMonthly) || 0;
+
+          if (emiAmount > loanAmount) {
+            errors[`housing_emi_${rel}`] = `EMI amount (₹${emiAmount}) cannot exceed loan amount (₹${loanAmount})`;
+          }
+        }
+      });
+
       // Check if there are validation errors
       if (Object.keys(errors).length > 0) {
         setValidationErrors(errors);
@@ -1095,6 +1138,21 @@ const FamilyDetailsForm = () => {
 
   const handleDiseaseChange = (relation, index, field, value) => {
     setAssistanceData((prev) => {
+      if (field === "removeDisease") {
+        // Remove disease
+        return {
+          ...prev,
+          [relation]: {
+            ...prev[relation],
+            Medical: {
+              ...prev[relation]?.Medical,
+              diseases: value, // value contains the filtered diseases array
+            },
+          },
+        };
+      }
+
+      // Regular field update
       const diseases = [...(prev[relation]?.Medical?.diseases || [])];
 
       diseases[index] = {
@@ -1135,7 +1193,7 @@ const FamilyDetailsForm = () => {
       },
     }));
   };
-  
+
   const handleEducationChange = (relation, field, value) => {
     setAssistanceData((prev) => ({
       ...prev,
@@ -1261,7 +1319,7 @@ const FamilyDetailsForm = () => {
   //   ]);
   return (
     <div className="min-h-screen bg-gray-50 flex p-6 justify-center">
-      <div className="w-full max-w-6xl bg-white p-6 shadow-sm">
+      <div className="w-full max-w-8xl bg-white p-6 shadow-sm">
         {/* Header */}
         <div className="flex items-center gap-2 mb-8 text-slate-800">
           <svg
@@ -1713,12 +1771,12 @@ const FamilyDetailsForm = () => {
                         {/* Head of Family Member - Exclusive */}
                         <div className="flex gap-4">
                           <div className={`mb-4 p-3 w-[180px] rounded-md ${headOfFamily !== null && headOfFamily !== rel
-                              ? "bg-gray-100 opacity-50"
-                              : "bg-blue-50"
+                            ? "bg-gray-100 opacity-50"
+                            : "bg-blue-50"
                             }`}>
                             <label className={`flex items-center gap-2 ${headOfFamily !== null && headOfFamily !== rel
-                                ? "cursor-not-allowed"
-                                : "cursor-pointer"
+                              ? "cursor-not-allowed"
+                              : "cursor-pointer"
                               }`}>
                               <input
                                 type="radio"
@@ -2175,25 +2233,116 @@ const FamilyDetailsForm = () => {
                                       </select>
                                     </div>
 
-                                    <div className="flex flex-col gap-1">
-                                      <label className="text-[11px] font-bold uppercase text-gray-500">
-                                        Disease / Condition Name*
-                                      </label>
-                                      <input
-                                        type="text"
-                                        value={
-                                          assistanceData[rel]?.Medical
-                                            ?.diseaseName || ""
-                                        }
-                                        onChange={(e) =>
-                                          handleMedicalChange(
-                                            rel,
-                                            "diseaseName",
-                                            e.target.value,
-                                          )
-                                        }
-                                        className="border p-2 rounded outline-none focus:border-blue-500"
-                                      />
+                                    {/* Diseases List Section */}
+                                    <div className="col-span-full">
+                                      <div className="flex items-center justify-between mb-4">
+                                        <label className="text-[11px] font-bold uppercase text-gray-500">
+                                          Disease / Condition Details*
+                                        </label>
+                                        <button
+                                          type="button"
+                                          onClick={() => handleAddDisease(rel)}
+                                          className="text-xs px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded"
+                                        >
+                                          + Add Disease
+                                        </button>
+                                      </div>
+
+                                      <div className="space-y-4">
+                                        {(assistanceData[rel]?.Medical?.diseases || []).map((disease, index) => (
+                                          <div key={index} className="border rounded-lg p-4 bg-gray-50">
+                                            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                              <div className="flex flex-col gap-1">
+                                                <label className="text-[11px] font-bold uppercase text-gray-500">
+                                                  Disease Name*
+                                                </label>
+                                                <input
+                                                  type="text"
+                                                  value={disease.diseaseName || ""}
+                                                  onChange={(e) =>
+                                                    handleDiseaseChange(rel, index, "diseaseName", e.target.value)
+                                                  }
+                                                  placeholder="e.g., Diabetes, BP"
+                                                  className="border p-2 rounded outline-none focus:border-blue-500"
+                                                />
+                                              </div>
+
+                                              <div className="flex flex-col gap-1">
+                                                <label className="text-[11px] font-bold uppercase text-gray-500">
+                                                  Treatment Frequency*
+                                                </label>
+                                                <select
+                                                  value={disease.frequency || ""}
+                                                  onChange={(e) =>
+                                                    handleDiseaseChange(rel, index, "frequency", e.target.value)
+                                                  }
+                                                  className="border p-2 rounded bg-white outline-none focus:border-blue-500"
+                                                >
+                                                  <option value="">Select</option>
+                                                  <option value="Daily">Daily</option>
+                                                  <option value="Alternate Days">Alternate Days</option>
+                                                  <option value="Weekly">Weekly</option>
+                                                  <option value="Bi-Weekly">Bi-Weekly</option>
+                                                  <option value="Monthly">Monthly</option>
+                                                  <option value="Quarterly">Quarterly</option>
+                                                  <option value="Yearly">Yearly</option>
+                                                </select>
+                                              </div>
+
+                                              <div className="flex flex-col gap-1">
+                                                <label className="text-[11px] font-bold uppercase text-gray-500">
+                                                  Sessions/Year*
+                                                </label>
+                                                <input
+                                                  type="number"
+                                                  value={disease.sessions || ""}
+                                                  onChange={(e) =>
+                                                    handleDiseaseChange(rel, index, "sessions", e.target.value)
+                                                  }
+                                                  placeholder="Number"
+                                                  className="border p-2 rounded outline-none focus:border-blue-500"
+                                                />
+                                              </div>
+
+                                              <div className="flex flex-col gap-1">
+                                                <label className="text-[11px] font-bold uppercase text-gray-500">
+                                                  Cost/Session*
+                                                </label>
+                                                <input
+                                                  type="number"
+                                                  value={disease.costPerSession || ""}
+                                                  onChange={(e) =>
+                                                    handleDiseaseChange(rel, index, "costPerSession", e.target.value)
+                                                  }
+                                                  placeholder="Amount"
+                                                  className="border p-2 rounded outline-none focus:border-blue-500"
+                                                />
+                                              </div>
+                                            </div>
+
+                                            <div className="flex items-end justify-between mt-4 gap-4">
+                                              <div className="flex-1">
+                                                <label className="text-[11px] font-bold uppercase text-gray-500">
+                                                  Total Cost
+                                                </label>
+                                                <div className="border p-2 rounded bg-gray-100 text-gray-600 font-semibold">
+                                                  {(Number(disease.sessions || 0) * Number(disease.costPerSession || 0)) || "0"}
+                                                </div>
+                                              </div>
+                                              <button
+                                                type="button"
+                                                onClick={() => {
+                                                  const updatedDiseases = assistanceData[rel]?.Medical?.diseases?.filter((_, i) => i !== index) || [];
+                                                  handleDiseaseChange(rel, -1, "removeDisease", updatedDiseases);
+                                                }}
+                                                className="px-3 py-2 bg-red-500 hover:bg-red-600 text-white text-xs rounded"
+                                              >
+                                                Remove
+                                              </button>
+                                            </div>
+                                          </div>
+                                        ))}
+                                      </div>
                                     </div>
 
                                     <div className="flex flex-col gap-1">
@@ -2369,119 +2518,9 @@ const FamilyDetailsForm = () => {
 
 
 
-                                    <div className="flex flex-col gap-1">
-                                      <label className="text-[11px] font-bold uppercase text-gray-500">
-                                        Repeated Medical Assistance Required?*
-                                      </label>
-                                      <div className="flex gap-4 mt-2">
-                                        <label className="flex items-center gap-2 text-sm">
-                                          <input
-                                            type="checkbox"
-                                            checked={
-                                              assistanceData[rel]?.Medical
-                                                ?.repeatedAssistance || false
-                                            }
-                                            onChange={(e) =>
-                                              handleMedicalChange(
-                                                rel,
-                                                "repeatedAssistance",
-                                                e.target.checked,
-                                              )
-                                            }
-                                          />{" "}
-                                          Yes
-                                        </label>
-                                        <label className="flex items-center gap-2 text-sm">
-                                          <input
-                                            type="checkbox"
-                                            checked={
-                                              !assistanceData[rel]?.Medical
-                                                ?.repeatedAssistance
-                                            }
-                                            onChange={(e) =>
-                                              handleMedicalChange(
-                                                rel,
-                                                "repeatedAssistance",
-                                                !e.target.checked,
-                                              )
-                                            }
-                                          />{" "}
-                                          No
-                                        </label>
-                                      </div>
-                                    </div>
+                                    {/* Treatment frequency is now handled per disease in the diseases array above */}
 
-                                    {assistanceData[rel]?.Medical?.repeatedAssistance && (
-                                      <div className="col-span-full md:col-span-2">
-                                        <div className="flex gap-2">
-
-                                          <div className="flex flex-col gap-1">
-                                            <label className="text-[11px] font-bold uppercase text-gray-500">
-                                              Treatment Frequency*
-                                            </label>
-                                            <select
-                                              className="border p-2 rounded bg-white outline-none focus:border-blue-500"
-                                              value={assistanceData[rel]?.Medical?.frequency || ""}
-                                              onChange={(e) =>
-                                                handleMedicalChange(rel, "frequency", e.target.value)
-                                              }
-                                            >
-                                              <option value="">Select</option>
-                                              <option value="Daily">Daily</option>
-                                              <option value="Alternate Days">Alternate Days</option>
-                                              <option value="Weekly">Weekly</option>
-                                              <option value="Bi-Weekly">Bi-Weekly</option>
-                                              <option value="Monthly">Monthly</option>
-                                              <option value="Quarterly">Quarterly</option>
-                                              <option value="Yearly">Yearly</option>
-                                            </select>
-                                          </div>
-
-                                          <div className="flex flex-col gap-1">
-                                            <label className="text-[11px] font-bold uppercase text-gray-500">
-                                              Estimated Cost Per Session*
-                                            </label>
-                                            <input
-                                              type="number"
-                                              value={assistanceData[rel]?.Medical?.costPerSession || ""}
-                                              onChange={(e) =>
-                                                handleMedicalChange(rel, "costPerSession", e.target.value)
-                                              }
-                                              className="border p-2 rounded outline-none focus:border-blue-500"
-                                            />
-                                          </div>
-
-                                          <div className="flex flex-col gap-1">
-                                            <label className="text-[11px] font-bold uppercase text-gray-500">
-                                              Expected Number of Sessions*
-                                            </label>
-                                            <input
-                                              type="number"
-                                              value={assistanceData[rel]?.Medical?.sessionsCount || ""}
-                                              onChange={(e) =>
-                                                handleMedicalChange(rel, "sessionsCount", e.target.value)
-                                              }
-                                              className="border p-2 rounded outline-none focus:border-blue-500"
-                                            />
-                                          </div>
-
-                                          <div className="flex flex-col gap-1">
-                                            <label className="text-[11px] font-bold uppercase text-gray-500">
-                                              Calculated Total
-                                            </label>
-                                            <input
-                                              type="number"
-                                              readOnly
-                                              value={
-                                                assistanceData[rel]?.Medical?.totalEstimatedCost || ""
-                                              }
-                                              className="border p-2 rounded bg-gray-50 text-gray-600 outline-none"
-                                            />
-                                          </div>
-
-                                        </div>
-                                      </div>
-                                    )}
+                                    {/* Treatment frequency is now handled per disease in the diseases array */}
 
                                     {/* <div className="col-span-full md:col-span-2">
                                       <label className="text-[11px] font-bold uppercase text-gray-500">
@@ -3882,8 +3921,16 @@ const FamilyDetailsForm = () => {
                                                     e.target.value,
                                                   )
                                                 }
-                                                className="border p-2 rounded outline-none focus:border-blue-500"
+                                                className={`border p-2 rounded outline-none focus:border-blue-500 ${Number(assistanceData[rel]?.Housing?.emiAmountMonthly || 0) > Number(assistanceData[rel]?.Housing?.loanAmount || 0) && assistanceData[rel]?.Housing?.loanAmount
+                                                    ? "border-red-500 focus:ring-2 focus:ring-red-100"
+                                                    : "border-slate-300"
+                                                  }`}
                                               />
+                                              {Number(assistanceData[rel]?.Housing?.emiAmountMonthly || 0) > Number(assistanceData[rel]?.Housing?.loanAmount || 0) && assistanceData[rel]?.Housing?.loanAmount && (
+                                                <p className="text-red-500 text-xs mt-1">
+                                                  EMI amount cannot exceed loan amount (₹{assistanceData[rel]?.Housing?.loanAmount})
+                                                </p>
+                                              )}
                                             </div>
 
                                             <div className="flex flex-col gap-1">
@@ -4808,14 +4855,25 @@ const FamilyDetailsForm = () => {
                   <input
                     type="number"
                     value={formData.mediclaimPremiumAmount || ""}
-                    onChange={(e) =>
+                    onChange={(e) => {
+                      const premiumAmount = Number(e.target.value);
+                      const coverAmount = Number(formData.Family_mediclaim_amount) || 0;
+
                       setFormData({
                         ...formData,
                         mediclaimPremiumAmount: e.target.value,
-                      })
-                    }
-                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
+                      });
+                    }}
+                    className={`w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-100 outline-none ${Number(formData.mediclaimPremiumAmount || 0) > Number(formData.Family_mediclaim_amount || 0) && formData.Family_mediclaim_amount
+                      ? "border-red-500 focus:ring-red-100"
+                      : "border-slate-300"
+                      }`}
                   />
+                  {Number(formData.mediclaimPremiumAmount || 0) > Number(formData.Family_mediclaim_amount || 0) && formData.Family_mediclaim_amount && (
+                    <p className="text-red-500 text-xs mt-1">
+                      Premium amount cannot exceed cover amount (₹{formData.Family_mediclaim_amount})
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
