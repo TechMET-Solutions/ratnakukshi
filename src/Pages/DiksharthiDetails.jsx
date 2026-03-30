@@ -1,4 +1,4 @@
-import { Plus, Search, X } from "lucide-react";
+import { Plus, Search, SquaresExclude, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { API } from "../api/BaseURL";
@@ -718,6 +718,10 @@ const DiksharthiListing = () => {
     }
   };
 
+  const downloadExcel = () => {
+    window.open(`https://karyakarta.ratnakukshi.org/api/export/diksharthi`);
+  };
+
   return (
     <div className="p-8 min-h-screen">
       {/* Header Section */}
@@ -726,6 +730,7 @@ const DiksharthiListing = () => {
           Diksharthi Details
         </h1>
         {role === "staff" && (
+          <div className="flex gap-6">
           <Link
             to="/diksharthi-details-add"
             className="bg-[#d94452] hover:bg-[#c13946] text-white px-4 py-2 rounded-md flex items-center gap-2 text-sm font-medium transition-colors shadow-sm"
@@ -733,6 +738,13 @@ const DiksharthiListing = () => {
             <Plus size={18} />
             Add New Diksharthi
           </Link>
+          <button
+            onClick={downloadExcel}
+            className="bg-green-600 text-white px-4 py-2 rounded-md flex items-center gap-2 text-sm font-medium transition-colors shadow-sm"
+          >
+            Export Diksharthi Details
+            </button>
+          </div>
         )}
       </div>
 
@@ -757,9 +769,6 @@ const DiksharthiListing = () => {
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-gray-50 border-b border-gray-100 ">
-              {/* <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">
-                Photo
-              </th> */}
               <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">
                 Date
               </th>
@@ -770,15 +779,18 @@ const DiksharthiListing = () => {
                 Diksharthi Name
               </th>
               <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">
-                Pad
+                RBF Criteria
               </th>
               <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">
-                RBF Criteria
+                RBF Relation
+              </th>
+              <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">
+                RBF Family Member Name
               </th>
               {/* <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">
                 Alive Status
               </th> */}
-              
+
               {role === "operations-manager" && (
                 <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">
                   Staff Name
@@ -844,16 +856,15 @@ const DiksharthiListing = () => {
                     {/* Name */}
                     <td className="px-6 py-3">{diksharthi.sadhu_sadhvi_name}</td>
 
-                    {/* Pad */}
-                    <td className="px-6 py-3">{diksharthi.pad}</td>
-
-                    {/* Sect */}
-                    {/* <td className="px-6 py-3">{diksharthi.samudaay}</td> */}
 
                     {/* Alive */}
                     <td className="px-6 py-3">{diksharthi.rbf_criteria}</td>
 
-                  
+                    {/* Pad */}
+                    <td className="px-6 py-3">{diksharthi.relation}</td>
+                    <td className="px-6 py-3">{diksharthi.relation_name}</td>
+
+
                     {role === "operations-manager" && (
                       <td className="px-6 py-3">
                         {getUserNameById(diksharthi.user_id)}
