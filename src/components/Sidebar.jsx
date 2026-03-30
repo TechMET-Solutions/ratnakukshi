@@ -17,7 +17,7 @@ const Sidebar = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const navigate = useNavigate();
   const { user, logout } = useAuth();
-  const role = String(user?.role || "").toLowerCase();
+  const role = String(user?.role || "").trim().toLowerCase();
   const isAdmin = role === "admin";
   const isStaff = role === "staff";
   const isOperationsManager = role === "operations-manager";
@@ -89,9 +89,9 @@ const Sidebar = () => {
           isCollapsed={isCollapsed}
           to="/diksharthi-details"
           icon={<FileText size={22} />}
-          label={isOperationsManager
-            ? "Ratnakukshi Family Details"
-            : "Diksharthi Details"}
+          label={isStaff
+            ? "Diksharthi Details"
+            : "Family Details"}
         />
         
         {isKaryakarta && (

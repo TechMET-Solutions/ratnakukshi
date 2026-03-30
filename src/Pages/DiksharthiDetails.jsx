@@ -82,6 +82,7 @@ const DiksharthiListing = () => {
   const [isAdminListLoading, setIsAdminListLoading] = useState(false);
   const [visitSchedules, setVisitSchedules] = useState({});
   const [scheduleVisitModalData, setScheduleVisitModalData] = useState(null);
+  const [scheduleVisitModalMode, setScheduleVisitModalMode] = useState("contact");
   const [viewScheduleModalData, setViewScheduleModalData] = useState(null);
   const [familyDetailsModalData, setFamilyDetailsModalData] = useState(null);
   const [isFamilyDetailsLoading, setIsFamilyDetailsLoading] = useState(false);
@@ -294,6 +295,20 @@ const DiksharthiListing = () => {
     return visitSchedules[String(diksharthi.id)] || null;
   };
 
+  const hasVisitContactInfo = (diksharthi) => {
+    const schedule = getVisitSchedule(diksharthi);
+    return Boolean(
+      schedule?.name?.trim() &&
+      schedule?.address?.trim() &&
+      schedule?.mobile?.trim()
+    );
+  };
+
+  const hasVisitDateTime = (diksharthi) => {
+    const schedule = getVisitSchedule(diksharthi);
+    return Boolean(schedule?.date && schedule?.time);
+  };
+
   const normalizeVisitSchedule = (schedule) => {
     if (!schedule) return null;
 
@@ -387,13 +402,26 @@ const DiksharthiListing = () => {
     console.log(fetchAdminUsers)
   };
 
-  const openScheduleVisitModal = (diksharthi) => {
+  const openContactInfoModal = (diksharthi) => {
     const existingSchedule = getVisitSchedule(diksharthi);
+    setScheduleVisitModalMode("contact");
     setScheduleVisitModalData(diksharthi);
     setScheduleForm(
       existingSchedule || {
         ...emptyScheduleForm,
-        // name: diksharthi?.sadhu_sadhvi_name || "",
+        name: diksharthi?.relation_name || "",
+      }
+    );
+  };
+
+  const openDateTimeModal = (diksharthi) => {
+    const existingSchedule = getVisitSchedule(diksharthi);
+    setScheduleVisitModalMode("datetime");
+    setScheduleVisitModalData(diksharthi);
+    setScheduleForm(
+      existingSchedule || {
+        ...emptyScheduleForm,
+        name: diksharthi?.relation_name || "",
       }
     );
   };
@@ -409,14 +437,13 @@ const DiksharthiListing = () => {
   const handleSaveVisitSchedule = async () => {
     if (!scheduleVisitModalData?.id) return;
 
-    if (
-      !scheduleForm.name.trim() ||
-      !scheduleForm.address.trim() ||
-      !scheduleForm.mobile.trim() ||
-      !scheduleForm.date ||
-      !scheduleForm.time
-    ) {
-      alert("Please fill name, address, mobile number, date and time");
+    if (!scheduleForm.name.trim() || !scheduleForm.address.trim() || !scheduleForm.mobile.trim()) {
+      alert("Please fill name, address and mobile number");
+      return;
+    }
+
+    if (scheduleVisitModalMode === "datetime" && (!scheduleForm.date || !scheduleForm.time)) {
+      alert("Please set visit date and time");
       return;
     }
 
@@ -427,8 +454,8 @@ const DiksharthiListing = () => {
       name: scheduleForm.name.trim(),
       address: scheduleForm.address.trim(),
       mobile: scheduleForm.mobile.trim(),
-      date: scheduleForm.date,
-      time: scheduleForm.time,
+      date: scheduleForm.date || null,
+      time: scheduleForm.time || null,
       scheduled_by: loggedInUserId,
     };
 
@@ -473,8 +500,13 @@ const DiksharthiListing = () => {
 
       setVisitSchedules(updatedSchedules);
       setScheduleVisitModalData(null);
+      setScheduleVisitModalMode("contact");
       setScheduleForm(emptyScheduleForm);
-      alert(result?.message || "Visit scheduled successfully");
+      alert(
+        scheduleVisitModalMode === "contact"
+          ? "Contact info saved successfully"
+          : (result?.message || "Visit schedule saved successfully")
+      );
     } catch (error) {
       console.error(error);
       alert(error?.message || "Failed to schedule visit");
@@ -592,7 +624,7 @@ const DiksharthiListing = () => {
   };
 
   const canDownloadApplicationPdf =
-    role === "admin" || role === "karyakarta" || role === "case-coordinator";
+    role === "admin" || role === "case-coordinator" || role === "operations-manager";
 
   const handleDownloadApplicationPdf = async (diksharthi) => {
     if (!diksharthi?.id) return;
@@ -719,7 +751,7 @@ const DiksharthiListing = () => {
   };
 
   const downloadExcel = () => {
-    window.open(`https://karyakarta.ratnakukshi.org/api/export/diksharthi`);
+    window.open(`${API}/api/diksharthi/export`, "_blank");
   };
 
   return (
@@ -926,7 +958,26 @@ const DiksharthiListing = () => {
                             View
                           </button>
 
-                          {isAdminUnassigned(diksharthi) && (
+                          {canDownloadApplicationPdf && diksharthi.family_details && (
+                            <button
+                              className="rounded-lg bg-rose-600 text-sm px-2 py-1 text-white disabled:opacity-60"
+                              onClick={() => handleDownloadApplicationPdf(diksharthi)}
+                              disabled={downloadingPdfId === diksharthi.id}
+                            >
+                              {downloadingPdfId === diksharthi.id ? "Downloading..." : "Application PDF"}
+                            </button>
+                          )}
+
+                          {!hasVisitContactInfo(diksharthi) && (
+                            <button
+                              className="rounded-lg bg-emerald-600 text-sm px-2 py-1 text-white"
+                              onClick={() => openContactInfoModal(diksharthi)}
+                            >
+                              Set Contact Info
+                            </button>
+                          )}
+
+                          {hasVisitContactInfo(diksharthi) && isAdminUnassigned(diksharthi) && (
                             <button
                               className="rounded-lg bg-purple-600 text-sm px-2 py-1 text-white"
                               onClick={() => openAssignAdminModal(diksharthi)}
@@ -935,12 +986,12 @@ const DiksharthiListing = () => {
                             </button>
                           )}
 
-                          {!isAdminUnassigned(diksharthi) && !getVisitSchedule(diksharthi) && (
+                          {!isAdminUnassigned(diksharthi) && hasVisitContactInfo(diksharthi) && !hasVisitDateTime(diksharthi) && (
                             <button
                               className="rounded-lg bg-emerald-600 text-sm px-2 py-1 text-white"
-                              onClick={() => openScheduleVisitModal(diksharthi)}
+                              onClick={() => openDateTimeModal(diksharthi)}
                             >
-                              Schedule Visit
+                              Set Date & Time
                             </button>
                           )}
 
@@ -995,7 +1046,7 @@ const DiksharthiListing = () => {
                             </button>
                           )}
 
-                          {getVisitSchedule(diksharthi) && (
+                          {hasVisitDateTime(diksharthi) && (
                             <button
                               className="rounded-lg bg-indigo-600 text-sm px-2 py-1 text-white"
                               onClick={() => openViewScheduleModal(diksharthi)}
@@ -1250,12 +1301,15 @@ const DiksharthiListing = () => {
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 px-4">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg">
             <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-              <h3 className="text-lg font-semibold text-gray-800">Schedule Visit</h3>
+              <h3 className="text-lg font-semibold text-gray-800">
+                {scheduleVisitModalMode === "contact" ? "Set Contact Info" : "Set Visit Date & Time"}
+              </h3>
               <button
                 type="button"
                 className="p-1 rounded hover:bg-gray-100"
                 onClick={() => {
                   setScheduleVisitModalData(null);
+                  setScheduleVisitModalMode("contact");
                   setScheduleForm(emptyScheduleForm);
                 }}
               >
@@ -1303,32 +1357,34 @@ const DiksharthiListing = () => {
                   className="w-full p-2 border border-slate-300 rounded-md outline-none"
                 />
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Date
-                  </label>
-                  <input
-                    type="date"
-                    name="date"
-                    value={scheduleForm.date}
-                    onChange={handleScheduleFormChange}
-                    className="w-full p-2 border border-slate-300 rounded-md outline-none"
-                  />
+              {scheduleVisitModalMode === "datetime" && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      Date
+                    </label>
+                    <input
+                      type="date"
+                      name="date"
+                      value={scheduleForm.date}
+                      onChange={handleScheduleFormChange}
+                      className="w-full p-2 border border-slate-300 rounded-md outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      Time
+                    </label>
+                    <input
+                      type="time"
+                      name="time"
+                      value={scheduleForm.time}
+                      onChange={handleScheduleFormChange}
+                      className="w-full p-2 border border-slate-300 rounded-md outline-none"
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Time
-                  </label>
-                  <input
-                    type="time"
-                    name="time"
-                    value={scheduleForm.time}
-                    onChange={handleScheduleFormChange}
-                    className="w-full p-2 border border-slate-300 rounded-md outline-none"
-                  />
-                </div>
-              </div>
+              )}
             </div>
             <div className="px-5 py-4 border-t border-gray-100 flex gap-2 justify-end">
               <button
@@ -1336,6 +1392,7 @@ const DiksharthiListing = () => {
                 className="rounded-lg bg-gray-200 text-sm px-4 py-2 text-gray-800"
                 onClick={() => {
                   setScheduleVisitModalData(null);
+                  setScheduleVisitModalMode("contact");
                   setScheduleForm(emptyScheduleForm);
                 }}
               >
@@ -1347,7 +1404,11 @@ const DiksharthiListing = () => {
                 onClick={handleSaveVisitSchedule}
                 disabled={isSchedulingVisit}
               >
-                {isSchedulingVisit ? "Saving..." : "Save Schedule"}
+                {isSchedulingVisit
+                  ? "Saving..."
+                  : scheduleVisitModalMode === "contact"
+                    ? "Save Contact Info"
+                    : "Save Date & Time"}
               </button>
             </div>
           </div>
