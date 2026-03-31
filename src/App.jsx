@@ -19,6 +19,7 @@ import UserList from "./pages/UserList";
 import KaryakartaDetailsAdd from "./pages/KaryakartaDetailsAdd";
 import Pofile from "./pages/Pofile";
 import Language from "./pages/Language";
+import ResProof from "./pages/ResProof";
 
 const Layout = ({ children }) => {
   return (
@@ -212,11 +213,21 @@ function App() {
           }
         />
         <Route
-          path="/language"
+          path="/mother-tongue"
           element={
             <ProtectedRoute>
               <Layout>
                 <Language />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/res-proof"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <ResProof />
               </Layout>
             </ProtectedRoute>
           }

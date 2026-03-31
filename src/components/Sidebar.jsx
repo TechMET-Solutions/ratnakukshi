@@ -9,7 +9,12 @@ import {
   Settings,
   LogOut,
   ChevronLeft,
-  Menu
+  Menu,
+  Users,
+  HeartHandshake,
+  FileBadge,
+  Globe,
+  ShieldCheck
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -89,7 +94,7 @@ const Sidebar = () => {
         <NavItem
           isCollapsed={isCollapsed}
           to="/diksharthi-details"
-          icon={<FileText size={22} />}
+          icon={<FileBadge size={22} />}
           label={isStaff
             ? "Diksharthi Details"
             : "Family Details"}
@@ -101,7 +106,7 @@ const Sidebar = () => {
 
         {(isAdmin || isKaryakarta || isCaseCoordinator || isExpertPanel || isCommitteeMember) && (
           <>
-            <NavItem isCollapsed={isCollapsed} to="/assistance" icon={<Handshake size={22} />} label="Assistance" />
+            <NavItem isCollapsed={isCollapsed} to="/assistance" icon={<HeartHandshake size={22} />} label="Assistance" />
            
           </>
         )}
@@ -110,7 +115,7 @@ const Sidebar = () => {
           <NavItem
             isCollapsed={isCollapsed}
             to="/donor"
-            icon={<FileText size={22} />}
+            icon={<Users size={22} />}
             label="Donor"
           />
         )}
@@ -118,7 +123,9 @@ const Sidebar = () => {
 
         {isAdmin && (
           <>
-            <NavItem isCollapsed={isCollapsed} to="/user" icon={<UserCircle size={22} />} label="User Management" />
+            <NavItem isCollapsed={isCollapsed} to="/user" icon={<Users size={22} />} label="User Management" />
+            <NavItem isCollapsed={isCollapsed} to="/mother-tongue" icon={<Globe size={22} />} label="Mother Tongue" />
+            <NavItem isCollapsed={isCollapsed} to="/res-proof" icon={<FileText size={22} />} label="Res. Proof" />
             <NavItem isCollapsed={isCollapsed} to="/religious-practices" icon={<Home size={22} />} label="Religious" />
             <NavItem isCollapsed={isCollapsed} to="/settings" icon={<Settings size={22} />} label="Settings" />
           </>

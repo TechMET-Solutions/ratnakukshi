@@ -2,14 +2,15 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { Plus, Search, Edit, Trash2 } from 'lucide-react';
 import { API } from '../api/BaseURL';
 
-// Mock Modal Component (Replace with your actual Modal components)
-const DeleteModal = ({ isOpen, onClose, onConfirm, languageName }) => {
+// --- Modals ---
+
+const DeleteModal = ({ isOpen, onClose, onConfirm, resProofName }) => {
     if (!isOpen) return null;
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
             <div className="bg-white p-6 rounded-lg max-w-sm w-full">
-                <h2 className="text-xl font-bold mb-4">Delete Language</h2>
-                <p>Are you sure you want to delete <strong>{languageName}</strong>?</p>
+                <h2 className="text-xl font-bold mb-4">Delete ResProof</h2>
+                <p>Are you sure you want to delete <strong>{resProofName}</strong>?</p>
                 <div className="flex justify-end gap-3 mt-6">
                     <button onClick={onClose} className="px-4 py-2 border rounded">Cancel</button>
                     <button onClick={onConfirm} className="px-4 py-2 bg-red-500 text-white rounded">Delete</button>
@@ -19,11 +20,10 @@ const DeleteModal = ({ isOpen, onClose, onConfirm, languageName }) => {
     );
 };
 
-const LanguageModal = ({ isOpen, onClose, onSave, initialData }) => {
+const ResProofModal = ({ isOpen, onClose, onSave, initialData }) => {
     const [formData, setFormData] = useState({ name: "", status: "active" });
 
-    // Sync form data when modal opens or initialData changes
-    React.useEffect(() => {
+    useEffect(() => {
         if (initialData) {
             setFormData({ name: initialData.name, status: initialData.status });
         } else {
@@ -44,19 +44,19 @@ const LanguageModal = ({ isOpen, onClose, onSave, initialData }) => {
             <div className="bg-white rounded-lg shadow-xl w-full max-w-md overflow-hidden">
                 <div className="p-6 border-b border-gray-100">
                     <h2 className="text-xl font-bold text-gray-800">
-                        {initialData ? "Edit Language" : "Add New Language"}
+                        {initialData ? "Edit ResProof" : "Add New ResProof"}
                     </h2>
                 </div>
 
                 <form onSubmit={handleSubmit} className="p-6 space-y-4">
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Language Name</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">ResProof Name</label>
                         <input
                             required
                             type="text"
                             value={formData.name}
                             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                            placeholder="e.g. Spanish"
+                            placeholder="e.g. Identity Proof"
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                         />
                     </div>
@@ -85,7 +85,7 @@ const LanguageModal = ({ isOpen, onClose, onSave, initialData }) => {
                             type="submit"
                             className="px-4 py-2 text-sm font-medium bg-[#d94452] hover:bg-[#c13946] text-white rounded-md transition-colors"
                         >
-                            {initialData ? "Update Language" : "Save Language"}
+                            {initialData ? "Update ResProof" : "Save ResProof"}
                         </button>
                     </div>
                 </form>
@@ -94,44 +94,40 @@ const LanguageModal = ({ isOpen, onClose, onSave, initialData }) => {
     );
 };
 
-function Language() {
-    // State for Modals
+// --- Main Component ---
+
+function ResProof() {
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
     const [searchTerm, setSearchTerm] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
-    const [selectedLanguage, setSelectedLanguage] = useState(null);
+    const [selectedResProof, setSelectedResProof] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
-    const [languages, setLanguages] = useState([]);
+    const [resProofs, setResProofs] = useState([]);
     const itemsPerPage = 5;
 
-
-    const fetchLanguages = async () => {
+    const fetchResProofs = async () => {
         try {
             setIsLoading(true);
-
-            const res = await fetch(`${API}/api/languages/list`);
-            if (!res.ok) {
-                throw new Error("Failed to fetch languages");
-            }
+            const res = await fetch(`${API}/api/resproof/list`);
+            if (!res.ok) throw new Error("Failed to fetch ResProofs");
             const data = await res.json();
-            setLanguages(Array.isArray(data) ? data : []);
+            setResProofs(Array.isArray(data) ? data : []);
         } catch (error) {
             console.error(error);
-            setLanguages([]);
+            setResProofs([]);
         } finally {
             setIsLoading(false);
         }
     };
 
     useEffect(() => {
-        fetchLanguages();
+        fetchResProofs();
     }, []);
 
-
-    const handleSaveLanguage = async (formData) => {
+    const handleSaveResProof = async (formData) => {
         try {
             setIsLoading(true);
             const payload = {
@@ -140,43 +136,33 @@ function Language() {
             };
 
             if (!payload.name) {
-                alert("Language name is required");
+                alert("ResProof name is required");
                 return false;
             }
 
-            if (selectedLanguage) {
+            if (selectedResProof) {
                 // UPDATE
-                const res = await fetch(`${API}/api/languages/update/${selectedLanguage.id}`, {
+                const res = await fetch(`${API}/api/resproof/update/${selectedResProof.id}`, {
                     method: "PUT",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
+                    headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(payload),
                 });
-                if (!res.ok) {
-                    const errorData = await res.json().catch(() => ({}));
-                    throw new Error(errorData?.message || "Failed to update language");
-                }
+                if (!res.ok) throw new Error("Failed to update ResProof");
             } else {
                 // CREATE
-                const res = await fetch(`${API}/api/languages/create`, {
+                const res = await fetch(`${API}/api/resproof/create`, {
                     method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
+                    headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(payload),
                 });
-                if (!res.ok) {
-                    const errorData = await res.json().catch(() => ({}));
-                    throw new Error(errorData?.message || "Failed to create language");
-                }
+                if (!res.ok) throw new Error("Failed to create ResProof");
             }
 
-            await fetchLanguages(); // refresh list
+            await fetchResProofs();
             return true;
         } catch (error) {
             console.error(error);
-            alert(error?.message || "Failed to save language");
+            alert(error?.message || "Failed to save ResProof");
             return false;
         } finally {
             setIsLoading(false);
@@ -184,51 +170,46 @@ function Language() {
     };
 
     const handleDelete = async () => {
-        if (!selectedLanguage?.id) return;
+        if (!selectedResProof?.id) return;
         try {
             setIsLoading(true);
-            const res = await fetch(`${API}/api/languages/delete/${selectedLanguage.id}`, {
+            const res = await fetch(`${API}/api/resproof/delete/${selectedResProof.id}`, {
                 method: "DELETE",
             });
-            if (!res.ok) {
-                const errorData = await res.json().catch(() => ({}));
-                throw new Error(errorData?.message || "Failed to delete language");
-            }
+            if (!res.ok) throw new Error("Failed to delete ResProof");
 
-            await fetchLanguages();
+            await fetchResProofs();
             setIsDeleteModalOpen(false);
-            setSelectedLanguage(null);
+            setSelectedResProof(null);
         } catch (error) {
             console.error(error);
-            alert(error?.message || "Failed to delete language");
+            alert(error?.message || "Failed to delete ResProof");
         } finally {
             setIsLoading(false);
         }
     };
 
-    // --- Logic ---
-
-    const filteredLanguages = useMemo(() => {
-        return languages.filter(lang =>
-            String(lang?.name || "").toLowerCase().includes(searchTerm.toLowerCase())
+    const filteredResProofs = useMemo(() => {
+        return resProofs.filter(item =>
+            String(item?.name || "").toLowerCase().includes(searchTerm.toLowerCase())
         );
-    }, [languages, searchTerm]);
+    }, [resProofs, searchTerm]);
 
     useEffect(() => {
         setCurrentPage(1);
-    }, [searchTerm, languages.length]);
+    }, [searchTerm, resProofs.length]);
 
-    const totalPages = Math.ceil(filteredLanguages.length / itemsPerPage) || 1;
+    const totalPages = Math.ceil(filteredResProofs.length / itemsPerPage) || 1;
     const startIndex = (currentPage - 1) * itemsPerPage;
-    const paginatedLanguages = filteredLanguages.slice(startIndex, startIndex + itemsPerPage);
+    const paginatedResProofs = filteredResProofs.slice(startIndex, startIndex + itemsPerPage);
 
-    const openUpdateModal = (lang) => {
-        setSelectedLanguage(lang);
+    const openUpdateModal = (resProof) => {
+        setSelectedResProof(resProof);
         setIsEditModalOpen(true);
     };
 
-    const openDeleteModal = (lang) => {
-        setSelectedLanguage(lang);
+    const openDeleteModal = (resProof) => {
+        setSelectedResProof(resProof);
         setIsDeleteModalOpen(true);
     };
 
@@ -236,28 +217,25 @@ function Language() {
         setIsAddModalOpen(false);
         setIsEditModalOpen(false);
         setIsDeleteModalOpen(false);
-        setSelectedLanguage(null);
+        setSelectedResProof(null);
     };
-
-    
 
     return (
         <div className="p-8 min-h-screen bg-gray-50">
-            {/* Header */}
             <div className="flex justify-between items-center mb-6">
-                <h1 className="text-2xl font-bold text-slate-700">Language</h1>
+                <h1 className="text-2xl font-bold text-slate-700">ResProof</h1>
                 <button
                     onClick={() => {
-                        setSelectedLanguage(null); // Ensure no old data is loaded
+                        setSelectedResProof(null);
                         setIsAddModalOpen(true);
-                    }}                    className="bg-[#d94452] hover:bg-[#c13946] text-white px-4 py-2 rounded-md flex items-center gap-2 text-sm font-medium transition-colors shadow-sm"
+                    }}
+                    className="bg-[#d94452] hover:bg-[#c13946] text-white px-4 py-2 rounded-md flex items-center gap-2 text-sm font-medium transition-colors shadow-sm"
                 >
                     <Plus size={18} />
-                    Add Language
+                    Add ResProof
                 </button>
             </div>
 
-            {/* Table Container */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
                 <div className="p-4 border-b border-gray-100 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
                     <div className="relative w-full sm:max-w-sm">
@@ -268,12 +246,12 @@ function Language() {
                             type="text"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            placeholder="Search by language name..."
+                            placeholder="Search by ResProof name..."
                             className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
                         />
                     </div>
                     <p className="text-sm text-gray-600">
-                        Showing {filteredLanguages.length} result(s)
+                        Showing {filteredResProofs.length} result(s)
                     </p>
                 </div>
 
@@ -281,7 +259,7 @@ function Language() {
                     <thead>
                         <tr className="bg-gray-50 border-b border-gray-100">
                             <th className="px-6 py-4 text-sm font-semibold text-gray-700">Sr no</th>
-                            <th className="px-6 py-4 text-sm font-semibold text-gray-700">Language Name</th>
+                            <th className="px-6 py-4 text-sm font-semibold text-gray-700">ResProof Name</th>
                             <th className="px-6 py-4 text-sm font-semibold text-gray-700">Status</th>
                             <th className="px-6 py-4 text-sm font-semibold text-gray-700 text-right">Actions</th>
                         </tr>
@@ -289,37 +267,24 @@ function Language() {
                     <tbody className="divide-y divide-gray-100">
                         {isLoading ? (
                             <tr>
-                                <td colSpan="4" className="px-6 py-10 text-center text-gray-500">
-                                    Loading...
-                                </td>
+                                <td colSpan="4" className="px-6 py-10 text-center text-gray-500">Loading...</td>
                             </tr>
-                        ) : paginatedLanguages.length > 0 ? (
-                            paginatedLanguages.map((lang, index) => (
-                                <tr key={lang.id} className="hover:bg-gray-50 transition-colors">
-                                    <td className="px-6 py-4 text-sm text-gray-600">
-                                        {startIndex + index + 1}
-                                    </td>
-                                    <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                                        {lang.name}
-                                    </td>
+                        ) : paginatedResProofs.length > 0 ? (
+                            paginatedResProofs.map((item, index) => (
+                                <tr key={item.id} className="hover:bg-gray-50 transition-colors">
+                                    <td className="px-6 py-4 text-sm text-gray-600">{startIndex + index + 1}</td>
+                                    <td className="px-6 py-4 text-sm font-medium text-gray-900">{item.name}</td>
                                     <td className="px-6 py-4 text-sm">
-                                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${lang.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'
-                                            }`}>
-                                            {lang.status}
+                                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${item.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>
+                                            {item.status}
                                         </span>
                                     </td>
                                     <td className="px-6 py-4 text-sm text-gray-600 text-right">
                                         <div className="flex justify-end gap-3">
-                                            <button
-                                                onClick={() => openUpdateModal(lang)}
-                                                className="text-blue-500 hover:text-blue-700"
-                                            >
+                                            <button onClick={() => openUpdateModal(item)} className="text-blue-500 hover:text-blue-700">
                                                 <Edit size={18} />
                                             </button>
-                                            <button
-                                                onClick={() => openDeleteModal(lang)}
-                                                className="text-red-500 hover:text-red-700"
-                                            >
+                                            <button onClick={() => openDeleteModal(item)} className="text-red-500 hover:text-red-700">
                                                 <Trash2 size={18} />
                                             </button>
                                         </div>
@@ -328,19 +293,14 @@ function Language() {
                             ))
                         ) : (
                             <tr>
-                                <td colSpan="4" className="px-6 py-10 text-center text-gray-500">
-                                    No languages found.
-                                </td>
+                                <td colSpan="4" className="px-6 py-10 text-center text-gray-500">No ResProofs found.</td>
                             </tr>
                         )}
                     </tbody>
                 </table>
 
-                {/* Pagination */}
                 <div className="px-4 py-3 border-t border-gray-100 flex items-center justify-between">
-                    <p className="text-sm text-gray-600">
-                        Page {currentPage} of {totalPages}
-                    </p>
+                    <p className="text-sm text-gray-600">Page {currentPage} of {totalPages}</p>
                     <div className="flex items-center gap-2">
                         <button
                             onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
@@ -360,17 +320,16 @@ function Language() {
                 </div>
             </div>
 
-            <LanguageModal
+            <ResProofModal
                 isOpen={isAddModalOpen || isEditModalOpen}
-                initialData={selectedLanguage}
+                initialData={selectedResProof}
                 onClose={closeAllModals}
-                onSave={handleSaveLanguage}
+                onSave={handleSaveResProof}
             />
 
-            {/* Modals */}
             <DeleteModal
                 isOpen={isDeleteModalOpen}
-                languageName={selectedLanguage?.name}
+                resProofName={selectedResProof?.name}
                 onClose={() => setIsDeleteModalOpen(false)}
                 onConfirm={handleDelete}
             />
@@ -378,4 +337,4 @@ function Language() {
     );
 }
 
-export default Language;
+export default ResProof;

@@ -2,7 +2,7 @@ import { ChevronLeft } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { API } from "../api/BaseURL";
-import { BLOOD_GROUP, GENDER, MOTHER_TONGUE } from "../utils/constants";
+import { BLOOD_GROUP, GENDER } from "../utils/constants";
 import { isValidAadhaar, isValidPAN } from "../utils/validation";
 
 const parseMaybeJson = (value) => {
@@ -527,6 +527,82 @@ function AddDonor() {
 
   const [numInstallments, setNumInstallments] = useState("");
   const [photo, setPhoto] = useState(null);
+  const [languageOptions, setLanguageOptions] = useState([]);
+  const [isLanguageLoading, setIsLanguageLoading] = useState(false);
+  const [resProofOptions, setResProofOptions] = useState([]);
+  const [isResProofLoading, setIsResProofLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchActiveLanguages = async () => {
+      try {
+        setIsLanguageLoading(true);
+        const response = await fetch(`${API}/api/languages/list`);
+        if (!response.ok) {
+          throw new Error("Failed to fetch languages");
+        }
+        const data = await response.json();
+        const rows = Array.isArray(data) ? data : [];
+        const activeLanguages = rows
+          .filter(
+            (item) =>
+              String(item?.status || "").toLowerCase() === "active" &&
+              String(item?.name || "").trim(),
+          )
+          .map((item) => ({
+            label: item.name,
+            value: item.name,
+          }));
+        setLanguageOptions(activeLanguages);
+
+      } catch (error) {
+        console.error("Error fetching active languages:", error);
+        setLanguageOptions([]);
+      } finally {
+        setIsLanguageLoading(false);
+      }
+    };
+
+    fetchActiveLanguages();
+  }, []);
+
+
+  useEffect(() => {
+    const fetchActiveResProof = async () => {
+      try {
+        setIsResProofLoading(true);
+
+        const response = await fetch(`${API}/api/resproof/list`);
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch res proof");
+        }
+
+        const data = await response.json();
+
+        const activeResProofs = data
+          .filter(
+            (item) =>
+              String(item?.status || "").toLowerCase() === "active" &&
+              String(item?.name || "").trim()
+          )
+          .map((item) => ({
+            label: item.name,
+            value: item.name,
+          }));
+
+        setResProofOptions(activeResProofs);
+        console.log("test", activeResProofs)
+
+      } catch (error) {
+        console.error("Error fetching res proof:", error);
+        setResProofOptions([]);
+      } finally {
+        setIsResProofLoading(false);
+      }
+    };
+
+    fetchActiveResProof();
+  }, []);
 
   useEffect(() => {
     if (numInstallments) {
@@ -1044,9 +1120,12 @@ function AddDonor() {
                       )
                     }
                     className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
+                    disabled={isLanguageLoading}
                   >
-                    <option value="">Select </option>
-                    {MOTHER_TONGUE.map((item) => (
+                    <option value="">
+                      {isLanguageLoading ? "Loading languages..." : "Select"}
+                    </option>
+                    {languageOptions.map((item) => (
                       <option key={item.value} value={item.value}>
                         {item.label}
                       </option>
@@ -1293,8 +1372,27 @@ function AddDonor() {
                       Res. Proof
                     </label>
                     <div className="flex gap-2">
-                      <select className="flex-1 p-2 border border-slate-300 rounded-md outline-none focus:ring-2 focus:ring-blue-100">
+                      {/* <select className="flex-1 p-2 border border-slate-300 rounded-md outline-none focus:ring-2 focus:ring-blue-100">
                         <option value="">Select</option>
+                      </select> */}
+
+                      <select
+                        value={formData.residentialAddress.proof}
+                        onChange={(e) =>
+                          handleChange("residentialAddress", "proof", e.target.value)
+                        }
+                        className="flex-1 p-2 border border-slate-300 rounded-md outline-none focus:ring-2 focus:ring-blue-100"
+                        disabled={isResProofLoading}
+                      >
+                        <option value="">
+                          {isResProofLoading ? "Loading..." : "Select"}
+                        </option>
+
+                        {resProofOptions.map((item) => (
+                          <option key={item.value} value={item.value}>
+                            {item.label}
+                          </option>
+                        ))}
                       </select>
                       <div className="flex border rounded-md overflow-hidden">
                         <button
