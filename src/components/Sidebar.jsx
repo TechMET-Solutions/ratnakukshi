@@ -23,7 +23,8 @@ const Sidebar = () => {
   const isOperationsManager = role === "operations-manager";
   const isKaryakarta = role === "karyakarta";
   const isCaseCoordinator = role === "case-coordinator";
-  const isExpertPanel = role === "expert-panel";
+  const isExpertPanel =
+    role === "expert-panel" || role.startsWith("expert-panel-");
   const isCommitteeMember = role === "committee-member";
 
   const handleLogout = (e) => {

@@ -16,6 +16,19 @@ const UserFormModal = ({
     onSubmit,
 }) => {
     if (!isOpen) return null;
+    const expertPanelSubRoles = [
+        { value: "expert-panel-medical", label: "Expert Panel - Medical" },
+        { value: "expert-panel-job", label: "Expert Panel - Job" },
+        { value: "expert-panel-educations", label: "Expert Panel - Educations" },
+        { value: "expert-panel-food", label: "Expert Panel - Food" },
+        { value: "expert-panel-rent", label: "Expert Panel - Rent" },
+        { value: "expert-panel-housing", label: "Expert Panel - Housing" },
+        { value: "expert-panel-vaiyavacch", label: "Expert Panel - Vaiyavacch" },
+        {
+            value: "expert-panel-livelihoodexpenses",
+            label: "Expert Panel - LivelihoodExpenses",
+        },
+    ];
 
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
@@ -57,6 +70,11 @@ const UserFormModal = ({
                                 <option value="operations-manager">Operations Manager</option>
                                 <option value="case-coordinator">Case Co-ordinator</option>
                                 <option value="expert-panel">Expert Panel</option>
+                                {expertPanelSubRoles.map((item) => (
+                                    <option key={item.value} value={item.value}>
+                                        {item.label}
+                                    </option>
+                                ))}
                                 <option value="committee-member">Committee Member</option>
                             </select>
                         </div>

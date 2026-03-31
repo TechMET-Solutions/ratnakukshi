@@ -37,6 +37,9 @@ const normalizeWorkflowValue = (value) =>
     .replace(/_/g, " ")
     .replace(/-/g, " ");
 
+const isExpertPanelRole = (value) =>
+  normalizeWorkflowValue(value).startsWith("expert panel");
+
 const STATUS_LABELS = {
   pending: "Pending11",
   approve: "Approve",
@@ -116,7 +119,7 @@ const getAllowedActions = ({ role, status }) => {
   }
 
   // ✅ EXPERT PANEL
-  if (normalizedRole === "expert panel") {
+  if (isExpertPanelRole(normalizedRole)) {
     if (normalizedStatus === "expert panel") {
       return ["approve", "rejected","queries"];
     }
@@ -147,7 +150,8 @@ const AssistancePage = () => {
   const role = String(user?.role || "").toLowerCase();
   const isKaryakarta = role === "karyakarta";
   const isCaseCoordinator = role === "case-coordinator";
-  const isExpertPanel = role === "expert-panel";
+  const isExpertPanel =
+    role === "expert-panel" || role.startsWith("expert-panel-");
   const isCommitteeMember = role === "committee-member";
   const canAccessAssistance = isKaryakarta || isCaseCoordinator || isExpertPanel || isCommitteeMember;
   const queryEditorConfig = {
@@ -448,7 +452,10 @@ const AssistancePage = () => {
         return status === "Committee Member";
       }
 
-      if (normalizedRole === "expert-panel") {
+      if (
+        normalizedRole === "expert-panel" ||
+        normalizedRole.startsWith("expert-panel-")
+      ) {
         return status === "send to expert panel";
       }
 

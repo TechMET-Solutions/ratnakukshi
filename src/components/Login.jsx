@@ -13,6 +13,19 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const expertPanelSubRoles = [
+    { value: "expert-panel-medical", label: "Expert Panel - Medical" },
+    { value: "expert-panel-job", label: "Expert Panel - Job" },
+    { value: "expert-panel-educations", label: "Expert Panel - Educations" },
+    { value: "expert-panel-food", label: "Expert Panel - Food" },
+    { value: "expert-panel-rent", label: "Expert Panel - Rent" },
+    { value: "expert-panel-housing", label: "Expert Panel - Housing" },
+    { value: "expert-panel-vaiyavacch", label: "Expert Panel - Vaiyavacch" },
+    {
+      value: "expert-panel-livelihoodexpenses",
+      label: "Expert Panel - LivelihoodExpenses",
+    },
+  ];
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -66,6 +79,11 @@ const Login = () => {
                 <option value="operations-manager">Operations Manager</option>
                 <option value="case-coordinator">Case Coordinator</option>
                 <option value="expert-panel">Expert Panel</option>
+                {expertPanelSubRoles.map((item) => (
+                  <option key={item.value} value={item.value}>
+                    {item.label}
+                  </option>
+                ))}
                 <option value="committee-member">Committee Member</option>
               </select>
             </div>
