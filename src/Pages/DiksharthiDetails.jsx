@@ -25,10 +25,13 @@ const normalizeRole = (value) => {
   const rawRole = String(value || "").trim().toLowerCase();
 
   if (
+    ["case coordinator", "case cordinator", "case-coordinator"].includes(rawRole)
+  ) {
+    return "case-coordinator";
+  }
+
+  if (
     [
-      "case coordinator",
-      "case cordinator",
-      "case-coordinator",
       "operations-manager",
       "operations manager",
       "operation manage",
@@ -759,7 +762,7 @@ const DiksharthiListing = () => {
       {/* Header Section */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-slate-700">
-          Diksharthi Details
+          {role === "staff" ? "Diksharthi Details" : "Family Details"}
         </h1>
         {role === "staff" && (
           <div className="flex gap-6">
@@ -1075,8 +1078,8 @@ const DiksharthiListing = () => {
                         </>
                       )}
 
-                      {/* ================= ADMIN / CASE COORDINATOR ================= */}
-                      {(role === "admin" || role === "case-coordinator") && (
+                      {/* ================= ADMIN ================= */}
+                      {role === "admin" && (
                         <>
                           {canDownloadApplicationPdf && (
                             <button
@@ -1101,6 +1104,21 @@ const DiksharthiListing = () => {
                               onClick={() => openFamilyDetailsModal(diksharthi)}
                             >
                               View Family Details
+                            </button>
+                          )}
+                        </>
+                      )}
+
+                      {/* ================= CASE COORDINATOR ================= */}
+                      {role === "case-coordinator" && (
+                        <>
+                          {canDownloadApplicationPdf && (
+                            <button
+                              className="rounded-lg bg-rose-600 text-sm px-2 py-1 text-white disabled:opacity-60"
+                              onClick={() => handleDownloadApplicationPdf(diksharthi)}
+                              disabled={downloadingPdfId === diksharthi.id}
+                            >
+                              {downloadingPdfId === diksharthi.id ? "Downloading..." : "Application PDF"}
                             </button>
                           )}
                         </>

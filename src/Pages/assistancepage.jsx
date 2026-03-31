@@ -40,6 +40,27 @@ const normalizeWorkflowValue = (value) =>
 const isExpertPanelRole = (value) =>
   normalizeWorkflowValue(value).startsWith("expert panel");
 
+const getExpertPanelAssistanceType = (roleValue) => {
+  const normalizedRole = String(roleValue || "").trim().toLowerCase();
+  if (!normalizedRole.startsWith("expert-panel-")) return null;
+
+  const subRole = normalizedRole.replace("expert-panel-", "").trim();
+  const map = {
+    medical: "medical",
+    job: "job",
+    educations: "education",
+    education: "education",
+    food: "food",
+    rent: "rent",
+    housing: "housing",
+    vaiyavacch: "vaiyavacch",
+    livelihoodexpenses: "livelihoodexpenses",
+    livelihood: "livelihoodexpenses",
+  };
+
+  return map[subRole] || null;
+};
+
 const STATUS_LABELS = {
   pending: "Pending11",
   approve: "Approve",
@@ -436,9 +457,11 @@ const AssistancePage = () => {
 
   const getFilteredData = () => {
     const normalizedRole = role.toLowerCase();
+    const expertPanelType = getExpertPanelAssistanceType(normalizedRole);
 
     return tableData.filter((row) => {
       const status = normalizeWorkflowValue(row.status);
+      const rowType = normalizeWorkflowValue(row.type);
 
       if (normalizedRole === "karyakarta") {
         return status === "pending";
@@ -449,14 +472,21 @@ const AssistancePage = () => {
       }
 
       if (normalizedRole === "committee-member") {
-        return status === "Committee Member";
+        return status === "committee member";
       }
 
       if (
         normalizedRole === "expert-panel" ||
         normalizedRole.startsWith("expert-panel-")
       ) {
-        return status === "send to expert panel";
+        const isInExpertPanelStatus = status === "expert panel";
+        if (!isInExpertPanelStatus) return false;
+        if (!expertPanelType) return true;
+
+        if (expertPanelType === "education") {
+          return rowType === "education" || rowType === "educations";
+        }
+        return rowType === expertPanelType;
       }
 
       return false;
@@ -523,7 +553,7 @@ const AssistancePage = () => {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {tableData.map((row, index) => {
+            {getFilteredData().map((row, index) => {
               const hasQuery = Boolean(getQueryText(row));
               const rowActionKey = getRowActionKey(row, index);
               const isOpen = openDropdownId === rowActionKey;
@@ -719,8 +749,8 @@ const AssistancePage = () => {
 
         </div>
 
-        {selectedSadhu
-          ? familyDetails.map((family) => (
+        {selectedSadhu &&
+          familyDetails.map((family) => (
             <div key={family.id} className="space-y-6">
               <div className="flex items-center gap-4 bg-white p-6 rounded-xl border border-slate-100 shadow-sm">
                 <div className="bg-blue-100 p-3 rounded-full text-blue-600">
@@ -799,8 +829,9 @@ const AssistancePage = () => {
                 )}
               </div>
             </div>
-          ))
-          : renderDefaultTable()}
+          ))}
+
+        {renderDefaultTable()}
 
         {isModalOpen && (
           <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
