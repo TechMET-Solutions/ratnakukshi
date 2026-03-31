@@ -245,7 +245,7 @@ function Language() {
         <div className="p-8 min-h-screen bg-gray-50">
             {/* Header */}
             <div className="flex justify-between items-center mb-6">
-                <h1 className="text-2xl font-bold text-slate-700">Language</h1>
+                <h1 className="text-2xl font-bold text-slate-700">Mother Tongue</h1>
                 <button
                     onClick={() => {
                         setSelectedLanguage(null); // Ensure no old data is loaded
@@ -253,7 +253,7 @@ function Language() {
                     }}                    className="bg-[#d94452] hover:bg-[#c13946] text-white px-4 py-2 rounded-md flex items-center gap-2 text-sm font-medium transition-colors shadow-sm"
                 >
                     <Plus size={18} />
-                    Add Language
+                    Add Mother Tongue
                 </button>
             </div>
 

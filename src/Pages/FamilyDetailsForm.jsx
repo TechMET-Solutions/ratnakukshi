@@ -52,10 +52,26 @@ const asObject = (value) => (value && typeof value === "object" ? value : {});
 const isFileLike = (value) =>
   typeof File !== "undefined" && value instanceof File;
 
+const calculateDiseaseTotal = (disease = {}) => {
+  const costPerSession = Number(disease?.costPerSession) || 0;
+  const sessionsCount = Number(disease?.sessionsCount) || 0;
+  if (!costPerSession || !sessionsCount) return "";
+  return String(costPerSession * sessionsCount);
+};
+
 const calculateMedicalTotal = (medical = {}) => {
+  const diseases = Array.isArray(medical?.diseases) ? medical.diseases : [];
+
+  if (diseases.length) {
+    const total = diseases.reduce((sum, disease) => {
+      const rowTotal = Number(calculateDiseaseTotal(disease)) || 0;
+      return sum + rowTotal;
+    }, 0);
+    return total ? String(total) : "";
+  }
+
   const costPerSession = Number(medical?.costPerSession) || 0;
   const sessionsCount = Number(medical?.sessionsCount) || 0;
-
   if (!costPerSession || !sessionsCount) return "";
   return String(costPerSession * sessionsCount);
 };
@@ -482,13 +498,62 @@ const FamilyDetailsForm = () => {
   };
 
   const handleRelationDetailChange = (relation, field, value) => {
-    setRelationDetails((prev) => ({
-      ...prev,
-      [relation]: {
-        ...prev[relation],
-        [field]: value,
-      },
-    }));
+    setRelationDetails((prev) => {
+      const nextRelationDetails = {
+        ...prev,
+        [relation]: {
+          ...prev[relation],
+          [field]: value,
+        },
+      };
+
+      if (field === "aadharNumber") {
+        const trimmedValue = String(value || "").trim();
+        const isDuplicate = Object.entries(nextRelationDetails).some(
+          ([key, data]) =>
+            key !== relation &&
+            String(data?.aadharNumber || "").trim() !== "" &&
+            String(data?.aadharNumber || "").trim() === trimmedValue,
+        );
+
+        setValidationErrors((prevErrors) => {
+          const nextErrors = { ...prevErrors };
+
+          if (!trimmedValue) {
+            delete nextErrors[`aadhar_${relation}`];
+          } else if (!isValidAadhaar(trimmedValue)) {
+            nextErrors[`aadhar_${relation}`] =
+              "Aadhar number must be exactly 12 digits";
+          } else if (isDuplicate) {
+            nextErrors[`aadhar_${relation}`] = "Aadhar number must be unique";
+          } else {
+            delete nextErrors[`aadhar_${relation}`];
+          }
+
+          return nextErrors;
+        });
+      }
+
+      if (field === "panNumber") {
+        const trimmedValue = String(value || "").trim();
+        setValidationErrors((prevErrors) => {
+          const nextErrors = { ...prevErrors };
+
+          if (!trimmedValue) {
+            delete nextErrors[`pan_${relation}`];
+          } else if (!isValidPAN(trimmedValue)) {
+            nextErrors[`pan_${relation}`] =
+              "PAN must be in format ABCDE1234F (5 letters + 4 digits + 1 letter)";
+          } else {
+            delete nextErrors[`pan_${relation}`];
+          }
+
+          return nextErrors;
+        });
+      }
+
+      return nextRelationDetails;
+    });
   };
 
   const handleHeadOfFamilyChange = (relation) => {
@@ -1116,38 +1181,53 @@ const FamilyDetailsForm = () => {
     }
   };
 
-  // const handleMedicalChange = (relation, field, value) => {
-  //   setAssistanceData((prev) => {
-  //     const nextMedical = {
-  //       ...prev[relation]?.Medical,
-  //       [field]: value,
-  //       status: "Pending",
-  //     };
+  const handleMedicalChange = (relation, field, value) => {
+    setAssistanceData((prev) => {
+      const nextMedical = {
+        ...prev[relation]?.Medical,
+        [field]: value,
+        status: "Pending",
+      };
 
-  //     nextMedical.totalEstimatedCost = calculateMedicalTotal(nextMedical);
+      nextMedical.totalEstimatedCost = calculateMedicalTotal(nextMedical);
 
-  //     return {
-  //       ...prev,
-  //       [relation]: {
-  //         ...prev[relation],
-  //         Medical: nextMedical,
-  //       },
-  //     };
-  //   });
-  // };
+      return {
+        ...prev,
+        [relation]: {
+          ...prev[relation],
+          Medical: nextMedical,
+        },
+      };
+    });
+  };
 
   const handleDiseaseChange = (relation, index, field, value) => {
     setAssistanceData((prev) => {
       if (field === "removeDisease") {
+        const recalculatedDiseases = (value || []).map((item) => ({
+          ...item,
+          totalEstimatedCost: calculateDiseaseTotal(item),
+        }));
+
+        const nextMedical = {
+          ...prev[relation]?.Medical,
+          diseases: recalculatedDiseases,
+        };
+
+        const diseaseNames = (value || [])
+          .map((item) => item?.diseaseName)
+          .filter(Boolean)
+          .join(", ");
+
+        nextMedical.diseaseName = diseaseNames;
+        nextMedical.totalEstimatedCost = calculateMedicalTotal(nextMedical);
+
         // Remove disease
         return {
           ...prev,
           [relation]: {
             ...prev[relation],
-            Medical: {
-              ...prev[relation]?.Medical,
-              diseases: value, // value contains the filtered diseases array
-            },
+            Medical: nextMedical,
           },
         };
       }
@@ -1159,15 +1239,25 @@ const FamilyDetailsForm = () => {
         ...diseases[index],
         [field]: value,
       };
+      diseases[index].totalEstimatedCost = calculateDiseaseTotal(diseases[index]);
+
+      const diseaseNames = diseases
+        .map((item) => item?.diseaseName)
+        .filter(Boolean)
+        .join(", ");
+
+      const nextMedical = {
+        ...prev[relation]?.Medical,
+        diseases,
+        diseaseName: diseaseNames,
+      };
+      nextMedical.totalEstimatedCost = calculateMedicalTotal(nextMedical);
 
       return {
         ...prev,
         [relation]: {
           ...prev[relation],
-          Medical: {
-            ...prev[relation]?.Medical,
-            diseases,
-          },
+          Medical: nextMedical,
         },
       };
     });
@@ -2233,117 +2323,67 @@ const FamilyDetailsForm = () => {
                                       </select>
                                     </div>
 
-                                    {/* Diseases List Section */}
-                                    <div className="col-span-full">
-                                      <div className="flex items-center justify-between mb-4">
-                                        <label className="text-[11px] font-bold uppercase text-gray-500">
-                                          Disease / Condition Details*
-                                        </label>
-                                        <button
-                                          type="button"
-                                          onClick={() => handleAddDisease(rel)}
-                                          className="text-xs px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded"
-                                        >
-                                          + Add Disease
-                                        </button>
-                                      </div>
+                                    <div className="flex flex-col gap-2 md:col-span-2 lg:col-span-3">
+                                      <label className="text-[11px] font-bold uppercase text-gray-500">
+                                        Disease / Condition Name*
+                                      </label>
 
-                                      <div className="space-y-4">
-                                        {(assistanceData[rel]?.Medical?.diseases || []).map((disease, index) => (
-                                          <div key={index} className="border rounded-lg p-4 bg-gray-50">
-                                            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                                              <div className="flex flex-col gap-1">
-                                                <label className="text-[11px] font-bold uppercase text-gray-500">
-                                                  Disease Name*
-                                                </label>
-                                                <input
-                                                  type="text"
-                                                  value={disease.diseaseName || ""}
-                                                  onChange={(e) =>
-                                                    handleDiseaseChange(rel, index, "diseaseName", e.target.value)
-                                                  }
-                                                  placeholder="e.g., Diabetes, BP"
-                                                  className="border p-2 rounded outline-none focus:border-blue-500"
-                                                />
-                                              </div>
-
-                                              <div className="flex flex-col gap-1">
-                                                <label className="text-[11px] font-bold uppercase text-gray-500">
-                                                  Treatment Frequency*
-                                                </label>
-                                                <select
-                                                  value={disease.frequency || ""}
-                                                  onChange={(e) =>
-                                                    handleDiseaseChange(rel, index, "frequency", e.target.value)
-                                                  }
-                                                  className="border p-2 rounded bg-white outline-none focus:border-blue-500"
-                                                >
-                                                  <option value="">Select</option>
-                                                  <option value="Daily">Daily</option>
-                                                  <option value="Alternate Days">Alternate Days</option>
-                                                  <option value="Weekly">Weekly</option>
-                                                  <option value="Bi-Weekly">Bi-Weekly</option>
-                                                  <option value="Monthly">Monthly</option>
-                                                  <option value="Quarterly">Quarterly</option>
-                                                  <option value="Yearly">Yearly</option>
-                                                </select>
-                                              </div>
-
-                                              <div className="flex flex-col gap-1">
-                                                <label className="text-[11px] font-bold uppercase text-gray-500">
-                                                  Sessions/Year*
-                                                </label>
-                                                <input
-                                                  type="number"
-                                                  value={disease.sessions || ""}
-                                                  onChange={(e) =>
-                                                    handleDiseaseChange(rel, index, "sessions", e.target.value)
-                                                  }
-                                                  placeholder="Number"
-                                                  className="border p-2 rounded outline-none focus:border-blue-500"
-                                                />
-                                              </div>
-
-                                              <div className="flex flex-col gap-1">
-                                                <label className="text-[11px] font-bold uppercase text-gray-500">
-                                                  Cost/Session*
-                                                </label>
-                                                <input
-                                                  type="number"
-                                                  value={disease.costPerSession || ""}
-                                                  onChange={(e) =>
-                                                    handleDiseaseChange(rel, index, "costPerSession", e.target.value)
-                                                  }
-                                                  placeholder="Amount"
-                                                  className="border p-2 rounded outline-none focus:border-blue-500"
-                                                />
-                                              </div>
-                                            </div>
-
-                                            <div className="flex items-end justify-between mt-4 gap-4">
-                                              <div className="flex-1">
-                                                <label className="text-[11px] font-bold uppercase text-gray-500">
-                                                  Total Cost
-                                                </label>
-                                                <div className="border p-2 rounded bg-gray-100 text-gray-600 font-semibold">
-                                                  {(Number(disease.sessions || 0) * Number(disease.costPerSession || 0)) || "0"}
-                                                </div>
-                                              </div>
+                                      {(
+                                        assistanceData[rel]?.Medical?.diseases?.length
+                                          ? assistanceData[rel]?.Medical?.diseases
+                                          : [{ diseaseName: assistanceData[rel]?.Medical?.diseaseName || "" }]
+                                      ).map(
+                                        (diseaseItem, diseaseIndex) => (
+                                          <div key={`${rel}-disease-${diseaseIndex}`} className="flex gap-2 items-center">
+                                            <input
+                                              type="text"
+                                              value={diseaseItem?.diseaseName || ""}
+                                              onChange={(e) =>
+                                                handleDiseaseChange(
+                                                  rel,
+                                                  diseaseIndex,
+                                                  "diseaseName",
+                                                  e.target.value,
+                                                )
+                                              }
+                                              className="border p-2 rounded outline-none focus:border-blue-500 flex-1"
+                                              placeholder={`Disease ${diseaseIndex + 1}`}
+                                            />
+                                            {(assistanceData[rel]?.Medical?.diseases?.length || 1) > 1 && (
                                               <button
                                                 type="button"
+                                                className="px-3 py-2 rounded bg-red-100 text-red-700 text-sm"
                                                 onClick={() => {
-                                                  const updatedDiseases = assistanceData[rel]?.Medical?.diseases?.filter((_, i) => i !== index) || [];
-                                                  handleDiseaseChange(rel, -1, "removeDisease", updatedDiseases);
+                                                  const filteredDiseases = (
+                                                    assistanceData[rel]?.Medical?.diseases || []
+                                                  ).filter((_, idx) => idx !== diseaseIndex);
+                                                  handleDiseaseChange(
+                                                    rel,
+                                                    diseaseIndex,
+                                                    "removeDisease",
+                                                    filteredDiseases,
+                                                  );
                                                 }}
-                                                className="px-3 py-2 bg-red-500 hover:bg-red-600 text-white text-xs rounded"
                                               >
                                                 Remove
                                               </button>
-                                            </div>
+                                            )}
                                           </div>
-                                        ))}
-                                      </div>
+                                        ),
+                                      )}
+
+                                      <button
+                                        type="button"
+                                        className="w-fit px-3 py-2 rounded bg-blue-50 text-blue-700 text-sm"
+                                        onClick={() => handleAddDisease(rel)}
+                                      >
+                                        + Add Disease
+                                      </button>
                                     </div>
+
+
+
+                                   
 
                                     <div className="flex flex-col gap-1">
                                       <label className="text-[11px] font-bold uppercase text-gray-500">
@@ -2518,9 +2558,159 @@ const FamilyDetailsForm = () => {
 
 
 
-                                    {/* Treatment frequency is now handled per disease in the diseases array above */}
+                                    <div className="flex flex-col gap-1">
+                                      <label className="text-[11px] font-bold uppercase text-gray-500">
+                                        Repeated Medical Assistance Required?*
+                                      </label>
+                                      <div className="flex gap-4 mt-2">
+                                        <label className="flex items-center gap-2 text-sm">
+                                          <input
+                                            type="checkbox"
+                                            checked={
+                                              assistanceData[rel]?.Medical
+                                                ?.repeatedAssistance || false
+                                            }
+                                            onChange={(e) =>
+                                              handleMedicalChange(
+                                                rel,
+                                                "repeatedAssistance",
+                                                e.target.checked,
+                                              )
+                                            }
+                                          />{" "}
+                                          Yes
+                                        </label>
+                                        <label className="flex items-center gap-2 text-sm">
+                                          <input
+                                            type="checkbox"
+                                            checked={
+                                              !assistanceData[rel]?.Medical
+                                                ?.repeatedAssistance
+                                            }
+                                            onChange={(e) =>
+                                              handleMedicalChange(
+                                                rel,
+                                                "repeatedAssistance",
+                                                !e.target.checked,
+                                              )
+                                            }
+                                          />{" "}
+                                          No
+                                        </label>
+                                      </div>
+                                    </div>
 
-                                    {/* Treatment frequency is now handled per disease in the diseases array */}
+                                    {assistanceData[rel]?.Medical?.repeatedAssistance && (
+                                      <div className="col-span-full md:col-span-3">
+                                        <div className="space-y-3">
+                                          {(assistanceData[rel]?.Medical?.diseases || []).map(
+                                            (diseaseItem, diseaseIndex) => (
+                                              <div
+                                                key={`${rel}-treatment-${diseaseIndex}`}
+                                                className="border rounded-lg p-3 bg-gray-50"
+                                              >
+                                                <p className="text-xs font-semibold text-gray-700 mb-2">
+                                                  {diseaseItem?.diseaseName
+                                                    ? `Treatment Plan - ${diseaseItem.diseaseName}`
+                                                    : `Treatment Plan - Disease ${diseaseIndex + 1}`}
+                                                </p>
+
+                                                <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
+                                                  <div className="flex flex-col gap-1">
+                                                    <label className="text-[11px] font-bold uppercase text-gray-500">
+                                                      Treatment Frequency*
+                                                    </label>
+                                                    <select
+                                                      className="border p-2 rounded bg-white outline-none focus:border-blue-500"
+                                                      value={diseaseItem?.frequency || ""}
+                                                      onChange={(e) =>
+                                                        handleDiseaseChange(
+                                                          rel,
+                                                          diseaseIndex,
+                                                          "frequency",
+                                                          e.target.value,
+                                                        )
+                                                      }
+                                                    >
+                                                      <option value="">Select</option>
+                                                      <option value="Daily">Daily</option>
+                                                      <option value="Alternate Days">Alternate Days</option>
+                                                      <option value="Weekly">Weekly</option>
+                                                      <option value="Bi-Weekly">Bi-Weekly</option>
+                                                      <option value="Monthly">Monthly</option>
+                                                      <option value="Quarterly">Quarterly</option>
+                                                      <option value="Yearly">Yearly</option>
+                                                    </select>
+                                                  </div>
+
+                                                  <div className="flex flex-col gap-1">
+                                                    <label className="text-[11px] font-bold uppercase text-gray-500">
+                                                      Estimated Cost Per Session*
+                                                    </label>
+                                                    <input
+                                                      type="number"
+                                                      value={diseaseItem?.costPerSession || ""}
+                                                      onChange={(e) =>
+                                                        handleDiseaseChange(
+                                                          rel,
+                                                          diseaseIndex,
+                                                          "costPerSession",
+                                                          e.target.value,
+                                                        )
+                                                      }
+                                                      className="border p-2 rounded outline-none focus:border-blue-500"
+                                                    />
+                                                  </div>
+
+                                                  <div className="flex flex-col gap-1">
+                                                    <label className="text-[11px] font-bold uppercase text-gray-500">
+                                                      Expected Number of Sessions*
+                                                    </label>
+                                                    <input
+                                                      type="number"
+                                                      value={diseaseItem?.sessionsCount || ""}
+                                                      onChange={(e) =>
+                                                        handleDiseaseChange(
+                                                          rel,
+                                                          diseaseIndex,
+                                                          "sessionsCount",
+                                                          e.target.value,
+                                                        )
+                                                      }
+                                                      className="border p-2 rounded outline-none focus:border-blue-500"
+                                                    />
+                                                  </div>
+
+                                                  <div className="flex flex-col gap-1">
+                                                    <label className="text-[11px] font-bold uppercase text-gray-500">
+                                                      Calculated Total
+                                                    </label>
+                                                    <input
+                                                      type="number"
+                                                      readOnly
+                                                      value={diseaseItem?.totalEstimatedCost || ""}
+                                                      className="border p-2 rounded bg-gray-100 text-gray-600 outline-none"
+                                                    />
+                                                  </div>
+                                                </div>
+                                              </div>
+                                            ),
+                                          )}
+
+                                          <div className="flex flex-col gap-1 w-full md:w-72">
+                                            <label className="text-[11px] font-bold uppercase text-gray-500">
+                                              Overall Calculated Total
+                                            </label>
+                                            <input
+                                              type="number"
+                                              readOnly
+                                              value={assistanceData[rel]?.Medical?.totalEstimatedCost || ""}
+                                              className="border p-2 rounded bg-gray-100 text-gray-700 outline-none"
+                                            />
+                                          </div>
+                                        </div>
+                                      </div>
+                                    )}
 
                                     {/* <div className="col-span-full md:col-span-2">
                                       <label className="text-[11px] font-bold uppercase text-gray-500">
@@ -2745,7 +2935,7 @@ const FamilyDetailsForm = () => {
                                     ></textarea>
                                   </div>
                                 </div>
-                              )}
+                              )} 
 
                             {relationDetails[
                               rel

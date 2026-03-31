@@ -800,19 +800,21 @@ const DiksharthiListing = () => {
         </h1>
         {role === "staff" && (
           <div className="flex gap-6">
-          <Link
-            to="/diksharthi-details-add"
-            className="bg-[#d94452] hover:bg-[#c13946] text-white px-4 py-2 rounded-md flex items-center gap-2 text-sm font-medium transition-colors shadow-sm"
-          >
-            <Plus size={18} />
-            Add New Diksharthi
-          </Link>
+          
           <button
             onClick={downloadExcel}
             className="bg-green-600 text-white px-4 py-2 rounded-md flex items-center gap-2 text-sm font-medium transition-colors shadow-sm"
           >
             Export Diksharthi Details
             </button>
+
+            <Link
+              to="/diksharthi-details-add"
+              className="bg-[#d94452] hover:bg-[#c13946] text-white px-4 py-2 rounded-md flex items-center gap-2 text-sm font-medium transition-colors shadow-sm"
+            >
+              <Plus size={18} />
+              Add New Diksharthi
+            </Link>
           </div>
         )}
       </div>
@@ -930,8 +932,8 @@ const DiksharthiListing = () => {
                     <td className="px-6 py-3">{diksharthi.rbf_criteria}</td>
 
                     {/* Pad */}
-                    <td className="px-6 py-3">{diksharthi.relation}</td>
-                    <td className="px-6 py-3">{diksharthi.relation_name}</td>
+                    <td className="px-6 py-3">{diksharthi.relation || "-"}</td>
+                    <td className="px-6 py-3">{diksharthi.relation_name || "-"}</td>
 
 
                     {role === "operations-manager" && (

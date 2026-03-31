@@ -206,9 +206,9 @@ function AddDonor() {
     }
 
     // Required: Anniversary
-    if (showRequired && !data.anniversary) {
-      e.anniversary = "Anniversary date is required";
-    }
+    // if (showRequired && !data.anniversary) {
+    //   e.anniversary = "Anniversary date is required";
+    // }
 
     // Required: Mobile
     if (showRequired && !data.mobileNumber) {
@@ -1045,7 +1045,7 @@ function AddDonor() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Anniversary<span className="text-red-500">*</span>
+                    Anniversary
                   </label>
                   <input
                     type="date"
@@ -1534,7 +1534,6 @@ function AddDonor() {
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">
                       Communication Address 2
-                      <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
