@@ -15,6 +15,10 @@ const parseMaybeJson = (value) => {
 };
 
 const asObject = (value) => (value && typeof value === "object" ? value : {});
+const DOC_ACCEPT = ".png,.jpg,.jpeg,.pdf";
+const IMAGE_ACCEPT = ".png,.jpg,.jpeg";
+const DOC_ALLOWED_TYPES = ["image/png", "image/jpeg", "image/jpg", "application/pdf"];
+const IMAGE_ALLOWED_TYPES = ["image/png", "image/jpeg", "image/jpg"];
 
 function AddDonor() {
 
@@ -155,29 +159,34 @@ function AddDonor() {
 
   const [errors, setErrors] = useState({});
   const [installmentError, setInstallmentError] = useState("");
+  const [requiredValidationTriggered, setRequiredValidationTriggered] = useState({
+    1: false,
+    2: false,
+    3: false,
+    4: false,
+  });
 
-  const validateStep1 = () => {
-    // debugger
+  const validateStep1 = (showAlert = false, showRequired = true) => {
     const e = {};
     const data = formData.personalDetails;
 
     // Required: Salutation
-    if (!data.salutation) {
+    if (showRequired && !data.salutation) {
       e.salutation = "Salutation is required";
     }
 
     // Required: First Name
-    if (!data.firstName) {
+    if (showRequired && !data.firstName) {
       e.firstName = "First name required";
     }
 
     // Required: Last Name
-    if (!data.lastName) {
+    if (showRequired && !data.lastName) {
       e.lastName = "Last name required";
     }
 
     // Required: Gender
-    if (!data.gender || data.gender === "#") {
+    if (showRequired && (!data.gender || data.gender === "#")) {
       e.gender = "Gender required";
     }
 
@@ -185,11 +194,11 @@ function AddDonor() {
     const today = new Date();
     const dob = new Date(data.dob);
 
-    if (!data.dob) {
+    if (showRequired && !data.dob) {
       e.dob = "Date of Birth is required";
-    } else if (dob > today) {
+    } else if (data.dob && dob > today) {
       e.dob = "DOB cannot be future date";
-    } else {
+    } else if (data.dob) {
       const age = today.getFullYear() - dob.getFullYear();
       if (age < 18) {
         e.dob = "Age must be at least 18 years";
@@ -197,14 +206,14 @@ function AddDonor() {
     }
 
     // Required: Anniversary
-    if (!data.anniversary) {
+    if (showRequired && !data.anniversary) {
       e.anniversary = "Anniversary date is required";
     }
 
     // Required: Mobile
-    if (!data.mobileNumber) {
+    if (showRequired && !data.mobileNumber) {
       e.mobileNumber = "Mobile Number required";
-    } else if (!/^\d{10}$/.test(data.mobileNumber)) {
+    } else if (data.mobileNumber && !/^\d{10}$/.test(data.mobileNumber)) {
       e.mobileNumber = "Mobile must be 10 digits";
     }
 
@@ -214,111 +223,114 @@ function AddDonor() {
     }
 
     // Required: Email
-    if (!data.email) {
+    if (showRequired && !data.email) {
       e.email = "Email is required";
-    } else if (!/^\S+@\S+\.\S+$/.test(data.email)) {
+    } else if (data.email && !/^\S+@\S+\.\S+$/.test(data.email)) {
       e.email = "Invalid email format";
     }
 
     // Required: Blood Group
-    if (!data.bloodGroup) {
+    if (showRequired && !data.bloodGroup) {
       e.bloodGroup = "Blood Group required";
     }
 
     // Required: Mother Tongue
-    if (!data.motherTongue) {
+    if (showRequired && !data.motherTongue) {
       e.motherTongue = "Mother Tongue required";
     }
 
     // Required: Native Place
-    if (!data.nativePlace) {
+    if (showRequired && !data.nativePlace) {
       e.nativePlace = "Native Place required";
     }
 
     // Required: Aadhaar Number
-    if (!data.aadhaarNumber) {
+    if (showRequired && !data.aadhaarNumber) {
       e.aadhaarNumber = "Aadhaar number required";
-    } else if (!isValidAadhaar(data.aadhaarNumber)) {
+    } else if (data.aadhaarNumber && !isValidAadhaar(data.aadhaarNumber)) {
       e.aadhaarNumber = "Aadhaar must be 12 digits";
     }
 
     // Required: Aadhaar File
-    if (!data.aadhaarFile) {
+    if (showRequired && !data.aadhaarFile) {
       e.aadhaarFile = "Aadhaar upload is required";
     }
 
     // Required: PAN Number
-    if (!data.panNumber) {
+    if (showRequired && !data.panNumber) {
       e.panNumber = "PAN number required";
-    } else if (!isValidPAN(data.panNumber)) {
+    } else if (data.panNumber && !isValidPAN(data.panNumber)) {
       e.panNumber = "Invalid PAN format (ABCDE1234F)";
     }
 
     // Required: PAN File
-    if (!data.panFile) {
+    if (showRequired && !data.panFile) {
       e.panFile = "PAN upload is required";
     }
 
     // Required: Photo
-    if (!data.photo) {
+    if (showRequired && !data.photo) {
       e.photo = "Photo upload is required";
     }
 
     // Contact Person Details - Required
-    if (!formData.contactPerson.contactPersonName) {
+    if (showRequired && !formData.contactPerson.contactPersonName) {
       e.contactPersonName = "Contact person name is required";
     }
 
-    if (!formData.contactPerson.contactPersonMobile) {
+    if (showRequired && !formData.contactPerson.contactPersonMobile) {
       e.contactPersonMobile = "Contact person mobile is required";
-    } else if (!/^\d{10}$/.test(formData.contactPerson.contactPersonMobile)) {
+    } else if (
+      formData.contactPerson.contactPersonMobile &&
+      !/^\d{10}$/.test(formData.contactPerson.contactPersonMobile)
+    ) {
       e.contactPersonMobile = "Contact person mobile must be 10 digits";
     }
 
     // Residential Address - Required fields
-    if (!formData.residentialAddress.address1) {
+    if (showRequired && !formData.residentialAddress.address1) {
       e.resAddress1 = "Residential address is required";
     }
-    if (!formData.residentialAddress.city) {
+    if (showRequired && !formData.residentialAddress.city) {
       e.resCity = "Residential city is required";
     }
-    if (!formData.residentialAddress.pincode) {
+    if (showRequired && !formData.residentialAddress.pincode) {
       e.resPincode = "Residential pincode is required";
     }
-    if (!formData.residentialAddress.contactCode) {
+    if (showRequired && !formData.residentialAddress.contactCode) {
       e.resContactCode = "Contact code is required";
     }
-    if (!formData.residentialAddress.contactNumber) {
+    if (showRequired && !formData.residentialAddress.contactNumber) {
       e.resContactNumber = "Contact number is required";
     }
-    if (!formData.residentialAddress.preferredAddress) {
+    if (showRequired && !formData.residentialAddress.preferredAddress) {
       e.preferredAddress = "Preferred address type is required";
     }
 
     setErrors(e);
-    if (Object.keys(e).length > 0) {
+    if (showAlert && Object.keys(e).length > 0) {
       alert("Please fill all required fields marked with *");
     }
 
     return Object.keys(e).length === 0;
   };
 
-  const validateStep2 = () => {
+  const validateStep2 = (showAlert = false, showRequired = true) => {
     const e = {};
     const data = formData.familyDetails;
 
     // Required: Father's Name
-    if (!data.fatherName) {
+    if (showRequired && !data.fatherName) {
       e.fatherName = "Father's name is required";
     }
 
     // Required: Has Children
-    if (!data.hasChildren) {
+    if (showRequired && !data.hasChildren) {
       e.hasChildren = "Please select if you have children";
     }
 
     // If children exist, validate each child
-    if (data.hasChildren === "Yes" && data.children) {
+    if (showRequired && data.hasChildren === "Yes" && data.children) {
       data.children.forEach((child, index) => {
         if (!child.name) {
           e[`child_${index}_name`] = "Child name is required";
@@ -339,58 +351,63 @@ function AddDonor() {
     }
 
     setErrors(e);
-    if (Object.keys(e).length > 0) {
+    if (showAlert && Object.keys(e).length > 0) {
       alert("Please fill all required fields in Family Details");
     }
 
     return Object.keys(e).length === 0;
   };
 
-  const validateStep3 = () => {
+  const validateStep3 = (showAlert = false, showRequired = true) => {
     const e = {};
     const data = formData.nomineeDetails;
 
     // Required fields
-    if (!data.nomineeName) {
+    if (showRequired && !data.nomineeName) {
       e.nomineeName = "Nominee name is required";
     }
-    if (!data.nomineeContact || !/^\d{10}$/.test(data.nomineeContact)) {
+    if (showRequired && !data.nomineeContact) {
+      e.nomineeContact = "Valid 10-digit contact number is required";
+    } else if (data.nomineeContact && !/^\d{10}$/.test(data.nomineeContact)) {
       e.nomineeContact = "Valid 10-digit contact number is required";
     }
-    if (!data.nomineeAddress) {
+    if (showRequired && !data.nomineeAddress) {
       e.nomineeAddress = "Nominee address is required";
     }
-    if (!data.nomineecity) {
+    if (showRequired && !data.nomineecity) {
       e.nomineecity = "Nominee city is required";
     }
-    if (!data.nomineepincode) {
+    if (showRequired && !data.nomineepincode) {
       e.nomineepincode = "Nominee pincode is required";
     }
-    if (!data.nomineerelation) {
+    if (showRequired && !data.nomineerelation) {
       e.nomineerelation = "Nominee relation is required";
     }
-    if (!data.nomineehasCompany) {
+    if (showRequired && !data.nomineehasCompany) {
       e.nomineehasCompany = "Please select if nominee has company";
     }
 
     setErrors(e);
-    if (Object.keys(e).length > 0) {
+    if (showAlert && Object.keys(e).length > 0) {
       alert("Please fill all required fields in Nominee Details");
     }
 
     return Object.keys(e).length === 0;
   };
 
-  const validateStep4 = () => {
+  const validateStep4 = (showAlert = false, showRequired = true) => {
     const e = {};
 
     // Check total amount
-    if (!formData.paymentDetails.totalInstallmentsAmount) {
+    if (showRequired && !formData.paymentDetails.totalInstallmentsAmount) {
       e.totalInstallmentsAmount = "Total installment amount is required";
     }
 
     // Check if installments are added
-    if (!formData.paymentDetails.installments || formData.paymentDetails.installments.length === 0) {
+    if (
+      showRequired &&
+      (!formData.paymentDetails.installments || formData.paymentDetails.installments.length === 0)
+    ) {
       e.installments = "Please add at least one installment";
     }
 
@@ -401,7 +418,7 @@ function AddDonor() {
     }
 
     setErrors(e);
-    if (Object.keys(e).length > 0) {
+    if (showAlert && Object.keys(e).length > 0) {
       alert(installmentError || "Please complete all payment details");
     }
 
@@ -781,18 +798,18 @@ function AddDonor() {
   // };
 
   const handleNext = (e) => {
-    debugger
     e.preventDefault();
+    setRequiredValidationTriggered((prev) => ({ ...prev, [currentStep]: true }));
 
     // Validate based on current step
     if (currentStep === 1) {
-      const isValidStep1 = validateStep1();
+      const isValidStep1 = validateStep1(true, true);
       if (!isValidStep1) return;
     } else if (currentStep === 2) {
-      const isValidStep2 = validateStep2();
+      const isValidStep2 = validateStep2(true, true);
       if (!isValidStep2) return;
     } else if (currentStep === 3) {
-      const isValidStep3 = validateStep3();
+      const isValidStep3 = validateStep3(true, true);
       if (!isValidStep3) return;
     }
 
@@ -871,10 +888,33 @@ function AddDonor() {
     setInstallmentError(error);
   }, [formData.paymentDetails]);
 
+  useEffect(() => {
+    // Step 1: format errors instant (required only after Next on this step)
+    if (currentStep === 1) {
+      validateStep1(false, requiredValidationTriggered[1]);
+      return;
+    }
+
+    // Other steps: required errors appear only after Next is attempted on that step
+    if (currentStep === 2 && requiredValidationTriggered[2]) {
+      validateStep2(false, true);
+      return;
+    }
+
+    if (currentStep === 3 && requiredValidationTriggered[3]) {
+      validateStep3(false, true);
+      return;
+    }
+
+    if (currentStep === 4 && requiredValidationTriggered[4]) {
+      validateStep4(false, true);
+    }
+  }, [formData, currentStep, requiredValidationTriggered]);
+
 
   return (
     <div className="min-h-screen bg-gray-50 flex p-6 justify-center">
-      <div className="w-full max-w-6xl bg-white p-6 shadow-sm">
+      <div className="w-full max-w-8xl bg-white p-6 shadow-sm">
         {/* Step Indicator */}
         <div className="mb-8">
           <div className="flex justify-between items-center">
@@ -1190,9 +1230,18 @@ function AddDonor() {
                   </label>
                   <input
                     type="file"
-                    onChange={(e) =>
-                      handleChange("personalDetails", "aadhaarFile", e.target.files[0])
-                    }
+                    accept={DOC_ACCEPT}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+
+                      if (!DOC_ALLOWED_TYPES.includes(file.type)) {
+                        alert("Aadhaar upload: only PNG, JPG, JPEG, PDF allowed");
+                        return;
+                      }
+
+                      handleChange("personalDetails", "aadhaarFile", file);
+                    }}
                     className="w-full p-2 border border-slate-300 rounded-md"
                   />
                 </div>
@@ -1223,9 +1272,18 @@ function AddDonor() {
                   </label>
                   <input
                     type="file"
-                    onChange={(e) =>
-                      handleChange("personalDetails", "panFile", e.target.files[0])
-                    }
+                    accept={DOC_ACCEPT}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+
+                      if (!DOC_ALLOWED_TYPES.includes(file.type)) {
+                        alert("PAN upload: only PNG, JPG, JPEG, PDF allowed");
+                        return;
+                      }
+
+                      handleChange("personalDetails", "panFile", file);
+                    }}
                     className="w-full p-2 border border-slate-300 rounded-md"
                   />
                 </div>
@@ -1235,9 +1293,18 @@ function AddDonor() {
                   </label>
                   <input
                     type="file"
-                    onChange={(e) =>
-                      handleChange("personalDetails", "photo", e.target.files[0])
-                    }
+                    accept={IMAGE_ACCEPT}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+
+                      if (!IMAGE_ALLOWED_TYPES.includes(file.type)) {
+                        alert("Photo upload: only PNG, JPG, JPEG allowed (PDF not allowed)");
+                        return;
+                      }
+
+                      handleChange("personalDetails", "photo", file);
+                    }}
                     className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                   />
                 </div>
@@ -1326,7 +1393,7 @@ function AddDonor() {
                       Res. Pincode<span className="text-red-500">*</span>
                     </label>
                     <input
-                      type="text"
+                      type="number"
                       value={formData.residentialAddress.pincode}
                       onChange={(e) =>
                         handleChange("residentialAddress", "pincode", e.target.value)
@@ -1339,7 +1406,7 @@ function AddDonor() {
                       Res. Contact Code<span className="text-red-500">*</span>
                     </label>
                     <input
-                      type="text"
+                      type="number"
                       value={formData.residentialAddress.contactCode}
                       onChange={(e) =>
                         handleChange("residentialAddress", "contactCode", e.target.value)
@@ -1395,12 +1462,31 @@ function AddDonor() {
                         ))}
                       </select>
                       <div className="flex border rounded-md overflow-hidden">
-                        <button
-                          type="button"
-                          className="bg-gray-100 px-3 py-1 border-r text-sm"
-                        >
-                          Upload
-                        </button>
+                        <input
+                          type="file"
+                          accept={DOC_ACCEPT}
+                          onChange={(e) => {
+                            const file = e.target.files[0];
+
+                            if (!file) return;
+
+                            // ✅ File type validation
+                            const allowedTypes = DOC_ALLOWED_TYPES;
+                            if (!allowedTypes.includes(file.type)) {
+                              alert("Only PNG, JPG, JPEG, PDF allowed");
+                              return;
+                            }
+
+                            // ✅ File size validation (2MB)
+                            if (file.size > 2 * 1024 * 1024) {
+                              alert("File size must be less than 2MB");
+                              return;
+                            }
+
+                            handleChange("residentialAddress", "resProofFile", file);
+                          }}
+                          className="w-full p-2 border border-slate-300 rounded-md"
+                        />
                       </div>
                     </div>
                   </div>
@@ -2072,13 +2158,14 @@ function AddDonor() {
                       placeholder="Total Installments Amount"
                       className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                     />
+                    {/* ✅ Realtime Error */}
+                    {installmentError && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {installmentError}
+                      </p>
+                    )}
                   </div>
-                  {/* ✅ Realtime Error */}
-                  {installmentError && (
-                    <p className="text-red-500 text-sm mt-1">
-                      {installmentError}
-                    </p>
-                  )}
+                 
                 </div>
 
                 {/* SECTION: Installment Tables - Conditional */}

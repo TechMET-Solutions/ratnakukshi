@@ -49,7 +49,7 @@ const Login = () => {
 
         <div className="px-8 py-6 flex flex-col items-center">
           <div className="mb-6">
-            <img src="/ratnakukshi_logo.jpg" alt="logo" className="h-28" />
+            <img src="/logo.jpg" alt="logo" className="h-28" />
           </div>
 
           <h1 className="text-[#4285f4] text-2xl font-semibold mb-2">
