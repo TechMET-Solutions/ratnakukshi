@@ -101,6 +101,7 @@ const DiksharthiListing = () => {
   const [isFeedbackLoading, setIsFeedbackLoading] = useState(false);
   const [isAddingFeedbackToDiksharthi, setIsAddingFeedbackToDiksharthi] = useState(false);
   const [downloadingPdfId, setDownloadingPdfId] = useState(null);
+  const [downloadingApplicationId, setDownloadingApplicationId] = useState(null);
 
   const itemsPerPage = 10;
 
@@ -626,8 +627,41 @@ const DiksharthiListing = () => {
     setFeedbackForm(emptyFeedbackForm);
   };
 
-  const canDownloadApplicationPdf =
+  const canDownloadApplication =
     role === "admin" || role === "case-coordinator" || role === "operations-manager";
+
+  const handleDownloadApplicationExcel = async (diksharthi) => {
+    if (!diksharthi?.id) return;
+
+    try {
+      setDownloadingApplicationId(diksharthi.id);
+
+      const response = await fetch(
+        `${API}/api/report/generateDiksharthiExcel?id=${diksharthi.id}`
+      );
+
+      if (!response.ok) {
+        const result = await response.json().catch(() => ({}));
+        throw new Error(result?.message || "Failed to download application Excel");
+      }
+
+      const blob = await response.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+
+      link.href = downloadUrl;
+      link.download = `Diksharthi_Application_${diksharthi.id}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(downloadUrl);
+    } catch (error) {
+      console.error(error);
+      alert(error?.message || "Failed to download application Excel");
+    } finally {
+      setDownloadingApplicationId(null);
+    }
+  };
 
   const handleDownloadApplicationPdf = async (diksharthi) => {
     if (!diksharthi?.id) return;
@@ -961,14 +995,23 @@ const DiksharthiListing = () => {
                             View
                           </button>
 
-                          {canDownloadApplicationPdf && diksharthi.family_details && (
-                            <button
-                              className="rounded-lg bg-rose-600 text-sm px-2 py-1 text-white disabled:opacity-60"
-                              onClick={() => handleDownloadApplicationPdf(diksharthi)}
-                              disabled={downloadingPdfId === diksharthi.id}
-                            >
-                              {downloadingPdfId === diksharthi.id ? "Downloading..." : "Application PDF"}
-                            </button>
+                          {canDownloadApplication && diksharthi.family_details && (
+                            <div className="flex items-center gap-2">
+                              <button
+                                className="rounded-lg bg-rose-600 text-sm px-2 py-1 text-white disabled:opacity-60"
+                                onClick={() => handleDownloadApplicationPdf(diksharthi)}
+                                disabled={downloadingPdfId === diksharthi.id}
+                              >
+                                {downloadingPdfId === diksharthi.id ? "Downloading..." : "Application PDF"}
+                              </button>
+                              <button
+                                className="rounded-lg bg-emerald-600 text-sm px-2 py-1 text-white disabled:opacity-60"
+                                onClick={() => handleDownloadApplicationExcel(diksharthi)}
+                                disabled={downloadingApplicationId === diksharthi.id}
+                              >
+                                {downloadingApplicationId === diksharthi.id ? "Downloading..." : "Application Excel"}
+                              </button>
+                            </div>
                           )}
 
                           {!hasVisitContactInfo(diksharthi) && (
@@ -1012,14 +1055,23 @@ const DiksharthiListing = () => {
                       {/* ================= KARYAKARTA ================= */}
                       {role === "karyakarta" && (
                         <>
-                          {canDownloadApplicationPdf && (
-                            <button
-                              className="rounded-lg bg-rose-600 text-sm px-2 py-1 text-white disabled:opacity-60"
-                              onClick={() => handleDownloadApplicationPdf(diksharthi)}
-                              disabled={downloadingPdfId === diksharthi.id}
-                            >
-                              {downloadingPdfId === diksharthi.id ? "Downloading..." : "Application PDF"}
-                            </button>
+                          {canDownloadApplication && (
+                            <div className="flex items-center gap-2">
+                              <button
+                                className="rounded-lg bg-rose-600 text-sm px-2 py-1 text-white disabled:opacity-60"
+                                onClick={() => handleDownloadApplicationPdf(diksharthi)}
+                                disabled={downloadingPdfId === diksharthi.id}
+                              >
+                                {downloadingPdfId === diksharthi.id ? "Downloading..." : "Application PDF"}
+                              </button>
+                              <button
+                                className="rounded-lg bg-emerald-600 text-sm px-2 py-1 text-white disabled:opacity-60"
+                                onClick={() => handleDownloadApplicationExcel(diksharthi)}
+                                disabled={downloadingApplicationId === diksharthi.id}
+                              >
+                                {downloadingApplicationId === diksharthi.id ? "Downloading..." : "Application Excel"}
+                              </button>
+                            </div>
                           )}
 
                           <button
@@ -1081,14 +1133,23 @@ const DiksharthiListing = () => {
                       {/* ================= ADMIN ================= */}
                       {role === "admin" && (
                         <>
-                          {canDownloadApplicationPdf && (
-                            <button
-                              className="rounded-lg bg-rose-600 text-sm px-2 py-1 text-white disabled:opacity-60"
-                              onClick={() => handleDownloadApplicationPdf(diksharthi)}
-                              disabled={downloadingPdfId === diksharthi.id}
-                            >
-                              {downloadingPdfId === diksharthi.id ? "Downloading..." : "Application PDF"}
-                            </button>
+                          {canDownloadApplication && (
+                            <div className="flex items-center gap-2">
+                              <button
+                                className="rounded-lg bg-rose-600 text-sm px-2 py-1 text-white disabled:opacity-60"
+                                onClick={() => handleDownloadApplicationPdf(diksharthi)}
+                                disabled={downloadingPdfId === diksharthi.id}
+                              >
+                                {downloadingPdfId === diksharthi.id ? "Downloading..." : "Application PDF"}
+                              </button>
+                              <button
+                                className="rounded-lg bg-emerald-600 text-sm px-2 py-1 text-white disabled:opacity-60"
+                                onClick={() => handleDownloadApplicationExcel(diksharthi)}
+                                disabled={downloadingApplicationId === diksharthi.id}
+                              >
+                                {downloadingApplicationId === diksharthi.id ? "Downloading..." : "Application Excel"}
+                              </button>
+                            </div>
                           )}
 
                           <button
@@ -1112,14 +1173,23 @@ const DiksharthiListing = () => {
                       {/* ================= CASE COORDINATOR ================= */}
                       {role === "case-coordinator" && (
                         <>
-                          {canDownloadApplicationPdf && (
-                            <button
-                              className="rounded-lg bg-rose-600 text-sm px-2 py-1 text-white disabled:opacity-60"
-                              onClick={() => handleDownloadApplicationPdf(diksharthi)}
-                              disabled={downloadingPdfId === diksharthi.id}
-                            >
-                              {downloadingPdfId === diksharthi.id ? "Downloading..." : "Application PDF"}
-                            </button>
+                          {canDownloadApplication && (
+                            <div className="flex items-center gap-2">
+                              <button
+                                className="rounded-lg bg-rose-600 text-sm px-2 py-1 text-white disabled:opacity-60"
+                                onClick={() => handleDownloadApplicationPdf(diksharthi)}
+                                disabled={downloadingPdfId === diksharthi.id}
+                              >
+                                {downloadingPdfId === diksharthi.id ? "Downloading..." : "Application PDF"}
+                              </button>
+                              <button
+                                className="rounded-lg bg-emerald-600 text-sm px-2 py-1 text-white disabled:opacity-60"
+                                onClick={() => handleDownloadApplicationExcel(diksharthi)}
+                                disabled={downloadingApplicationId === diksharthi.id}
+                              >
+                                {downloadingApplicationId === diksharthi.id ? "Downloading..." : "Application Excel"}
+                              </button>
+                            </div>
                           )}
                         </>
                       )}
@@ -1765,3 +1835,6 @@ const DiksharthiListing = () => {
 };
 
 export default DiksharthiListing;
+
+
+
