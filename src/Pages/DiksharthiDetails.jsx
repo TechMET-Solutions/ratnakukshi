@@ -933,7 +933,7 @@ const DiksharthiListing = () => {
 
                     {/* Pad */}
                     <td className="px-6 py-3">{diksharthi.relation || "-"}</td>
-                    <td className="px-6 py-3">{diksharthi.relation_name || "-"}</td>
+                    <td className="px-6 py-3">{diksharthi.family_member_firstName || "-"} {diksharthi.family_member_lastName || "-"}</td>
 
 
                     {role === "operations-manager" && (
