@@ -1,3 +1,15 @@
+export const RELATIONS = [
+    { label: "Father", value: "father" },
+    { label: "Mother", value: "mother" },
+    { label: "Husband", value: "husband" },
+    { label: "Wife", value: "wife" },
+    { label: "Son", value: "son" },
+    { label: "Daughter", value: "daughter" },
+    { label: "Brother", value: "brother" },
+    { label: "Sister", value: "sister" },
+    { label: "Other", value: "other" },
+];
+
 export const GENDER = [
     { label: "Male", value: "male" },
     { label: "Female", value: "female" },
