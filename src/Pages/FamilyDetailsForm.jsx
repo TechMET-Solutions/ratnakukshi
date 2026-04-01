@@ -4,13 +4,7 @@ import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { API } from "../api/BaseURL";
 import { isValidAadhaar, isValidPAN } from "../utils/validation";
-// import placeholder from "../assets/placeholder.png";
-import {
-  useFetchDistrictsByState,
-  useFetchStates,
-  useFetchSubDistrictsByDistrict,
-  useFetchVillagesBySubDistrict
-} from "../utils/useLocationData";
+import statesDistrictData from "../data//state_discripts.json";
 
 
 const INITIAL_FORM_DATA = {
@@ -312,13 +306,32 @@ const FamilyDetailsForm = () => {
   console.log("Name:", name);
   console.log("Gender:", gender);
 
-  const states = useFetchStates();
-
   const [formData, setFormData] = useState(INITIAL_FORM_DATA);
+  const [states, setStates] = useState([]);
+  const [districts, setDistricts] = useState([]);
 
-  const district = useFetchDistrictsByState(formData.state);
-  const taluka = useFetchSubDistrictsByDistrict(formData.state, formData.district);
-  const village = useFetchVillagesBySubDistrict(formData.state, formData.district, formData.taluka);
+  useEffect(() => {
+    const allStates = [
+      ...(statesDistrictData?.states || []).map((item) => item.name),
+      ...(statesDistrictData?.union_territories || []).map((item) => item.name),
+    ];
+    setStates(allStates);
+  }, []);
+
+  useEffect(() => {
+    if (!formData.state) {
+      setDistricts([]);
+      return;
+    }
+    const locationEntry =
+      (statesDistrictData?.states || []).find(
+        (item) => item?.name?.toLowerCase() === formData.state.toLowerCase()
+      ) ||
+      (statesDistrictData?.union_territories || []).find(
+        (item) => item?.name?.toLowerCase() === formData.state.toLowerCase()
+      );
+    setDistricts(locationEntry?.districts || []);
+  }, [formData.state]);
 
   console.log(formData, "formData");
   const [relationDetails, setRelationDetails] = useState({});
@@ -1040,6 +1053,8 @@ const FamilyDetailsForm = () => {
   // };
 
   const handleSave = async () => {
+    if (loading) return;
+    setLoading(true);
     try {
       // 🔴 VALIDATION LOGIC FOR AADHAR AND PAN
       const errors = {};
@@ -1178,6 +1193,9 @@ const FamilyDetailsForm = () => {
       navigate("/diksharthi-details");
     } catch (err) {
       console.error(err);
+      alert("Something went wrong while saving family details. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -1517,7 +1535,7 @@ const FamilyDetailsForm = () => {
                 className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
               >
                 <option value="">Select district</option>
-                {district.map((s) => (
+                {districts.map((s) => (
                   <option key={s} value={s}>
                     {s}
                   </option>
@@ -1528,20 +1546,15 @@ const FamilyDetailsForm = () => {
               <label className="block text-sm font-medium text-slate-700 mb-1">
                 Taluka
               </label>
-              <select
+              <input
+                type="text"
                 value={formData.taluka}
                 onChange={(e) =>
                   setFormData({ ...formData, taluka: e.target.value, village: "" })
                 }
                 className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
-              >
-                <option value="">Select taluka</option>
-                {taluka.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
-              </select>
+                placeholder="Enter taluka"
+              />
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -5147,9 +5160,19 @@ const FamilyDetailsForm = () => {
               type="button"
               onClick={handleSave}
               disabled={loading}
-              className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-md"
+              className={`px-4 py-2 text-white font-semibold rounded-md transition-colors ${
+                loading
+                  ? "bg-green-400 cursor-not-allowed"
+                  : "bg-green-500 hover:bg-green-600"
+              }`}
             >
-              {loading ? "Saving..." : "Save"}
+              {loading
+                ? familyRecordId
+                  ? "Updating..."
+                  : "Saving..."
+                : familyRecordId
+                  ? "Update"
+                  : "Save"}
             </button>
           </div>
         </form>
