@@ -1,4 +1,5 @@
 import axios from "axios";
+import JoditEditor from "jodit-react";
 import { ChevronDown, FileText } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -24,7 +25,8 @@ const initialFormData = {
   samadhiPlace: "", // Optional
   rbfCriteria: "",
   relation: "",
-  relationName: "",
+  family_member_firstName: "",
+  family_member_lastName: "",
   mobileNo: "",
   altMobileNo: "",
   permanentAddress: "",
@@ -34,6 +36,9 @@ const initialFormData = {
   district: "",
   state: "",
   pinCode: "",
+  assistanceReceived: "",
+  family_relation: [], // checkbox ke liye array
+  summary: "",  // 👈 new field
 };
 
 // Helper to calculate age from DOB
@@ -74,7 +79,8 @@ const mapDiksharthiToFormData = (record) => ({
   samadhiPlace: record?.samadhiPlace || record?.samadhi_place || "",
   rbfCriteria: record?.rbfCriteria || record?.rbf_criteria || "",
   relation: record?.relation || "",
-  relationName: record?.relationName || record?.family_member_name || "",
+  family_member_firstName: record?.family_member_firstName || "",
+  family_member_lastName: record?.family_member_lastName || "",
   mobileNo: record?.mobileNo || record?.mobile_no || "",
   altMobileNo: record?.altMobileNo || record?.alt_mobile_no || "",
   permanentAddress: record?.permanentAddress || record?.permanent_address || "",
@@ -84,6 +90,12 @@ const mapDiksharthiToFormData = (record) => ({
   district: record?.district || "",
   state: record?.state || "",
   pinCode: record?.pinCode || record?.pin_code || "",
+  family_relation: String(record?.family_relation || "")
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean),
+  assistanceReceived: record?.assistanceReceived || record?.assistance_received || "",
+  summary: record?.summary || "",
 });
 
 const mapFormDataToApiPayload = (formData, userId) => ({
@@ -104,7 +116,8 @@ const mapFormDataToApiPayload = (formData, userId) => ({
   samadhi_place: formData.samadhiPlace,
   rbf_criteria: formData.rbfCriteria,
   relation: formData.relation,
-  family_member_name: formData.relationName,
+  family_member_firstName: formData.family_member_firstName,
+  family_member_lastName: formData.family_member_lastName,
   mobile_no: formData.mobileNo,
   alt_mobile_no: formData.altMobileNo,
   permanent_address: formData.permanentAddress,
@@ -114,6 +127,12 @@ const mapFormDataToApiPayload = (formData, userId) => ({
   district: formData.district,
   state: formData.state,
   pin_code: formData.pinCode,
+  family_relation: Array.isArray(formData.family_relation)
+    ? formData.family_relation.join(",")
+    : formData.family_relation || "",
+  assistance_received: formData.assistanceReceived,
+  summary: formData.summary,
+  
 });
 
 const DiksharthiDetailsAdd = () => {
@@ -147,27 +166,6 @@ const DiksharthiDetailsAdd = () => {
       console.error(error);
     }
   };
-
-  // const fetchPincodeDetails = async (pincode) => {
-  //   try {
-  //     const res = await axios.get(`https://api.postalpincode.in/pincode/${pincode}`);
-  //     const data = res.data;
-
-  //     if (data[0].Status === "Success") {
-  //       const postOffice = data[0].PostOffice[0];
-
-  //       setFormData((prev) => ({
-  //         ...prev,
-  //         state: postOffice.State,
-  //         district: postOffice.District,
-  //         taluka: postOffice.Block,   // Taluka
-  //         village: postOffice.Name,   // Village/Post office
-  //       }));
-  //     }
-  //   } catch (error) {
-  //     console.error("Pincode fetch error", error);
-  //   }
-  // };
 
   useEffect(() => {
     if (!isEditMode) return;
@@ -212,7 +210,10 @@ const DiksharthiDetailsAdd = () => {
       }
       if (name === "rbfCriteria" && value === "No") {
         nextState.relation = "";
-        nextState.relationName = "";
+        nextState.family_member_firstName = "";
+        nextState.family_member_lastName = "";
+        nextState.assistanceReceived = "";
+        nextState.family_relation = [];
       }
       return nextState;
     });
@@ -233,8 +234,11 @@ const DiksharthiDetailsAdd = () => {
     if (formData.rbfCriteria === "Yes" && !formData.relation) {
       newErrors.relation = "Required for RBF";
     }
-    if (formData.rbfCriteria === "Yes" && !formData.relationName) {
-      newErrors.relationName = "Required for RBF";
+    if (formData.rbfCriteria === "Yes" && !formData.family_member_firstName) {
+      newErrors.family_member_firstName = "Required for RBF";
+    }
+    if (formData.rbfCriteria === "Yes" && !formData.family_member_lastName) {
+      newErrors.family_member_lastName = "Required for RBF";
     }
 
     if (formData.isAlive === "Yes" && !formData.viharLocation) {
@@ -248,8 +252,13 @@ const DiksharthiDetailsAdd = () => {
   const handleSave = async () => {
     if (!validate()) return;
     try {
+      const loggedInUserId = user?.id || user?.user_id || user?.userId || "";
+      if (!loggedInUserId) {
+        alert("Login user id missing. Please login again.");
+        return;
+      }
       const data = new FormData();
-      const payload = mapFormDataToApiPayload(formData, user?.id);
+      const payload = mapFormDataToApiPayload(formData, loggedInUserId);
       Object.entries(payload).forEach(([key, value]) => {
         data.append(key, value ?? "");
       });
@@ -435,16 +444,16 @@ const DiksharthiDetailsAdd = () => {
           {formData.rbfCriteria === "Yes" && (
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Family Member First Name<span className="text-red-500">*</span></label>
-              <input name="relationName" value={formData.relationName} onChange={handleChange} type="text" className="w-full p-2 border border-slate-300 rounded-md outline-none" />
-              {errors.relationName && <p className="text-red-500 text-xs">{errors.relationName}</p>}
+              <input name="family_member_firstName" value={formData.family_member_firstName} onChange={handleChange} type="text" className="w-full p-2 border border-slate-300 rounded-md outline-none" />
+              {errors.family_member_firstName && <p className="text-red-500 text-xs">{errors.family_member_firstName}</p>}
             </div>
           )}
 
           {formData.rbfCriteria === "Yes" && (
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Family Member Last Name<span className="text-red-500">*</span></label>
-              <input name="relationName" value={formData.relationName} onChange={handleChange} type="text" className="w-full p-2 border border-slate-300 rounded-md outline-none" />
-              {errors.relationName && <p className="text-red-500 text-xs">{errors.relationName}</p>}
+              <input name="family_member_lastName" value={formData.family_member_lastName} onChange={handleChange} type="text" className="w-full p-2 border border-slate-300 rounded-md outline-none" />
+              {errors.family_member_lastName && <p className="text-red-500 text-xs">{errors.family_member_lastName}</p>}
             </div>
           )}
 
@@ -557,7 +566,7 @@ const DiksharthiDetailsAdd = () => {
                 onChange={handleChange}
               /> */}
 
-              <div className="flex flex-wrap gap-4">
+              {/* <div className="flex flex-wrap gap-4">
                 {RELATIONS.map((item) => (
                   <label key={item.value} className="flex items-center gap-2 cursor-pointer">
                     <input
@@ -574,15 +583,55 @@ const DiksharthiDetailsAdd = () => {
                     {item.label}
                   </label>
                 ))}
+              </div> */}
+
+              <div className="flex flex-wrap gap-4">
+                {RELATIONS.map((item) => (
+                  <label key={item.value} className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      value={item.value}
+                      checked={formData.family_relation.includes(item.value)}
+                      onChange={(e) => {
+                        const value = e.target.value;
+
+                        setFormData((prev) => {
+                          const exists = prev.family_relation.includes(value);
+
+                          return {
+                            ...prev,
+                            family_relation: exists
+                              ? prev.family_relation.filter((r) => r !== value)
+                              : [...prev.family_relation, value],
+                          };
+                        });
+                      }}
+                    />
+                    {item.label}
+                  </label>
+                ))}
               </div>
             </div>
           )}
-
-        
-
-       
         </div>
 
+        
+        <div className="col-span-4">
+          <label className="block text-sm font-medium text-slate-700 mb-1">
+            Summary
+          </label>
+
+          <JoditEditor
+            value={formData.summary}
+            onBlur={(newContent) =>
+              setFormData((prev) => ({
+                ...prev,
+                summary: newContent,
+              }))
+            }
+          />
+        </div>
+        
 
 
         <div className="p-6 flex justify-between items-center bg-white mt-4">
