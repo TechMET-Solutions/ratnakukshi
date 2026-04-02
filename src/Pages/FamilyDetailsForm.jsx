@@ -51,14 +51,16 @@ const FamilyDetailsForm = () => {
   const selectedRelations = Array.isArray(formData?.relations)
     ? formData.relations
     : [];
+  
+  console.log(selectedRelations,"--------selectedRelations------------")
   const allowRelationEditing = false;
 
 
 
   console.log(formData, "formData");
   const [relationDetails, setRelationDetails] = useState({});
-
-  console.log(relationDetails, "relationDetails");
+  const [selectedRelation, setSelectedRelation] = useState(null);
+  console.log(relationDetails, "relationDetails", selectedRelation, "selectedRelation");
   const [expandedRelations, setExpandedRelations] = useState({});
   console.log(expandedRelations, "expandedRelations");
   const [assistanceTypes] = useState([
@@ -69,9 +71,12 @@ const FamilyDetailsForm = () => {
     "Rent",
     "Housing",
     "Vaiyavacch",
-    "LivelihoodExpenses ",
-
+    "LivelihoodExpenses",
   ]);
+
+  const [showReasonModal, setShowReasonModal] = useState(false);
+  const [reasonFor, setReasonFor] = useState({ relation: "", type: "" });
+  const [reasonText, setReasonText] = useState("");
   const [additionalRelations, setAdditionalRelations] = useState({});
 
   const handleAddDocument = (rel) => {
@@ -354,6 +359,15 @@ const FamilyDetailsForm = () => {
       setHeadOfFamily(relation);
     }
   };
+  const resolvePhotoUrl = (photo) => {
+    if (!photo) return "/user.png";
+
+    // If already full URL
+    if (photo.startsWith("http")) return photo;
+
+    // If stored as filename/path from backend
+    return `${API}/uploads/${photo}`;
+  };
 
   const validateAadharUnique = () => {
     const aadharList = Object.values(relationDetails)
@@ -407,25 +421,25 @@ const FamilyDetailsForm = () => {
     }));
 
     // Initialize Medical with one empty disease entry when Medical is selected
-    if (category === "Medical" && !assistanceData[relation]?.Medical?.diseases) {
-      setAssistanceData((prev) => ({
-        ...prev,
-        [relation]: {
-          ...prev[relation],
-          Medical: {
-            ...prev[relation]?.Medical,
-            diseases: [
-              {
-                diseaseName: "",
-                frequency: "",
-                sessions: "",
-                costPerSession: "",
-              },
-            ],
-          },
-        },
-      }));
-    }
+    // if (category === "Medical" && !assistanceData[relation]?.Medical?.diseases) {
+    //   setAssistanceData((prev) => ({
+    //     ...prev,
+    //     [relation]: {
+    //       ...prev[relation],
+    //       Medical: {
+    //         ...prev[relation]?.Medical,
+    //         diseases: [
+    //           {
+    //             diseaseName: "",
+    //             frequency: "",
+    //             sessions: "",
+    //             costPerSession: "",
+    //           },
+    //         ],
+    //       },
+    //     },
+    //   }));
+    // }
   };
 
   const handleAddRelationRow = (baseRelation) => {
@@ -516,94 +530,408 @@ const FamilyDetailsForm = () => {
   });
 
   const [assistanceData, setAssistanceData] = useState({});
+  const [selectedAssistance, setselectedAssistance] = useState({});
 
+  console.log(selectedAssistance, "selectedAssistance")
   console.log(assistanceData, "assistanceData");
 
   const [validationErrors, setValidationErrors] = useState({});
+
+  // useEffect(() => {
+  //   if (!id) return;
+
+  //   const fetchFamilyDetailsById = async () => {
+  //     try {
+  //       // ================= PARALLEL FETCH =================
+  //       const [diksharthiRes, familyRes] = await Promise.all([
+  //         axios.get(`${API}/api/diksharthi/${id}`),
+  //         axios.get(`${API}/api/family-details/${id}`),
+  //       ]);
+
+  //       const diksharthiData = diksharthiRes?.data?.data || {};
+  //       const familyData = familyRes?.data?.data?.[0] || {};
+
+
+
+  //       const normalizedFormData = {
+  //         permanentAddress: familyData?.formData?.permanentAddress || "",
+  //         currentAddress: familyData?.formData?.currentAddress || "",
+  //         village: familyData?.formData?.village || "",
+  //         taluka: familyData?.formData?.taluka || "",
+  //         district: familyData?.formData?.district || "",
+  //         state: familyData?.formData?.state || "",
+  //         pinCode: familyData?.formData?.pinCode || "",
+
+  //         houseDetails: familyData?.formData?.houseDetails || "",
+  //         typeOfHouse: familyData?.formData?.typeOfHouse || "",
+  //         maintenanceCost: familyData?.formData?.maintenanceCost || "",
+  //         lightBillCost: familyData?.formData?.lightBillCost || "",
+  //         rentCost: familyData?.formData?.rentCost || "",
+
+  //         mediclaim: familyData?.formData?.mediclaim || null,
+  //         family_mediclaim_type: familyData?.formData?.family_mediclaim_type || "",
+  //         Family_mediclaim_amount: familyData?.formData?.Family_mediclaim_amount || "",
+  //         mediclaimPremiumAmount: familyData?.formData?.mediclaimPremiumAmount || "",
+  //         family_mediclaim_companyName: familyData?.formData?.family_mediclaim_companyName || "",
+
+  //         ngoAssistance: familyData?.formData?.ngoAssistance || null,
+  //         sanghName: familyData?.formData?.sanghName || "",
+  //         ngoAmount: familyData?.formData?.ngoAmount || "",
+  //         ngoRemark: familyData?.formData?.ngoRemark || "",
+  //       };
+
+
+
+  //       const apiRelations = [
+  //         ...new Set(
+  //           (familyData?.formData?.relations || []).map(
+  //             (r) =>
+  //               r.charAt(0).toUpperCase() + r.slice(1).toLowerCase()
+  //           )
+  //         ),
+  //       ];
+
+  //       // ================= HEAD OF FAMILY FROM FAMILY DETAILS =================
+  //       const headOfFamily = familyData?.head_of_family || null;
+  //       const headOfFamilyName = familyData?.head_of_family_name || null;
+
+  //       // ================= RELATION DETAILS FROM FAMILY DETAILS =================
+  //       const apiRelationDetails = familyData?.relationDetails || familyData?.relation_details || {};
+
+  //       const apiHead = Object.entries(familyData?.relationDetails || {})
+  //         .find(([_, val]) => val?.family_head)?.[0] || null;
+
+  //       const relationDetailsData = familyData?.relationDetails || {};
+
+  //       // const relationDetailsData = Array.isArray(apiRelations)
+  //       //   ? Object.fromEntries(
+  //       //     apiRelations.map((rel) => [
+  //       //       rel,
+  //       //       apiRelationDetails[rel] || {
+  //       //         relationName: rel,
+  //       //         firstName: "",
+  //       //         lastName: "",
+  //       //         aadharNumber: "",
+  //       //         panNumber: "",
+  //       //         photo: null,
+  //       //         photoPreview: "",
+  //       //         ayushman: null,
+  //       //         mediclaim: null,
+  //       //         needAssistance: null,
+  //       //         assistanceCategories: [],
+  //       //         isMarried: null,
+  //       //       },
+  //       //     ])
+  //       //   )
+  //       //   : apiRelationDetails;
+
+  //       // ================= ASSISTANCE DATA FROM FAMILY DETAILS =================
+  //       // const apiAssistanceData = familyData?.assistanceData || familyData?.assistance_data || {};
+  //       const apiAssistanceData = familyData?.assistanceData || {};
+  //       // ================= EXPAND ALL =================
+  //       const expanded = {};
+  //       apiRelations.forEach((rel) => {
+  //         expanded[rel] = true;
+  //       });
+
+  //       // ================= SET STATE =================
+  //       // setFormData((prev) => ({
+  //       //   ...prev,
+  //       //   ...normalizedFormData,
+  //       //   relations: apiRelations,
+  //       // }));
+
+  //       // setRelationDetails(relationDetailsData);
+  //       // setExpandedRelations(expanded);
+  //       // setHeadOfFamily(headOfFamily);
+  //       // setAssistanceData(apiAssistanceData);
+  //       // setAdditionalRelations({});
+  //       // setFamilyRecordId(familyData?.id ?? null);
+
+  //       setFormData((prev) => ({
+  //         ...prev,
+  //         ...normalizedFormData,
+  //         relations: apiRelations,
+  //       }));
+
+  //       setRelationDetails(relationDetailsData);
+  //       setHeadOfFamily(apiHead);
+  //       setAssistanceData(apiAssistanceData);
+
+  //     } catch (error) {
+  //       console.error("Error fetching family details:", error);
+  //     }
+  //   };
+
+  //   fetchFamilyDetailsById();
+  // }, [id]);
+
+  // useEffect(() => {
+  //   if (!id) return;
+
+  //   const fetchFamilyDetailsById = async () => {
+  //     try {
+  //       const [diksharthiRes, familyRes] = await Promise.all([
+  //         axios.get(`${API}/api/diksharthi/${id}`),
+  //         axios.get(`${API}/api/family-details/${id}`),
+  //       ]);
+
+  //       const diksharthiData = diksharthiRes?.data?.data || {};
+  //       const familyData = familyRes?.data?.data?.[0] || {};
+
+  //       // ================= FORM DATA =================
+  //       const normalizedFormData = {
+  //         permanentAddress: familyData?.formData?.permanentAddress || "",
+  //         currentAddress: familyData?.formData?.currentAddress || "",
+  //         village: familyData?.formData?.village || "",
+  //         taluka: familyData?.formData?.taluka || "",
+  //         district: familyData?.formData?.district || "",
+  //         state: familyData?.formData?.state || "",
+  //         pinCode: familyData?.formData?.pinCode || "",
+
+  //         houseDetails: familyData?.formData?.houseDetails || "",
+  //         typeOfHouse: familyData?.formData?.typeOfHouse || "",
+  //         maintenanceCost: familyData?.formData?.maintenanceCost || "",
+  //         lightBillCost: familyData?.formData?.lightBillCost || "",
+  //         rentCost: familyData?.formData?.rentCost || "",
+
+  //         mediclaim: familyData?.formData?.mediclaim || null,
+  //         family_mediclaim_type: familyData?.formData?.family_mediclaim_type || "",
+  //         Family_mediclaim_amount: familyData?.formData?.Family_mediclaim_amount || "",
+  //         mediclaimPremiumAmount: familyData?.formData?.mediclaimPremiumAmount || "",
+  //         family_mediclaim_companyName:
+  //           familyData?.formData?.family_mediclaim_companyName || "",
+
+  //         ngoAssistance: familyData?.formData?.ngoAssistance || null,
+  //         sanghName: familyData?.formData?.sanghName || "",
+  //         ngoAmount: familyData?.formData?.ngoAmount || "",
+  //         ngoRemark: familyData?.formData?.ngoRemark || "",
+  //       };
+
+  //       // ================= RELATIONS =================
+  //       const apiRelations = [
+  //         ...new Set(
+  //           (familyData?.formData?.relations || []).map(
+  //             (r) =>
+  //               r.charAt(0).toUpperCase() + r.slice(1).toLowerCase()
+  //           )
+  //         ),
+  //       ];
+
+  //       // ================= RELATION DETAILS =================
+  //       const relationDetailsRaw = familyData?.relationDetails ?? {};
+  //       const relationFromApi = familyData?.relation?.toLowerCase() || null;
+
+  //       setSelectedRelation(relationFromApi);
+  //       const normalizedRelationDetails = {};
+
+  //       Object.keys(relationDetailsRaw).forEach((key) => {
+  //         const formattedKey =
+  //           key.charAt(0).toUpperCase() + key.slice(1).toLowerCase();
+
+  //         normalizedRelationDetails[formattedKey] = {
+  //           relationName: formattedKey,
+  //           firstName: relationDetailsRaw[key]?.firstName || "",
+  //           lastName: relationDetailsRaw[key]?.lastName || "",
+  //           aadharNumber: relationDetailsRaw[key]?.aadharNumber || "",
+  //           panNumber: relationDetailsRaw[key]?.panNumber || "",
+  //           photo: relationDetailsRaw[key]?.photo || "",
+  //           ayushman: relationDetailsRaw[key]?.ayushman || null,
+  //           mediclaim: relationDetailsRaw[key]?.mediclaim || null,
+  //           needAssistance: relationDetailsRaw[key]?.needAssistance || null,
+  //           family_head: relationDetailsRaw[key]?.family_head || false,
+  //           assistanceCategories:
+  //             relationDetailsRaw[key]?.assistanceCategories || [],
+  //         };
+  //       });
+
+  //       // ================= FIND HEAD =================
+  //       const apiHead =
+  //         Object.entries(normalizedRelationDetails).find(
+  //           ([_, val]) => val?.family_head
+  //         )?.[0] || null;
+
+  //       // ================= ASSISTANCE DATA =================
+  //       const assistanceRaw = familyData?.assistanceData ?? {};
+  //       const Selecetdassistance = familyData?.assistance ?? {};
+
+
+  //       const normalizedAssistanceData = {};
+
+  //       Object.keys(assistanceRaw).forEach((key) => {
+  //         const formattedKey =
+  //           key.charAt(0).toUpperCase() + key.slice(1).toLowerCase();
+
+  //         normalizedAssistanceData[formattedKey] = assistanceRaw[key];
+  //       });
+
+  //       // ================= EXPAND =================
+  //       // const expanded = {};
+  //       // apiRelations.forEach((rel) => {
+  //       //   expanded[rel] = true;
+  //       // });
+  //       const relationFromApiRaw = familyData?.relation || null;
+
+  //       const formattedRelation = relationFromApiRaw
+  //         ? relationFromApiRaw.charAt(0).toUpperCase() +
+  //         relationFromApiRaw.slice(1).toLowerCase()
+  //         : null;
+  //       const expanded = {};
+
+  //       if (formattedRelation) {
+  //         expanded[formattedRelation] = true;
+  //       }
+
+  //       // ================= SET STATE =================
+  //       setFormData((prev) => ({
+  //         ...prev,
+  //         ...normalizedFormData,
+  //         relations: apiRelations,
+  //       }));
+
+  //       setRelationDetails(normalizedRelationDetails);
+  //       setHeadOfFamily(apiHead);
+  //       setAssistanceData(normalizedAssistanceData);
+  //       setselectedAssistance(Selecetdassistance)
+  //       setExpandedRelations(expanded);
+  //       setFamilyRecordId(familyData?.id ?? null);
+
+  //       // ================= DEBUG =================
+  //       console.log("FINAL relationDetails:", normalizedRelationDetails);
+  //       console.log("FINAL assistanceData:", normalizedAssistanceData);
+
+  //     } catch (error) {
+  //       console.error("Error fetching family details:", error);
+  //     }
+  //   };
+
+  //   fetchFamilyDetailsById();
+  // }, [id]);
 
   useEffect(() => {
     if (!id) return;
 
     const fetchFamilyDetailsById = async () => {
       try {
-        const res = await axios.get(`${API}/api/diksharthi/${id}`);
-        const diksharthiData = res?.data?.data || {};
-        const matchedFamily = diksharthiData?.family_details || {};
+        const [diksharthiRes, familyRes] = await Promise.all([
+          axios.get(`${API}/api/diksharthi/${id}`),
+          axios.get(`${API}/api/family-details/${id}`),
+        ]);
 
-        // ================= ADDRESS =================
+        const diksharthiData = diksharthiRes?.data?.data || {};
+        const familyData = familyRes?.data?.data?.[0] || {};
+
+        // ================= FORM DATA =================
         const normalizedFormData = {
-          permanentAddress: diksharthiData?.permanent_address || "",
-          currentAddress: diksharthiData?.current_address || "",
-          village: diksharthiData?.village || "",
-          taluka: diksharthiData?.taluka || "",
-          district: diksharthiData?.district || "",
-          state: diksharthiData?.state || "",
-          pinCode: diksharthiData?.pin_code || "",
+          permanentAddress: familyData?.formData?.permanentAddress || "",
+          currentAddress: familyData?.formData?.currentAddress || "",
+          village: familyData?.formData?.village || "",
+          taluka: familyData?.formData?.taluka || "",
+          district: familyData?.formData?.district || "",
+          state: familyData?.formData?.state || "",
+          pinCode: familyData?.formData?.pinCode || "",
+
+          houseDetails: familyData?.formData?.houseDetails || "",
+          typeOfHouse: familyData?.formData?.typeOfHouse || "",
+          maintenanceCost: familyData?.formData?.maintenanceCost || "",
+          lightBillCost: familyData?.formData?.lightBillCost || "",
+          rentCost: familyData?.formData?.rentCost || "",
+
+          mediclaim: familyData?.formData?.mediclaim || null,
+          family_mediclaim_type: familyData?.formData?.family_mediclaim_type || "",
+          Family_mediclaim_amount: familyData?.formData?.Family_mediclaim_amount || "",
+          mediclaimPremiumAmount: familyData?.formData?.mediclaimPremiumAmount || "",
+          family_mediclaim_companyName:
+            familyData?.formData?.family_mediclaim_companyName || "",
+
+          ngoAssistance: familyData?.formData?.ngoAssistance || null,
+          sanghName: familyData?.formData?.sanghName || "",
+          ngoAmount: familyData?.formData?.ngoAmount || "",
+          ngoRemark: familyData?.formData?.ngoRemark || "",
         };
 
-        // ================= RELATIONS =================
-        const apiRelations = (diksharthiData?.family_relation || "")
-          .split(",")
-          .map((r) => r.trim())
-          .filter(Boolean)
-          .map(
-            (r) =>
-              r.charAt(0).toUpperCase() + r.slice(1).toLowerCase()
-          );
+        // ================= RELATIONS FROM API =================
+        const apiRelations = [
+          ...new Set(
+            (familyData?.formData?.relations || []).map(
+              (r) => r.charAt(0).toUpperCase() + r.slice(1).toLowerCase()
+            )
+          ),
+        ];
 
-        // ================= HEAD =================
-        const apiHead = diksharthiData?.relation
-          ? diksharthiData.relation.charAt(0).toUpperCase() +
-          diksharthiData.relation.slice(1).toLowerCase()
+        // ================= SELECTED RELATION =================
+        const relationFromApiRaw = familyData?.relation || null;
+        const formattedRelation = relationFromApiRaw
+          ? relationFromApiRaw.charAt(0).toUpperCase() + relationFromApiRaw.slice(1).toLowerCase()
           : null;
 
+        // ================= FINAL RELATIONS ARRAY =================
+        const finalRelations = formattedRelation
+          ? Array.from(new Set([...apiRelations, formattedRelation])) // merge default relation
+          : apiRelations;
+
         // ================= RELATION DETAILS =================
-        const relationDetailsData = {};
+        const relationDetailsRaw = familyData?.relationDetails ?? {};
+        const normalizedRelationDetails = {};
 
-        apiRelations.forEach((rel) => {
-          const isHead =
-            rel.toLowerCase() ===
-            diksharthiData?.relation?.toLowerCase();
-
-          relationDetailsData[rel] = {
-            relationName: rel,
-            firstName: isHead
-              ? diksharthiData?.family_member_firstName || ""
-              : "",
-            lastName: isHead
-              ? diksharthiData?.family_member_lastName || ""
-              : "",
-            aadharNumber: "",
-            panNumber: "",
-            photo: null,
-            photoPreview: "",
-            ayushman: null,
-            mediclaim: null,
-            needAssistance: null,
-            assistanceCategories: [],
-            isMarried: null,
+        Object.keys(relationDetailsRaw).forEach((key) => {
+          const formattedKey = key.charAt(0).toUpperCase() + key.slice(1).toLowerCase();
+          normalizedRelationDetails[formattedKey] = {
+            relationName: formattedKey,
+            firstName: relationDetailsRaw[key]?.firstName || "",
+            lastName: relationDetailsRaw[key]?.lastName || "",
+            aadharNumber: relationDetailsRaw[key]?.aadharNumber || "",
+            panNumber: relationDetailsRaw[key]?.panNumber || "",
+            photo: relationDetailsRaw[key]?.photo || "",
+            ayushman: relationDetailsRaw[key]?.ayushman || null,
+            mediclaim: relationDetailsRaw[key]?.mediclaim || null,
+            needAssistance: relationDetailsRaw[key]?.needAssistance || null,
+            family_head: relationDetailsRaw[key]?.family_head || false,
+            assistanceCategories: relationDetailsRaw[key]?.assistanceCategories || [],
           };
         });
 
-        // ================= EXPAND ALL =================
-        const expanded = {};
-        apiRelations.forEach((rel) => {
-          expanded[rel] = true;
+        // ================= HEAD OF FAMILY =================
+        const apiHead =
+          Object.entries(normalizedRelationDetails).find(([_, val]) => val?.family_head)?.[0] || null;
+
+        // ================= ASSISTANCE DATA =================
+        const assistanceRaw = familyData?.assistanceData ?? {};
+        const selectedAssistance = familyData?.assistance ?? {};
+
+        const normalizedAssistanceData = {};
+        Object.keys(assistanceRaw).forEach((key) => {
+          const formattedKey = key.charAt(0).toUpperCase() + key.slice(1).toLowerCase();
+          normalizedAssistanceData[formattedKey] = assistanceRaw[key];
         });
+
+        // ================= EXPAND RELATIONS =================
+        const expanded = {};
+        if (formattedRelation) {
+          expanded[formattedRelation] = true;
+        }
 
         // ================= SET STATE =================
         setFormData((prev) => ({
           ...prev,
           ...normalizedFormData,
-          relations: apiRelations,
+          relations: finalRelations,
         }));
 
-        setRelationDetails(relationDetailsData);
-        setExpandedRelations(expanded);
+        setRelationDetails(normalizedRelationDetails);
         setHeadOfFamily(apiHead);
-        setAdditionalRelations({});
-        setAssistanceData({});
-        setFamilyRecordId(matchedFamily?.id ?? null);
+        setAssistanceData(normalizedAssistanceData);
+        setselectedAssistance(selectedAssistance);
+        setSelectedRelation(formattedRelation); // default selected
+        setExpandedRelations(expanded);
+        setFamilyRecordId(familyData?.id ?? null);
+
+        // ================= DEBUG =================
+        console.log("FINAL relationDetails:", normalizedRelationDetails);
+        console.log("FINAL assistanceData:", normalizedAssistanceData);
+        console.log("FINAL relations (formData):", finalRelations);
+        console.log("Selected Relation:", formattedRelation);
+        console.log("Expanded Relations:", expanded);
 
       } catch (error) {
         console.error("Error fetching family details:", error);
@@ -1237,12 +1565,8 @@ const FamilyDetailsForm = () => {
                 >
                   <input
                     type="checkbox"
-                    checked={selectedRelations.includes(rel)}
-                    onChange={() => {
-                      if (allowRelationEditing) handleCheckbox(rel);
-                    }}
-
-                    disabled={!allowRelationEditing}
+                    checked={Object.keys(relationDetails).includes(rel)}
+                    onChange={() => handleCheckbox(rel)}
                     className="w-5 h-5 border-slate-400 rounded"
                   />
                   <span>{rel}</span>
@@ -1705,7 +2029,7 @@ const FamilyDetailsForm = () => {
                               Assistances<span className="text-red-500">*</span>
                             </p>
                             <div className="flex flex-wrap gap-4">
-                              {assistanceTypes.map((type) => (
+                              {/* {assistanceTypes.map((type) => (
                                 <label
                                   key={type}
                                   className="flex items-center gap-2 text-slate-700 cursor-pointer"
@@ -1725,12 +2049,50 @@ const FamilyDetailsForm = () => {
                                   />
                                   <span>{type}</span>
                                 </label>
-                              ))}
+                              ))} */}
+
+                              {assistanceTypes.map((type) => {
+                                const selectedCategories = (
+                                  relationDetails[rel]?.assistanceCategories || []
+                                ).map((item) => item.toLowerCase());
+
+                                const defaultAssist = (selectedAssistance || []).map((item) =>
+                                  item.toLowerCase()
+                                );
+
+                                // ✅ FIX: normalize case
+                                const isSameRelation =
+                                  rel?.toLowerCase() === selectedRelation?.toLowerCase();
+
+                                const isChecked =
+                                  selectedCategories.includes(type.toLowerCase()) || // saved data
+                                  (isSameRelation && defaultAssist.includes(type.toLowerCase())); // default only for selected
+
+                                return (
+                                  <label
+                                    key={type}
+                                    className="flex items-center gap-2 text-slate-700 cursor-pointer"
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      checked={isChecked}
+                                      onChange={() => handleAssistanceCategory(rel, type)}
+                                      className="w-4 h-4 border-slate-400 rounded"
+                                    />
+                                    <span>{type}</span>
+                                  </label>
+                                );
+                              })}
                             </div>
 
-                            {relationDetails[
-                              rel
-                            ]?.assistanceCategories?.includes("Medical") && (
+                            {
+
+                              //   relationDetails[
+                              //   rel
+                              // ]?.assistanceCategories?.includes("Medical") &&
+                              (relationDetails[rel]?.assistanceCategories?.includes("Medical") ||
+                                (selectedRelation === rel && selectedAssistance?.includes("Medical"))) &&
+                              (
                                 <div className="mt-6 p-6 border rounded-lg bg-white shadow-sm font-sans">
                                   <h3 className="text-xl font-semibold mb-6 text-gray-800">
                                     Medical support Assistance
@@ -2376,9 +2738,16 @@ const FamilyDetailsForm = () => {
                                 </div>
                               )}
 
-                            {relationDetails[
-                              rel
-                            ]?.assistanceCategories?.includes("Education") && (
+                            {
+                            //   (
+                             
+                            //     relationDetails[rel]?.assistanceCategories?.includes("Education") ||
+                            //     selectedAssistance?.includes("Education")
+                            // ) && 
+                              (relationDetails[rel]?.assistanceCategories?.includes("Education") ||
+                                (selectedRelation === rel && selectedAssistance?.includes("Education"))) &&
+                              
+                              (
                                 <div className="mt-6 p-6 border rounded-lg bg-white shadow-sm font-sans">
                                   <h3 className="text-xl font-semibold mb-6 text-gray-800">
                                     Education support Assistance
@@ -2497,9 +2866,20 @@ const FamilyDetailsForm = () => {
                                 </div>
                               )}
 
-                            {relationDetails[
-                              rel
-                            ]?.assistanceCategories?.includes("Job") && (
+                            {
+                            
+                            //   relationDetails[
+                            //   rel
+                            // ]?.assistanceCategories?.includes("Job") && 
+                              // (
+                              //   relationDetails[rel]?.assistanceCategories?.includes("Job") ||
+                              //   selectedAssistance?.includes("Job")
+                              // ) &&
+
+                              (relationDetails[rel]?.assistanceCategories?.includes("Job") ||
+                                (selectedRelation === rel && selectedAssistance?.includes("Job"))) &&
+                            
+                              (
                                 <div className="mt-6 p-6 border rounded-lg bg-white shadow-sm font-sans">
                                   <h3 className="text-xl font-semibold mb-6 text-gray-800">
                                     Job assistance
@@ -2790,9 +3170,20 @@ const FamilyDetailsForm = () => {
                                 </div>
                               )}
 
-                            {relationDetails[
-                              rel
-                            ]?.assistanceCategories?.includes("Food") && (
+                            {
+                              // relationDetails[
+                              // rel
+                              // ]?.assistanceCategories?.includes("Food") &&
+
+                              // (
+                              //   relationDetails[rel]?.assistanceCategories?.includes("Food") ||
+                              //   selectedAssistance?.includes("Food")
+                              // ) &&
+
+                              (relationDetails[rel]?.assistanceCategories?.includes("Food") ||
+                                (selectedRelation === rel && selectedAssistance?.includes("Food"))) &&
+
+                              (
                                 <div className="mt-6 p-6 border rounded-lg bg-white shadow-sm font-sans">
                                   <h3 className="text-xl font-semibold mb-6 text-gray-800">
                                     Food support Assistance
@@ -2962,9 +3353,19 @@ const FamilyDetailsForm = () => {
                                 </div>
                               )}
 
-                            {relationDetails[
-                              rel
-                            ]?.assistanceCategories?.includes("Rent") && (
+                            {
+                              // relationDetails[
+                              // rel
+                              // ]?.assistanceCategories?.includes("Rent") &&
+
+                              // (
+                              //   relationDetails[rel]?.assistanceCategories?.includes("Rent") ||
+                              //   selectedAssistance?.includes("Rent")
+                              // ) &&
+                              (relationDetails[rel]?.assistanceCategories?.includes("Rent") ||
+                                (selectedRelation === rel && selectedAssistance?.includes("Rent"))) &&
+                              
+                              (
                                 <div className="mt-6 p-6 border rounded-lg bg-white shadow-sm font-sans">
                                   <h3 className="text-xl font-semibold mb-6 text-gray-800">
                                     Rent support Assistance
@@ -3251,9 +3652,23 @@ const FamilyDetailsForm = () => {
                                 </div>
                               )}
 
-                            {relationDetails[rel]?.assistanceCategories?.includes(
-                              "Housing",
-                            ) && (
+                            {
+                              
+                              
+                            //   relationDetails[rel]?.assistanceCategories?.includes(
+                            //   "Housing",
+                              // ) &&
+                              
+                              // (
+                              //   relationDetails[rel]?.assistanceCategories?.includes("Housing") ||
+                              //   selectedAssistance?.includes("Housing")
+                              // ) &&
+
+                              (relationDetails[rel]?.assistanceCategories?.includes("Housing") ||
+                                (selectedRelation === rel && selectedAssistance?.includes("Housing"))) &&
+                            
+                              
+                              (
                                 <div className="mt-6 p-6 border rounded-lg bg-white shadow-sm font-sans text-[#4A4A4A]">
                                   <h3 className="text-xl font-semibold mb-6 text-gray-800">
                                     House purchase/repair Assistance
@@ -3742,9 +4157,19 @@ const FamilyDetailsForm = () => {
                                 </div>
                               )}
 
-                            {relationDetails[rel]?.assistanceCategories?.includes(
-                              "Vaiyavacch",
-                            ) && (
+                            {
+                              // relationDetails[rel]?.assistanceCategories?.includes(
+                              // "Vaiyavacch",
+                              // ) &&
+                              // (
+                              //   relationDetails[rel]?.assistanceCategories?.includes("Vaiyavacch") ||
+                              //   selectedAssistance?.includes("Vaiyavacch")
+                              // ) &&
+
+                              (relationDetails[rel]?.assistanceCategories?.includes("Vaiyavacch") ||
+                                (selectedRelation === rel && selectedAssistance?.includes("Vaiyavacch"))) &&
+                              
+                              (
                                 <div className="p-6 border rounded-lg bg-white shadow-sm">
                                   <h3 className="text-xl font-semibold mb-6 text-gray-800">
                                     Vaiyavacch Assistance
@@ -3809,9 +4234,21 @@ const FamilyDetailsForm = () => {
                                 </div>
                               )}
 
-                            {relationDetails[rel]?.assistanceCategories?.includes(
-                              "LivelihoodExpenses ",
-                            ) && (
+                            {
+                              
+                            //   relationDetails[rel]?.assistanceCategories?.includes(
+                            //   "LivelihoodExpenses ",
+                            // ) &&
+
+                              // (
+                              //   relationDetails[rel]?.assistanceCategories?.includes("LivelihoodExpenses") ||
+                              //   selectedAssistance?.includes("LivelihoodExpenses")
+                              // ) &&
+
+                              (relationDetails[rel]?.assistanceCategories?.includes("LivelihoodExpenses") ||
+                                (selectedRelation === rel && selectedAssistance?.includes("LivelihoodExpenses"))) &&
+                              
+                              (
                                 <div className="p-6 border rounded-lg bg-white shadow-sm mt-6">
                                   <h3 className="text-xl font-semibold mb-6 text-gray-800">
                                     Livelihood Expenses Assistance
@@ -4587,8 +5024,8 @@ const FamilyDetailsForm = () => {
               onClick={handleSave}
               disabled={loading}
               className={`px-4 py-2 text-white font-semibold rounded-md transition-colors ${loading
-                  ? "bg-green-400 cursor-not-allowed"
-                  : "bg-green-500 hover:bg-green-600"
+                ? "bg-green-400 cursor-not-allowed"
+                : "bg-green-500 hover:bg-green-600"
                 }`}
             >
               {loading

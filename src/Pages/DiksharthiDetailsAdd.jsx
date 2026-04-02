@@ -5,8 +5,8 @@ import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { API } from "../api/BaseURL";
 import { useAuth } from "../context/AuthContext";
-import { getMaxDOB } from "../utils/validation";
 import { RELATIONS } from "../utils/constants";
+import { getMaxDOB } from "../utils/validation";
 
 const initialFormData = {
   sadhu_sadhvi_name: "",
@@ -36,7 +36,8 @@ const initialFormData = {
   state: "",
   pinCode: "",
   assistanceReceived: "",
-  family_relation: [], // checkbox ke liye array
+  assistance: [], // checkbox ke liye array
+  // family_relation: [], // checkbox ke liye array
   summary: "",  // 👈 new field
 };
 
@@ -124,9 +125,10 @@ const mapFormDataToApiPayload = (formData, userId) => ({
   district: formData.district,
   state: formData.state,
   pin_code: formData.pinCode,
-  family_relation: Array.isArray(formData.family_relation)
-    ? formData.family_relation.join(",")
-    : formData.family_relation || "",
+  // family_relation: Array.isArray(formData.family_relation)
+  //   ? formData.family_relation.join(",")
+  //   : formData.family_relation || "",
+  assistance: formData.assistance,
   assistance_received: formData.assistanceReceived,
   summary: formData.summary,
 
@@ -160,6 +162,9 @@ const DiksharthiDetailsAdd = () => {
     "district",
     "state",
   ];
+
+  const [assistanceTypes] = useState(["Medical", "Education", "Job", "Food", "Rent", "Housing", "Vaiyavacch", "LivelihoodExpenses",]);
+
 
   const validateRbfField = (fieldName, fieldValue, rbfCriteria) => {
     if (rbfCriteria !== "Yes") return "";
@@ -273,7 +278,7 @@ const DiksharthiDetailsAdd = () => {
         nextState.district = "";
         nextState.state = "";
         nextState.assistanceReceived = "";
-        nextState.family_relation = [];
+        nextState.assistance = [];
       }
       return nextState;
     });
@@ -698,7 +703,7 @@ const DiksharthiDetailsAdd = () => {
 
           {formData.assistanceReceived === "Yes" && (
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Relations</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Assistance</label>
               {/* <input name="state" value={formData.state} onChange={handleChange} type="text" className="w-full p-2 border border-slate-300 rounded-md outline-none" />
 
               <input
@@ -727,7 +732,7 @@ const DiksharthiDetailsAdd = () => {
                 ))}
               </div> */}
 
-              <div className="flex flex-wrap gap-4">
+              {/* <div className="flex flex-wrap gap-4">
                 {RELATIONS.map((item) => (
                   <label key={item.value} className="flex items-center gap-2 cursor-pointer">
                     <input
@@ -750,6 +755,33 @@ const DiksharthiDetailsAdd = () => {
                       }}
                     />
                     {item.label}
+                  </label>
+                ))}
+              </div> */}
+
+              <div className="flex flex-wrap gap-4">
+                {assistanceTypes.map((type) => (
+                  <label key={type} className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      value={type}
+                      checked={formData.assistance?.includes(type)}
+                      onChange={(e) => {
+                        const value = e.target.value;
+
+                        setFormData((prev) => {
+                          const exists = prev.assistance?.includes(value);
+
+                          return {
+                            ...prev,
+                            assistance: exists
+                              ? prev.assistance.filter((a) => a !== value)
+                              : [...(prev.assistance || []), value],
+                          };
+                        });
+                      }}
+                    />
+                    {type}
                   </label>
                 ))}
               </div>
