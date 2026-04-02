@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { API } from "../api/BaseURL";
 import { isValidAadhaar, isValidPAN } from "../utils/validation";
-import statesDistrictData from "../data/state_discripts.json";
 
 const INITIAL_FORM_DATA = {
   permanentAddress: "",
@@ -52,10 +51,11 @@ const FamilyDetailsForm = () => {
   const selectedRelations = Array.isArray(formData?.relations)
     ? formData.relations
     : [];
+  const allowRelationEditing = false;
 
- 
 
-   console.log(formData, "formData");
+
+  console.log(formData, "formData");
   const [relationDetails, setRelationDetails] = useState({});
 
   console.log(relationDetails, "relationDetails");
@@ -205,43 +205,24 @@ const FamilyDetailsForm = () => {
     return result;
   };
 
-  // const handleCheckbox = (relation) => {
-  //   setFormData((prev) => ({
-  //     ...prev,
-  //     relations: prev.relations.includes(relation)
-  //       ? prev.relations.filter((r) => r !== relation)
-  //       : [...prev.relations, relation],
-  //   }));
+  const buildRelationDetailsPayloadWithUploads = (data, formData) => {
+    const result = {};
 
-  //   // Initialize relation details if not exists
-  //   if (!relationDetails[relation]) {
-  //     setRelationDetails((prev) => ({
-  //       ...prev,
-  //       [relation]: {
-  //         relationName: "",
-  //         relationDetailsName: "",
-  //         firstName: "",
-  //         lastName: "",
-  //         aadharNumber: "",
-  //         photo: null,
-  //         photoPreview: "",
-  //         ayushman: null,
-  //         amount: "",
-  //         mediclaim: null,
-  //         needAssistance: null,
-  //         assistanceCategories: [],
-  //         isMarried: null,
-  //       },
-  //     }));
-  //   }
+    Object.entries(data || {}).forEach(([relation, details]) => {
+      const newDetails = { ...details };
 
-  //   // Toggle accordion expansion
-  //   setExpandedRelations((prev) => ({
-  //     ...prev,
-  //     [relation]: !prev[relation],
-  //   }));
-  // };
+      // Handle photo file upload
+      if (details?.photo instanceof File) {
+        const key = `photo_${relation}`;
+        formData.append(key, details.photo);
+        newDetails.photo = key;
+      }
 
+      result[relation] = newDetails;
+    });
+
+    return result;
+  };
 
   const handleCheckbox = (relation) => {
     setFormData((prev) => {
@@ -545,139 +526,87 @@ const FamilyDetailsForm = () => {
 
     const fetchFamilyDetailsById = async () => {
       try {
-        const res = await axios.get(
-          `${API}/api/family-details/${id}`,
-        );
+        const res = await axios.get(`${API}/api/diksharthi/${id}`);
+        const diksharthiData = res?.data?.data || {};
+        const matchedFamily = diksharthiData?.family_details || {};
 
-        const payload = res?.data?.data;
-        const rows = Array.isArray(payload)
-          ? payload
-          : payload
-            ? [payload]
-            : [];
-        const matchedFamily =
-          rows.find((row) => String(row?.diksharthi_id) === String(id)) ||
-          rows[0];
-
-        if (!matchedFamily) return;
-
-        const fetchedRelationDetails = asObject(
-          parseMaybeJson(
-            matchedFamily?.relationDetails ?? matchedFamily?.relation_details ?? {},
-          ),
-        );
-        const fetchedAdditionalRelations = asObject(
-          parseMaybeJson(
-            matchedFamily?.additionalRelations ??
-            matchedFamily?.additional_relations ??
-            {},
-          ),
-        );
-        const fetchedExpandedRelations = asObject(
-          parseMaybeJson(
-            matchedFamily?.expandedRelations ?? matchedFamily?.expanded_relations ?? {},
-          ),
-        );
-        const fetchedHeadOfFamily =
-          matchedFamily?.headOfFamily ??
-          matchedFamily?.head_of_family ??
-          Object.entries(fetchedRelationDetails).find(
-            ([, relationValue]) => relationValue?.family_head === true,
-          )?.[0] ??
-          null;
-
-        const nestedFormData = parseMaybeJson(
-          matchedFamily?.formData ?? matchedFamily?.form_data,
-        );
-        const fallbackRelations = Object.keys(fetchedRelationDetails);
-        const minimalRelationDetails = Object.fromEntries(
-          Object.entries(fetchedRelationDetails).map(([relationKey, relationValue]) => [
-            relationKey,
-            {
-              relationName:
-                relationValue?.relationName ||
-                relationValue?.relation_name ||
-                relationKey,
-              firstName:
-                relationValue?.firstName ||
-                relationValue?.first_name ||
-                "",
-              lastName:
-                relationValue?.lastName ||
-                relationValue?.last_name ||
-                "",
-              family_head:
-                String(fetchedHeadOfFamily || "").trim().toLowerCase() ===
-                String(relationKey || "").trim().toLowerCase(),
-            },
-          ]),
-        );
-
+        // ================= ADDRESS =================
         const normalizedFormData = {
-          permanentAddress:
-            (nestedFormData && typeof nestedFormData === "object"
-              ? nestedFormData?.permanentAddress
-              : null) ??
-            matchedFamily?.permanentAddress ??
-            matchedFamily?.permanent_address ??
-            "",
-          currentAddress:
-            (nestedFormData && typeof nestedFormData === "object"
-              ? nestedFormData?.currentAddress
-              : null) ??
-            matchedFamily?.currentAddress ??
-            matchedFamily?.current_address ??
-            "",
-          village:
-            (nestedFormData && typeof nestedFormData === "object"
-              ? nestedFormData?.village
-              : null) ??
-            matchedFamily?.village ??
-            "",
-          taluka:
-            (nestedFormData && typeof nestedFormData === "object"
-              ? nestedFormData?.taluka
-              : null) ??
-            matchedFamily?.taluka ??
-            "",
-          district:
-            (nestedFormData && typeof nestedFormData === "object"
-              ? nestedFormData?.district
-              : null) ??
-            matchedFamily?.district ??
-            "",
-          state:
-            (nestedFormData && typeof nestedFormData === "object"
-              ? nestedFormData?.state
-              : null) ??
-            matchedFamily?.state ??
-            "",
-          pinCode:
-            (nestedFormData && typeof nestedFormData === "object"
-              ? nestedFormData?.pinCode
-              : null) ??
-            matchedFamily?.pinCode ??
-            matchedFamily?.pin_code ??
-            "",
-          relations: fallbackRelations,
+          permanentAddress: diksharthiData?.permanent_address || "",
+          currentAddress: diksharthiData?.current_address || "",
+          village: diksharthiData?.village || "",
+          taluka: diksharthiData?.taluka || "",
+          district: diksharthiData?.district || "",
+          state: diksharthiData?.state || "",
+          pinCode: diksharthiData?.pin_code || "",
         };
 
-        setFormData({
-          ...INITIAL_FORM_DATA,
-          ...normalizedFormData,
-          relations:
-            normalizedFormData?.relations?.length > 0
-              ? normalizedFormData.relations
-              : fallbackRelations,
+        // ================= RELATIONS =================
+        const apiRelations = (diksharthiData?.family_relation || "")
+          .split(",")
+          .map((r) => r.trim())
+          .filter(Boolean)
+          .map(
+            (r) =>
+              r.charAt(0).toUpperCase() + r.slice(1).toLowerCase()
+          );
+
+        // ================= HEAD =================
+        const apiHead = diksharthiData?.relation
+          ? diksharthiData.relation.charAt(0).toUpperCase() +
+          diksharthiData.relation.slice(1).toLowerCase()
+          : null;
+
+        // ================= RELATION DETAILS =================
+        const relationDetailsData = {};
+
+        apiRelations.forEach((rel) => {
+          const isHead =
+            rel.toLowerCase() ===
+            diksharthiData?.relation?.toLowerCase();
+
+          relationDetailsData[rel] = {
+            relationName: rel,
+            firstName: isHead
+              ? diksharthiData?.family_member_firstName || ""
+              : "",
+            lastName: isHead
+              ? diksharthiData?.family_member_lastName || ""
+              : "",
+            aadharNumber: "",
+            panNumber: "",
+            photo: null,
+            photoPreview: "",
+            ayushman: null,
+            mediclaim: null,
+            needAssistance: null,
+            assistanceCategories: [],
+            isMarried: null,
+          };
         });
-        setRelationDetails(normalizeRelationDetails(minimalRelationDetails));
-        setAdditionalRelations(fetchedAdditionalRelations);
-        setExpandedRelations(fetchedExpandedRelations);
+
+        // ================= EXPAND ALL =================
+        const expanded = {};
+        apiRelations.forEach((rel) => {
+          expanded[rel] = true;
+        });
+
+        // ================= SET STATE =================
+        setFormData((prev) => ({
+          ...prev,
+          ...normalizedFormData,
+          relations: apiRelations,
+        }));
+
+        setRelationDetails(relationDetailsData);
+        setExpandedRelations(expanded);
+        setHeadOfFamily(apiHead);
+        setAdditionalRelations({});
         setAssistanceData({});
-        setHeadOfFamily(fetchedHeadOfFamily);
         setFamilyRecordId(matchedFamily?.id ?? null);
+
       } catch (error) {
-        console.error("Error fetching family details by id:", error);
+        console.error("Error fetching family details:", error);
       }
     };
 
@@ -702,118 +631,6 @@ const FamilyDetailsForm = () => {
         return [relationKey, nextRelationValue];
       }),
     );
-
-  // const handleSave = async () => {
-  //   try {
-  //     if (!validateAadharUnique()) {
-  //       alert("Duplicate Aadhar numbers are not allowed");
-  //       return;
-  //     }
-
-  //     // 🔴 Head of Family validation
-  //     if (!headOfFamily) {
-  //       alert("Please select Head of Family");
-  //       return;
-  //     }
-
-  //     const headDetails = relationDetails[headOfFamily];
-
-  //     // 🔴 Photo validation
-  //     if (!headDetails?.photo && !headDetails?.photoPreview) {
-  //       alert("Head of Family photo is required");
-  //       return;
-  //     }
-
-  //     const payload = {
-  //       diksharthi_id: id,
-  //       formData: formData,
-  //       relationDetails: sanitizeRelationDetailsForPayload(
-  //         buildRelationDetailsPayload(relationDetails, headOfFamily),
-  //       ),
-  //       additionalRelations: additionalRelations,
-  //       expandedRelations: expandedRelations,
-  //       headOfFamily: headOfFamily,
-  //       assistanceData: assistanceData, // ✅ new field
-  //     };
-
-  //     console.log(payload, "Sending Data");
-
-  //     const response = familyRecordId
-  //       ? await axios.put(`${API}/api/update-family-details/${id}`, payload)
-  //       : await axios.post(`${API}/api/create-family-details`, payload);
-
-  //     console.log(response.data);
-
-  //     if (response.data.success) {
-  //       alert("Family details saved successfully");
-  //       resetForm();
-  //       navigate("/diksharthi-details");
-  //     }
-  //   } catch (error) {
-  //     console.error(error);
-  //     alert("Something went wrong");
-  //   }
-  // };
-
-  // const handleSave = async () => {
-  //   try {
-  //     const formDataToSend = new FormData();
-
-  //     formDataToSend.append("diksharthi_id", id);
-  //     formDataToSend.append("formData", JSON.stringify(formData));
-  //     formDataToSend.append(
-  //       "relationDetails",
-  //       JSON.stringify(
-  //         sanitizeRelationDetailsForPayload(
-  //           buildRelationDetailsPayload(relationDetails, headOfFamily)
-  //         )
-  //       )
-  //     );
-  //     formDataToSend.append(
-  //       "additionalRelations",
-  //       JSON.stringify(additionalRelations)
-  //     );
-  //     formDataToSend.append(
-  //       "expandedRelations",
-  //       JSON.stringify(expandedRelations)
-  //     );
-  //     formDataToSend.append("headOfFamily", headOfFamily);
-
-  //     // ✅ IMPORTANT: assistanceData bhi stringify
-  //     formDataToSend.append(
-  //       "assistanceData",
-  //       JSON.stringify(assistanceData)
-  //     );
-
-  //     // ✅ FILES ADD KARO
-  //     Object.keys(assistanceData).forEach((rel) => {
-  //       const docs = assistanceData[rel]?.Medical?.documents || [];
-
-  //       docs.forEach((file, index) => {
-  //         if (file instanceof File) {
-  //           formDataToSend.append(
-  //             `documents_${rel}_${index}`,
-  //             file
-  //           );
-  //         }
-  //       });
-  //     });
-
-  //     const response = await axios.post(
-  //       `${API}/api/create-family-details`,
-  //       formDataToSend,
-  //       {
-  //         headers: {
-  //           "Content-Type": "multipart/form-data",
-  //         },
-  //       }
-  //     );
-
-  //     console.log(response.data);
-  //   } catch (err) {
-  //     console.error(err);
-  //   }
-  // };
 
   const handleSave = async () => {
     if (loading) return;
@@ -1218,30 +1035,12 @@ const FamilyDetailsForm = () => {
                 <label className="block text-sm font-medium text-slate-700 mb-1">
                   Permanent Address <span className="text-red-500">*</span>
                 </label>
-                {/* Checkbox Logic */}
-                <label className="flex items-center gap-1.5 text-xs text-blue-600 cursor-pointer select-none font-semibold">
-                  <input
-                    type="checkbox"
-                    className="w-3.5 h-3.5 rounded border-gray-300"
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        setFormData({
-                          ...formData,
-                          currentAddress: formData.permanentAddress
-                        });
-                      }
-                    }}
-                  />
-                  Same as Permanent
-                </label>
               </div>
 
               <input
                 type="text"
                 value={formData.permanentAddress}
-                onChange={(e) =>
-                  setFormData({ ...formData, permanentAddress: e.target.value })
-                }
+                readOnly
                 className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
               />
             </div>
@@ -1256,54 +1055,36 @@ const FamilyDetailsForm = () => {
               <input
                 type="text"
                 value={formData.currentAddress}
-                onChange={(e) =>
-                  setFormData({ ...formData, currentAddress: e.target.value })
-                }
+                readOnly
                 className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
               />
             </div>
           </div>
 
           {/* Location Row */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">
                 State<span className="text-red-500">*</span>
               </label>
-              <select
+              <input
+                type="text"
                 value={formData.state}
-                onChange={(e) =>
-                  setFormData({ ...formData, state: e.target.value, district: "", taluka: "", village: "" })
-                }
+                readOnly
                 className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
-              >
-                <option value="">Select State</option>
-                {states.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
-              </select>
+              />
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">
                 District / City<span className="text-red-500">*</span>
               </label>
 
-              <select
+              <input
+                type="text"
                 value={formData.district}
-                onChange={(e) =>
-                  setFormData({ ...formData, district: e.target.value, taluka: "", village: "" })
-                }
+                readOnly
                 className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
-              >
-                <option value="">Select district</option>
-                {districts.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
-              </select>
+              />
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -1312,9 +1093,7 @@ const FamilyDetailsForm = () => {
               <input
                 type="text"
                 value={formData.taluka}
-                onChange={(e) =>
-                  setFormData({ ...formData, taluka: e.target.value, village: "" })
-                }
+                readOnly
                 className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                 placeholder="Enter taluka"
               />
@@ -1327,140 +1106,13 @@ const FamilyDetailsForm = () => {
               <input
                 type="text"
                 value={formData.village}
-                onChange={(e) =>
-                  setFormData({ ...formData, village: e.target.value })
-                }
+                readOnly
                 className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
               />
 
-              {/* <select
-                value={formData.village}
-                onChange={(e) =>
-                  setFormData({ ...formData, village: e.target.value })
-                }
-                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
-              >
-                <option value="">Select village</option>
-                {village.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
-              </select> */}
-            </div>
-          </div>
 
-          {/* House Details Row */}
-          {/* <div className="grid grid-cols-1 md:grid-cols-5 gap-6 items-end">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
-                Pin Code<span className="text-red-500">*</span>
-              </label>
-              <input
-                type="number"
-                value={formData.pinCode}
-                onChange={(e) =>
-                  setFormData({ ...formData, pinCode: e.target.value })
-                }
-                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
-              />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
-                House Details<span className="text-red-500">*</span>
-              </label>
-              <div className="flex gap-6 pt-1">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="house"
-                    value="own"
-                    checked={formData.houseDetails === "own"}
-                    onChange={(e) =>
-                      setFormData({ ...formData, houseDetails: e.target.value })
-                    }
-                    className="w-4 h-4 text-blue-600"
-                  />{" "}
-                  <span>Own</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="house"
-                    value="rented"
-                    checked={formData.houseDetails === "rented"}
-                    onChange={(e) =>
-                      setFormData({ ...formData, houseDetails: e.target.value })
-                    }
-                    className="w-4 h-4 text-blue-600"
-                  />{" "}
-                  <span>Rented</span>
-                </label>
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
-                Type Of House 
-              </label>
-              <input
-                type="text"
-                value={formData.typeOfHouse}
-                onChange={(e) =>
-                  setFormData({ ...formData, typeOfHouse: e.target.value })
-                }
-                className="w-full p-2 border border-slate-300 rounded-md outline-none"
-              />
-            </div>
-            <div>
-              {formData.houseDetails === "own" && (
-                <div className="">
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Maintenance Cost
-                  </label>
-                  <input
-                    type="number"
-                    value={formData.maintenanceCost}
-                    onChange={(e) =>
-                      setFormData({ ...formData, maintenanceCost: e.target.value })
-                    }
-                    className="w-full p-2 border border-slate-300 rounded-md outline-none"
-                  />
-                </div>
-              )}
-              
-              {formData.houseDetails === "rented" && (
-                <div className="w-full ">
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Rent Cost
-                  </label>
-                  <input
-                    type="number"
-                    value={formData.rentCost}
-                    onChange={(e) =>
-                      setFormData({ ...formData, rentCost: e.target.value })
-                    }
-                    className="w-full p-2 border border-slate-300 rounded-md outline-none"
-                  />
-                </div>
-              )}
-            </div>
-            <div className="">
-              <label className="block text-sm font-medium text-slate-700 mb-1">
-                Light Bill cost
-              </label>
-              <input
-                type="number"
-                value={formData.lightBillCost}
-                onChange={(e) =>
-                  setFormData({ ...formData, lightBillCost: e.target.value })
-                }
-                className="w-full p-2 border border-slate-300 rounded-md outline-none"
-              />
-            </div>
-          </div> */}
 
-
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-6 items-start">
             {/* 1. Pin Code */}
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -1469,10 +1121,17 @@ const FamilyDetailsForm = () => {
               <input
                 type="number"
                 value={formData.pinCode}
-                onChange={(e) => setFormData({ ...formData, pinCode: e.target.value })}
+                readOnly
                 className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
               />
             </div>
+          </div>
+
+
+
+
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-6 items-start">
+
 
             {/* 2. House Details (Radio) */}
             <div>
@@ -1579,7 +1238,11 @@ const FamilyDetailsForm = () => {
                   <input
                     type="checkbox"
                     checked={selectedRelations.includes(rel)}
-                    onChange={() => handleCheckbox(rel)}
+                    onChange={() => {
+                      if (allowRelationEditing) handleCheckbox(rel);
+                    }}
+
+                    disabled={!allowRelationEditing}
                     className="w-5 h-5 border-slate-400 rounded"
                   />
                   <span>{rel}</span>
@@ -2159,7 +1822,7 @@ const FamilyDetailsForm = () => {
 
 
 
-                                   
+
 
                                     <div className="flex flex-col gap-1">
                                       <label className="text-[11px] font-bold uppercase text-gray-500">
@@ -2711,7 +2374,7 @@ const FamilyDetailsForm = () => {
                                     ></textarea>
                                   </div>
                                 </div>
-                              )} 
+                              )}
 
                             {relationDetails[
                               rel
@@ -3888,8 +3551,8 @@ const FamilyDetailsForm = () => {
                                                   )
                                                 }
                                                 className={`border p-2 rounded outline-none focus:border-blue-500 ${Number(assistanceData[rel]?.Housing?.emiAmountMonthly || 0) > Number(assistanceData[rel]?.Housing?.loanAmount || 0) && assistanceData[rel]?.Housing?.loanAmount
-                                                    ? "border-red-500 focus:ring-2 focus:ring-red-100"
-                                                    : "border-slate-300"
+                                                  ? "border-red-500 focus:ring-2 focus:ring-red-100"
+                                                  : "border-slate-300"
                                                   }`}
                                               />
                                               {Number(assistanceData[rel]?.Housing?.emiAmountMonthly || 0) > Number(assistanceData[rel]?.Housing?.loanAmount || 0) && assistanceData[rel]?.Housing?.loanAmount && (
@@ -4666,7 +4329,7 @@ const FamilyDetailsForm = () => {
               );
             })}
 
-            {selectedRelations.includes("Son") && (
+            {allowRelationEditing && selectedRelations.includes("Son") && (
               <button
                 type="button"
                 onClick={() => handleAddRelationRow("Son")}
@@ -4676,7 +4339,7 @@ const FamilyDetailsForm = () => {
               </button>
             )}
 
-            {selectedRelations.includes("Daughter") && (
+            {allowRelationEditing && selectedRelations.includes("Daughter") && (
               <button
                 type="button"
                 onClick={() => handleAddRelationRow("Daughter")}
@@ -4686,7 +4349,7 @@ const FamilyDetailsForm = () => {
               </button>
             )}
 
-            {selectedRelations.includes("Brother") && (
+            {allowRelationEditing && selectedRelations.includes("Brother") && (
               <button
                 type="button"
                 onClick={() => handleAddRelationRow("Brother")}
@@ -4696,7 +4359,7 @@ const FamilyDetailsForm = () => {
               </button>
             )}
 
-            {selectedRelations.includes("Sister") && (
+            {allowRelationEditing && selectedRelations.includes("Sister") && (
               <button
                 type="button"
                 onClick={() => handleAddRelationRow("Sister")}
@@ -4923,11 +4586,10 @@ const FamilyDetailsForm = () => {
               type="button"
               onClick={handleSave}
               disabled={loading}
-              className={`px-4 py-2 text-white font-semibold rounded-md transition-colors ${
-                loading
+              className={`px-4 py-2 text-white font-semibold rounded-md transition-colors ${loading
                   ? "bg-green-400 cursor-not-allowed"
                   : "bg-green-500 hover:bg-green-600"
-              }`}
+                }`}
             >
               {loading
                 ? familyRecordId
