@@ -696,50 +696,137 @@ const DiksharthiListing = () => {
     return result;
   };
 
+  // const formatExcelData = (data) => {
+  //   return data.map((item) => {
+  //     const family = item.family_details || {};
+  //     const relations = family.relation_details || {};
+
+  //     return {
+  //       // Basic Info
+  //       Date: formatIndianDate(item.created_at),
+  //       ID: item.id,
+  //       Name: item.sadhu_sadhvi_name,
+  //       Gender: item.gender,
+  //       Age: item.age,
+  //       Mobile: item.mobile_no,
+
+  //       // Address
+  //       Village: item.village,
+  //       Taluka: item.taluka,
+  //       District: item.district,
+  //       State: item.state,
+  //       PinCode: item.pin_code,
+
+  //       // RBF
+  //       RBF_Criteria: item.rbf_criteria,
+  //       Relation: item.relation,
+  //       Family_Member_Name:
+  //         (item.family_member_firstName || "") +
+  //         " " +
+  //         (item.family_member_lastName || ""),
+
+  //       // Family Info
+  //       Head_of_Family: family.head_of_family,
+  //       Family_Village: family.village,
+  //       Family_District: family.district,
+  //       House_Type: family.type_of_house,
+  //       Mediclaim: family.mediclaim === "1" ? "Yes" : "No",
+
+  //       // Example Relation (Father)
+  //       Father_Name:
+  //         relations?.father?.firstName +
+  //         " " +
+  //         relations?.father?.lastName || "",
+  //       Father_Aadhar: relations?.father?.aadharNumber || "",
+
+  //       // Dates
+  //     };
+  //   });
+  // };
+
+
   const formatExcelData = (data) => {
     return data.map((item) => {
       const family = item.family_details || {};
       const relations = family.relation_details || {};
 
       return {
-        // Basic Info
+        // ================= BASIC =================
         Date: formatIndianDate(item.created_at),
         ID: item.id,
+        User_ID: item.user_id,
+        Karyakarta_ID: item.karykarata_id,
         Name: item.sadhu_sadhvi_name,
         Gender: item.gender,
         Age: item.age,
-        Mobile: item.mobile_no,
+        DOB: item.dob ? formatIndianDate(item.dob) : "",
 
-        // Address
+        // ================= RELIGIOUS =================
+        Pad: item.pad,
+        Samudaay: item.samudaay,
+        Guru_Name: item.guru_name,
+        Acharya: item.acharya,
+        Gaachh: item.gaachh,
+        Gadipati: item.gadipati,
+
+        // ================= STATUS =================
+        Is_Alive: item.is_alive,
+        Vihar_Location: item.vihar_location,
+        Samadhi_Date: item.samadhi_date
+          ? formatIndianDate(item.samadhi_date)
+          : "",
+        Samadhi_Place: item.samadhi_place,
+
+        // ================= RBF =================
+        RBF_Criteria: item.rbf_criteria,
+        Relation: item.relation,
+        Family_Relations: item.family_relation,
+        Assistance_Received: item.assistance_received,
+
+        // ================= FAMILY MEMBER =================
+        Family_First_Name: item.family_member_firstName,
+        Family_Last_Name: item.family_member_lastName,
+
+        // ================= CONTACT =================
+        Mobile: item.mobile_no,
+        Alt_Mobile: item.alt_mobile_no,
+
+        // ================= ADDRESS =================
+        Permanent_Address: item.permanent_address,
+        Current_Address: item.current_address,
         Village: item.village,
         Taluka: item.taluka,
         District: item.district,
         State: item.state,
         PinCode: item.pin_code,
 
-        // RBF
-        RBF_Criteria: item.rbf_criteria,
-        Relation: item.relation,
-        Family_Member_Name:
-          (item.family_member_firstName || "") +
-          " " +
-          (item.family_member_lastName || ""),
+        // ================= VISIT =================
+        Visit_Date: item.visit_date
+          ? formatIndianDate(item.visit_date)
+          : "",
+        Visit_Time: item.visit_time,
 
-        // Family Info
+        // ================= SYSTEM =================
+        Status: item.status,
+
+        // ================= FAMILY DETAILS =================
         Head_of_Family: family.head_of_family,
         Family_Village: family.village,
         Family_District: family.district,
         House_Type: family.type_of_house,
         Mediclaim: family.mediclaim === "1" ? "Yes" : "No",
 
-        // Example Relation (Father)
+        // ================= RELATION DETAILS =================
         Father_Name:
-          relations?.father?.firstName +
+          (relations?.father?.firstName || "") +
           " " +
-          relations?.father?.lastName || "",
+          (relations?.father?.lastName || ""),
         Father_Aadhar: relations?.father?.aadharNumber || "",
 
-        // Dates
+        // ================= EXTRA =================
+        Summary: item.summary
+          ? item.summary.replace(/<[^>]+>/g, "") // HTML remove
+          : "",
       };
     });
   };
@@ -1710,7 +1797,13 @@ const DiksharthiListing = () => {
                     </h4>
 
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                      <DetailItem label="Head of Family" value={familyDetailsModalData.details.head_of_family} />
+                      <DetailItem
+                        label="Head of Family"
+                        value={
+                          familyDetailsModalData.details.head_of_family_name ||
+                          familyDetailsModalData.details.head_of_family
+                        }
+                      />
                       <DetailItem label="Permanent Address" value={familyDetailsModalData.details.permanent_address} />
                       <DetailItem label="Current Address" value={familyDetailsModalData.details.current_address} />
                       <DetailItem label="Village" value={familyDetailsModalData.details.village} />

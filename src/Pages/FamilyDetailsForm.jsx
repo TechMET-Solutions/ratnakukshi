@@ -4,9 +4,32 @@ import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { API } from "../api/BaseURL";
 import { isValidAadhaar, isValidPAN } from "../utils/validation";
-import statesDistrictData from "../data//state_discripts.json";
+import statesDistrictData from "../data/state_discripts.json";
 
-
+const INITIAL_FORM_DATA = {
+  permanentAddress: "",
+  currentAddress: "",
+  state: "",
+  district: "",
+  taluka: "",
+  village: "",
+  pinCode: "",
+  houseDetails: "",
+  typeOfHouse: "",
+  maintenanceCost: "",
+  rentCost: "",
+  lightBillCost: "",
+  relations: [],
+  mediclaim: null,
+  family_mediclaim_type: "",
+  Family_mediclaim_amount: "",
+  mediclaimPremiumAmount: "",
+  family_mediclaim_companyName: "",
+  ngoAssistance: null,
+  sanghName: "",
+  ngoAmount: "",
+  ngoRemark: "",
+};
 
 const FamilyDetailsForm = () => {
 
@@ -26,31 +49,13 @@ const FamilyDetailsForm = () => {
   const [formData, setFormData] = useState(INITIAL_FORM_DATA);
   const [states, setStates] = useState([]);
   const [districts, setDistricts] = useState([]);
+  const selectedRelations = Array.isArray(formData?.relations)
+    ? formData.relations
+    : [];
 
-  useEffect(() => {
-    const allStates = [
-      ...(statesDistrictData?.states || []).map((item) => item.name),
-      ...(statesDistrictData?.union_territories || []).map((item) => item.name),
-    ];
-    setStates(allStates);
-  }, []);
+ 
 
-  useEffect(() => {
-    if (!formData.state) {
-      setDistricts([]);
-      return;
-    }
-    const locationEntry =
-      (statesDistrictData?.states || []).find(
-        (item) => item?.name?.toLowerCase() === formData.state.toLowerCase()
-      ) ||
-      (statesDistrictData?.union_territories || []).find(
-        (item) => item?.name?.toLowerCase() === formData.state.toLowerCase()
-      );
-    setDistricts(locationEntry?.districts || []);
-  }, [formData.state]);
-
-  console.log(formData, "formData");
+   console.log(formData, "formData");
   const [relationDetails, setRelationDetails] = useState({});
 
   console.log(relationDetails, "relationDetails");
@@ -128,6 +133,78 @@ const FamilyDetailsForm = () => {
   const [familyRecordId, setFamilyRecordId] = useState(null);
   console.log(headOfFamily, "headOfFamily");
 
+  const normalizeAssistanceDataForPayload = (data) => {
+    const result = {};
+
+    Object.entries(data || {}).forEach(([relation, types]) => {
+      result[relation] = {};
+
+      Object.entries(types || {}).forEach(([type, values]) => {
+        const cleanValues = { ...values };
+
+        // ❌ remove unwanted UI fields
+        delete cleanValues.status;
+
+        // ✅ handle nested arrays safely
+        if (type === "Medical" && Array.isArray(cleanValues.diseases)) {
+          cleanValues.diseases = cleanValues.diseases.map((d) => ({
+            diseaseName: d.diseaseName || "",
+            frequency: d.frequency || "",
+            sessions: d.sessions || "",
+            costPerSession: d.costPerSession || "",
+            totalEstimatedCost: d.totalEstimatedCost || "",
+          }));
+        }
+
+        result[relation][type] = cleanValues;
+      });
+    });
+
+    return result;
+  };
+
+  const buildRelationDetailsPayload = (data, headOfFamily) => {
+    return Object.fromEntries(
+      Object.entries(data || {}).map(([key, value]) => [
+        key,
+        {
+          ...value,
+          family_head: key === headOfFamily,
+        },
+      ])
+    );
+  };
+
+  const buildAssistanceDataPayloadWithUploads = (data, formData) => {
+    const result = {};
+
+    Object.entries(data || {}).forEach(([rel, types]) => {
+      result[rel] = {};
+
+      Object.entries(types || {}).forEach(([type, values]) => {
+        const newValues = { ...values };
+
+        // Example: handle documents
+        if (Array.isArray(values?.medicalDocuments)) {
+          newValues.medicalDocuments = values.medicalDocuments.map(
+            (doc, index) => {
+              if (doc.files instanceof File) {
+                const key = `doc_${rel}_${type}_${index}`;
+                formData.append(key, doc.files);
+                return { ...doc, files: key };
+              }
+              return doc;
+            }
+          );
+        }
+
+        result[rel][type] = newValues;
+      });
+    });
+
+    return result;
+  };
+
   // const handleCheckbox = (relation) => {
   //   setFormData((prev) => ({
   //     ...prev,
@@ -168,17 +245,18 @@ const FamilyDetailsForm = () => {
 
   const handleCheckbox = (relation) => {
     setFormData((prev) => {
-      const isChecked = prev.relations.includes(relation);
+      const prevRelations = Array.isArray(prev?.relations) ? prev.relations : [];
+      const isChecked = prevRelations.includes(relation);
 
       return {
         ...prev,
         relations: isChecked
-          ? prev.relations.filter((r) => r !== relation)
-          : [...prev.relations, relation],
+          ? prevRelations.filter((r) => r !== relation)
+          : [...prevRelations, relation],
       };
     });
 
-    const isAlreadySelected = formData.relations.includes(relation);
+    const isAlreadySelected = selectedRelations.includes(relation);
 
     if (isAlreadySelected) {
       // ❌ REMOVE DATA WHEN UNCHECKED
@@ -296,23 +374,6 @@ const FamilyDetailsForm = () => {
     }
   };
 
-  // const handleProfileUpload = (relation, event) => {
-  //   const file = event.target.files?.[0];
-  //   if (file) {
-  //     const reader = new FileReader();
-  //     reader.onload = (e) => {
-  //       handleRelationDetailChange(relation, "photo", e.target.result);
-  //     };
-  //     reader.readAsDataURL(file);
-  //   }
-  // };
-
-  // const isAadharDuplicate = (currentRelation, value) => {
-  //   return Object.entries(relationDetails).some(([key, data]) => {
-  //     return key !== currentRelation && data?.aadharNumber === value;
-  //   });
-  // };
-
   const validateAadharUnique = () => {
     const aadharList = Object.values(relationDetails)
       .map(r => r?.aadharNumber)
@@ -323,27 +384,6 @@ const FamilyDetailsForm = () => {
     return aadharList.length === uniqueSet.size;
   };
 
-
-  // const handleProfileUpload = (relation, event) => {
-  //   const file = event.target.files?.[0];
-  //   if (file) {
-  //     setRelationDetails((prev) => {
-  //       const currentPreview = prev[relation]?.photoPreview;
-  //       if (typeof currentPreview === "string" && currentPreview.startsWith("blob:")) {
-  //         URL.revokeObjectURL(currentPreview);
-  //       }
-
-  //       return {
-  //         ...prev,
-  //         [relation]: {
-  //           ...prev[relation],
-  //           photo: file,
-  //           photoPreview: URL.createObjectURL(file),
-  //         },
-  //       };
-  //     });
-  //   }
-  // };
 
 
   const handleProfileUpload = (relation, event) => {
@@ -438,7 +478,10 @@ const FamilyDetailsForm = () => {
 
     setFormData((prev) => ({
       ...prev,
-      relations: [...prev.relations, newRelationId],
+      relations: [
+        ...(Array.isArray(prev?.relations) ? prev.relations : []),
+        newRelationId,
+      ],
     }));
 
     // Auto-expand the new accordion
@@ -457,7 +500,9 @@ const FamilyDetailsForm = () => {
 
     setFormData((prev) => ({
       ...prev,
-      relations: prev.relations.filter((r) => r !== relationId),
+      relations: (Array.isArray(prev?.relations) ? prev.relations : []).filter(
+        (r) => r !== relationId
+      ),
     }));
 
     setRelationDetails((prev) => {
@@ -521,17 +566,18 @@ const FamilyDetailsForm = () => {
             matchedFamily?.relationDetails ?? matchedFamily?.relation_details ?? {},
           ),
         );
-        const fetchedAdditionalRelations = asObject(parseMaybeJson(
-          matchedFamily?.additionalRelations ??
-          matchedFamily?.additional_relations ??
-          {},
-        ));
-        const fetchedExpandedRelations = asObject(parseMaybeJson(
-          matchedFamily?.expandedRelations ?? matchedFamily?.expanded_relations ?? {},
-        ));
-        const fetchedAssistanceData = asObject(parseMaybeJson(
-          matchedFamily?.assistanceData ?? matchedFamily?.assistance_data ?? {},
-        ));
+        const fetchedAdditionalRelations = asObject(
+          parseMaybeJson(
+            matchedFamily?.additionalRelations ??
+            matchedFamily?.additional_relations ??
+            {},
+          ),
+        );
+        const fetchedExpandedRelations = asObject(
+          parseMaybeJson(
+            matchedFamily?.expandedRelations ?? matchedFamily?.expanded_relations ?? {},
+          ),
+        );
         const fetchedHeadOfFamily =
           matchedFamily?.headOfFamily ??
           matchedFamily?.head_of_family ??
@@ -544,77 +590,77 @@ const FamilyDetailsForm = () => {
           matchedFamily?.formData ?? matchedFamily?.form_data,
         );
         const fallbackRelations = Object.keys(fetchedRelationDetails);
-        const normalizedFormData =
-          nestedFormData && typeof nestedFormData === "object"
-            ? {
-              state: matchedFamily?.state ?? "",
-              village: matchedFamily?.village ?? "",
-              taluka: matchedFamily?.taluka ?? "",
-              district: matchedFamily?.district ?? "",
-              ...nestedFormData,
-            }
-            : {
-              permanentAddress:
-                matchedFamily?.permanentAddress ??
-                matchedFamily?.permanent_address ??
+        const minimalRelationDetails = Object.fromEntries(
+          Object.entries(fetchedRelationDetails).map(([relationKey, relationValue]) => [
+            relationKey,
+            {
+              relationName:
+                relationValue?.relationName ||
+                relationValue?.relation_name ||
+                relationKey,
+              firstName:
+                relationValue?.firstName ||
+                relationValue?.first_name ||
                 "",
-              currentAddress:
-                matchedFamily?.currentAddress ??
-                matchedFamily?.current_address ??
+              lastName:
+                relationValue?.lastName ||
+                relationValue?.last_name ||
                 "",
-              village: matchedFamily?.village ?? "",
-              taluka: matchedFamily?.taluka ?? "",
-              district: matchedFamily?.district ?? "",
-              state: matchedFamily?.state ?? "",
-              pinCode: matchedFamily?.pinCode ?? matchedFamily?.pin_code ?? "",
-              houseDetails:
-                matchedFamily?.houseDetails ?? matchedFamily?.house_details ?? "",
-              typeOfHouse:
-                matchedFamily?.typeOfHouse ?? matchedFamily?.type_of_house ?? "",
-              maintenanceCost:
-                matchedFamily?.maintenanceCost ??
-                matchedFamily?.maintenance_cost ??
-                "",
-              lightBillCost:
-                matchedFamily?.lightBillCost ??
-                matchedFamily?.light_bill_cost ??
-                "",
-              rentCost: matchedFamily?.rentCost ?? matchedFamily?.rent_cost ?? "",
-              mediclaim: matchedFamily?.mediclaim ?? null,
-              family_mediclaim_type:
-                matchedFamily?.family_mediclaim_type ??
-                matchedFamily?.Family_mediclaim_type ??
-                null,
-              Family_mediclaim_amount:
-                matchedFamily?.Family_mediclaim_amount ??
-                matchedFamily?.family_mediclaim_amount ??
-                null,
-              mediclaimPremiumAmount:
-                matchedFamily?.mediclaimPremiumAmount ??
-                matchedFamily?.mediclaim_premium_amount ??
-                null,
-              family_mediclaim_companyName:
-                matchedFamily?.family_mediclaim_companyName ??
-                matchedFamily?.mediclaim_company_name ??
-                null,
-              ngoAssistance:
-                matchedFamily?.ngoAssistance ??
-                matchedFamily?.ngo_assistance ??
-                null,
-              sanghName:
-                matchedFamily?.sanghName ??
-                matchedFamily?.ngo_sangh_name ??
-                "",
-              ngoAmount:
-                matchedFamily?.ngoAmount ??
-                matchedFamily?.ngo_amount ??
-                "",
-              ngoRemark:
-                matchedFamily?.ngoRemark ??
-                matchedFamily?.ngo_remark ??
-                "",
-              relations: fallbackRelations,
-            };
+              family_head:
+                String(fetchedHeadOfFamily || "").trim().toLowerCase() ===
+                String(relationKey || "").trim().toLowerCase(),
+            },
+          ]),
+        );
+
+        const normalizedFormData = {
+          permanentAddress:
+            (nestedFormData && typeof nestedFormData === "object"
+              ? nestedFormData?.permanentAddress
+              : null) ??
+            matchedFamily?.permanentAddress ??
+            matchedFamily?.permanent_address ??
+            "",
+          currentAddress:
+            (nestedFormData && typeof nestedFormData === "object"
+              ? nestedFormData?.currentAddress
+              : null) ??
+            matchedFamily?.currentAddress ??
+            matchedFamily?.current_address ??
+            "",
+          village:
+            (nestedFormData && typeof nestedFormData === "object"
+              ? nestedFormData?.village
+              : null) ??
+            matchedFamily?.village ??
+            "",
+          taluka:
+            (nestedFormData && typeof nestedFormData === "object"
+              ? nestedFormData?.taluka
+              : null) ??
+            matchedFamily?.taluka ??
+            "",
+          district:
+            (nestedFormData && typeof nestedFormData === "object"
+              ? nestedFormData?.district
+              : null) ??
+            matchedFamily?.district ??
+            "",
+          state:
+            (nestedFormData && typeof nestedFormData === "object"
+              ? nestedFormData?.state
+              : null) ??
+            matchedFamily?.state ??
+            "",
+          pinCode:
+            (nestedFormData && typeof nestedFormData === "object"
+              ? nestedFormData?.pinCode
+              : null) ??
+            matchedFamily?.pinCode ??
+            matchedFamily?.pin_code ??
+            "",
+          relations: fallbackRelations,
+        };
 
         setFormData({
           ...INITIAL_FORM_DATA,
@@ -624,10 +670,10 @@ const FamilyDetailsForm = () => {
               ? normalizedFormData.relations
               : fallbackRelations,
         });
-        setRelationDetails(normalizeRelationDetails(fetchedRelationDetails));
+        setRelationDetails(normalizeRelationDetails(minimalRelationDetails));
         setAdditionalRelations(fetchedAdditionalRelations);
         setExpandedRelations(fetchedExpandedRelations);
-        setAssistanceData(fetchedAssistanceData);
+        setAssistanceData({});
         setHeadOfFamily(fetchedHeadOfFamily);
         setFamilyRecordId(matchedFamily?.id ?? null);
       } catch (error) {
@@ -1532,7 +1578,7 @@ const FamilyDetailsForm = () => {
                 >
                   <input
                     type="checkbox"
-                    checked={formData.relations.includes(rel)}
+                    checked={selectedRelations.includes(rel)}
                     onChange={() => handleCheckbox(rel)}
                     className="w-5 h-5 border-slate-400 rounded"
                   />
@@ -1542,7 +1588,7 @@ const FamilyDetailsForm = () => {
             </div>
 
             {/* Relation Details Accordions */}
-            {formData.relations.map((rel) => {
+            {selectedRelations.map((rel) => {
               const baseRelation = rel.split("-")[0];
               const isAdditionalRow = rel !== baseRelation;
 
@@ -4620,7 +4666,7 @@ const FamilyDetailsForm = () => {
               );
             })}
 
-            {formData.relations.includes("Son") && (
+            {selectedRelations.includes("Son") && (
               <button
                 type="button"
                 onClick={() => handleAddRelationRow("Son")}
@@ -4630,7 +4676,7 @@ const FamilyDetailsForm = () => {
               </button>
             )}
 
-            {formData.relations.includes("Daughter") && (
+            {selectedRelations.includes("Daughter") && (
               <button
                 type="button"
                 onClick={() => handleAddRelationRow("Daughter")}
@@ -4640,7 +4686,7 @@ const FamilyDetailsForm = () => {
               </button>
             )}
 
-            {formData.relations.includes("Brother") && (
+            {selectedRelations.includes("Brother") && (
               <button
                 type="button"
                 onClick={() => handleAddRelationRow("Brother")}
@@ -4650,7 +4696,7 @@ const FamilyDetailsForm = () => {
               </button>
             )}
 
-            {formData.relations.includes("Sister") && (
+            {selectedRelations.includes("Sister") && (
               <button
                 type="button"
                 onClick={() => handleAddRelationRow("Sister")}

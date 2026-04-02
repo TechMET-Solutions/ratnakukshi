@@ -262,8 +262,8 @@ const AssistancePage = () => {
     setSelectedSadhu(item);
     setResults([]);
     setSearchText(
-      searchType === "family" && item.head_of_family
-        ? `${item.head_of_family} - ${item.sadhu_sadhvi_name}`
+      searchType === "family" && (item.head_of_family_name || item.head_of_family)
+        ? `${item.head_of_family_name || item.head_of_family} - ${item.sadhu_sadhvi_name}`
         : item.sadhu_sadhvi_name,
     );
     try {
@@ -737,8 +737,8 @@ const AssistancePage = () => {
                       {item.sadhu_sadhvi_name}
                     </p>
                     <p className="text-sm text-gray-500">
-                      {searchType === "family" && item.head_of_family
-                        ? `Head: ${item.head_of_family}`
+                      {searchType === "family" && (item.head_of_family_name || item.head_of_family)
+                        ? `Head: ${item.head_of_family_name || item.head_of_family}`
                         : item.diksharthi_code}
                     </p>
                   </div>
