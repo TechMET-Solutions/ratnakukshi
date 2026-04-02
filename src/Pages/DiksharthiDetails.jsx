@@ -1,6 +1,8 @@
 import { Plus, Search, SquaresExclude, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
 import { API } from "../api/BaseURL";
 import { useAuth } from "../context/AuthContext";
 import { formatIndianDate } from "../utils/formatIndianDate";
@@ -659,9 +661,149 @@ const DiksharthiListing = () => {
     }
   };
 
-  const downloadExcel = () => {
-    window.open(`${API}/api/diksharthi/export`, "_blank");
+  // const downloadExcel = () => {
+  //   window.open(`${API}/api/diksharthi/export`, "_blank");
+  // };
+
+  const [selectedRows, setSelectedRows] = useState([]);
+
+  const getSelectedData = () => {
+    return diksharthiList.filter(item =>
+      selectedRows.includes(item.id)
+    );
   };
+
+  const flattenObject = (obj, prefix = "") => {
+    let result = {};
+
+    for (let key in obj) {
+      if (!obj.hasOwnProperty(key)) continue;
+
+      const newKey = prefix ? `${prefix}_${key}` : key;
+
+      if (
+        typeof obj[key] === "object" &&
+        obj[key] !== null &&
+        !Array.isArray(obj[key])
+      ) {
+        Object.assign(result, flattenObject(obj[key], newKey));
+      } else if (Array.isArray(obj[key])) {
+        result[newKey] = obj[key]
+          .map((item) =>
+            typeof item === "object" ? JSON.stringify(item) : item
+          )
+          .join(", ");
+      } else {
+        result[newKey] = obj[key];
+      }
+    }
+
+    return result;
+  };
+
+  const formatExcelData = (data) => {
+    return data.map((item) => {
+      const family = item.family_details || {};
+      const relations = family.relation_details || {};
+
+      return {
+        // Basic Info
+        Date: formatIndianDate(item.created_at),
+        ID: item.id,
+        Name: item.sadhu_sadhvi_name,
+        Gender: item.gender,
+        Age: item.age,
+        Mobile: item.mobile_no,
+
+        // Address
+        Village: item.village,
+        Taluka: item.taluka,
+        District: item.district,
+        State: item.state,
+        PinCode: item.pin_code,
+
+        // RBF
+        RBF_Criteria: item.rbf_criteria,
+        Relation: item.relation,
+        Family_Member_Name:
+          (item.family_member_firstName || "") +
+          " " +
+          (item.family_member_lastName || ""),
+
+        // Family Info
+        Head_of_Family: family.head_of_family,
+        Family_Village: family.village,
+        Family_District: family.district,
+        House_Type: family.type_of_house,
+        Mediclaim: family.mediclaim === "1" ? "Yes" : "No",
+
+        // Example Relation (Father)
+        Father_Name:
+          relations?.father?.firstName +
+          " " +
+          relations?.father?.lastName || "",
+        Father_Aadhar: relations?.father?.aadharNumber || "",
+
+        // Dates
+      };
+    });
+  };
+
+  const downloadFormattedExcel = () => {
+    if (!diksharthiList.length) {
+      alert("No data available");
+      return;
+    }
+
+    const formattedData = formatExcelData(diksharthiList);
+
+    const worksheet = XLSX.utils.json_to_sheet(formattedData);
+    const workbook = XLSX.utils.book_new();
+
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Diksharthi");
+
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: "xlsx",
+      type: "array",
+    });
+
+    const blob = new Blob([excelBuffer], {
+      type:
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8",
+    });
+
+    saveAs(blob, "Formatted_Diksharthi.xlsx");
+  };
+
+  //  const downloadFullExcel = () => {
+  //   if (!diksharthiList.length) {
+  //     alert("No data available");
+  //     return;
+  //   }
+
+  //   const formattedData = diksharthiList.map((item) =>
+  //     flattenObject(item)
+  //   );
+
+  //   const worksheet = XLSX.utils.json_to_sheet(formattedData);
+  //   const workbook = XLSX.utils.book_new();
+
+  //   XLSX.utils.book_append_sheet(workbook, worksheet, "Full_Data");
+
+  //   const excelBuffer = XLSX.write(workbook, {
+  //     bookType: "xlsx",
+  //     type: "array",
+  //   });
+
+  //   const blob = new Blob([excelBuffer], {
+  //     type:
+  //       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8",
+  //   });
+
+  //   saveAs(blob, "All_Diksharthi_Data.xlsx");
+  // };
+
+
 
   return (
     <div className="p-8 min-h-screen">
@@ -673,11 +815,11 @@ const DiksharthiListing = () => {
         {role === "staff" && (
           <div className="flex gap-6">
           
-          <button
-            onClick={downloadExcel}
-            className="bg-green-600 text-white px-4 py-2 rounded-md flex items-center gap-2 text-sm font-medium transition-colors shadow-sm"
-          >
-            Export Diksharthi Details
+            <button
+              onClick={downloadFormattedExcel}
+              className="bg-green-600 text-white px-4 py-2 rounded-md"
+            >
+              Export Data
             </button>
 
             <Link
@@ -712,6 +854,20 @@ const DiksharthiListing = () => {
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-gray-50 border-b border-gray-100 ">
+              {role === "staff" && (
+                <th className="px-6 py-4">
+                  <input
+                    type="checkbox"
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedRows(paginatedList.map(item => item.id));
+                      } else {
+                        setSelectedRows([]);
+                      }
+                    }}
+                  />
+                </th>
+              )}
               <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">
                 Date
               </th>
@@ -777,16 +933,19 @@ const DiksharthiListing = () => {
                 return (
                   <tr key={diksharthi.id} className="border-b border-gray-100">
                     {/* Photo */}
-                    {/* <td className="px-6 py-3">
-                      <img
-                        src={diksharthi.photo || "/user.png"}
-                        alt="diksharthi"
-                        onError={(e) => {
-                          e.currentTarget.src = "/user.png";
+                    <td className="px-6 py-3">
+                      <input
+                        type="checkbox"
+                        checked={selectedRows.includes(diksharthi.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedRows([...selectedRows, diksharthi.id]);
+                          } else {
+                            setSelectedRows(selectedRows.filter(id => id !== diksharthi.id));
+                          }
                         }}
-                        className="w-10 h-10 rounded-full object-cover"
                       />
-                    </td> */}
+                    </td>
 
                     {/* Date */}
                     <td className="px-6 py-3">{formatIndianDate(diksharthi.created_at)}</td>
@@ -1171,7 +1330,6 @@ const DiksharthiListing = () => {
                       <DetailItem label="Samudaay" value={viewModalData?.samudaay} />
                       <DetailItem label="Guru Name" value={viewModalData?.guru_name || viewModalData?.guruName} />
                       <DetailItem label="Acharya" value={viewModalData?.acharya} />
-                      <DetailItem label="Gaachh" value={viewModalData?.gaachh} />
                       <DetailItem label="Gadipati" value={viewModalData?.gadipati} />
                       <DetailItem label="Mobile No" value={viewModalData?.mobile_no} />
                       <DetailItem label="Alt Mobile No" value={viewModalData?.alt_mobile_no} />

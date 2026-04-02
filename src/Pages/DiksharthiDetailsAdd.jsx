@@ -17,7 +17,6 @@ const initialFormData = {
   samudaay: "",
   guruName: "",
   acharya: "",
-  gaachh: "",
   gadipati: "",
   isAlive: "",
   viharLocation: "",
@@ -71,7 +70,6 @@ const mapDiksharthiToFormData = (record) => ({
   samudaay: record?.samudaay || "",
   guruName: record?.guruName || record?.guru_name || "",
   acharya: record?.acharya || "",
-  gaachh: record?.gaachh || "",
   gadipati: record?.gadipati || "",
   isAlive: record?.isAlive || record?.is_alive || "",
   viharLocation: record?.viharLocation || record?.vihar_location || "",
@@ -108,12 +106,11 @@ const mapFormDataToApiPayload = (formData, userId) => ({
   samudaay: formData.samudaay,
   guru_name: formData.guruName,
   acharya: formData.acharya,
-  gaachh: formData.gaachh,
   gadipati: formData.gadipati,
   is_alive: formData.isAlive,
-  vihar_location: formData.viharLocation,
-  samadhi_date: formData.samadhiDate,
-  samadhi_place: formData.samadhiPlace,
+  vihar_location: formData.viharLocation || null,
+  samadhi_date: formData.samadhiDate || null,
+  samadhi_place: formData.samadhiPlace || null,
   rbf_criteria: formData.rbfCriteria,
   relation: formData.relation,
   family_member_firstName: formData.family_member_firstName,
@@ -355,10 +352,10 @@ const DiksharthiDetailsAdd = () => {
           </div>
 
           {/* Gaachh */}
-          <div>
+          {/* <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Gaachh</label>
             <input name="gaachh" value={formData.gaachh} onChange={handleChange} type="text" className="w-full p-2 border border-slate-300 rounded-md outline-none" />
-          </div>
+          </div> */}
 
           {/* Gadipati */}
           <div>
