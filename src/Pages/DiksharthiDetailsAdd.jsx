@@ -129,8 +129,11 @@ const mapFormDataToApiPayload = (formData, userId) => ({
     : formData.family_relation || "",
   assistance_received: formData.assistanceReceived,
   summary: formData.summary,
-  
+
 });
+
+const MOBILE_REGEX = /^\d{10}$/;
+const PINCODE_REGEX = /^\d{6}$/;
 
 const DiksharthiDetailsAdd = () => {
   const location = useLocation();
@@ -148,6 +151,51 @@ const DiksharthiDetailsAdd = () => {
   const [errors, setErrors] = useState({});
 
   const [postOffices, setPostOffices] = useState([]);
+  const rbfMandatoryFields = [
+    "family_member_firstName",
+    "family_member_lastName",
+    "mobileNo",
+    "permanentAddress",
+    "pinCode",
+    "district",
+    "state",
+  ];
+
+  const validateRbfField = (fieldName, fieldValue, rbfCriteria) => {
+    if (rbfCriteria !== "Yes") return "";
+
+    const value = String(fieldValue || "").trim();
+
+    if (
+      [
+        "family_member_firstName",
+        "family_member_lastName",
+        "permanentAddress",
+        "district",
+        "state",
+      ].includes(fieldName) &&
+      !value
+    ) {
+      return "Required";
+    }
+
+    if (fieldName === "mobileNo") {
+      if (!value) return "Required";
+      if (!MOBILE_REGEX.test(value)) return "Mobile number must be 10 digits";
+    }
+
+    if (fieldName === "altMobileNo") {
+      if (!value) return ""; // optional field hai 👍
+      if (!MOBILE_REGEX.test(value)) return "Alt Mobile number must be 10 digits";
+    }
+
+    if (fieldName === "pinCode") {
+      if (!value) return "Required";
+      if (!PINCODE_REGEX.test(value)) return "Pin code must be 6 digits";
+    }
+
+    return "";
+  };
 
   const fetchPincodeDetails = async (pincode) => {
     try {
@@ -184,36 +232,86 @@ const DiksharthiDetailsAdd = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    let sanitizedValue = value;
+
+    if (name === "mobileNo" || name === "altMobileNo") {
+      sanitizedValue = value.replace(/\D/g, "").slice(0, 10);
+    }
+
+    if (name === "pinCode") {
+      sanitizedValue = value.replace(/\D/g, "").slice(0, 6);
+    }
+
     setFormData((prev) => {
-      let nextState = { ...prev, [name]: value };
+      let nextState = { ...prev, [name]: sanitizedValue };
 
       if (name === "pinCode") {
-        if (value.length === 6) {
-          fetchPincodeDetails(value);
+        if (sanitizedValue.length === 6) {
+          fetchPincodeDetails(sanitizedValue);
         }
       }
 
       // Auto-calculate age when DOB changes
       if (name === "dob") {
-        nextState.age = calculateAge(value);
+        nextState.age = calculateAge(sanitizedValue);
       }
 
       if (name === "isAlive") {
-        nextState.viharLocation = value === "Yes" ? prev.viharLocation : "";
-        if (value === "Yes") {
+        nextState.viharLocation = sanitizedValue === "Yes" ? prev.viharLocation : "";
+        if (sanitizedValue === "Yes") {
           nextState.samadhiDate = "";
           nextState.samadhiPlace = "";
         }
       }
-      if (name === "rbfCriteria" && value === "No") {
+      if (name === "rbfCriteria" && sanitizedValue === "No") {
         nextState.relation = "";
         nextState.family_member_firstName = "";
         nextState.family_member_lastName = "";
+        nextState.mobileNo = "";
+        nextState.permanentAddress = "";
+        nextState.pinCode = "";
+        nextState.district = "";
+        nextState.state = "";
         nextState.assistanceReceived = "";
         nextState.family_relation = [];
       }
       return nextState;
     });
+
+    const nextRbfCriteria = name === "rbfCriteria" ? sanitizedValue : formData.rbfCriteria;
+
+    if (name === "rbfCriteria" && sanitizedValue !== "Yes") {
+      setErrors((prev) => {
+        const next = { ...prev };
+        [
+          "relation",
+          "family_member_firstName",
+          "family_member_lastName",
+          "mobileNo",
+          "permanentAddress",
+          "pinCode",
+          "district",
+          "state",
+          "assistanceReceived",
+        ].forEach((field) => delete next[field]);
+        return next;
+      });
+      return;
+    }
+
+    if (rbfMandatoryFields.includes(name) || name === "relation") {
+      const errorMessage =
+        name === "relation" && nextRbfCriteria === "Yes" && !String(sanitizedValue || "").trim()
+          ? "Required for RBF"
+          : validateRbfField(name, sanitizedValue, nextRbfCriteria);
+
+      setErrors((prev) => {
+        const next = { ...prev };
+        if (errorMessage) next[name] = errorMessage;
+        else delete next[name];
+        return next;
+      });
+    }
   };
 
   const validate = () => {
@@ -236,6 +334,25 @@ const DiksharthiDetailsAdd = () => {
     }
     if (formData.rbfCriteria === "Yes" && !formData.family_member_lastName) {
       newErrors.family_member_lastName = "Required for RBF";
+    }
+    if (formData.rbfCriteria === "Yes" && !String(formData.mobileNo || "").trim()) {
+      newErrors.mobileNo = "Required";
+    } else if (formData.rbfCriteria === "Yes" && !MOBILE_REGEX.test(String(formData.mobileNo || "").trim())) {
+      newErrors.mobileNo = "Mobile number must be 10 digits";
+    }
+    if (formData.rbfCriteria === "Yes" && !String(formData.permanentAddress || "").trim()) {
+      newErrors.permanentAddress = "Required";
+    }
+    if (formData.rbfCriteria === "Yes" && !String(formData.pinCode || "").trim()) {
+      newErrors.pinCode = "Required";
+    } else if (formData.rbfCriteria === "Yes" && !PINCODE_REGEX.test(String(formData.pinCode || "").trim())) {
+      newErrors.pinCode = "Pin code must be 6 digits";
+    }
+    if (formData.rbfCriteria === "Yes" && !String(formData.district || "").trim()) {
+      newErrors.district = "Required";
+    }
+    if (formData.rbfCriteria === "Yes" && !String(formData.state || "").trim()) {
+      newErrors.state = "Required";
     }
 
     if (formData.isAlive === "Yes" && !formData.viharLocation) {
@@ -421,7 +538,7 @@ const DiksharthiDetailsAdd = () => {
           {formData.rbfCriteria === "Yes" && (
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Relation to MS <span className="text-red-500">*</span></label>
-             <select
+              <select
                 name="relation"
                 value={formData.relation}
                 onChange={handleChange}
@@ -457,22 +574,39 @@ const DiksharthiDetailsAdd = () => {
           {formData.rbfCriteria === "Yes" && (
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Mobile Number</label>
-              <input name="mobileNo" value={formData.mobileNo} onChange={handleChange} type="text" className="w-full p-2 border border-slate-300 rounded-md outline-none" />
+              <label className="block text-sm font-medium text-slate-700 mb-1">Mobile Number <span className="text-red-500">*</span></label>
+              <input
+                name="mobileNo"
+                value={formData.mobileNo}
+                onChange={handleChange}
+                type="text"
+                inputMode="numeric"
+                maxLength={10}
+                className="w-full p-2 border border-slate-300 rounded-md outline-none"
+              />
+              {errors.mobileNo && <p className="text-red-500 text-xs">{errors.mobileNo}</p>}
             </div>
           )}
 
           {formData.rbfCriteria === "Yes" && (
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Alternate Mobile Number</label>
-              <input name="altMobileNo" value={formData.altMobileNo} onChange={handleChange} type="text" className="w-full p-2 border border-slate-300 rounded-md outline-none" />
+              <input name="altMobileNo"
+                value={formData.altMobileNo}
+                onChange={handleChange}
+                type="text"
+                inputMode="numeric"
+                maxLength={10}
+                className="w-full p-2 border border-slate-300 rounded-md outline-none" />
+              {errors.altMobileNo && <p className="text-red-500 text-xs">{errors.altMobileNo}</p>}
             </div>
           )}
 
           {formData.rbfCriteria === "Yes" && (
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Permanent Address</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Permanent Address <span className="text-red-500">*</span></label>
               <input name="permanentAddress" value={formData.permanentAddress} onChange={handleChange} type="text" className="w-full p-2 border border-slate-300 rounded-md outline-none" />
+              {errors.permanentAddress && <p className="text-red-500 text-xs">{errors.permanentAddress}</p>}
             </div>
           )}
 
@@ -485,8 +619,17 @@ const DiksharthiDetailsAdd = () => {
 
           {formData.rbfCriteria === "Yes" && (
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Pin Code</label>
-              <input name="pinCode" value={formData.pinCode} onChange={handleChange} type="text" className="w-full p-2 border border-slate-300 rounded-md outline-none" />
+              <label className="block text-sm font-medium text-slate-700 mb-1">Pin Code <span className="text-red-500">*</span></label>
+              <input
+                name="pinCode"
+                value={formData.pinCode}
+                onChange={handleChange}
+                type="text"
+                inputMode="numeric"
+                maxLength={6}
+                className="w-full p-2 border border-slate-300 rounded-md outline-none"
+              />
+              {errors.pinCode && <p className="text-red-500 text-xs">{errors.pinCode}</p>}
             </div>
 
           )}
@@ -529,15 +672,17 @@ const DiksharthiDetailsAdd = () => {
 
           {formData.rbfCriteria === "Yes" && (
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">District / City</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1">District / City <span className="text-red-500">*</span></label>
               <input name="district" value={formData.district} onChange={handleChange} type="text" className="w-full p-2 border border-slate-300 rounded-md outline-none" />
+              {errors.district && <p className="text-red-500 text-xs">{errors.district}</p>}
             </div>
           )}
 
           {formData.rbfCriteria === "Yes" && (
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">State</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1">State <span className="text-red-500">*</span></label>
               <input name="state" value={formData.state} onChange={handleChange} type="text" className="w-full p-2 border border-slate-300 rounded-md outline-none" />
+              {errors.state && <p className="text-red-500 text-xs">{errors.state}</p>}
             </div>
           )}
           {formData.rbfCriteria === "Yes" && (
@@ -612,7 +757,7 @@ const DiksharthiDetailsAdd = () => {
           )}
         </div>
 
-        
+
         <div className="col-span-4">
           <label className="block text-sm font-medium text-slate-700 mb-1">
             Summary
@@ -628,7 +773,7 @@ const DiksharthiDetailsAdd = () => {
             }
           />
         </div>
-        
+
 
 
         <div className="p-6 flex justify-between items-center bg-white mt-4">

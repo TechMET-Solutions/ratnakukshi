@@ -661,16 +661,11 @@ const DiksharthiListing = () => {
     }
   };
 
-  // const downloadExcel = () => {
-  //   window.open(`${API}/api/diksharthi/export`, "_blank");
-  // };
-
-  const [selectedRows, setSelectedRows] = useState([]);
+ const [selectedRows, setSelectedRows] = useState([]);
 
   const getSelectedData = () => {
-    return diksharthiList.filter(item =>
-      selectedRows.includes(item.id)
-    );
+    const selectedIdSet = new Set(selectedRows.map((id) => String(id)));
+    return diksharthiList.filter((item) => selectedIdSet.has(String(item.id)));
   };
 
   const flattenObject = (obj, prefix = "") => {
@@ -750,12 +745,18 @@ const DiksharthiListing = () => {
   };
 
   const downloadFormattedExcel = () => {
-    if (!diksharthiList.length) {
-      alert("No data available");
+    if (!selectedRows.length) {
+      alert("Please select at least one record to export");
       return;
     }
 
-    const formattedData = formatExcelData(diksharthiList);
+    const selectedData = getSelectedData();
+    if (!selectedData.length) {
+      alert("Selected records not found");
+      return;
+    }
+
+    const formattedData = formatExcelData(selectedData);
 
     const worksheet = XLSX.utils.json_to_sheet(formattedData);
     const workbook = XLSX.utils.book_new();
@@ -774,35 +775,6 @@ const DiksharthiListing = () => {
 
     saveAs(blob, "Formatted_Diksharthi.xlsx");
   };
-
-  //  const downloadFullExcel = () => {
-  //   if (!diksharthiList.length) {
-  //     alert("No data available");
-  //     return;
-  //   }
-
-  //   const formattedData = diksharthiList.map((item) =>
-  //     flattenObject(item)
-  //   );
-
-  //   const worksheet = XLSX.utils.json_to_sheet(formattedData);
-  //   const workbook = XLSX.utils.book_new();
-
-  //   XLSX.utils.book_append_sheet(workbook, worksheet, "Full_Data");
-
-  //   const excelBuffer = XLSX.write(workbook, {
-  //     bookType: "xlsx",
-  //     type: "array",
-  //   });
-
-  //   const blob = new Blob([excelBuffer], {
-  //     type:
-  //       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8",
-  //   });
-
-  //   saveAs(blob, "All_Diksharthi_Data.xlsx");
-  // };
-
 
 
   return (
@@ -858,12 +830,18 @@ const DiksharthiListing = () => {
                 <th className="px-6 py-4">
                   <input
                     type="checkbox"
+                    checked={
+                      paginatedList.length > 0 &&
+                      paginatedList.every((item) => selectedRows.includes(item.id))
+                    }
                     onChange={(e) => {
-                      if (e.target.checked) {
-                        setSelectedRows(paginatedList.map(item => item.id));
-                      } else {
-                        setSelectedRows([]);
-                      }
+                      const pageIds = paginatedList.map((item) => item.id);
+                      setSelectedRows((prev) => {
+                        if (e.target.checked) {
+                          return [...new Set([...prev, ...pageIds])];
+                        }
+                        return prev.filter((id) => !pageIds.includes(id));
+                      });
                     }}
                   />
                 </th>
@@ -939,9 +917,9 @@ const DiksharthiListing = () => {
                         checked={selectedRows.includes(diksharthi.id)}
                         onChange={(e) => {
                           if (e.target.checked) {
-                            setSelectedRows([...selectedRows, diksharthi.id]);
+                            setSelectedRows((prev) => [...new Set([...prev, diksharthi.id])]);
                           } else {
-                            setSelectedRows(selectedRows.filter(id => id !== diksharthi.id));
+                            setSelectedRows((prev) => prev.filter((id) => id !== diksharthi.id));
                           }
                         }}
                       />
@@ -1470,6 +1448,7 @@ const DiksharthiListing = () => {
                     name="date"
                     value={scheduleForm.date}
                     onChange={handleScheduleFormChange}
+                    min={new Date().toISOString().split("T")[0]} // 🔥 important
                     className="w-full p-2 border border-slate-300 rounded-md outline-none"
                   />
                 </div>
