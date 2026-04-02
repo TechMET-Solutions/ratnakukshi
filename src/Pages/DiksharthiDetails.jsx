@@ -52,9 +52,13 @@ const normalizeUser = (item) => ({
   role: String(item?.role || "").toLowerCase(),
 });
 
+const getProfileImageUrl = (photoValue) => {
+  if (!photoValue) return "/user.png";
+  if (String(photoValue).startsWith("http")) return photoValue;
+  return `${API}/upload/diksharthiImages/${photoValue}`;
+};
+
 const emptyScheduleForm = {
-  name: "",
-  address: "",
   mobile: "",
   date: "",
   time: "",
@@ -83,9 +87,7 @@ const DiksharthiListing = () => {
   const [selectedAdminId, setSelectedAdminId] = useState("");
   const [isAssigningAdmin, setIsAssigningAdmin] = useState(false);
   const [isAdminListLoading, setIsAdminListLoading] = useState(false);
-  const [visitSchedules, setVisitSchedules] = useState({});
   const [scheduleVisitModalData, setScheduleVisitModalData] = useState(null);
-  const [scheduleVisitModalMode, setScheduleVisitModalMode] = useState("contact");
   const [viewScheduleModalData, setViewScheduleModalData] = useState(null);
   const [familyDetailsModalData, setFamilyDetailsModalData] = useState(null);
   const [isFamilyDetailsLoading, setIsFamilyDetailsLoading] = useState(false);
@@ -165,9 +167,10 @@ const DiksharthiListing = () => {
         );
 
       } else if (role === "karyakarta") {
-        // Admin sees only assigned records
+        // Karyakarta sees only assigned records
         filteredRecords = allRecords.filter(
-          (item) => String(item?.admin_id) === String(loggedInUserId)
+          (item) =>
+            String(item?.karykarata_id || item?.admin_id || "") === String(loggedInUserId)
         );
 
       } else {
@@ -176,11 +179,6 @@ const DiksharthiListing = () => {
 
       setDiksharthiList(filteredRecords);
       await fetchFeedbackStatus(filteredRecords);
-      if (role === "operations-manager" || role === "karyakarta") {
-        await fetchVisitSchedulesForList(filteredRecords);
-      } else {
-        setVisitSchedules({});
-      }
 
     } catch (error) {
       console.error(error);
@@ -278,8 +276,8 @@ const DiksharthiListing = () => {
       .toLowerCase();
 
   const isAdminUnassigned = (diksharthi) => {
-    const adminId = diksharthi?.admin_id;
-    return adminId === null || adminId === undefined || String(adminId).trim() === "" || String(adminId) === "0";
+    const assignedId = diksharthi?.karykarata_id || diksharthi?.admin_id;
+    return assignedId === null || assignedId === undefined || String(assignedId).trim() === "" || String(assignedId) === "0";
   };
 
   const getUserNameById = (userId) => {
@@ -294,87 +292,8 @@ const DiksharthiListing = () => {
     return matchedUser?.name || matchedUser?.email || String(userId);
   };
 
-  const getVisitSchedule = (diksharthi) => {
-    if (!diksharthi?.id) return null;
-    return visitSchedules[String(diksharthi.id)] || null;
-  };
-
-  const hasVisitContactInfo = (diksharthi) => {
-    const schedule = getVisitSchedule(diksharthi);
-    return Boolean(
-      schedule?.name?.trim() &&
-      schedule?.address?.trim() &&
-      schedule?.mobile?.trim()
-    );
-  };
-
   const hasVisitDateTime = (diksharthi) => {
-    const schedule = getVisitSchedule(diksharthi);
-    return Boolean(schedule?.date && schedule?.time);
-  };
-
-  const normalizeVisitSchedule = (schedule) => {
-    if (!schedule) return null;
-
-    return {
-      diksharthi_id: schedule?.diksharthi_id || "",
-      diksharthi_name:
-        schedule?.diksharthi_name ||
-        schedule?.sadhu_sadhvi_name ||
-        schedule?.name ||
-        "",
-      name: schedule?.name || schedule?.person_name || "",
-      address: schedule?.address || schedule?.visit_address || "",
-      mobile: schedule?.mobile || schedule?.mobile_no || schedule?.phone || "",
-      date: schedule?.date || schedule?.visit_date || schedule?.scheduled_date || "",
-      time: schedule?.time || schedule?.visit_time || schedule?.scheduled_time || "",
-      diksharthi_code: schedule?.diksharthi_code || schedule?.diksharthi_id || "",
-      scheduled_by: schedule?.scheduled_by || schedule?.user_id || "",
-    };
-  };
-
-  const fetchVisitScheduleById = async (diksharthiId) => {
-    if (!diksharthiId) return null;
-
-    try {
-      const response = await fetch(`${API}/api/visit-schedule/list/${diksharthiId}`);
-      const result = await response.json().catch(() => ({}));
-
-      if (!response.ok) {
-        return null;
-      }
-
-      const rawSchedule = Array.isArray(result?.data)
-        ? result.data[0]
-        : result?.data || result?.schedule || result;
-      return normalizeVisitSchedule(rawSchedule);
-    } catch (error) {
-      console.error("Failed to fetch visit schedule", error);
-      return null;
-    }
-  };
-
-  const fetchVisitSchedulesForList = async (records) => {
-    try {
-      const entries = await Promise.all(
-        records.map(async (item) => {
-          const schedule = await fetchVisitScheduleById(item?.id);
-          return [String(item?.id), schedule];
-        })
-      );
-
-      const nextSchedules = entries.reduce((acc, [id, schedule]) => {
-        if (id && schedule) {
-          acc[id] = schedule;
-        }
-        return acc;
-      }, {});
-
-      setVisitSchedules(nextSchedules);
-    } catch (error) {
-      console.error("Failed to fetch visit schedules for list", error);
-      setVisitSchedules({});
-    }
+    return Boolean(diksharthi?.visit_date && diksharthi?.visit_time);
   };
 
   const fetchAdminUsers = async () => {
@@ -406,28 +325,14 @@ const DiksharthiListing = () => {
     console.log(fetchAdminUsers)
   };
 
-  const openContactInfoModal = (diksharthi) => {
-    const existingSchedule = getVisitSchedule(diksharthi);
-    setScheduleVisitModalMode("contact");
+  const openScheduleVisitModal = (diksharthi) => {
     setScheduleVisitModalData(diksharthi);
-    setScheduleForm(
-      existingSchedule || {
-        ...emptyScheduleForm,
-        name: diksharthi?.relation_name || "",
-      }
-    );
-  };
-
-  const openDateTimeModal = (diksharthi) => {
-    const existingSchedule = getVisitSchedule(diksharthi);
-    setScheduleVisitModalMode("datetime");
-    setScheduleVisitModalData(diksharthi);
-    setScheduleForm(
-      existingSchedule || {
-        ...emptyScheduleForm,
-        name: diksharthi?.relation_name || "",
-      }
-    );
+    setScheduleForm({
+      ...emptyScheduleForm,
+      date: diksharthi?.visit_date || "",
+      time: diksharthi?.visit_time ? String(diksharthi.visit_time).slice(0, 5) : "",
+      mobile: diksharthi?.mobile_no || "",
+    });
   };
 
   const handleScheduleFormChange = (e) => {
@@ -441,37 +346,23 @@ const DiksharthiListing = () => {
   const handleSaveVisitSchedule = async () => {
     if (!scheduleVisitModalData?.id) return;
 
-    if (!scheduleForm.name.trim() || !scheduleForm.address.trim() || !scheduleForm.mobile.trim()) {
-      alert("Please fill name, address and mobile number");
-      return;
-    }
-
-    if (scheduleVisitModalMode === "datetime" && (!scheduleForm.date || !scheduleForm.time)) {
+    if (!scheduleForm.date || !scheduleForm.time) {
       alert("Please set visit date and time");
       return;
     }
 
-    const payload = {
-      diksharthi_id: scheduleVisitModalData.id,
-      diksharthi_code: String(scheduleVisitModalData.id || ""),
-      diksharthi_name: scheduleVisitModalData.sadhu_sadhvi_name || "",
-      name: scheduleForm.name.trim(),
-      address: scheduleForm.address.trim(),
-      mobile: scheduleForm.mobile.trim(),
-      date: scheduleForm.date || null,
-      time: scheduleForm.time || null,
-      scheduled_by: loggedInUserId,
-    };
-
     try {
       setIsSchedulingVisit(true);
 
-      const response = await fetch(`${API}/api/visit-schedule/create`, {
-        method: "POST",
+      const response = await fetch(`${API}/api/schedule-visit/${scheduleVisitModalData.id}`, {
+        method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          visit_date: scheduleForm.date,
+          visit_time: scheduleForm.time,
+        }),
       });
 
       const result = await response.json().catch(() => ({}));
@@ -480,37 +371,10 @@ const DiksharthiListing = () => {
         throw new Error(result?.message || "Failed to schedule visit");
       }
 
-      const savedSchedule = result?.data || payload;
-      const normalizedSchedule = {
-        diksharthi_id:
-          savedSchedule?.diksharthi_id || payload.diksharthi_id,
-        diksharthi_name:
-          savedSchedule?.diksharthi_name || payload.diksharthi_name,
-        name: savedSchedule?.name || payload.name,
-        address: savedSchedule?.address || payload.address,
-        mobile: savedSchedule?.mobile || payload.mobile,
-        date: savedSchedule?.date || payload.date,
-        time: savedSchedule?.time || payload.time,
-        diksharthi_code:
-          savedSchedule?.diksharthi_code || payload.diksharthi_code,
-        scheduled_by:
-          savedSchedule?.scheduled_by || payload.scheduled_by,
-      };
-
-      const updatedSchedules = {
-        ...visitSchedules,
-        [String(scheduleVisitModalData.id)]: normalizedSchedule,
-      };
-
-      setVisitSchedules(updatedSchedules);
       setScheduleVisitModalData(null);
-      setScheduleVisitModalMode("contact");
       setScheduleForm(emptyScheduleForm);
-      alert(
-        scheduleVisitModalMode === "contact"
-          ? "Contact info saved successfully"
-          : (result?.message || "Visit schedule saved successfully")
-      );
+      alert(result?.message || "Visit schedule saved successfully");
+      await fetchDiksharthiList();
     } catch (error) {
       console.error(error);
       alert(error?.message || "Failed to schedule visit");
@@ -519,38 +383,15 @@ const DiksharthiListing = () => {
     }
   };
 
-  const openFamilyDetailsModal = async (diksharthi) => {
-    if (!diksharthi?.id) return;
-    setIsFamilyDetailsLoading(true);
-    setFamilyDetailsModalData({ diksharthi, details: null });
-    try {
-      const response = await fetch(`${API}/api/family-details/${diksharthi.id}`);
-      const result = await response.json().catch(() => ({}));
-      if (response.ok && result?.success) {
-        setFamilyDetailsModalData({ diksharthi, details: result?.data });
-      } else {
-        setFamilyDetailsModalData({ diksharthi, details: null });
-      }
-    } catch (error) {
-      console.error("Failed to fetch family details", error);
-      setFamilyDetailsModalData({ diksharthi, details: null });
-    } finally {
-      setIsFamilyDetailsLoading(false);
-    }
-  };
-
   const openViewScheduleModal = async (diksharthi) => {
     setIsViewScheduleLoading(true);
-    setViewScheduleModalData({
-      diksharthi,
-      schedule: getVisitSchedule(diksharthi),
-    });
-
     try {
-      const schedule = await fetchVisitScheduleById(diksharthi?.id);
       setViewScheduleModalData({
         diksharthi,
-        schedule,
+        schedule: {
+          date: diksharthi?.visit_date || "",
+          time: diksharthi?.visit_time || "",
+        },
       });
     } finally {
       setIsViewScheduleLoading(false);
@@ -567,11 +408,12 @@ const DiksharthiListing = () => {
       const response = await fetch(`${API}/api/diksharthi/${diksharthi.id}`);
       const result = await response.json().catch(() => ({}));
 
-      if (!response.ok || !result?.success) {
+      const profileData = result?.data || result;
+      if (!response.ok || !profileData || typeof profileData !== "object") {
         throw new Error(result?.message || "Failed to fetch diksharthi details");
       }
 
-      setViewModalData(result?.data || diksharthi);
+      setViewModalData({ ...diksharthi, ...profileData });
     } catch (error) {
       console.error(error);
       alert("Failed to fetch diksharthi details");
@@ -590,7 +432,7 @@ const DiksharthiListing = () => {
       setIsAssigningAdmin(true);
       const payload = {
         id: assignModalData.id,
-        admin_id: selectedAdminId,
+        karykarata_id: selectedAdminId,
       };
 
       const response = await fetch(`${API}/api/assign-karyakarta`, {
@@ -626,6 +468,27 @@ const DiksharthiListing = () => {
     setFeedbackModalData(diksharthi);
     setFeedbackForm(emptyFeedbackForm);
   };
+
+  const openFamilyDetailsModal = async (diksharthi) => {
+    if (!diksharthi?.id) return;
+    setIsFamilyDetailsLoading(true);
+    setFamilyDetailsModalData({ diksharthi, details: null });
+    try {
+      const response = await fetch(`${API}/api/family-details/${diksharthi.id}`);
+      const result = await response.json().catch(() => ({}));
+      if (response.ok && result?.success) {
+        setFamilyDetailsModalData({ diksharthi, details: result?.data });
+      } else {
+        setFamilyDetailsModalData({ diksharthi, details: null });
+      }
+    } catch (error) {
+      console.error("Failed to fetch family details", error);
+      setFamilyDetailsModalData({ diksharthi, details: null });
+    } finally {
+      setIsFamilyDetailsLoading(false);
+    }
+  };
+
 
   const canDownloadApplication =
     role === "admin" || role === "case-coordinator" || role === "operations-manager";
@@ -694,6 +557,15 @@ const DiksharthiListing = () => {
     } finally {
       setDownloadingPdfId(null);
     }
+  };
+
+  const handleOpenDiksharthiPdf = (id) => {
+    if (!id) return;
+    window.open(
+      `https://karyakarta.ratnakukshi.org/api/diksharthi/pdf/${id}`,
+      "_blank",
+      "noopener,noreferrer"
+    );
   };
 
   const handleFeedbackFormChange = (e) => {
@@ -944,7 +816,7 @@ const DiksharthiListing = () => {
 
                     {role === "operations-manager" && (
                       <td className="px-6 py-3">
-                        {getUserNameById(diksharthi.admin_id)}
+                        {getUserNameById(diksharthi.karykarata_id || diksharthi.admin_id)}
                       </td>
                     )}
 
@@ -954,6 +826,7 @@ const DiksharthiListing = () => {
 
                     {/* Actions */}
                     <td className="px-6 py-3 flex gap-3 flex-wrap">
+                     
 
                       {/* ================= STAFF ================= */}
                       {role === "staff" && (
@@ -974,6 +847,13 @@ const DiksharthiListing = () => {
                             }
                           >
                             Edit
+                          </button>
+
+                          <button
+                            className="rounded-lg bg-red-600 text-sm px-2 py-1 text-white"
+                            onClick={() => handleOpenDiksharthiPdf(diksharthi.id)}
+                          >
+                            PDF
                           </button>
 
                           {getDiksharthiStatus(diksharthi) !== "send" && (
@@ -1016,16 +896,7 @@ const DiksharthiListing = () => {
                             </div>
                           )}
 
-                          {!hasVisitContactInfo(diksharthi) && (
-                            <button
-                              className="rounded-lg bg-emerald-600 text-sm px-2 py-1 text-white"
-                              onClick={() => openContactInfoModal(diksharthi)}
-                            >
-                              Set Contact Info
-                            </button>
-                          )}
-
-                          {hasVisitContactInfo(diksharthi) && isAdminUnassigned(diksharthi) && (
+                          {isAdminUnassigned(diksharthi) && (
                             <button
                               className="rounded-lg bg-purple-600 text-sm px-2 py-1 text-white"
                               onClick={() => openAssignAdminModal(diksharthi)}
@@ -1034,12 +905,12 @@ const DiksharthiListing = () => {
                             </button>
                           )}
 
-                          {!isAdminUnassigned(diksharthi) && hasVisitContactInfo(diksharthi) && !hasVisitDateTime(diksharthi) && (
+                          {!isAdminUnassigned(diksharthi) && !hasVisitDateTime(diksharthi) && (
                             <button
                               className="rounded-lg bg-emerald-600 text-sm px-2 py-1 text-white"
-                              onClick={() => openDateTimeModal(diksharthi)}
+                              onClick={() => openScheduleVisitModal(diksharthi)}
                             >
-                              Set Date & Time
+                              Schedule Visit
                             </button>
                           )}
 
@@ -1275,15 +1146,15 @@ const DiksharthiListing = () => {
                       <div className="flex-shrink-0 flex justify-center sm:justify-end">
                         <div className="relative">
                           <img
-                            src={viewModalData?.photo || "/user.png"}
+                            src={getProfileImageUrl(viewModalData?.photo)}
                             alt="profile"
                             onError={(e) => { e.currentTarget.src = "/user.png"; }}
                             className="w-32 h-32 rounded-xl object-cover border-4 border-white shadow-md"
                           />
                           <div
-                            className={`absolute -bottom-2 -right-2 px-2 py-1 rounded text-[10px] font-bold uppercase text-white shadow-sm ${viewModalData?.is_alive === "No" ? "bg-red-500" : "bg-green-500"}`}
+                            className={`absolute -bottom-2 -right-2 px-2 py-1 rounded text-[10px] font-bold uppercase text-white shadow-sm ${(viewModalData?.is_alive || viewModalData?.isAlive) === "No" ? "bg-red-500" : "bg-green-500"}`}
                           >
-                            {viewModalData?.is_alive === "Yes" ? "Alive" : viewModalData?.is_alive === "No" ? "Dead" : "N/A"}
+                            {(viewModalData?.is_alive || viewModalData?.isAlive) === "Yes" ? "Alive" : (viewModalData?.is_alive || viewModalData?.isAlive) === "No" ? "Dead" : "N/A"}
                           </div>
                         </div>
                       </div>
@@ -1300,30 +1171,57 @@ const DiksharthiListing = () => {
                       <DetailItem label="Samudaay" value={viewModalData?.samudaay} />
                       <DetailItem label="Guru Name" value={viewModalData?.guru_name || viewModalData?.guruName} />
                       <DetailItem label="Acharya" value={viewModalData?.acharya} />
+                      <DetailItem label="Gaachh" value={viewModalData?.gaachh} />
                       <DetailItem label="Gadipati" value={viewModalData?.gadipati} />
+                      <DetailItem label="Mobile No" value={viewModalData?.mobile_no} />
+                      <DetailItem label="Alt Mobile No" value={viewModalData?.alt_mobile_no} />
+                      <DetailItem label="Permanent Address" value={viewModalData?.permanent_address} />
+                      <DetailItem label="Current Address" value={viewModalData?.current_address} />
+                      <DetailItem label="Village" value={viewModalData?.village} />
+                      <DetailItem label="Taluka" value={viewModalData?.taluka} />
+                      <DetailItem label="District" value={viewModalData?.district} />
+                      <DetailItem label="State" value={viewModalData?.state} />
+                      <DetailItem label="Pin Code" value={viewModalData?.pin_code} />
 
                       {/* RBF Fields */}
                       <DetailItem label="RBF Criteria" value={viewModalData?.rbf_criteria || viewModalData?.rbfCriteria || "No"} />
                       {(viewModalData?.rbf_criteria === "Yes" || viewModalData?.rbfCriteria === "Yes") && (
                         <>
                           <DetailItem label="RBF Relation" value={viewModalData?.relation || "N/A"} />
-                          <DetailItem label="Relation Name" value={viewModalData?.relation_name || viewModalData?.relationName || "N/A"} />
+                          <DetailItem label="Relation Name" value={
+                            viewModalData?.family_member_name ||
+                            `${viewModalData?.family_member_firstName || ""} ${viewModalData?.family_member_lastName || ""}`.trim() ||
+                            viewModalData?.relation_name ||
+                            viewModalData?.relationName ||
+                            "N/A"
+                          } />
+                          <DetailItem label="Assistance Received" value={viewModalData?.assistance_received || "N/A"} />
+                          <DetailItem label="Family Relation" value={viewModalData?.family_relation || "N/A"} />
                         </>
                       )}
 
                       {/* Alive Specific Info */}
-                      {viewModalData?.is_alive === "Yes" && (
+                      {(viewModalData?.is_alive || viewModalData?.isAlive) === "Yes" && (
                         <DetailItem label="Current Vihar Location" value={viewModalData?.vihar_location || viewModalData?.viharLocation} />
                       )}
 
                       {/* Dead Specific Info */}
-                      {viewModalData?.is_alive === "No" && (
+                      {(viewModalData?.is_alive || viewModalData?.isAlive) === "No" && (
                         <>
                           <DetailItem label="Samadhi Date" value={formatIndianDate(viewModalData?.samadhi_date || viewModalData?.samadhiDate)} />
                           <DetailItem label="Samadhi Place" value={viewModalData?.samadhi_place || viewModalData?.samadhiPlace} />
                         </>
                       )}
                     </div>
+                    {viewModalData?.summary && (
+                      <div className="pt-4 border-t border-gray-100">
+                        <p className="text-xs font-bold text-blue-600 uppercase tracking-wider mb-2">Summary</p>
+                        <div
+                          className="text-sm text-gray-700 prose max-w-none"
+                          dangerouslySetInnerHTML={{ __html: viewModalData.summary }}
+                        />
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -1391,15 +1289,12 @@ const DiksharthiListing = () => {
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 px-4">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg">
             <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-              <h3 className="text-lg font-semibold text-gray-800">
-                {scheduleVisitModalMode === "contact" ? "Set Contact Info" : "Set Visit Date & Time"}
-              </h3>
+              <h3 className="text-lg font-semibold text-gray-800">Schedule Visit</h3>
               <button
                 type="button"
                 className="p-1 rounded hover:bg-gray-100"
                 onClick={() => {
                   setScheduleVisitModalData(null);
-                  setScheduleVisitModalMode("contact");
                   setScheduleForm(emptyScheduleForm);
                 }}
               >
@@ -1407,74 +1302,32 @@ const DiksharthiListing = () => {
               </button>
             </div>
             <div className="px-5 py-4 grid grid-cols-1 gap-4 text-sm">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Name
-                </label>
-                <input
-                  type="text"
-                  name="name"
-                  value={scheduleForm.name}
-                  onChange={handleScheduleFormChange}
-                  className="w-full p-2 border border-slate-300 rounded-md outline-none"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Address
-                </label>
-                <textarea
-                  name="address"
-                  value={scheduleForm.address}
-                  onChange={handleScheduleFormChange}
-                  rows={3}
-                  className="w-full p-2 border border-slate-300 rounded-md outline-none resize-none"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Mobile No
-                </label>
-                <input
-                  type="text"
-                  name="mobile"
-                  maxLength={10}
-                  value={scheduleForm.mobile}
-                  onChange={(e) => {
-                    const onlyNumbers = e.target.value.replace(/\D/g, "");
-                    handleScheduleFormChange({ target: { name: "mobile", value: onlyNumbers } });
-                  }}
-                  className="w-full p-2 border border-slate-300 rounded-md outline-none"
-                />
-              </div>
-              {scheduleVisitModalMode === "datetime" && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">
-                      Date
-                    </label>
-                    <input
-                      type="date"
-                      name="date"
-                      value={scheduleForm.date}
-                      onChange={handleScheduleFormChange}
-                      className="w-full p-2 border border-slate-300 rounded-md outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">
-                      Time
-                    </label>
-                    <input
-                      type="time"
-                      name="time"
-                      value={scheduleForm.time}
-                      onChange={handleScheduleFormChange}
-                      className="w-full p-2 border border-slate-300 rounded-md outline-none"
-                    />
-                  </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Date
+                  </label>
+                  <input
+                    type="date"
+                    name="date"
+                    value={scheduleForm.date}
+                    onChange={handleScheduleFormChange}
+                    className="w-full p-2 border border-slate-300 rounded-md outline-none"
+                  />
                 </div>
-              )}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Time
+                  </label>
+                  <input
+                    type="time"
+                    name="time"
+                    value={scheduleForm.time}
+                    onChange={handleScheduleFormChange}
+                    className="w-full p-2 border border-slate-300 rounded-md outline-none"
+                  />
+                </div>
+              </div>
             </div>
             <div className="px-5 py-4 border-t border-gray-100 flex gap-2 justify-end">
               <button
@@ -1482,7 +1335,6 @@ const DiksharthiListing = () => {
                 className="rounded-lg bg-gray-200 text-sm px-4 py-2 text-gray-800"
                 onClick={() => {
                   setScheduleVisitModalData(null);
-                  setScheduleVisitModalMode("contact");
                   setScheduleForm(emptyScheduleForm);
                 }}
               >
@@ -1494,11 +1346,7 @@ const DiksharthiListing = () => {
                 onClick={handleSaveVisitSchedule}
                 disabled={isSchedulingVisit}
               >
-                {isSchedulingVisit
-                  ? "Saving..."
-                  : scheduleVisitModalMode === "contact"
-                    ? "Save Contact Info"
-                    : "Save Date & Time"}
+                {isSchedulingVisit ? "Saving..." : "Save Visit Schedule"}
               </button>
             </div>
           </div>
@@ -1524,18 +1372,34 @@ const DiksharthiListing = () => {
               ) : viewScheduleModalData?.schedule ? (
                 <>
                   <p>
-                    <span className="font-semibold">Name:</span>{" "}
-                    {viewScheduleModalData.schedule.diksharthi_name ||
+                      <span className="font-semibold">Diksharthi Name:</span>{" "}
+                    {viewScheduleModalData.diksharthi?.sadhu_sadhvi_name ||
                       viewScheduleModalData.diksharthi?.sadhu_sadhvi_name ||
                       "-"}
                   </p>
                   <p>
-                    <span className="font-semibold">Address:</span>{" "}
-                    {viewScheduleModalData.schedule.address || "-"}
+                    <span className="font-semibold">Family Head Name:</span>{" "}
+                      {viewScheduleModalData.diksharthi?.family_member_firstName ||
+                        viewScheduleModalData.diksharthi?.family_member_firstName ||
+                        "-"} { " "}
+                      {viewScheduleModalData.diksharthi?.family_member_lastName ||
+                        viewScheduleModalData.diksharthi?.family_member_lastName ||
+                      "-"}
                   </p>
                   <p>
-                    <span className="font-semibold">Mobile No:</span>{" "}
-                    {viewScheduleModalData.schedule.mobile || "-"}
+                    <span className="font-semibold">Contact No:</span>{" "}
+                      {viewScheduleModalData.diksharthi?.mobile_no ||
+                        viewScheduleModalData.diksharthi?.mobile_no ||
+                        "-"} { " | "}
+                      {viewScheduleModalData.diksharthi?.alt_mobile_no ||
+                        viewScheduleModalData.diksharthi?.alt_mobile_no ||
+                      "-"}
+                  </p>
+                  <p>
+                    <span className="font-semibold">Address:</span>{" "}
+                      {viewScheduleModalData.diksharthi?.current_address ||
+                        viewScheduleModalData.diksharthi?.current_address ||
+                        "-"}
                   </p>
                   <p>
                     <span className="font-semibold">Date:</span>{" "}

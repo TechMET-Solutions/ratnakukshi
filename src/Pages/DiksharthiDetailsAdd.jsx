@@ -496,7 +496,7 @@ const DiksharthiDetailsAdd = () => {
 
           {formData.rbfCriteria === "Yes" && (
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Village</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Village / Post Office</label>
 
               <select
                 onChange={(e) => {
@@ -532,7 +532,7 @@ const DiksharthiDetailsAdd = () => {
 
           {formData.rbfCriteria === "Yes" && (
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">District</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1">District / City</label>
               <input name="district" value={formData.district} onChange={handleChange} type="text" className="w-full p-2 border border-slate-300 rounded-md outline-none" />
             </div>
           )}
