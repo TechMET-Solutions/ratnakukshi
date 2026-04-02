@@ -55,7 +55,8 @@ const FamilyDetailsForm = () => {
   console.log(selectedRelations,"--------selectedRelations------------")
   const allowRelationEditing = false;
 
-
+  const [deselectData, setDeselectData] = useState(null);
+  // { rel, type, reason }
 
   console.log(formData, "formData");
   const [relationDetails, setRelationDetails] = useState({});
@@ -2051,7 +2052,7 @@ const FamilyDetailsForm = () => {
                                 </label>
                               ))} */}
 
-                              {assistanceTypes.map((type) => {
+                              {/* {assistanceTypes.map((type) => {
                                 const selectedCategories = (
                                   relationDetails[rel]?.assistanceCategories || []
                                 ).map((item) => item.toLowerCase());
@@ -2082,9 +2083,81 @@ const FamilyDetailsForm = () => {
                                     <span>{type}</span>
                                   </label>
                                 );
+                              })} */}
+
+                              {assistanceTypes.map((type) => {
+                                const selectedCategories = (relationDetails[rel]?.assistanceCategories || []).map((item) =>
+                                  item.toLowerCase()
+                                );
+                                const defaultAssist = (selectedAssistance || []).map((item) => item.toLowerCase());
+                                const isSameRelation = rel?.toLowerCase() === selectedRelation?.toLowerCase();
+
+                                const isChecked =
+                                  selectedCategories.includes(type.toLowerCase()) ||
+                                  (isSameRelation && defaultAssist.includes(type.toLowerCase()));
+
+                                const handleCheckboxChange = (checked) => {
+                                  if (!checked && isSameRelation && defaultAssist.includes(type.toLowerCase())) {
+                                    // Open modal for deselect reason
+                                    setDeselectData({ rel, type, reason: "" });
+                                  } else {
+                                    handleAssistanceCategory(rel, type);
+                                  }
+                                };
+
+                                return (
+                                  <label key={type} className="flex items-center gap-2 text-slate-700 cursor-pointer">
+                                    <input
+                                      type="checkbox"
+                                      checked={isChecked}
+                                      onChange={(e) => handleCheckboxChange(e.target.checked)}
+                                      className="w-4 h-4 border-slate-400 rounded"
+                                    />
+                                    <span>{type}</span>
+                                  </label>
+                                );
                               })}
                             </div>
+                            {deselectData && (
+                              <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30">
+                                <div className="bg-white p-6 rounded shadow-lg w-96">
+                                  <h3 className="text-lg font-semibold mb-4">Reason for Deselecting</h3>
+                                  <p className="mb-2">
+                                    Relation: {deselectData.rel}, Assistance: {deselectData.type}
+                                  </p>
+                                  <textarea
+                                    className="w-full border rounded p-2 mb-4"
+                                    value={deselectData.reason}
+                                    onChange={(e) =>
+                                      setDeselectData((prev) => ({ ...prev, reason: e.target.value }))
+                                    }
+                                    placeholder="Enter reason"
+                                  />
+                                  <div className="flex justify-end gap-2">
+                                    <button
+                                      onClick={() => setDeselectData(null)}
+                                      className="px-4 py-2 bg-gray-200 rounded"
+                                    >
+                                      Cancel
+                                    </button>
+                                    <button
+                                      onClick={() => {
+                                        // store reason and deselect
+                                        console.log("Deselect Data:", deselectData);
+                                        // You can send this to backend or keep in state
 
+                                        handleAssistanceCategory(deselectData.rel, deselectData.type);
+
+                                        setDeselectData(null); // close modal
+                                      }}
+                                      className="px-4 py-2 bg-blue-600 text-white rounded"
+                                    >
+                                      Submit
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
                             {
 
                               //   relationDetails[
