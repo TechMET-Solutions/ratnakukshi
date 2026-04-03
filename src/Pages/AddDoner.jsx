@@ -28,6 +28,10 @@ function AddDonor() {
   const editDonorId = location?.state?.id;
   const isEditMode = Boolean(editDonorId);
   const [currentStep, setCurrentStep] = useState(1);
+
+  const [donorId, setDonorId] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+
   const [formData, setFormData] = useState({
     personalDetails: {
       salutation: "",
@@ -137,6 +141,11 @@ function AddDonor() {
       "nomineehasCompany",
     ],
   };
+
+ 
+
+
+  
 
   const validateRequiredFields = () => {
     const newErrors = {};
@@ -745,32 +754,185 @@ function AddDonor() {
     "Nominee Details",
     "Payment Details",
   ];
-  // const handleNext = (e) => {
+  
+
+  const updateDonor = async () => {
+    if (!donorId) return;
+
+    const formDataToSend = new FormData();
+
+    formDataToSend.append("personalDetails", JSON.stringify(formData.personalDetails));
+    formDataToSend.append("contactPerson", JSON.stringify(formData.contactPerson));
+    formDataToSend.append("residentialAddress", JSON.stringify(formData.residentialAddress));
+    formDataToSend.append("communicationAddress", JSON.stringify(formData.communicationAddress));
+    formDataToSend.append("companyDetails", JSON.stringify(formData.companyDetails));
+    formDataToSend.append("familyDetails", JSON.stringify(formData.familyDetails));
+    formDataToSend.append("nomineeDetails", JSON.stringify(formData.nomineeDetails));
+    formDataToSend.append("paymentDetails", JSON.stringify(formData.paymentDetails));
+
+    await fetch(`${API}/api/donor/update/${donorId}`, {
+      method: "PUT",
+      body: formDataToSend,
+    });
+  };
+
+  
+  // const handleNext = async (e) => {
   //   e.preventDefault();
 
-  //   if (currentStep < steps.length) {
-  //     setCurrentStep((prev) => prev + 1);
+  //   setRequiredValidationTriggered((prev) => ({
+  //     ...prev,
+  //     [currentStep]: true,
+  //   }));
+
+  //   if (currentStep === 1) {
+  //     const isValid = validateStep1(true, true);
+  //     if (!isValid) return;
+
+  //     // ✅ IMPORTANT CONDITION
+  //     if (!donorId && !isEditMode) {
+  //       const formDataToSend = new FormData();
+
+  //       formDataToSend.append("personalDetails", JSON.stringify(formData.personalDetails));
+  //       formDataToSend.append("contactPerson", JSON.stringify(formData.contactPerson));
+  //       formDataToSend.append("residentialAddress", JSON.stringify(formData.residentialAddress));
+  //       formDataToSend.append("communicationAddress", JSON.stringify(formData.communicationAddress));
+  //       formDataToSend.append("companyDetails", JSON.stringify(formData.companyDetails));
+
+  //       if (formData.personalDetails.photo) {
+  //         formDataToSend.append("photo", formData.personalDetails.photo);
+  //       }
+
+  //       if (formData.personalDetails.aadhaarFile) {
+  //         formDataToSend.append("aadhaarFile", formData.personalDetails.aadhaarFile);
+  //       }
+
+  //       if (formData.personalDetails.panFile) {
+  //         formDataToSend.append("panFile", formData.personalDetails.panFile);
+  //       }
+
+  //       const res = await fetch(`${API}/api/donor/create`, {
+  //         method: "POST",
+  //         body: formDataToSend,
+  //       });
+
+  //       const data = await res.json();
+
+  //       if (!data.success) {
+  //         alert("Step 1 save failed");
+  //         return;
+  //       }
+
+  //       setDonorId(data.donorId);
+  //     } else {
+  //       // ✅ already exists → update
+  //       await updateDonor();
+  //     }
   //   }
+
+  //   // STEP 2
+  //   else if (currentStep === 2) {
+  //     const isValid = validateStep2(true, true);
+  //     if (!isValid) return;
+
+  //     await updateDonor();
+  //   }
+
+  //   // STEP 3
+  //   else if (currentStep === 3) {
+  //     const isValid = validateStep3(true, true);
+  //     if (!isValid) return;
+
+  //     await updateDonor();
+  //   }
+
+  //   setCurrentStep((prev) => prev + 1);
   // };
 
-  const handleNext = (e) => {
-    e.preventDefault();
-    setRequiredValidationTriggered((prev) => ({ ...prev, [currentStep]: true }));
 
-    // Validate based on current step
+  const handleNext = async (e) => {
+  e.preventDefault();
+
+  setRequiredValidationTriggered((prev) => ({
+    ...prev,
+    [currentStep]: true,
+  }));
+
+  try {
+    setIsLoading(true); // 🔥 START LOADING
+
     if (currentStep === 1) {
-      const isValidStep1 = validateStep1(true, true);
-      if (!isValidStep1) return;
-    } else if (currentStep === 2) {
-      const isValidStep2 = validateStep2(true, true);
-      if (!isValidStep2) return;
-    } else if (currentStep === 3) {
-      const isValidStep3 = validateStep3(true, true);
-      if (!isValidStep3) return;
+      const isValid = validateStep1(true, true);
+      if (!isValid) return;
+
+      if (!donorId && !isEditMode) {
+        const formDataToSend = new FormData();
+
+        formDataToSend.append("personalDetails", JSON.stringify(formData.personalDetails));
+        formDataToSend.append("contactPerson", JSON.stringify(formData.contactPerson));
+        formDataToSend.append("residentialAddress", JSON.stringify(formData.residentialAddress));
+        formDataToSend.append("communicationAddress", JSON.stringify(formData.communicationAddress));
+        formDataToSend.append("companyDetails", JSON.stringify(formData.companyDetails));
+
+        // ✅ files
+        if (formData.personalDetails.photo) {
+          formDataToSend.append("photo", formData.personalDetails.photo);
+        }
+        if (formData.personalDetails.aadhaarFile) {
+          formDataToSend.append("aadhaarFile", formData.personalDetails.aadhaarFile);
+        }
+        if (formData.personalDetails.panFile) {
+          formDataToSend.append("panFile", formData.personalDetails.panFile);
+        }
+
+        const res = await fetch(`${API}/api/donor/create`, {
+          method: "POST",
+          body: formDataToSend,
+        });
+
+        const data = await res.json();
+
+        if (!data.success) {
+          alert("Step 1 save failed");
+          return;
+        }
+
+        setDonorId(data.donorId);
+      } else {
+        await updateDonor();
+      }
+    }
+
+    else if (currentStep === 2) {
+      const isValid = validateStep2(true, true);
+      if (!isValid) return;
+
+      await updateDonor();
+    }
+
+    else if (currentStep === 3) {
+      const isValid = validateStep3(true, true);
+      if (!isValid) return;
+
+      await updateDonor();
     }
 
     setCurrentStep((prev) => prev + 1);
-  };
+  } catch (err) {
+    console.log(err);
+    alert("Something went wrong");
+  } finally {
+    setIsLoading(false); // 🔥 STOP LOADING
+  }
+};
+
+  
+  useEffect(() => {
+    if (editDonorId) {
+      setDonorId(editDonorId);
+    }
+  }, [editDonorId]);
+
 
   const handlePrevious = (e) => {
     e.preventDefault();
@@ -2216,11 +2378,12 @@ function AddDonor() {
             <div className="flex-1"></div>
             {currentStep < steps.length ? (
               <button
-                type="button"
                 onClick={handleNext}
-                className="flex-1 md:flex-none bg-[#EAB308] hover:bg-yellow-600 text-white px-16 py-2.5 rounded-md font-bold uppercase shadow-sm transition-all"
+                disabled={isLoading}
+                className={`px-6 py-2 rounded-md text-white font-semibold ${isLoading ? "bg-gray-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"
+                  }`}
               >
-                Next
+                {isLoading ? "Saving..." : "Save & Next"}
               </button>
             ) : (
               <button
