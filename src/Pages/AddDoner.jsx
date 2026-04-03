@@ -1029,6 +1029,26 @@ function AddDonor() {
     }
   }, [formData, currentStep, requiredValidationTriggered]);
 
+  const handleCommAddressSelect = (type) => {
+    let address = "";
+
+    if (type === "res") {
+      address = formData.residentialAddress.address1 || "";
+    }
+
+    if (type === "company") {
+      address = formData.companyDetails.companyAddress || "";
+    }
+
+    setFormData((prev) => ({
+      ...prev,
+      communicationAddress: {
+        ...prev.communicationAddress,
+        communicationAddress1: address,
+      },
+    }));
+  };
+
 
   return (
     <div className="min-h-screen bg-gray-50 flex p-6 justify-center">
@@ -1677,7 +1697,7 @@ function AddDonor() {
                   Communication Address
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
+                  {/* <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">
                       Communication Address 1
                     </label>
@@ -1693,6 +1713,43 @@ function AddDonor() {
                       }
                       className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                     />
+                  </div> */}
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      Communication Address 1
+                    </label>
+
+                    {/* 🔽 Dropdown */}
+                    <select
+                      value={formData.communicationAddress.communicationAddress1}
+                      onChange={(e) =>
+                        handleChange(
+                          "communicationAddress",
+                          "communicationAddress1",
+                          e.target.value
+                        )
+                      }
+                      className="w-full p-2 border border-slate-300 rounded-md mb-2"
+                    >
+                      <option value="">Select Address</option>
+
+                      {/* ✅ Residential Address */}
+                      {formData.residentialAddress.address1 && (
+                        <option value={formData.residentialAddress.address1}>
+                          {formData.residentialAddress.address1}
+                        </option>
+                      )}
+
+                      {/* ✅ Company Address */}
+                      {formData.companyDetails.companyAddress && (
+                        <option value={formData.companyDetails.companyAddress}>
+                          {formData.companyDetails.companyAddress}
+                        </option>
+                      )}
+                    </select>
+
+                  
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">
