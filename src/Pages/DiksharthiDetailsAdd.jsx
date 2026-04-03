@@ -24,6 +24,8 @@ const initialFormData = {
   samadhiPlace: "", // Optional
   rbfCriteria: "",
   relation: "",
+   relation_name: "",   // ✅ add this
+  isMarried: "",       // ✅ add this
   family_member_firstName: "",
   family_member_lastName: "",
   mobileNo: "",
@@ -78,6 +80,8 @@ const mapDiksharthiToFormData = (record) => ({
   samadhiPlace: record?.samadhiPlace || record?.samadhi_place || "",
   rbfCriteria: record?.rbfCriteria || record?.rbf_criteria || "",
   relation: record?.relation || "",
+  relation_name: record?.relation_name || "",
+isMarried: record?.isMarried || record?.is_married || "",
   family_member_firstName: record?.family_member_firstName || "",
   family_member_lastName: record?.family_member_lastName || "",
   mobileNo: record?.mobileNo || record?.mobile_no || "",
@@ -116,6 +120,8 @@ const mapFormDataToApiPayload = (formData, userId) => ({
   samadhi_place: formData.samadhiPlace || null,
   rbf_criteria: formData.rbfCriteria,
   relation: formData.relation,
+  relation_name: formData.relation_name || null,
+is_married: formData.isMarried || null,
   family_member_firstName: formData.family_member_firstName,
   family_member_lastName: formData.family_member_lastName,
   mobile_no: formData.mobileNo,
@@ -203,6 +209,8 @@ const DiksharthiDetailsAdd = () => {
     return "";
   };
 
+
+
   const fetchPincodeDetails = async (pincode) => {
     try {
       const res = await axios.get(`https://api.postalpincode.in/pincode/${pincode}`);
@@ -281,6 +289,18 @@ const DiksharthiDetailsAdd = () => {
         nextState.assistanceReceived = "";
         nextState.assistance = [];
       }
+
+      if (name === "relation" && value !== "other") {
+  nextState.relation_name = "";
+}
+
+if (name === "relation" && value !== "sister" && value !== "daughter") {
+  nextState.isMarried = "";
+}
+
+if (name === "isMarried" && value === "Yes") {
+  nextState.assistanceReceived = "";
+}
       return nextState;
     });
 
@@ -521,7 +541,14 @@ const DiksharthiDetailsAdd = () => {
           {formData.isAlive === "No" && (
             <div className="flex-1">
               <label className="block text-sm font-medium text-slate-700 mb-1">Samadhi Date (Optional)</label>
-              <input type="date" name="samadhiDate" value={formData.samadhiDate} onChange={handleChange} className="w-full p-2 border border-slate-300 rounded-md" />
+               <input
+    type="date"
+    name="samadhiDate"
+    value={formData.samadhiDate}
+    onChange={handleChange}
+    max={new Date().toISOString().split("T")[0]}  // ✅ TODAY MAX
+    className="w-full p-2 border border-slate-300 rounded-md"
+  />
             </div>
           )}
           {formData.isAlive === "No" && (
@@ -572,6 +599,50 @@ const DiksharthiDetailsAdd = () => {
             </div>
           )}
 
+            {formData.relation === "other" && (
+      <div>
+        <label className="block text-sm font-medium text-slate-700 mb-1">
+          Relation Name <span className="text-red-500">*</span>
+        </label>
+
+        <input
+          type="text"
+          name="relation_name"
+          value={formData.relation_name || ""}
+          onChange={handleChange}
+          placeholder="Enter relation name"
+          className="w-full p-2 border border-slate-300 rounded-md outline-none"
+        />
+
+        {errors.relation_name && (
+          <p className="text-red-500 text-xs">{errors.relation_name}</p>
+        )}
+      </div>
+    )}
+
+          {(formData.relation === "sister" || formData.relation === "daughter") && (
+  <div>
+    <label className="block text-sm font-medium text-slate-700 mb-1">
+      Is Married? <span className="text-red-500">*</span>
+    </label>
+
+    <select
+      name="isMarried"
+      value={formData.isMarried}
+      onChange={handleChange}
+      className="w-full p-2 border border-slate-300 rounded-md outline-none"
+    >
+      <option value="">Select</option>
+      <option value="yes">Yes</option>
+      <option value="no">No</option>
+    </select>
+
+    {errors.isMarried && (
+      <p className="text-red-500 text-xs">{errors.isMarried}</p>
+    )}
+  </div>
+)}
+
           {formData.rbfCriteria === "Yes" && (
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Family Member First Name<span className="text-red-500">*</span></label>
@@ -619,20 +690,65 @@ const DiksharthiDetailsAdd = () => {
             </div>
           )}
 
-          {formData.rbfCriteria === "Yes" && (
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Permanent Address <span className="text-red-500">*</span></label>
-              <input name="permanentAddress" value={formData.permanentAddress} onChange={handleChange} type="text" className="w-full p-2 border border-slate-300 rounded-md outline-none" />
-              {errors.permanentAddress && <p className="text-red-500 text-xs">{errors.permanentAddress}</p>}
-            </div>
-          )}
+        {formData.rbfCriteria === "Yes" && (
+  <>
+    {/* Permanent Address */}
+    <div>
+      <label className="block text-sm font-medium text-slate-700 mb-1">
+        Permanent Address <span className="text-red-500">*</span>
+      </label>
 
-          {formData.rbfCriteria === "Yes" && (
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Current Address</label>
-              <input name="currentAddress" value={formData.currentAddress} onChange={handleChange} type="text" className="w-full p-2 border border-slate-300 rounded-md outline-none" />
-            </div>
-          )}
+      <input
+        name="permanentAddress"
+        value={formData.permanentAddress}
+        onChange={handleChange}
+        type="text"
+        className="w-full p-2 border border-slate-300 rounded-md outline-none"
+      />
+
+      {errors.permanentAddress && (
+        <p className="text-red-500 text-xs">{errors.permanentAddress}</p>
+      )}
+    </div>
+
+    {/* ✅ Checkbox */}
+    <div className="flex items-center gap-2 mt-2">
+      <input
+        type="checkbox"
+        name="sameAddress"
+        checked={formData.sameAddress || false}
+        onChange={(e) => {
+          const checked = e.target.checked;
+
+          setFormData((prev) => ({
+            ...prev,
+            sameAddress: checked,
+            currentAddress: checked ? prev.permanentAddress : ""
+          }));
+        }}
+      />
+      <label className="text-sm text-slate-700 cursor-pointer">
+        Same as Permanent Address
+      </label>
+    </div>
+
+    {/* Current Address */}
+    <div>
+      <label className="block text-sm font-medium text-slate-700 mb-1">
+        Current Address
+      </label>
+
+      <input
+        name="currentAddress"
+        value={formData.currentAddress}
+        onChange={handleChange}
+        type="text"
+        disabled={formData.sameAddress} // ✅ disable when checked
+        className="w-full p-2 border border-slate-300 rounded-md outline-none bg-gray-100"
+      />
+    </div>
+  </>
+)}
 
           {formData.rbfCriteria === "Yes" && (
             <div>
@@ -702,16 +818,41 @@ const DiksharthiDetailsAdd = () => {
               {errors.state && <p className="text-red-500 text-xs">{errors.state}</p>}
             </div>
           )}
-          {formData.rbfCriteria === "Yes" && (
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">RBF Assistance Received? <span className="text-red-500">*</span></label>
-              <div className="flex gap-4 mt-2">
-                <label className="flex items-center gap-2 cursor-pointer"><input type="radio" name="assistanceReceived" value="Yes" checked={formData.assistanceReceived === "Yes"} onChange={handleChange} /> Yes</label>
-                <label className="flex items-center gap-2 cursor-pointer"><input type="radio" name="assistanceReceived" value="No" checked={formData.assistanceReceived === "No"} onChange={handleChange} /> No</label>
-              </div>
-              {errors.assistanceReceived && <p className="text-red-500 text-xs">{errors.assistanceReceived}</p>}
-            </div>
-          )}
+         {formData.rbfCriteria === "Yes" && (
+  <div>
+    <label className="block text-sm font-medium text-slate-700 mb-1">
+      RBF Assistance Required ? <span className="text-red-500">*</span>
+    </label>
+
+    <div className="flex gap-4 mt-2">
+      <label className="flex items-center gap-2 cursor-pointer">
+        <input
+          type="radio"
+          name="assistanceReceived"
+          value="Yes"
+          checked={formData.assistanceReceived === "Yes"}
+          onChange={handleChange}
+        />
+        Yes
+      </label>
+
+      <label className="flex items-center gap-2 cursor-pointer">
+        <input
+          type="radio"
+          name="assistanceReceived"
+          value="No"
+          checked={formData.assistanceReceived === "No"}
+          onChange={handleChange}
+        />
+        No
+      </label>
+    </div>
+
+    {errors.assistanceReceived && (
+      <p className="text-red-500 text-xs">{errors.assistanceReceived}</p>
+    )}
+  </div>
+)}
 
           {formData.assistanceReceived === "Yes" && (
             <div>
