@@ -234,16 +234,6 @@ function AddDonor() {
       e.bloodGroup = "Blood Group required";
     }
 
-    // Required: Mother Tongue
-    if (showRequired && !data.motherTongue) {
-      e.motherTongue = "Mother Tongue required";
-    }
-
-    // Required: Native Place
-    if (showRequired && !data.nativePlace) {
-      e.nativePlace = "Native Place required";
-    }
-
     // Required: Aadhaar Number
     if (showRequired && !data.aadhaarNumber) {
       e.aadhaarNumber = "Aadhaar number required";
@@ -273,20 +263,7 @@ function AddDonor() {
       e.photo = "Photo upload is required";
     }
 
-    // Contact Person Details - Required
-    if (showRequired && !formData.contactPerson.contactPersonName) {
-      e.contactPersonName = "Contact person name is required";
-    }
-
-    if (showRequired && !formData.contactPerson.contactPersonMobile) {
-      e.contactPersonMobile = "Contact person mobile is required";
-    } else if (
-      formData.contactPerson.contactPersonMobile &&
-      !/^\d{10}$/.test(formData.contactPerson.contactPersonMobile)
-    ) {
-      e.contactPersonMobile = "Contact person mobile must be 10 digits";
-    }
-
+    
     // Residential Address - Required fields
     if (showRequired && !formData.residentialAddress.address1) {
       e.resAddress1 = "Residential address is required";
