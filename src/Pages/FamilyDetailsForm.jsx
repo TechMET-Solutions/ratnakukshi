@@ -498,46 +498,119 @@ const FamilyDetailsForm = () => {
   //     );
   //   }
   // };
-  const handleAssistanceCategory = (relation, category, isDeselect = false, reason = "") => {
+  // const handleAssistanceCategory = (relation, category, isDeselect = false, reason = "") => {
+  //   const lowerCategory = category.toLowerCase();
+
+  //   setRelationDetails((prev) => ({
+  //     ...prev,
+  //     [relation]: {
+  //       ...prev[relation],
+  //       assistanceCategories: isDeselect
+  //         ? (prev[relation]?.assistanceCategories || []).filter((c) => c !== category)
+  //         : prev[relation]?.assistanceCategories.includes(category)
+  //           ? prev[relation].assistanceCategories.filter((c) => c !== category)
+  //           : [...(prev[relation]?.assistanceCategories || []), category],
+  //     },
+  //   }));
+
+  //   const isDefault = defaultAssistance.map((i) => i.toLowerCase()).includes(lowerCategory);
+
+  //   // ✅ Only track EXTRA here
+  //   if (!isDefault) {
+  //     setselectedAssistance((prev) =>
+  //       isDeselect
+  //         ? prev.filter((c) => c !== category)
+  //         : prev.includes(category)
+  //           ? prev
+  //           : [...prev, category]
+  //     );
+  //   }
+
+  //   if (isDeselect) {
+  //     setDeselectedAssistance((prev) => [
+  //       ...prev.filter((item) => !(item.relation === relation && item.type === category)),
+  //       { relation, type: category, reason },
+  //     ]);
+  //   } else {
+  //     setDeselectedAssistance((prev) =>
+  //       prev.filter((item) => !(item.relation === relation && item.type === category))
+  //     );
+  //   }
+  // };
+  const handleAssistanceCategory = (
+    relation,
+    category,
+    isRemove = false,
+    reason = ""
+  ) => {
     const lowerCategory = category.toLowerCase();
 
-    setRelationDetails((prev) => ({
-      ...prev,
-      [relation]: {
-        ...prev[relation],
-        assistanceCategories: isDeselect
-          ? (prev[relation]?.assistanceCategories || []).filter((c) => c !== category)
-          : prev[relation]?.assistanceCategories.includes(category)
-            ? prev[relation].assistanceCategories.filter((c) => c !== category)
-            : [...(prev[relation]?.assistanceCategories || []), category],
-      },
-    }));
+    // ✅ Update relationDetails
+    setRelationDetails((prev) => {
+      const existing = prev[relation]?.assistanceCategories || [];
 
-    const isDefault = defaultAssistance.map((i) => i.toLowerCase()).includes(lowerCategory);
+      let updatedCategories;
 
-    // ✅ Only track EXTRA here
-    if (!isDefault) {
-      setselectedAssistance((prev) =>
-        isDeselect
-          ? prev.filter((c) => c !== category)
-          : prev.includes(category)
-            ? prev
-            : [...prev, category]
-      );
-    }
+      if (isRemove) {
+        updatedCategories = existing.filter(
+          (c) => c.toLowerCase() !== lowerCategory
+        );
+      } else {
+        const alreadyExists = existing.some(
+          (c) => c.toLowerCase() === lowerCategory
+        );
 
-    if (isDeselect) {
+        updatedCategories = alreadyExists
+          ? existing
+          : [...existing, category];
+      }
+
+      return {
+        ...prev,
+        [relation]: {
+          ...prev[relation],
+          assistanceCategories: updatedCategories,
+        },
+      };
+    });
+
+    // ✅ ALWAYS update selectedAssistance (FIXED)
+    setselectedAssistance((prev) => {
+      if (isRemove) {
+        return prev.filter(
+          (c) => c.toLowerCase() !== lowerCategory
+        );
+      } else {
+        return prev.some((c) => c.toLowerCase() === lowerCategory)
+          ? prev
+          : [...prev, category];
+      }
+    });
+
+    // ✅ Track deselection with reason
+    if (isRemove) {
       setDeselectedAssistance((prev) => [
-        ...prev.filter((item) => !(item.relation === relation && item.type === category)),
+        ...prev.filter(
+          (item) =>
+            !(
+              item.relation === relation &&
+              item.type.toLowerCase() === lowerCategory
+            )
+        ),
         { relation, type: category, reason },
       ]);
     } else {
       setDeselectedAssistance((prev) =>
-        prev.filter((item) => !(item.relation === relation && item.type === category))
+        prev.filter(
+          (item) =>
+            !(
+              item.relation === relation &&
+              item.type.toLowerCase() === lowerCategory
+            )
+        )
       );
     }
   };
-
 
   // Initialize Medical with one empty disease entry when Medical is selected
   // if (category === "Medical" && !assistanceData[relation]?.Medical?.diseases) {
@@ -1168,7 +1241,8 @@ const FamilyDetailsForm = () => {
         additionalRelations,
         expandedRelations,
         headOfFamily,
-        assistanceData: selectedAssistance,
+        selectedAssistance: selectedAssistance,
+        assistanceData: uploadedAssistanceData,
         assistance_data: uploadedAssistanceData,
       };
 
@@ -2278,42 +2352,141 @@ const FamilyDetailsForm = () => {
                                 );
                               })} */}
 
-                              {assistanceTypes.map((type) => {
+                              {/* {assistanceTypes.map((type) => {
                                 const lowerType = type.toLowerCase();
 
-                                const selectedCategories = (relationDetails[rel]?.assistanceCategories || []).map((item) =>
-                                  item.toLowerCase()
+                                const selectedCategories =
+                                  relationDetails[rel]?.assistanceCategories || [];
+
+                                const normalizedSelected = selectedCategories.map((i) =>
+                                  i.toLowerCase()
                                 );
 
-                                const defaultAssist = (defaultAssistance || []).map((item) => item.toLowerCase());
-                                const extraAssist = (selectedAssistance || []).map((item) => item.toLowerCase());
+                                const defaultAssist = (defaultAssistance || []).map((i) =>
+                                  i.toLowerCase()
+                                );
 
-                                const isSameRelation = rel?.toLowerCase() === selectedRelation?.toLowerCase();
+                                const extraAssist = (selectedAssistance || []).map((i) =>
+                                  i.toLowerCase()
+                                );
 
-                                // ✅ FINAL CHECK LOGIC
+                                const isSameRelation =
+                                  rel?.toLowerCase() === selectedRelation?.toLowerCase();
+
+                                // ✅ FINAL CHECK (IMPORTANT FIX)
                                 const isChecked =
-                                  selectedCategories.includes(lowerType) ||
+                                  normalizedSelected.includes(lowerType) ||
                                   (isSameRelation &&
-                                    (defaultAssist.includes(lowerType) || extraAssist.includes(lowerType)));
+                                    (defaultAssist.includes(lowerType) ||
+                                      extraAssist.includes(lowerType)) &&
+                                    !deselectedAssistance?.some(
+                                      (d) =>
+                                        d.relation === rel &&
+                                        d.type.toLowerCase() === lowerType
+                                    ));
 
                                 const handleCheckboxChange = (checked) => {
                                   const isDefault = defaultAssist.includes(lowerType);
 
                                   if (!checked && isSameRelation && isDefault) {
-                                    // 🚨 ONLY default → modal
+                                    // 🚨 open modal
                                     setDeselectData({ rel, type, reason: "" });
                                   } else {
-                                    // ✅ extra OR select → normal toggle
+                                    handleAssistanceCategory(rel, type, checked === true ? false : true);
+                                  }
+                                };
+
+                                return (
+                                  <label
+                                    key={type}
+                                    className="flex items-center gap-2 text-slate-700 cursor-pointer"
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      checked={isChecked}
+                                      onChange={(e) =>
+                                        handleCheckboxChange(e.target.checked)
+                                      }
+                                      className="w-4 h-4 border-slate-400 rounded"
+                                    />
+                                    <span>{type}</span>
+                                  </label>
+                                );
+                              })} */}
+
+                              {assistanceTypes.map((type) => {
+                                const lowerType = type.toLowerCase();
+
+                                // ✅ 1. Selected categories (state)
+                                const selectedCategories =
+                                  relationDetails[rel]?.assistanceCategories || [];
+
+                                const normalizedSelected = selectedCategories.map((i) =>
+                                  i.toLowerCase()
+                                );
+
+                                // ✅ 2. API data
+                                const relationKey =
+                                  assistanceData?.[rel]
+                                    ? rel
+                                    : rel?.toLowerCase();
+
+                                const assistanceFromAPI = Object.keys(
+                                  assistanceData?.[relationKey] || {}
+                                ).map((i) => i.toLowerCase());
+
+                                // ✅ 3. Default + Extra
+                                const defaultAssist = (defaultAssistance || []).map((i) =>
+                                  i.toLowerCase()
+                                );
+
+                                const extraAssist = (selectedAssistance || []).map((i) =>
+                                  i.toLowerCase()
+                                );
+
+                                const isSameRelation =
+                                  rel?.toLowerCase() === selectedRelation?.toLowerCase();
+
+                                // ✅ 4. Manual deselection (MOST IMPORTANT)
+                                const isManuallyRemoved = deselectedAssistance?.some(
+                                  (d) =>
+                                    d.relation === rel &&
+                                    d.type.toLowerCase() === lowerType
+                                );
+
+                                // ✅ 5. FINAL CHECK LOGIC (FIXED PRIORITY)
+                                const isChecked =
+                                  !isManuallyRemoved && (
+                                    normalizedSelected.includes(lowerType) || // state
+                                    assistanceFromAPI.includes(lowerType) || // API
+                                    (isSameRelation &&
+                                      (defaultAssist.includes(lowerType) ||
+                                        extraAssist.includes(lowerType)))
+                                  );
+
+                                // ✅ 6. HANDLE CHANGE (CLEAN)
+                                const handleCheckboxChange = (checked) => {
+                                  const isDefault = defaultAssist.includes(lowerType);
+
+                                  if (!checked && isSameRelation && isDefault) {
+                                    // 🚨 open modal for default
+                                    setDeselectData({ rel, type, reason: "" });
+                                  } else {
                                     handleAssistanceCategory(rel, type, !checked);
                                   }
                                 };
 
                                 return (
-                                  <label key={type} className="flex items-center gap-2 text-slate-700 cursor-pointer">
+                                  <label
+                                    key={type}
+                                    className="flex items-center gap-2 text-slate-700 cursor-pointer"
+                                  >
                                     <input
                                       type="checkbox"
                                       checked={isChecked}
-                                      onChange={(e) => handleCheckboxChange(e.target.checked)}
+                                      onChange={(e) =>
+                                        handleCheckboxChange(e.target.checked)
+                                      }
                                       className="w-4 h-4 border-slate-400 rounded"
                                     />
                                     <span>{type}</span>
@@ -2322,116 +2495,44 @@ const FamilyDetailsForm = () => {
                               })}
                             </div>
                             {deselectData && (
-                              // <div className="fixed inset-0 flex items-center justify-center bg-black/30">
-                              //   <div className="bg-white p-6 rounded shadow-lg w-96">
-                              //     <h3 className="text-lg font-semibold mb-4">Reason for Deselecting</h3>
-                              //     .
-                              //     <p className="mb-2">
-                              //       Relation: {deselectData.rel}, Assistance: {deselectData.type}
-                              //     </p>
-                              //     <textarea
-                              //       className="w-full border rounded p-2 mb-4"
-                              //       value={deselectData.reason}
-                              //       onChange={(e) =>
-                              //         setDeselectData((prev) => ({ ...prev, reason: e.target.value }))
-                              //       }
-                              //       placeholder="Enter reason"
-                              //     />
-                              //     <div className="flex justify-end gap-2">
-                              //       <button
-                              //         onClick={() => setDeselectData(null)}
-                              //         className="px-4 py-2 bg-gray-200 rounded"
-                              //       >
-                              //         Cancel
-                              //       </button>
-                              //       <button
-                              //         onClick={() => {
-                              //           if (!deselectData.reason.trim()) {
-                              //             alert("Please provide a reason before deselecting");
-                              //             return;
-                              //           }
-
-                              //           // Pass the reason here
-                              //           handleAssistanceCategory(
-                              //             deselectData.rel,
-                              //             deselectData.type,
-                              //             true,              // isDeselect
-                              //             deselectData.reason // reason
-                              //           );
-
-                              //           setDeselectData(null); // close modal
-                              //         }}
-                              //         className="px-4 py-2 bg-blue-600 text-white rounded"
-                              //       >
-                              //         Submit
-                              //       </button>
-                              //     </div>
-                              //   </div>
-                              // </div>
-
                               <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-                                <div className="bg-white w-full max-w-md rounded-2xl shadow-xl p-6 animate-fadeIn">
+                                <div className="bg-white w-full max-w-md rounded-2xl shadow-xl p-6">
 
-                                  {/* Header */}
-                                  <div className="flex items-center justify-between mb-4">
-                                    <h3 className="text-lg font-semibold text-gray-800">
+                                  <div className="flex justify-between mb-4">
+                                    <h3 className="text-lg font-semibold">
                                       Reason for Deselecting
                                     </h3>
-                                    <button
-                                      onClick={() => setDeselectData(null)}
-                                      className="text-gray-400 hover:text-gray-600 text-xl"
-                                    >
-                                      ✕
-                                    </button>
+                                    <button onClick={() => setDeselectData(null)}>✕</button>
                                   </div>
 
-                                  {/* Info Box */}
-                                  <div className="">
-                                    <p>
-                                      <span className="font-medium text-gray-600">Relation:</span>{" "}
-                                      <span className="text-gray-800">{deselectData.rel}</span>
-                                    </p>
-                                    <p>
-                                      <span className="font-medium text-gray-600">Assistance:</span>{" "}
-                                      <span className="text-gray-800">{deselectData.type}</span>
-                                    </p>
-                                  </div>
+                                  <p><b>Relation:</b> {deselectData.rel}</p>
+                                  <p><b>Assistance:</b> {deselectData.type}</p>
 
-                                  {/* Textarea */}
-                                  <div className="my-6">
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                      Enter Reason <span className="text-red-500">*</span>
-                                    </label>
-                                    <textarea
-                                      rows={4}
-                                      className="w-full border border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                      value={deselectData.reason}
-                                      onChange={(e) =>
-                                        setDeselectData((prev) => ({
-                                          ...prev,
-                                          reason: e.target.value,
-                                        }))
-                                      }
-                                      placeholder="Enter reason for deselecting..."
-                                    />
-                                  </div>
+                                  <textarea
+                                    className="w-full border p-2 mt-4"
+                                    value={deselectData.reason}
+                                    onChange={(e) =>
+                                      setDeselectData((prev) => ({
+                                        ...prev,
+                                        reason: e.target.value,
+                                      }))
+                                    }
+                                    placeholder="Enter reason..."
+                                  />
 
-                                  {/* Buttons */}
-                                  <div className="flex justify-end gap-3">
-                                    <button
-                                      onClick={() => setDeselectData(null)}
-                                      className="px-4 py-2 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-100 transition"
-                                    >
+                                  <div className="flex justify-end gap-3 mt-4">
+                                    <button onClick={() => setDeselectData(null)}>
                                       Cancel
                                     </button>
 
                                     <button
                                       onClick={() => {
                                         if (!deselectData.reason.trim()) {
-                                          alert("Please provide a reason before deselecting");
+                                          alert("Please provide a reason");
                                           return;
                                         }
 
+                                        // ✅ FIXED: REMOVE (true means remove)
                                         handleAssistanceCategory(
                                           deselectData.rel,
                                           deselectData.type,
@@ -2441,7 +2542,7 @@ const FamilyDetailsForm = () => {
 
                                         setDeselectData(null);
                                       }}
-                                      className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition"
+                                      className="bg-blue-600 text-white px-4 py-2 rounded"
                                     >
                                       Submit
                                     </button>
