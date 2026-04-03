@@ -88,6 +88,8 @@ const mapDiksharthiToFormData = (record) => ({
   taluka: record?.taluka || "",
   district: record?.district || "",
   state: record?.state || "",
+  assistance: record?.assistance,
+  deselected_assistance: record?.deselected_assistance,
   pinCode: record?.pinCode || record?.pin_code || "",
   family_relation: String(record?.family_relation || "")
     .split(",")
@@ -125,9 +127,6 @@ const mapFormDataToApiPayload = (formData, userId) => ({
   district: formData.district,
   state: formData.state,
   pin_code: formData.pinCode,
-  // family_relation: Array.isArray(formData.family_relation)
-  //   ? formData.family_relation.join(",")
-  //   : formData.family_relation || "",
   assistance: formData.assistance,
   assistance_received: formData.assistanceReceived,
   summary: formData.summary,
@@ -145,9 +144,11 @@ const DiksharthiDetailsAdd = () => {
   const isEditMode = Boolean(editId);
 
   const [photo, setPhoto] = useState(null);
+  const [uploadDoc, setUploadDoc] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [savedId, setSavedId] = useState("");
   const [formData, setFormData] = useState(initialFormData);
+  console.log(formData, "formData")
   const [isEditLoading, setIsEditLoading] = useState(false);
   const navigate = useNavigate();
   const [errors, setErrors] = useState({});
@@ -382,6 +383,7 @@ const DiksharthiDetailsAdd = () => {
         data.append(key, value ?? "");
       });
       if (photo) data.append("photo", photo);
+      if (uploadDoc) data.append("uploadDoc", uploadDoc);
 
       const response = isEditMode
         ? await axios.put(`${API}/api/update-diksharthi/${editId}`, data)
@@ -396,6 +398,16 @@ const DiksharthiDetailsAdd = () => {
       alert("Error saving data");
     }
   };
+
+  const filteredRelations = RELATIONS.filter((item) => {
+    if (formData.gender === "Sadhu" && item.value === "husband") {
+      return false;
+    }
+    if (formData.gender === "Sadhvi" && item.value === "wife") {
+      return false;
+    }
+    return true;
+  });
 
   return (
     <div className="min-h-full bg-gray-50 flex p-6 justify-center">
@@ -550,7 +562,7 @@ const DiksharthiDetailsAdd = () => {
                 className="w-full p-2 border border-slate-300 rounded-md outline-none"
               >
                 <option value="">Select Relation</option>
-                {RELATIONS.map((item) => (
+                {filteredRelations.map((item) => (
                   <option key={item.value} value={item.value}>
                     {item.label}
                   </option>
@@ -787,6 +799,18 @@ const DiksharthiDetailsAdd = () => {
               </div>
             </div>
           )}
+
+          {formData.assistanceReceived === "Yes" && (
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Upload Documents</label>
+              <input
+                type="file"
+                accept=".png, .jpg, .jpeg"
+                onChange={(e) => setUploadDoc(e.target.files[0])}
+                className="w-full p-2 border border-slate-300 rounded-md" />
+            </div>
+          )}
         </div>
 
 
@@ -804,6 +828,36 @@ const DiksharthiDetailsAdd = () => {
               }))
             }
           />
+        </div>
+
+        <div className="col-span-4 mt-2">
+          <label className="block text-sm font-medium text-slate-700 mb-1 ">
+            Assistance Reasons
+          </label>
+
+          {formData?.deselected_assistance?.length > 0 ? (
+            <div className="space-y-2">
+              {/* Summary Message */}
+              <p className="text-sm text-red-500">
+                The Karyakarta has deselected assistance for the following reason(s):
+              </p>
+
+              {/* List */}
+              <ul className="list-disc pl-5 text-sm text-red-500">
+                {formData.deselected_assistance.map((item, index) => (
+                  <li key={index} className="leading-relaxed">
+                    <span className="font-semibold">{item.type}</span>{" "}
+                    — {item.reason}{" "}
+                    <span className="text-red-500">({item.relation})</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : (
+            <p className="text-sm text-slate-400 italic">
+              No assistance reasons selected.
+            </p>
+          )}
         </div>
 
 

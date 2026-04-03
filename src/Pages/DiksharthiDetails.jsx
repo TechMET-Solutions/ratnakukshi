@@ -661,7 +661,7 @@ const DiksharthiListing = () => {
     }
   };
 
- const [selectedRows, setSelectedRows] = useState([]);
+  const [selectedRows, setSelectedRows] = useState([]);
 
   const getSelectedData = () => {
     const selectedIdSet = new Set(selectedRows.map((id) => String(id)));
@@ -869,11 +869,11 @@ const DiksharthiListing = () => {
       {/* Header Section */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-slate-700">
-          {role === "staff" ? "Diksharthi Details" : "Family Details"}
+          {role === "staff" ? "Add Basic Family Member Details and MS Details" : "Family Details"}
         </h1>
         {role === "staff" && (
           <div className="flex gap-6">
-          
+
             <button
               onClick={downloadFormattedExcel}
               className="bg-green-600 text-white px-4 py-2 rounded-md"
@@ -998,19 +998,21 @@ const DiksharthiListing = () => {
                 return (
                   <tr key={diksharthi.id} className="border-b border-gray-100">
                     {/* Photo */}
-                    <td className="px-6 py-3">
-                      <input
-                        type="checkbox"
-                        checked={selectedRows.includes(diksharthi.id)}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setSelectedRows((prev) => [...new Set([...prev, diksharthi.id])]);
-                          } else {
-                            setSelectedRows((prev) => prev.filter((id) => id !== diksharthi.id));
-                          }
-                        }}
-                      />
-                    </td>
+                    {role === "staff" && (
+                      <td className="px-6 py-3">
+                        <input
+                          type="checkbox"
+                          checked={selectedRows.includes(diksharthi.id)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedRows((prev) => [...new Set([...prev, diksharthi.id])]);
+                            } else {
+                              setSelectedRows((prev) => prev.filter((id) => id !== diksharthi.id));
+                            }
+                          }}
+                        />
+                      </td>
+                    )}
 
                     {/* Date */}
                     <td className="px-6 py-3">{formatIndianDate(diksharthi.created_at)}</td>
@@ -1050,7 +1052,7 @@ const DiksharthiListing = () => {
 
                     {/* Actions */}
                     <td className="px-6 py-3 flex gap-3 flex-wrap">
-                     
+
 
                       {/* ================= STAFF ================= */}
                       {role === "staff" && (
@@ -1364,6 +1366,23 @@ const DiksharthiListing = () => {
                         <div className="inline-block bg-gray-100 px-3 py-1 rounded-full">
                           <span className="text-sm font-medium text-gray-600">ID: {viewModalData?.id || "-"}</span>
                         </div>
+                        {(viewModalData?.rbf_criteria === "Yes" || viewModalData?.rbfCriteria === "Yes") && (
+                          <>
+                            <DetailItem label="RBF Relation" value={viewModalData?.relation || "N/A"} />
+                            <DetailItem label="Relation Name" value={
+                              viewModalData?.family_member_name ||
+                              `${viewModalData?.family_member_firstName || ""} ${viewModalData?.family_member_lastName || ""}`.trim() ||
+                              viewModalData?.relation_name ||
+                              viewModalData?.relationName ||
+                              "N/A"
+                            } />
+                            <DetailItem label="Assistance Received" value={viewModalData?.assistance_received || "N/A"} />
+                            <DetailItem label="Family Relation" value={viewModalData?.family_relation || "N/A"} />
+                          </>
+                        )}
+
+                        <DetailItem label="Mobile No" value={viewModalData?.mobile_no} />
+                        <DetailItem label="Alt Mobile No" value={viewModalData?.alt_mobile_no} />
                       </div>
 
                       {/* Image Section */}
@@ -1405,6 +1424,14 @@ const DiksharthiListing = () => {
                       <DetailItem label="District" value={viewModalData?.district} />
                       <DetailItem label="State" value={viewModalData?.state} />
                       <DetailItem label="Pin Code" value={viewModalData?.pin_code} />
+                      <DetailItem
+                        label="Deselected Assistance"
+                        value={
+                          viewModalData?.deselected_assistance
+                            ?.map(item => `${item.type} (${item.reason})`)
+                            .join(", ") || "-"
+                        }
+                      />
 
                       {/* RBF Fields */}
                       <DetailItem label="RBF Criteria" value={viewModalData?.rbf_criteria || viewModalData?.rbfCriteria || "No"} />
@@ -1596,34 +1623,34 @@ const DiksharthiListing = () => {
               ) : viewScheduleModalData?.schedule ? (
                 <>
                   <p>
-                      <span className="font-semibold">Diksharthi Name:</span>{" "}
+                    <span className="font-semibold">Diksharthi Name:</span>{" "}
                     {viewScheduleModalData.diksharthi?.sadhu_sadhvi_name ||
                       viewScheduleModalData.diksharthi?.sadhu_sadhvi_name ||
                       "-"}
                   </p>
                   <p>
                     <span className="font-semibold">Family Head Name:</span>{" "}
-                      {viewScheduleModalData.diksharthi?.family_member_firstName ||
-                        viewScheduleModalData.diksharthi?.family_member_firstName ||
-                        "-"} { " "}
-                      {viewScheduleModalData.diksharthi?.family_member_lastName ||
-                        viewScheduleModalData.diksharthi?.family_member_lastName ||
+                    {viewScheduleModalData.diksharthi?.family_member_firstName ||
+                      viewScheduleModalData.diksharthi?.family_member_firstName ||
+                      "-"} {" "}
+                    {viewScheduleModalData.diksharthi?.family_member_lastName ||
+                      viewScheduleModalData.diksharthi?.family_member_lastName ||
                       "-"}
                   </p>
                   <p>
                     <span className="font-semibold">Contact No:</span>{" "}
-                      {viewScheduleModalData.diksharthi?.mobile_no ||
-                        viewScheduleModalData.diksharthi?.mobile_no ||
-                        "-"} { " | "}
-                      {viewScheduleModalData.diksharthi?.alt_mobile_no ||
-                        viewScheduleModalData.diksharthi?.alt_mobile_no ||
+                    {viewScheduleModalData.diksharthi?.mobile_no ||
+                      viewScheduleModalData.diksharthi?.mobile_no ||
+                      "-"} {" | "}
+                    {viewScheduleModalData.diksharthi?.alt_mobile_no ||
+                      viewScheduleModalData.diksharthi?.alt_mobile_no ||
                       "-"}
                   </p>
                   <p>
                     <span className="font-semibold">Address:</span>{" "}
-                      {viewScheduleModalData.diksharthi?.current_address ||
-                        viewScheduleModalData.diksharthi?.current_address ||
-                        "-"}
+                    {viewScheduleModalData.diksharthi?.current_address ||
+                      viewScheduleModalData.diksharthi?.current_address ||
+                      "-"}
                   </p>
                   <p>
                     <span className="font-semibold">Date:</span>{" "}

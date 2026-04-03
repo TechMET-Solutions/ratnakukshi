@@ -51,8 +51,8 @@ const FamilyDetailsForm = () => {
   const selectedRelations = Array.isArray(formData?.relations)
     ? formData.relations
     : [];
-  
-  console.log(selectedRelations,"--------selectedRelations------------")
+
+  console.log(selectedRelations, "--------selectedRelations------------")
   const allowRelationEditing = false;
 
   const [deselectData, setDeselectData] = useState(null);
@@ -60,6 +60,7 @@ const FamilyDetailsForm = () => {
 
   console.log(formData, "formData");
   const [relationDetails, setRelationDetails] = useState({});
+  console.log(relationDetails, "relationDetails")
   const [selectedRelation, setSelectedRelation] = useState(null);
   console.log(relationDetails, "relationDetails", selectedRelation, "selectedRelation");
   const [expandedRelations, setExpandedRelations] = useState({});
@@ -75,11 +76,14 @@ const FamilyDetailsForm = () => {
     "LivelihoodExpenses",
   ]);
 
-  const [showReasonModal, setShowReasonModal] = useState(false);
-  const [reasonFor, setReasonFor] = useState({ relation: "", type: "" });
-  const [reasonText, setReasonText] = useState("");
+  ;
   const [additionalRelations, setAdditionalRelations] = useState({});
+  const [deselectedAssistance, setDeselectedAssistance] = useState([]);
+  const [extraAssistance, setExtraAssistance] = useState([]);
 
+
+
+  console.log(deselectedAssistance, "deselectedAssistance")
   const handleAddDocument = (rel) => {
     const prevDocs = assistanceData[rel]?.Medical?.medicalDocuments || [];
 
@@ -408,40 +412,154 @@ const FamilyDetailsForm = () => {
     }
   };
 
-  const handleAssistanceCategory = (relation, category) => {
+  // const handleAssistanceCategory = (relation, category, isDeselect = false) => {
+  //   setRelationDetails((prev) => ({
+  //     ...prev,
+  //     [relation]: {
+  //       ...prev[relation],
+  //       assistanceCategories: isDeselect
+  //         ? (prev[relation]?.assistanceCategories || []).filter((c) => c !== category)
+  //         : prev[relation]?.assistanceCategories.includes(category)
+  //           ? prev[relation].assistanceCategories.filter((c) => c !== category)
+  //           : [...(prev[relation]?.assistanceCategories || []), category],
+  //     },
+  //   }));
+
+  //   setselectedAssistance((prev) =>
+  //     isDeselect ? prev.filter((c) => c !== category) : prev.includes(category) ? prev : [...prev, category]
+  //   );
+  // };
+
+  // const handleAssistanceCategory = (relation, category, isDeselect = false, reason = "") => {
+  //   debugger
+  //   setRelationDetails((prev) => ({
+  //     ...prev,
+  //     [relation]: {
+  //       ...prev[relation],
+  //       assistanceCategories: isDeselect
+  //         ? (prev[relation]?.assistanceCategories || []).filter((c) => c !== category)
+  //         : prev[relation]?.assistanceCategories.includes(category)
+  //           ? prev[relation].assistanceCategories.filter((c) => c !== category)
+  //           : [...(prev[relation]?.assistanceCategories || []), category],
+  //     },
+  //   }));
+
+  //   setselectedAssistance((prev) =>
+  //     isDeselect ? prev.filter((c) => c !== category) : prev.includes(category) ? prev : [...prev, category]
+  //   );
+
+  //   if (isDeselect) {
+  //     // Add to deselectedAssistance with reason
+  //     setDeselectedAssistance((prev) => [
+  //       ...prev.filter((item) => !(item.relation === relation && item.type === category)), // remove old if exists
+  //       { relation, type: category, reason },
+  //     ]);
+  //   } else {
+  //     // Remove from deselectedAssistance if user re-selects
+  //     setDeselectedAssistance((prev) =>
+  //       prev.filter((item) => !(item.relation === relation && item.type === category))
+  //     );
+  //   }
+  // };
+
+  // const handleAssistanceCategory = (relation, category, isDeselect = false, reason = "") => {
+  //   setRelationDetails((prev) => ({
+  //     ...prev,
+  //     [relation]: {
+  //       ...prev[relation],
+  //       assistanceCategories: isDeselect
+  //         ? (prev[relation]?.assistanceCategories || []).filter((c) => c !== category)
+  //         : prev[relation]?.assistanceCategories.includes(category)
+  //           ? prev[relation].assistanceCategories.filter((c) => c !== category)
+  //           : [...(prev[relation]?.assistanceCategories || []), category],
+  //     },
+  //   }));
+
+  //   setselectedAssistance((prev) =>
+  //     isDeselect ? prev.filter((c) => c !== category) : prev.includes(category) ? prev : [...prev, category]
+  //   );
+
+  //   if (isDeselect) {
+  //     // remove from extra if user unchecks
+  //     setExtraAssistance((prev) => prev.filter((c) => c !== category));
+
+  //     setDeselectedAssistance((prev) => [
+  //       ...prev.filter((item) => !(item.relation === relation && item.type === category)),
+  //       { relation, type: category, reason },
+  //     ]);
+  //   } else {
+  //     // 👉 ADD to extra ONLY if it's NOT default
+  //     if (!initialAssistance.includes(category.toLowerCase())) {
+  //       setExtraAssistance((prev) => [...prev, category]);
+  //     }
+
+  //     setDeselectedAssistance((prev) =>
+  //       prev.filter((item) => !(item.relation === relation && item.type === category))
+  //     );
+  //   }
+  // };
+  const handleAssistanceCategory = (relation, category, isDeselect = false, reason = "") => {
+    const lowerCategory = category.toLowerCase();
+
     setRelationDetails((prev) => ({
       ...prev,
       [relation]: {
         ...prev[relation],
-        assistanceCategories: prev[relation]?.assistanceCategories.includes(
-          category,
-        )
-          ? prev[relation].assistanceCategories.filter((c) => c !== category)
-          : [...(prev[relation]?.assistanceCategories || []), category],
+        assistanceCategories: isDeselect
+          ? (prev[relation]?.assistanceCategories || []).filter((c) => c !== category)
+          : prev[relation]?.assistanceCategories.includes(category)
+            ? prev[relation].assistanceCategories.filter((c) => c !== category)
+            : [...(prev[relation]?.assistanceCategories || []), category],
       },
     }));
 
-    // Initialize Medical with one empty disease entry when Medical is selected
-    // if (category === "Medical" && !assistanceData[relation]?.Medical?.diseases) {
-    //   setAssistanceData((prev) => ({
-    //     ...prev,
-    //     [relation]: {
-    //       ...prev[relation],
-    //       Medical: {
-    //         ...prev[relation]?.Medical,
-    //         diseases: [
-    //           {
-    //             diseaseName: "",
-    //             frequency: "",
-    //             sessions: "",
-    //             costPerSession: "",
-    //           },
-    //         ],
-    //       },
-    //     },
-    //   }));
-    // }
+    const isDefault = defaultAssistance.map((i) => i.toLowerCase()).includes(lowerCategory);
+
+    // ✅ Only track EXTRA here
+    if (!isDefault) {
+      setselectedAssistance((prev) =>
+        isDeselect
+          ? prev.filter((c) => c !== category)
+          : prev.includes(category)
+            ? prev
+            : [...prev, category]
+      );
+    }
+
+    if (isDeselect) {
+      setDeselectedAssistance((prev) => [
+        ...prev.filter((item) => !(item.relation === relation && item.type === category)),
+        { relation, type: category, reason },
+      ]);
+    } else {
+      setDeselectedAssistance((prev) =>
+        prev.filter((item) => !(item.relation === relation && item.type === category))
+      );
+    }
   };
+
+
+  // Initialize Medical with one empty disease entry when Medical is selected
+  // if (category === "Medical" && !assistanceData[relation]?.Medical?.diseases) {
+  //   setAssistanceData((prev) => ({
+  //     ...prev,
+  //     [relation]: {
+  //       ...prev[relation],
+  //       Medical: {
+  //         ...prev[relation]?.Medical,
+  //         diseases: [
+  //           {
+  //             diseaseName: "",
+  //             frequency: "",
+  //             sessions: "",
+  //             costPerSession: "",
+  //           },
+  //         ],
+  //       },
+  //     },
+  //   }));
+  // }
+
 
   const handleAddRelationRow = (baseRelation) => {
     const relationType = baseRelation;
@@ -532,7 +650,7 @@ const FamilyDetailsForm = () => {
 
   const [assistanceData, setAssistanceData] = useState({});
   const [selectedAssistance, setselectedAssistance] = useState({});
-
+  const [defaultAssistance, setdefaultAssisatce] = useState({});
   console.log(selectedAssistance, "selectedAssistance")
   console.log(assistanceData, "assistanceData");
 
@@ -886,6 +1004,15 @@ const FamilyDetailsForm = () => {
             photo: relationDetailsRaw[key]?.photo || "",
             ayushman: relationDetailsRaw[key]?.ayushman || null,
             mediclaim: relationDetailsRaw[key]?.mediclaim || null,
+            ayushman_Amount: relationDetailsRaw[key]?.amount || null,
+            mediclaim_amount: relationDetailsRaw[key]?.mediclaimAmount || null,
+            member_mediclaim_premium_amount: relationDetailsRaw[key]?.mediclaimPremiumAmount || null,
+            mediclaim_company_name: relationDetailsRaw[key]?.mediclaimCompanyName || null,
+            mediclaim_type: relationDetailsRaw[key]?.mediclaim_type || null,
+            // "mediclaimAmount": "1500",
+            // "mediclaimCompanyName": "uyhgtfd",
+            // "mediclaimPremiumAmount": "1000",
+
             needAssistance: relationDetailsRaw[key]?.needAssistance || null,
             family_head: relationDetailsRaw[key]?.family_head || false,
             assistanceCategories: relationDetailsRaw[key]?.assistanceCategories || [],
@@ -923,6 +1050,7 @@ const FamilyDetailsForm = () => {
         setHeadOfFamily(apiHead);
         setAssistanceData(normalizedAssistanceData);
         setselectedAssistance(selectedAssistance);
+        setdefaultAssisatce(selectedAssistance)
         setSelectedRelation(formattedRelation); // default selected
         setExpandedRelations(expanded);
         setFamilyRecordId(familyData?.id ?? null);
@@ -962,6 +1090,7 @@ const FamilyDetailsForm = () => {
     );
 
   const handleSave = async () => {
+    debugger
     if (loading) return;
     setLoading(true);
     try {
@@ -1035,10 +1164,11 @@ const FamilyDetailsForm = () => {
         diksharthi_id: id,
         formData,
         relationDetails: uploadedRelationDetails,
+        deselectedAssistance: deselectedAssistance,
         additionalRelations,
         expandedRelations,
         headOfFamily,
-        assistanceData: uploadedAssistanceData,
+        assistanceData: selectedAssistance,
         assistance_data: uploadedAssistanceData,
       };
 
@@ -1126,6 +1256,23 @@ const FamilyDetailsForm = () => {
         },
       };
     });
+  };
+
+  const calculateMedicalTotal = (medical) => {
+    if (!medical?.diseases) return 0;
+
+    return medical.diseases.reduce((total, disease) => {
+      return total + (disease.totalEstimatedCost || 0);
+    }, 0);
+  };
+
+  const calculateDiseaseTotal = (disease) => {
+    if (!disease) return 0;
+
+    const costPerSession = Number(disease.costPerSession || 0);
+    const sessionsCount = Number(disease.sessionsCount || 0);
+
+    return costPerSession * sessionsCount;
   };
 
   const handleDiseaseChange = (relation, index, field, value) => {
@@ -1826,32 +1973,23 @@ const FamilyDetailsForm = () => {
                                 <input
                                   type="radio"
                                   name={`ayushman-${rel}`}
-                                  checked={
-                                    relationDetails[rel]?.ayushman === true
-                                  }
+                                  value="true"
+                                  checked={String(relationDetails?.[rel]?.ayushman) === "true"}
                                   onChange={() =>
-                                    handleRelationDetailChange(
-                                      rel,
-                                      "ayushman",
-                                      true,
-                                    )
+                                    handleRelationDetailChange(rel, "ayushman", true)
                                   }
                                 />
                                 Yes
                               </label>
+
                               <label className="flex items-center gap-2">
                                 <input
                                   type="radio"
                                   name={`ayushman-${rel}`}
-                                  checked={
-                                    relationDetails[rel]?.ayushman === false
-                                  }
+                                  value="false"
+                                  checked={String(relationDetails?.[rel]?.ayushman) === "false"}
                                   onChange={() =>
-                                    handleRelationDetailChange(
-                                      rel,
-                                      "ayushman",
-                                      false,
-                                    )
+                                    handleRelationDetailChange(rel, "ayushman", false)
                                   }
                                 />
                                 No
@@ -1962,7 +2100,7 @@ const FamilyDetailsForm = () => {
                                 <span className="text-red-500">*</span>
                               </label>
                               <input
-                                type="text"
+                                type="number"
                                 value={
                                   relationDetails[rel]?.ayushman_Amount || ""
                                 }
@@ -1981,11 +2119,11 @@ const FamilyDetailsForm = () => {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                               <div className="w-[200px]">
                                 <label className="block text-sm font-medium text-slate-700 mb-1">
-                                  mediclaim Amount
+                                  Mediclaim Amount
                                   <span className="text-red-500">*</span>
                                 </label>
                                 <input
-                                  type="text"
+                                  type="number"
                                   value={
                                     relationDetails[rel]?.mediclaim_amount || ""
                                   }
@@ -1999,26 +2137,81 @@ const FamilyDetailsForm = () => {
                                   className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                                 />
                               </div>
-                              {/* <div className="w-[200px]">
+                              <div className="w-[200px]">
                                 <label className="block text-sm font-medium text-slate-700 mb-1">
-                                  Yearly Premium
+                                  Yearly Premium Amount
+                                  <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                  type="number"
+                                  value={
+                                    relationDetails[rel]?.member_mediclaim_premium_amount || ""
+                                  }
+                                  onChange={(e) => {
+                                    const premium = Number(e.target.value);
+                                    const mediclaim = Number(
+                                      relationDetails[rel]?.mediclaim_amount
+                                    );
+
+                                    // Prevent equal OR greater
+                                    if (premium >= mediclaim) {
+                                      alert("Yearly premium must be less than mediclaim amount");
+                                      return;
+                                    }
+
+                                    handleRelationDetailChange(
+                                      rel,
+                                      "member_mediclaim_premium_amount",
+                                      e.target.value
+                                    );
+                                  }}
+                                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
+                                />
+                              </div>
+                              <div className="w-[200px]">
+                                <label className="block text-sm font-medium text-slate-700 mb-1">
+                                  Mediclaim Compnay Name
                                   <span className="text-red-500">*</span>
                                 </label>
                                 <input
                                   type="text"
                                   value={
-                                    relationDetails[rel]?.mediclaim_yearly_premium || ""
+                                    relationDetails[rel]?.mediclaim_company_name || ""
                                   }
                                   onChange={(e) =>
                                     handleRelationDetailChange(
                                       rel,
-                                      "mediclaim_yearly_premium",
+                                      "mediclaim_company_name",
                                       e.target.value,
                                     )
                                   }
                                   className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                                 />
-                              </div> */}
+                              </div>
+                              <div className="w-[200px]">
+                                <label className="block text-sm font-medium text-slate-700 mb-1">
+                                  Mediclaim Type
+                                  <span className="text-red-500">*</span>
+                                </label>
+                                <select
+                                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
+                                  value={
+                                    relationDetails[rel]?.mediclaim_type || ""
+                                  }
+                                  onChange={(e) =>
+                                    handleRelationDetailChange(
+                                      rel,
+                                      "mediclaim_type",
+                                      e.target.value,
+                                    )
+                                  }
+                                >
+                                  <option value="">Select Type</option>
+                                  <option value="single">Single</option>
+                                  <option value="joint">Joint</option>
+                                </select>
+                              </div>
+
                             </div>
                           )}
                         </div>
@@ -2086,22 +2279,32 @@ const FamilyDetailsForm = () => {
                               })} */}
 
                               {assistanceTypes.map((type) => {
+                                const lowerType = type.toLowerCase();
+
                                 const selectedCategories = (relationDetails[rel]?.assistanceCategories || []).map((item) =>
                                   item.toLowerCase()
                                 );
-                                const defaultAssist = (selectedAssistance || []).map((item) => item.toLowerCase());
+
+                                const defaultAssist = (defaultAssistance || []).map((item) => item.toLowerCase());
+                                const extraAssist = (selectedAssistance || []).map((item) => item.toLowerCase());
+
                                 const isSameRelation = rel?.toLowerCase() === selectedRelation?.toLowerCase();
 
+                                // ✅ FINAL CHECK LOGIC
                                 const isChecked =
-                                  selectedCategories.includes(type.toLowerCase()) ||
-                                  (isSameRelation && defaultAssist.includes(type.toLowerCase()));
+                                  selectedCategories.includes(lowerType) ||
+                                  (isSameRelation &&
+                                    (defaultAssist.includes(lowerType) || extraAssist.includes(lowerType)));
 
                                 const handleCheckboxChange = (checked) => {
-                                  if (!checked && isSameRelation && defaultAssist.includes(type.toLowerCase())) {
-                                    // Open modal for deselect reason
+                                  const isDefault = defaultAssist.includes(lowerType);
+
+                                  if (!checked && isSameRelation && isDefault) {
+                                    // 🚨 ONLY default → modal
                                     setDeselectData({ rel, type, reason: "" });
                                   } else {
-                                    handleAssistanceCategory(rel, type);
+                                    // ✅ extra OR select → normal toggle
+                                    handleAssistanceCategory(rel, type, !checked);
                                   }
                                 };
 
@@ -2119,38 +2322,126 @@ const FamilyDetailsForm = () => {
                               })}
                             </div>
                             {deselectData && (
-                              <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30">
-                                <div className="bg-white p-6 rounded shadow-lg w-96">
-                                  <h3 className="text-lg font-semibold mb-4">Reason for Deselecting</h3>
-                                  <p className="mb-2">
-                                    Relation: {deselectData.rel}, Assistance: {deselectData.type}
-                                  </p>
-                                  <textarea
-                                    className="w-full border rounded p-2 mb-4"
-                                    value={deselectData.reason}
-                                    onChange={(e) =>
-                                      setDeselectData((prev) => ({ ...prev, reason: e.target.value }))
-                                    }
-                                    placeholder="Enter reason"
-                                  />
-                                  <div className="flex justify-end gap-2">
+                              // <div className="fixed inset-0 flex items-center justify-center bg-black/30">
+                              //   <div className="bg-white p-6 rounded shadow-lg w-96">
+                              //     <h3 className="text-lg font-semibold mb-4">Reason for Deselecting</h3>
+                              //     .
+                              //     <p className="mb-2">
+                              //       Relation: {deselectData.rel}, Assistance: {deselectData.type}
+                              //     </p>
+                              //     <textarea
+                              //       className="w-full border rounded p-2 mb-4"
+                              //       value={deselectData.reason}
+                              //       onChange={(e) =>
+                              //         setDeselectData((prev) => ({ ...prev, reason: e.target.value }))
+                              //       }
+                              //       placeholder="Enter reason"
+                              //     />
+                              //     <div className="flex justify-end gap-2">
+                              //       <button
+                              //         onClick={() => setDeselectData(null)}
+                              //         className="px-4 py-2 bg-gray-200 rounded"
+                              //       >
+                              //         Cancel
+                              //       </button>
+                              //       <button
+                              //         onClick={() => {
+                              //           if (!deselectData.reason.trim()) {
+                              //             alert("Please provide a reason before deselecting");
+                              //             return;
+                              //           }
+
+                              //           // Pass the reason here
+                              //           handleAssistanceCategory(
+                              //             deselectData.rel,
+                              //             deselectData.type,
+                              //             true,              // isDeselect
+                              //             deselectData.reason // reason
+                              //           );
+
+                              //           setDeselectData(null); // close modal
+                              //         }}
+                              //         className="px-4 py-2 bg-blue-600 text-white rounded"
+                              //       >
+                              //         Submit
+                              //       </button>
+                              //     </div>
+                              //   </div>
+                              // </div>
+
+                              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+                                <div className="bg-white w-full max-w-md rounded-2xl shadow-xl p-6 animate-fadeIn">
+
+                                  {/* Header */}
+                                  <div className="flex items-center justify-between mb-4">
+                                    <h3 className="text-lg font-semibold text-gray-800">
+                                      Reason for Deselecting
+                                    </h3>
                                     <button
                                       onClick={() => setDeselectData(null)}
-                                      className="px-4 py-2 bg-gray-200 rounded"
+                                      className="text-gray-400 hover:text-gray-600 text-xl"
+                                    >
+                                      ✕
+                                    </button>
+                                  </div>
+
+                                  {/* Info Box */}
+                                  <div className="">
+                                    <p>
+                                      <span className="font-medium text-gray-600">Relation:</span>{" "}
+                                      <span className="text-gray-800">{deselectData.rel}</span>
+                                    </p>
+                                    <p>
+                                      <span className="font-medium text-gray-600">Assistance:</span>{" "}
+                                      <span className="text-gray-800">{deselectData.type}</span>
+                                    </p>
+                                  </div>
+
+                                  {/* Textarea */}
+                                  <div className="my-6">
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                      Enter Reason <span className="text-red-500">*</span>
+                                    </label>
+                                    <textarea
+                                      rows={4}
+                                      className="w-full border border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                      value={deselectData.reason}
+                                      onChange={(e) =>
+                                        setDeselectData((prev) => ({
+                                          ...prev,
+                                          reason: e.target.value,
+                                        }))
+                                      }
+                                      placeholder="Enter reason for deselecting..."
+                                    />
+                                  </div>
+
+                                  {/* Buttons */}
+                                  <div className="flex justify-end gap-3">
+                                    <button
+                                      onClick={() => setDeselectData(null)}
+                                      className="px-4 py-2 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-100 transition"
                                     >
                                       Cancel
                                     </button>
+
                                     <button
                                       onClick={() => {
-                                        // store reason and deselect
-                                        console.log("Deselect Data:", deselectData);
-                                        // You can send this to backend or keep in state
+                                        if (!deselectData.reason.trim()) {
+                                          alert("Please provide a reason before deselecting");
+                                          return;
+                                        }
 
-                                        handleAssistanceCategory(deselectData.rel, deselectData.type);
+                                        handleAssistanceCategory(
+                                          deselectData.rel,
+                                          deselectData.type,
+                                          true,
+                                          deselectData.reason
+                                        );
 
-                                        setDeselectData(null); // close modal
+                                        setDeselectData(null);
                                       }}
-                                      className="px-4 py-2 bg-blue-600 text-white rounded"
+                                      className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition"
                                     >
                                       Submit
                                     </button>
@@ -2812,14 +3103,14 @@ const FamilyDetailsForm = () => {
                               )}
 
                             {
-                            //   (
-                             
-                            //     relationDetails[rel]?.assistanceCategories?.includes("Education") ||
-                            //     selectedAssistance?.includes("Education")
-                            // ) && 
+                              //   (
+
+                              //     relationDetails[rel]?.assistanceCategories?.includes("Education") ||
+                              //     selectedAssistance?.includes("Education")
+                              // ) && 
                               (relationDetails[rel]?.assistanceCategories?.includes("Education") ||
                                 (selectedRelation === rel && selectedAssistance?.includes("Education"))) &&
-                              
+
                               (
                                 <div className="mt-6 p-6 border rounded-lg bg-white shadow-sm font-sans">
                                   <h3 className="text-xl font-semibold mb-6 text-gray-800">
@@ -2940,10 +3231,10 @@ const FamilyDetailsForm = () => {
                               )}
 
                             {
-                            
-                            //   relationDetails[
-                            //   rel
-                            // ]?.assistanceCategories?.includes("Job") && 
+
+                              //   relationDetails[
+                              //   rel
+                              // ]?.assistanceCategories?.includes("Job") && 
                               // (
                               //   relationDetails[rel]?.assistanceCategories?.includes("Job") ||
                               //   selectedAssistance?.includes("Job")
@@ -2951,7 +3242,7 @@ const FamilyDetailsForm = () => {
 
                               (relationDetails[rel]?.assistanceCategories?.includes("Job") ||
                                 (selectedRelation === rel && selectedAssistance?.includes("Job"))) &&
-                            
+
                               (
                                 <div className="mt-6 p-6 border rounded-lg bg-white shadow-sm font-sans">
                                   <h3 className="text-xl font-semibold mb-6 text-gray-800">
@@ -3437,7 +3728,7 @@ const FamilyDetailsForm = () => {
                               // ) &&
                               (relationDetails[rel]?.assistanceCategories?.includes("Rent") ||
                                 (selectedRelation === rel && selectedAssistance?.includes("Rent"))) &&
-                              
+
                               (
                                 <div className="mt-6 p-6 border rounded-lg bg-white shadow-sm font-sans">
                                   <h3 className="text-xl font-semibold mb-6 text-gray-800">
@@ -3726,12 +4017,12 @@ const FamilyDetailsForm = () => {
                               )}
 
                             {
-                              
-                              
-                            //   relationDetails[rel]?.assistanceCategories?.includes(
-                            //   "Housing",
+
+
+                              //   relationDetails[rel]?.assistanceCategories?.includes(
+                              //   "Housing",
                               // ) &&
-                              
+
                               // (
                               //   relationDetails[rel]?.assistanceCategories?.includes("Housing") ||
                               //   selectedAssistance?.includes("Housing")
@@ -3739,8 +4030,8 @@ const FamilyDetailsForm = () => {
 
                               (relationDetails[rel]?.assistanceCategories?.includes("Housing") ||
                                 (selectedRelation === rel && selectedAssistance?.includes("Housing"))) &&
-                            
-                              
+
+
                               (
                                 <div className="mt-6 p-6 border rounded-lg bg-white shadow-sm font-sans text-[#4A4A4A]">
                                   <h3 className="text-xl font-semibold mb-6 text-gray-800">
@@ -4073,7 +4364,7 @@ const FamilyDetailsForm = () => {
 
                                             <div className="flex flex-col gap-1">
                                               <label className="text-[11px] font-bold uppercase text-gray-500">
-                                                No of Years of Loan Taken
+                                                No of Months of Loan Taken
                                               </label>
                                               <input
                                                 type="number"
@@ -4241,7 +4532,7 @@ const FamilyDetailsForm = () => {
 
                               (relationDetails[rel]?.assistanceCategories?.includes("Vaiyavacch") ||
                                 (selectedRelation === rel && selectedAssistance?.includes("Vaiyavacch"))) &&
-                              
+
                               (
                                 <div className="p-6 border rounded-lg bg-white shadow-sm">
                                   <h3 className="text-xl font-semibold mb-6 text-gray-800">
@@ -4308,10 +4599,10 @@ const FamilyDetailsForm = () => {
                               )}
 
                             {
-                              
-                            //   relationDetails[rel]?.assistanceCategories?.includes(
-                            //   "LivelihoodExpenses ",
-                            // ) &&
+
+                              //   relationDetails[rel]?.assistanceCategories?.includes(
+                              //   "LivelihoodExpenses ",
+                              // ) &&
 
                               // (
                               //   relationDetails[rel]?.assistanceCategories?.includes("LivelihoodExpenses") ||
@@ -4320,7 +4611,7 @@ const FamilyDetailsForm = () => {
 
                               (relationDetails[rel]?.assistanceCategories?.includes("LivelihoodExpenses") ||
                                 (selectedRelation === rel && selectedAssistance?.includes("LivelihoodExpenses"))) &&
-                              
+
                               (
                                 <div className="p-6 border rounded-lg bg-white shadow-sm mt-6">
                                   <h3 className="text-xl font-semibold mb-6 text-gray-800">
@@ -4328,26 +4619,6 @@ const FamilyDetailsForm = () => {
                                   </h3>
 
                                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                    {/* <div>
-                                      <label className="text-[11px] font-bold uppercase text-gray-500">
-                                        Emergency Assistance Required For?
-                                      </label>
-                                      <input
-                                        type="text"
-                                        className="w-full border p-2 rounded mt-1 outline-none"
-                                        value={
-                                          assistanceData[rel]?.LivelihoodExpenses
-                                            ?.type || ""
-                                        }
-                                        onChange={(e) =>
-                                          handleEmergencyChange(
-                                            rel,
-                                            "type",
-                                            e.target.value,
-                                          )
-                                        }
-                                      />
-                                    </div> */}
                                     <div>
                                       <label className="text-[11px] font-bold uppercase text-gray-500">
                                         Estimated Amount Required*
@@ -4392,7 +4663,7 @@ const FamilyDetailsForm = () => {
 
                                   <div className="mt-6">
                                     <label className="text-[11px] font-bold uppercase text-gray-500">
-                                      Briefly Describe the Emergency.
+                                      Briefly Describe the Expenses.
                                     </label>
                                     <textarea
                                       className="w-full border p-2 rounded mt-1 h-24 outline-none resize-none"
@@ -4966,8 +5237,8 @@ const FamilyDetailsForm = () => {
                     }
                   >
                     <option value="">Select Type</option>
-                    <option value="Individual">Individual</option>
-                    <option value="Family Floater">Family Floater</option>
+                    <option value="single">Single</option>
+                    <option value="joint">Joint</option>
                   </select>
                 </div>
                 <div>
@@ -4995,15 +5266,22 @@ const FamilyDetailsForm = () => {
                     type="number"
                     value={formData.mediclaimPremiumAmount || ""}
                     onChange={(e) => {
-                      const premiumAmount = Number(e.target.value);
+                      let premiumAmount = Number(e.target.value);
                       const coverAmount = Number(formData.Family_mediclaim_amount) || 0;
+
+                      // Ensure premiumAmount is LESS than coverAmount
+                      if (premiumAmount >= coverAmount) {
+                        alert(`Premium amount must be less than Family Mediclaim Policy Amount (₹${coverAmount})`);
+                        premiumAmount = coverAmount > 0 ? coverAmount - 1 : 0; // automatically reduce by 1
+                      }
 
                       setFormData({
                         ...formData,
-                        mediclaimPremiumAmount: e.target.value,
+                        mediclaimPremiumAmount: premiumAmount,
                       });
                     }}
-                    className={`w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-100 outline-none ${Number(formData.mediclaimPremiumAmount || 0) > Number(formData.Family_mediclaim_amount || 0) && formData.Family_mediclaim_amount
+                    className={`w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-100 outline-none ${Number(formData.mediclaimPremiumAmount || 0) >= Number(formData.Family_mediclaim_amount || 0) &&
+                      formData.Family_mediclaim_amount
                       ? "border-red-500 focus:ring-red-100"
                       : "border-slate-300"
                       }`}
