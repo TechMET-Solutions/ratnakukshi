@@ -205,11 +205,6 @@ function AddDonor() {
       }
     }
 
-    // Required: Anniversary
-    // if (showRequired && !data.anniversary) {
-    //   e.anniversary = "Anniversary date is required";
-    // }
-
     // Required: Mobile
     if (showRequired && !data.mobileNumber) {
       e.mobileNumber = "Mobile Number required";
@@ -229,11 +224,7 @@ function AddDonor() {
       e.email = "Invalid email format";
     }
 
-    // Required: Blood Group
-    if (showRequired && !data.bloodGroup) {
-      e.bloodGroup = "Blood Group required";
-    }
-
+  
     // Required: Aadhaar Number
     if (showRequired && !data.aadhaarNumber) {
       e.aadhaarNumber = "Aadhaar number required";
@@ -264,25 +255,7 @@ function AddDonor() {
     }
 
     
-    // Residential Address - Required fields
-    if (showRequired && !formData.residentialAddress.address1) {
-      e.resAddress1 = "Residential address is required";
-    }
-    if (showRequired && !formData.residentialAddress.city) {
-      e.resCity = "Residential city is required";
-    }
-    if (showRequired && !formData.residentialAddress.pincode) {
-      e.resPincode = "Residential pincode is required";
-    }
-    if (showRequired && !formData.residentialAddress.contactCode) {
-      e.resContactCode = "Contact code is required";
-    }
-    if (showRequired && !formData.residentialAddress.contactNumber) {
-      e.resContactNumber = "Contact number is required";
-    }
-    if (showRequired && !formData.residentialAddress.preferredAddress) {
-      e.preferredAddress = "Preferred address type is required";
-    }
+  
 
     setErrors(e);
     if (showAlert && Object.keys(e).length > 0) {
@@ -317,12 +290,6 @@ function AddDonor() {
         }
         if (!child.dob) {
           e[`child_${index}_dob`] = "Child DOB is required";
-        }
-        if (!child.bloodGroup) {
-          e[`child_${index}_bloodGroup`] = "Child blood group is required";
-        }
-        if (!child.maritalStatus) {
-          e[`child_${index}_maritalStatus`] = "Child marital status is required";
         }
       });
     }
@@ -388,6 +355,16 @@ function AddDonor() {
       e.installments = "Please add at least one installment";
     }
 
+    // ✅ Validate each installment due date
+    if (showRequired && formData.paymentDetails.installments) {
+      formData.paymentDetails.installments.forEach((inst, index) => {
+        if (!inst.dueDate) {
+          if (!e.installmentDueDates) e.installmentDueDates = {};
+          e.installmentDueDates[index] = "Due date is required";
+        }
+      });
+    }
+
     // Validate installments sum
     const installmentError = validateInstallments();
     if (installmentError) {
@@ -395,6 +372,7 @@ function AddDonor() {
     }
 
     setErrors(e);
+
     if (showAlert && Object.keys(e).length > 0) {
       alert(installmentError || "Please complete all payment details");
     }
@@ -402,6 +380,7 @@ function AddDonor() {
     return Object.keys(e).length === 0;
   };
 
+  
   const handleSubmit = async () => {
     try {
       // Validate Step 4 (Payment Details) before submission
@@ -1003,7 +982,7 @@ function AddDonor() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Date of Birth<span className="text-red-500">*</span>
+                    Date of Birth
                   </label>
                   <input
                     type="date"
@@ -1099,7 +1078,7 @@ function AddDonor() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Blood Group<span className="text-red-500">*</span>
+                    Blood Group
                   </label>
 
                   <select
@@ -1120,12 +1099,11 @@ function AddDonor() {
                       </option>
                     ))}
                   </select>
-                  {errors.bloodGroup && <p className="text-red-500 text-xs">{errors.bloodGroup}</p>}
 
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Mother Tongue<span className="text-red-500">*</span>
+                    Mother Tongue
                   </label>
                   <select
                     value={formData.personalDetails.motherTongue}
@@ -1148,7 +1126,6 @@ function AddDonor() {
                       </option>
                     ))}
                   </select>
-                  {errors.motherTongue && <p className="text-red-500 text-xs">{errors.motherTongue}</p>}
 
 
                   {/* <input
@@ -1166,7 +1143,7 @@ function AddDonor() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Native Place<span className="text-red-500">*</span>
+                    Native Place
                   </label>
                   <input
                     type="text"
@@ -1180,7 +1157,6 @@ function AddDonor() {
                     }
                     className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                   />
-                  {errors.nativePlace && <p className="text-red-500 text-xs">{errors.nativePlace}</p>}
 
                 </div>
                 <div>
@@ -1290,12 +1266,12 @@ function AddDonor() {
               {/* SECTION: Contact Person Details */}
               <div className="space-y-4">
                 <h3 className="text-red-500 font-semibold text-lg">
-                  Contact Person Details
+                  Assistant Details
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">
-                      Contact Person Name<span className="text-red-500">*</span>
+                      Assistant Name
                     </label>
                     <input
                       type="text"
@@ -1312,8 +1288,8 @@ function AddDonor() {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">
-                      Contact Person Mobile Number
-                      <span className="text-red-500">*</span>
+                      Assistant Mobile Number
+                      
                     </label>
                     <input
                       type="text"
@@ -1341,7 +1317,7 @@ function AddDonor() {
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                   <div className="md:col-span-1">
                     <label className="block text-sm font-medium text-slate-700 mb-1">
-                      Res. Address 1<span className="text-red-500">*</span>
+                      Res. Address <span className="text-red-500">*</span>
                     </label>
                     <textarea
                       type="text"
@@ -1378,7 +1354,7 @@ function AddDonor() {
                       className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                     />
                   </div>
-                  <div>
+                  {/* <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">
                       Res. Contact Code<span className="text-red-500">*</span>
                     </label>
@@ -1390,7 +1366,7 @@ function AddDonor() {
                       }
                       className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                     />
-                  </div>
+                  </div> */}
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">
                       Res. Contact Number<span className="text-red-500">*</span>
@@ -1467,7 +1443,7 @@ function AddDonor() {
                       </div>
                     </div>
                   </div>
-                  <div className="max-w-xs w-[450px]">
+                  {/* <div className="max-w-xs w-[450px]">
                     <label className="block text-sm font-medium text-slate-700 mb-1">
                       Preferred Address For Communication
                       <span className="text-red-500">*</span>
@@ -1479,6 +1455,55 @@ function AddDonor() {
                         handleChange("residentialAddress", "preferredAddress", e.target.value)
                       }
                       className="w-[535px] p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
+                    />
+                  </div> */}
+                </div>
+              </div>
+
+              {/* SECTION: Company Details */}
+              <div className="space-y-4">
+                <h3 className="text-red-500 font-semibold text-lg">
+                  Company Details
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      Company Name
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.companyDetails.companyName}
+                      onChange={(e) =>
+                        handleChange("companyDetails", "companyName", e.target.value)
+                      }
+                      className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      Company Number
+                    </label>
+                    <input
+                      type="text"
+                      maxLength={10}
+                      value={formData.companyDetails.companyNumber}
+                      onChange={(e) => {
+                        const onlyNumbers = e.target.value.replace(/\D/g, "");
+                        handleChange("companyDetails", "companyNumber", onlyNumbers)
+                      }}
+                      className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      Company Address
+                    </label>
+                    <textarea
+                      value={formData.companyDetails.companyAddress}
+                      onChange={(e) =>
+                        handleChange("companyDetails", "companyAddress", e.target.value)
+                      }
+                      className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                     />
                   </div>
                 </div>
@@ -1493,7 +1518,6 @@ function AddDonor() {
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">
                       Communication Address 1
-                      <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
@@ -1528,54 +1552,6 @@ function AddDonor() {
                 </div>
               </div>
 
-              {/* SECTION: Company Details */}
-              <div className="space-y-4">
-                <h3 className="text-red-500 font-semibold text-lg">
-                  Company Details
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">
-                      Company Name<span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.companyDetails.companyName}
-                      onChange={(e) =>
-                        handleChange("companyDetails", "companyName", e.target.value)
-                      }
-                      className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">
-                      Company Number<span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      maxLength={10}
-                      value={formData.companyDetails.companyNumber}
-                      onChange={(e) => {
-                        const onlyNumbers = e.target.value.replace(/\D/g, "");
-                        handleChange("companyDetails", "companyNumber", onlyNumbers)
-                      }}
-                      className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">
-                      Company Address<span className="text-red-500">*</span>
-                    </label>
-                    <textarea
-                      value={formData.companyDetails.companyAddress}
-                      onChange={(e) =>
-                        handleChange("companyDetails", "companyAddress", e.target.value)
-                      }
-                      className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
-                    />
-                  </div>
-                </div>
-              </div>
             </>
           )}
 
@@ -1802,7 +1778,7 @@ function AddDonor() {
                           </div>
                           <div>
                             <label className="block text-sm font-medium text-slate-700 mb-1">
-                              Blood Group<span className="text-red-500">*</span>
+                              Blood Group
                             </label>
 
                             <select
@@ -1830,7 +1806,6 @@ function AddDonor() {
                           <div className="w-[200px]">
                             <label className="block text-sm font-medium text-slate-700 mb-1">
                               Marital Status
-                              <span className="text-red-500">*</span>
                             </label>
                             <select
                               value={child.maritalStatus}
@@ -2021,7 +1996,7 @@ function AddDonor() {
                         className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                       />
                     </div>
-
+{/* 
                     <div>
                       <label className="block text-sm font-medium text-slate-700 mb-1">
                         Residential Address
@@ -2037,26 +2012,11 @@ function AddDonor() {
                         }
                         className="w-full p-2 border h-[40px] border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                       />
-                    </div>
+                    </div> */}
+
                     <div>
                       <label className="block text-sm font-medium text-slate-700 mb-1">
-                        Office Address
-                      </label>
-                      <textarea
-                        value={formData.nomineeDetails.nomineeofficeAddress}
-                        onChange={(e) =>
-                          handleChange(
-                            "nomineeDetails",
-                            "nomineeofficeAddress",
-                            e.target.value,
-                          )
-                        }
-                        className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none h-[40px]"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">
-                        Office Contact Number
+                        Company Contact Number
                       </label>
                       <input
                         type="text"
@@ -2073,6 +2033,23 @@ function AddDonor() {
                         className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                       />
                     </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">
+                        Company Address
+                      </label>
+                      <textarea
+                        value={formData.nomineeDetails.nomineeofficeAddress}
+                        onChange={(e) =>
+                          handleChange(
+                            "nomineeDetails",
+                            "nomineeofficeAddress",
+                            e.target.value,
+                          )
+                        }
+                        className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none h-[40px]"
+                      />
+                    </div>
+                   
                   </div>
                 </div>
               )}
@@ -2175,20 +2152,36 @@ function AddDonor() {
                                 placeholder="Enter amount"
                                 className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                               />
+
+                              {errors.installmentAmounts?.[index] && (
+                                <p className="text-red-500 text-xs mt-1">
+                                  {errors.installmentAmounts[index]}
+                                </p>
+                              )}
                             </div>
                             <div>
                               <label className="block text-sm font-medium text-slate-700 mb-1">
                                 Installment Due Date
                                 <span className="text-red-500">*</span>
                               </label>
+
                               <input
                                 type="date"
                                 value={formData.paymentDetails.installments[index]?.dueDate || ""}
                                 onChange={(e) =>
                                   handleInstallmentChange(index, "dueDate", e.target.value)
                                 }
-                                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
+                                className={`w-full p-2 border rounded-md outline-none ${errors.installmentDueDates?.[index]
+                                    ? "border-red-500"
+                                    : "border-slate-300"
+                                  }`}
                               />
+
+                              {errors.installmentDueDates?.[index] && (
+                                <p className="text-red-500 text-xs mt-1">
+                                  {errors.installmentDueDates[index]}
+                                </p>
+                              )}
                             </div>
 
                           </div>
