@@ -151,11 +151,13 @@ const getAllowedActions = ({ role, status }) => {
 
 const AssistancePage = () => {
   const { user } = useAuth();
-  const [searchType, setSearchType] = useState("sadhu");
+  const [searchType, setSearchType] = useState("sadhu_sadhvi_name");
   const [searchText, setSearchText] = useState("");
   const [results, setResults] = useState([]);
   const [selectedSadhu, setSelectedSadhu] = useState(null);
+  console.log(selectedSadhu, "selectedSadhu")
   const [familyDetails, setFamilyDetails] = useState([]);
+  console.log(familyDetails, "familyDetails")
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [tableData, setTableData] = useState([]);
   const [activeRow, setActiveRow] = useState(null);
@@ -205,7 +207,7 @@ const AssistancePage = () => {
 
   const fetchFamilyAccounting = async () => {
     try {
-      const res = await axios.get(`${API}/api/familyAccounting-details`);
+      const res = await axios.get(`${API}/api/assistance/allAssistance`);
       setTableData(asArray(res?.data?.data));
     } catch (error) {
       console.error("Failed to fetch family accounting details:", error);
@@ -233,6 +235,8 @@ const AssistancePage = () => {
     };
   }, [openDropdownId]);
   const navigate = useNavigate();
+
+
   const handleSearch = async (value) => {
     setSearchText(value);
     if (value.length < 2) {
@@ -243,13 +247,12 @@ const AssistancePage = () => {
     }
     try {
       const res = await axios.get(
-        `${API}/api/search-diksharthi`,
+        `${API}/api/assistance/search`,
         {
           params: {
-            name: value,
-            type: searchType,
+            search: value,   // ✅ change here
           },
-        },
+        }
       );
       setResults(asArray(res?.data?.data));
     } catch (error) {
@@ -259,16 +262,17 @@ const AssistancePage = () => {
   };
 
   const handleSelectSadhu = async (item) => {
+    debugger
     setSelectedSadhu(item);
     setResults([]);
     setSearchText(
-      searchType === "family" && (item.head_of_family_name || item.head_of_family)
-        ? `${item.head_of_family_name || item.head_of_family} - ${item.sadhu_sadhvi_name}`
+      searchType === "family" && (item.relation || item.head_of_family)
+        ? `${item.family_member_firstName || item.relation} - ${item.sadhu_sadhvi_name}`
         : item.sadhu_sadhvi_name,
     );
     try {
       const res = await axios.get(
-        `${API}/api/family-details/${item.id}`,
+        `${API}/api/assistance/all-assistance/${item.id}`,
       );
       setFamilyDetails(asArray(res?.data?.data));
     } catch (error) {
@@ -312,106 +316,6 @@ const AssistancePage = () => {
     setActionError("");
     setActiveRow(null);
   };
-
-
-
-  // const handleStatusAction = async () => {
-  //   if (!activeRow || !actionType) return;
-
-  //   if (actionType === "queries" && !queriesReason.trim()) {
-  //     setActionError("Queries reason is required for queries.");
-  //     return;
-  //   }
-
-  //   try {
-  //     setIsActionLoading(true);
-  //     setActionError("");
-
-  //     if (actionType === "queries") {
-  //       const payload = new FormData();
-  //       payload.append("id", activeRow?.id || "");
-  //       payload.append("assistance_id", activeRow?.id || "");
-  //       payload.append("diksharthi_id", activeRow?.diksharthi_id || "");
-  //       payload.append("relation", activeRow?.relation || "");
-  //       payload.append("type", activeRow?.type || "");
-  //       payload.append("actorRole", role);
-  //       payload.append("queriesReason", queriesReason.trim());
-  //       // payload.append("remark", queriesReason.trim());
-
-  //       if (queryFile) {
-  //         payload.append("file", queryFile);
-  //         // payload.append("attachment", queryFile);
-  //       }
-
-  //       await axios.put(`${API}/api/assistance-status/${actionType}`, payload, {
-  //         headers: {
-  //           "Content-Type": "multipart/form-data",
-  //         },
-  //       });
-  //     } else {
-  //       const payload = {
-  //         id: activeRow?.id,
-  //         assistance_id: activeRow?.id,
-  //         diksharthi_id: activeRow?.diksharthi_id,
-  //         relation: activeRow?.relation,
-  //         type: activeRow?.type,
-  //         actorRole: role,
-  //       };
-
-  //       await axios.put(`${API}/api/assistance-status/${actionType}`, payload);
-  //     }
-
-  //     await fetchFamilyAccounting();
-  //     handleCloseActionModal();
-  //   } catch (error) {
-  //     setActionError(
-  //       error?.response?.data?.message || "Failed to update assistance status.",
-  //     );
-  //   } finally {
-  //     setIsActionLoading(false);
-  //   }
-  // };
-
-  // const actionTypeMap = {
-  //   "send-to-committee-member": "committee-member",
-  //   "send-to-expert-panel": "expert-panel",
-  // };
-
-  // const handleStatusAction = async () => {
-  //   if (!activeRow || !actionType) return;
-
-  //   const finalActionType = actionTypeMap[actionType] || actionType;
-
-  //   try {
-  //     setIsActionLoading(true);
-
-  //     const payload = {
-  //       id: activeRow?.id,
-  //       assistance_id: activeRow?.id,
-  //       diksharthi_id: activeRow?.diksharthi_id,
-  //       relation: activeRow?.relation,
-  //       type: activeRow?.type,
-  //       actorRole: role,
-  //     };
-
-  //     await axios.put(`${API}/api/assistance-status/${finalActionType}`, payload);
-
-  //     await fetchFamilyAccounting();
-  //     handleCloseActionModal();
-  //   } catch (error) {
-  //     setActionError("Failed to update assistance status.");
-  //   } finally {
-  //     setIsActionLoading(false);
-  //   }
-  // };
-
-  // const actionTypeMap = {
-  //   "send-to-committee-member": "SEND_TO_COMMITTEE_MEMBER",
-  //   "send-to-expert-panel": "SEND_TO_EXPERT_PANEL",
-  //   approve: "APPROVE",
-  //   rejected: "REJECTED",
-  //   queries: "QUERIES",
-  // };
 
   const handleStatusAction = async () => {
     if (!activeRow || !actionType) return;
@@ -562,10 +466,14 @@ const AssistancePage = () => {
 
               return (
                 <tr key={rowActionKey} className="hover:bg-slate-50 transition-colors">
-                  <td className="p-4 text-slate-600">{asDisplayText(row.diksharthi)}</td>
-                  <td className="p-4 text-slate-600">{asDisplayText(row.member_name)}</td>
-                  <td className="p-4 text-slate-600">{asDisplayText(row.head)}</td>
-                  <td className="p-4 text-slate-600">{asDisplayText(row.type)}</td>
+                  <td className="p-4 text-slate-600">{asDisplayText(row.sadhu_sadhvi_name)}</td>
+                  <td className="p-4 text-slate-600">
+                    {asDisplayText(
+                      `${row?.family_member_firstName || ""} ${row?.family_member_lastName || ""}`.trim()
+                    )}
+                  </td>
+                  <td className="p-4 text-slate-600">{asDisplayText(row.relation)}</td>
+                  <td className="p-4 text-slate-600">{asDisplayText(row.assistance_type)}</td>
                   <td className="p-4 text-slate-600">{asDisplayText(row.case_id)}</td>
                   <td className={`p-4 font-semibold ${getStatusToneClass(row.status)}`}>
                     {asDisplayText(row.status)}
@@ -664,6 +572,27 @@ const AssistancePage = () => {
     </div>
   );
 
+
+  // 🔥 helper function (TOP me add karo)
+  const groupByRelation = (data) => {
+    const grouped = {};
+
+    data.forEach((item) => {
+      const relation = item.relation || "unknown";
+
+      if (!grouped[relation]) {
+        grouped[relation] = {
+          fullName: `${item.family_member_firstName || ""} ${item.family_member_lastName || ""}`,
+          relations: [],
+        };
+      }
+
+      grouped[relation].relations.push(item);
+    });
+
+    return grouped;
+  };
+
   return (
     <div className="flex h-screen bg-white">
       <main className="flex-1 p-12 overflow-y-auto">
@@ -749,7 +678,7 @@ const AssistancePage = () => {
 
         </div>
 
-        {selectedSadhu &&
+        {/* {selectedSadhu &&
           familyDetails.map((family) => (
             <div key={family.id} className="space-y-6">
               <div className="flex items-center gap-4 bg-white p-6 rounded-xl border border-slate-100 shadow-sm">
@@ -829,7 +758,83 @@ const AssistancePage = () => {
                 )}
               </div>
             </div>
-          ))}
+          ))} */}
+
+        {selectedSadhu && (
+          <div className="space-y-6">
+
+            {/* HEADER */}
+            <div className="flex items-center gap-4 bg-white p-6 rounded-xl border shadow-sm">
+              <div className="bg-blue-100 p-3 rounded-full text-blue-600">
+                <User size={32} />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold">
+                  {selectedSadhu.sadhu_sadhvi_name}
+                </h2>
+              </div>
+            </div>
+
+            {/* FAMILY MEMBERS */}
+            <div className="bg-white rounded-xl border shadow-sm p-6">
+              <h3 className="text-lg font-bold mb-6">Family Members</h3>
+
+              {familyDetails.length === 0 ? (
+                <p>No data found</p>
+              ) : (
+                <div className="space-y-4">
+
+                  {Object.entries(groupByRelation(familyDetails)).map(
+                    ([relation, member]) => {
+
+                      return (
+                        <div
+                          key={relation}
+                          className="flex items-center justify-between p-4 border rounded-xl hover:bg-gray-50"
+                        >
+                          {/* LEFT */}
+                          <div>
+                            <p className="font-semibold">
+                              {member.family_member_firstName} ({relation})
+                            </p>
+
+                            <p className="text-sm text-gray-500">
+                              Category:{" "}
+                              {member.relation_key
+                                .map((r) => r.assistance_type)
+                                .join(", ")}
+                            </p>
+                          </div>
+
+                          {/* RIGHT */}
+                          <div className="flex gap-3">
+                            <button
+                              onClick={() =>
+                                handleEdit(member, relation, member.relations)
+                              }
+                              className="bg-[#f2a12a] text-white px-4 py-2 rounded-lg text-sm"
+                            >
+                              Apply
+                            </button>
+
+                            <button
+                              onClick={() =>
+                                handleEdit(member, relation, member.relations)
+                              }
+                              className="bg-[#f2a12a] text-white px-4 py-2 rounded-lg text-sm"
+                            >
+                              Edit
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    }
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {renderDefaultTable()}
 
