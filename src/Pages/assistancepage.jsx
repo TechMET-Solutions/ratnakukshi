@@ -288,6 +288,10 @@ const AssistancePage = () => {
 
   const handleStatusAction = async () => {
     if (!activeRow || !actionType) return;
+    if (actionType === "queries" && !String(queriesReason || "").trim()) {
+      setActionError("Please provide query reason before submitting.");
+      return;
+    }
 
     const actionTypeMap = {
       "send-to-committee-member": "committee-member",
@@ -302,18 +306,22 @@ const AssistancePage = () => {
     try {
       setIsActionLoading(true);
 
-      const payload = {
-        id: activeRow?.id,
-        assistance_id: activeRow?.id,
-        diksharthi_id: activeRow?.diksharthi_id,
-        relation: activeRow?.relation,
-        type: activeRow?.type,
-        actorRole: role.replaceAll("-", " "), // 🔥 FIX
-      };
+      const formData = new FormData();
+      formData.append("id", activeRow?.id ?? "");
+      formData.append("assistance_id", activeRow?.id ?? "");
+      formData.append("diksharthi_id", activeRow?.diksharthi_id ?? "");
+      formData.append("relation", activeRow?.relation ?? "");
+      formData.append("assistance_type", activeRow?.assistance_type ?? "");
+      formData.append("actorRole", role.replaceAll("-", " "));
+
+      if (actionType === "queries") {
+        formData.append("query_reason", queriesReason || "");
+        if (queryFile) formData.append("query_image", queryFile);
+      }
 
       await axios.put(
-        `${API}/api/assistance-status/${finalActionType}`,
-        payload
+        `${API}/api/assistance/status/${finalActionType}`,
+        formData
       );
 
       await fetchFamilyAccounting();
@@ -334,7 +342,7 @@ const AssistancePage = () => {
 
     return tableData.filter((row) => {
       const status = normalizeWorkflowValue(row.status);
-      const rowType = normalizeWorkflowValue(row.type);
+      const rowType = normalizeWorkflowValue(row.assistance_type);
 
       if (normalizedRole === "karyakarta") {
         return status === "pending";
@@ -403,7 +411,7 @@ const AssistancePage = () => {
       row?.id,
       row?.diksharthi_id,
       row?.relation,
-      row?.type,
+      row?.assistance_type,
       row?.case_id,
       index,
     ]
