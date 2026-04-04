@@ -120,13 +120,11 @@ const getAllowedActions = ({ role, status }) => {
 
 const AssistancePage = () => {
   const { user } = useAuth();
-  const [searchType, setSearchType] = useState("sadhu_sadhvi_name");
+  const [searchType, setSearchType] = useState("sadhu");
   const [searchText, setSearchText] = useState("");
   const [results, setResults] = useState([]);
   const [selectedSadhu, setSelectedSadhu] = useState(null);
-  console.log(selectedSadhu, "selectedSadhu")
   const [familyDetails, setFamilyDetails] = useState([]);
-  console.log(familyDetails, "familyDetails")
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [tableData, setTableData] = useState([]);
   const [activeRow, setActiveRow] = useState(null);
@@ -214,34 +212,72 @@ const AssistancePage = () => {
       setFamilyDetails([]);
       return;
     }
-    try {
-      const res = await axios.get(
-        `${API}/api/assistance/search`,
-        {
-          params: {
-            search: value,   // ✅ change here
-          },
+
+    const normalizedSearch = value.trim().toLowerCase();
+    const rows = asArray(tableData);
+
+    if (searchType === "sadhu") {
+      const uniqueByDiksharthi = new Map();
+      rows.forEach((row) => {
+        const diksharthiId = row?.diksharthi_id;
+        const sadhuName = String(row?.sadhu_sadhvi_name || "").toLowerCase();
+        if (!diksharthiId || !sadhuName.includes(normalizedSearch)) return;
+
+        if (!uniqueByDiksharthi.has(diksharthiId)) {
+          uniqueByDiksharthi.set(diksharthiId, {
+            id: diksharthiId,
+            diksharthi_id: diksharthiId,
+            sadhu_sadhvi_name: row?.sadhu_sadhvi_name || "",
+            family_member_firstName: row?.family_member_firstName || "",
+            family_member_lastName: row?.family_member_lastName || "",
+            relation: row?.relation || "",
+          });
         }
-      );
-      setResults(asArray(res?.data?.data));
-    } catch (error) {
-      console.error(error);
-      setResults([]);
+      });
+
+      setResults(Array.from(uniqueByDiksharthi.values()));
+      return;
     }
+
+    const uniqueByMember = new Map();
+    rows.forEach((row) => {
+      const firstName = String(row?.family_member_firstName || "").trim();
+      const lastName = String(row?.family_member_lastName || "").trim();
+      const memberName = `${firstName} ${lastName}`.trim().toLowerCase();
+      if (!memberName.includes(normalizedSearch)) return;
+
+      const key = `${row?.diksharthi_id || ""}__${row?.relation || ""}`;
+      if (!uniqueByMember.has(key)) {
+        uniqueByMember.set(key, {
+          id: row?.diksharthi_id,
+          diksharthi_id: row?.diksharthi_id,
+          sadhu_sadhvi_name: row?.sadhu_sadhvi_name || "",
+          family_member_firstName: firstName,
+          family_member_lastName: lastName,
+          relation: row?.relation || "",
+        });
+      }
+    });
+
+    setResults(Array.from(uniqueByMember.values()));
   };
 
   const handleSelectSadhu = async (item) => {
-    debugger
     setSelectedSadhu(item);
     setResults([]);
+
+    const displayFamilyName = `${item?.family_member_firstName || ""} ${item?.family_member_lastName || ""}`.trim();
+
     setSearchText(
-      searchType === "family" && (item.relation || item.head_of_family)
-        ? `${item.family_member_firstName || item.relation} - ${item.sadhu_sadhvi_name}`
-        : item.sadhu_sadhvi_name,
+      searchType === "family" && displayFamilyName
+        ? `${displayFamilyName} (${item?.relation || "-"})`
+        : item?.sadhu_sadhvi_name || "",
     );
+
     try {
+      const diksharthiId = item?.diksharthi_id || item?.id;
       const res = await axios.get(
-        `${API}/api/assistance/all-assistance/${item.id}`,
+        `${API}/api/assistance/all-assistance/${diksharthiId}`,
       );
       setFamilyDetails(asArray(res?.data?.data));
     } catch (error) {
@@ -250,21 +286,17 @@ const AssistancePage = () => {
     }
   };
 
-  const handleEdit = (member, relation, family) => {
-    console.log("FULL FAMILY", family);
-
-    const assistanceData = family?.assistance_data?.[relation] || {};
-
-    console.log("ASSISTANCE DATA", assistanceData);
-
+  const handleEdit = (row) => {
     navigate("/assistance-details", {
       state: {
-        memberData: member,
-        relation: relation,
-        selectedSadhu: selectedSadhu?.id,
-        familyId: family?.id,
-        sadhuName: selectedSadhu?.sadhu_sadhvi_name,
-        assistanceData: assistanceData,
+        memberData: {
+          fullName: `${row?.family_member_firstName || ""} ${row?.family_member_lastName || ""}`.trim(),
+        },
+        relation: row?.relation,
+        selectedSadhu: row?.diksharthi_id || selectedSadhu?.diksharthi_id || selectedSadhu?.id,
+        familyId: row?.family_id,
+        sadhuName: row?.sadhu_sadhvi_name || selectedSadhu?.sadhu_sadhvi_name,
+        assistanceData: row?.assistance_data || {},
       },
     });
   };
@@ -550,7 +582,6 @@ const AssistancePage = () => {
   );
 
 
-  // 🔥 helper function (TOP me add karo)
   const groupByRelation = (data) => {
     const grouped = {};
 
@@ -559,15 +590,22 @@ const AssistancePage = () => {
 
       if (!grouped[relation]) {
         grouped[relation] = {
-          fullName: `${item.family_member_firstName || ""} ${item.family_member_lastName || ""}`,
-          relations: [],
+          relation,
+          memberName: `${item.family_member_firstName || ""} ${item.family_member_lastName || ""}`.trim(),
+          diksharthiName: item?.sadhu_sadhvi_name || "",
+          rows: [],
+          assistanceTypes: new Set(),
         };
       }
 
-      grouped[relation].relations.push(item);
+      grouped[relation].rows.push(item);
+      grouped[relation].assistanceTypes.add(item?.assistance_type || "General");
     });
 
-    return grouped;
+    return Object.values(grouped).map((entry) => ({
+      ...entry,
+      assistanceTypes: Array.from(entry.assistanceTypes),
+    }));
   };
 
   return (
@@ -609,7 +647,7 @@ const AssistancePage = () => {
                 }}
               />
               <span className="font-medium text-slate-700">
-                Family Head Details
+                Family Member Name
               </span>
             </label>
           </div>
@@ -626,7 +664,7 @@ const AssistancePage = () => {
               placeholder={
                 searchType === "sadhu"
                   ? "Start typing Sadhu/Sadhvi Name..."
-                  : "Search Family Head..."
+                  : "Search Family Member..."
               }
               className="w-full pl-14 pr-6 py-4 rounded-full border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 text-lg"
             />
@@ -643,9 +681,10 @@ const AssistancePage = () => {
                       {item.sadhu_sadhvi_name}
                     </p>
                     <p className="text-sm text-gray-500">
-                      {searchType === "family" && (item.head_of_family_name || item.head_of_family)
-                        ? `Head: ${item.head_of_family_name || item.head_of_family}`
-                        : item.diksharthi_code}
+                      {searchType === "family"
+                        ? `${asDisplayText(item.family_member_firstName)} ${asDisplayText(item.family_member_lastName, "")}`.trim() +
+                          ` (${asDisplayText(item.relation)})`
+                        : asDisplayText(item.diksharthi_code)}
                     </p>
                   </div>
                 ))}
@@ -749,6 +788,9 @@ const AssistancePage = () => {
                 <h2 className="text-2xl font-bold">
                   {selectedSadhu.sadhu_sadhvi_name}
                 </h2>
+                <p className="text-sm text-slate-500 mt-1">
+                  Diksharthi ID: {asDisplayText(selectedSadhu?.diksharthi_id || selectedSadhu?.id)}
+                </p>
               </div>
             </div>
 
@@ -761,52 +803,40 @@ const AssistancePage = () => {
               ) : (
                 <div className="space-y-4">
 
-                  {Object.entries(groupByRelation(familyDetails)).map(
-                    ([relation, member]) => {
-
-                      return (
-                        <div
-                          key={relation}
-                          className="flex items-center justify-between p-4 border rounded-xl hover:bg-gray-50"
-                        >
-                          {/* LEFT */}
-                          <div>
-                            <p className="font-semibold">
-                              {member.family_member_firstName} ({relation})
-                            </p>
-
-                            <p className="text-sm text-gray-500">
-                              Category:{" "}
-                              {member.relation_key
-                                .map((r) => r.assistance_type)
-                                .join(", ")}
-                            </p>
-                          </div>
-
-                          {/* RIGHT */}
-                          <div className="flex gap-3">
-                            <button
-                              onClick={() =>
-                                handleEdit(member, relation, member.relations)
-                              }
-                              className="bg-[#f2a12a] text-white px-4 py-2 rounded-lg text-sm"
-                            >
-                              Apply
-                            </button>
-
-                            <button
-                              onClick={() =>
-                                handleEdit(member, relation, member.relations)
-                              }
-                              className="bg-[#f2a12a] text-white px-4 py-2 rounded-lg text-sm"
-                            >
-                              Edit
-                            </button>
-                          </div>
+                  {groupByRelation(familyDetails).map((memberGroup) => {
+                    const primaryRow = memberGroup.rows[0] || {};
+                    return (
+                      <div
+                        key={`${memberGroup.relation}-${primaryRow?.family_id || primaryRow?.id || "row"}`}
+                        className="flex items-center justify-between p-4 border rounded-xl hover:bg-gray-50"
+                      >
+                        <div>
+                          <p className="font-semibold">
+                            {asDisplayText(memberGroup.memberName, "N/A")} ({asDisplayText(memberGroup.relation)})
+                          </p>
+                          <p className="text-sm text-gray-500">
+                            Category: {memberGroup.assistanceTypes.join(", ")}
+                          </p>
                         </div>
-                      );
-                    }
-                  )}
+
+                        <div className="flex gap-3">
+                          <button
+                            onClick={() => handleEdit(primaryRow)}
+                            className="bg-[#f2a12a] text-white px-4 py-2 rounded-lg text-sm"
+                          >
+                            Apply
+                          </button>
+
+                          <button
+                            onClick={() => handleEdit(primaryRow)}
+                            className="bg-[#f2a12a] text-white px-4 py-2 rounded-lg text-sm"
+                          >
+                            Edit
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -954,3 +984,10 @@ const AssistancePage = () => {
 };
 
 export default AssistancePage;
+
+
+
+
+
+
+
