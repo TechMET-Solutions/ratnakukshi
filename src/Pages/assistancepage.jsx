@@ -86,37 +86,6 @@ const getStatusToneClass = (status) => {
   return "text-yellow-600";
 };
 
-// const getAllowedActions = ({ role, status }) => {
-//   const normalizedRole = normalizeWorkflowValue(role);
-//   const normalizedStatus = normalizeWorkflowValue(status || STATUS_LABELS.pending);
-
-//   console.log(normalizedStatus)
-
-//   if (normalizedRole === "case coordinator") {
-//     if (normalizedStatus === "pending" || normalizedStatus === "queries") {
-//       return ["approve", "queries", "send-to-committee-member", "rejected"];
-//     }
-
-//     if (normalizedStatus === "Committee Member") {
-//       return ["send-to-expert-panel", "rejected"];
-//     }
-//   }
-
-//   if (normalizedRole === "committee member") {
-//     if (normalizedStatus === "Committee Member") {
-//       return ["approve", "send-to-expert-panel", "rejected"];
-//     }
-//   }
-
-//   if (normalizedRole === "expert panel") {
-//     if (normalizedStatus === "send to expert panel") {
-//       return ["approve", "rejected"];
-//     }
-//   }
-
-//   return [];
-// };
-
 const getAllowedActions = ({ role, status }) => {
   const normalizedRole = normalizeWorkflowValue(role);
   const normalizedStatus = normalizeWorkflowValue(status);
