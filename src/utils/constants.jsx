@@ -9,6 +9,10 @@ export const RELATIONS = [
     { label: "Other", value: "Other" },
 ];
 
+export const DONORTYPES = [
+    { label: "Esteemed Members ", value: "Esteemed Members " },
+    { label: "Voluntary Contributions", value: "Voluntary Contributions" },
+];
 export const GENDER = [
     { label: "Male", value: "male" },
     { label: "Female", value: "female" },

@@ -69,13 +69,13 @@ function DonorList() {
     <div className="p-8 min-h-screen bg-gray-50">
       {/* Header Section */}
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-slate-700">Donor List</h1>
+        <h1 className="text-2xl font-bold text-slate-700">Members and Contributions</h1>
         <Link
           to="/donor/add"
-          className="bg-[#d94452] hover:bg-[#c13946] text-white px-4 py-2 rounded-md flex items-center gap-2 text-sm font-medium transition-colors shadow-sm"
+          className="bg-[#C62026] hover:bg-[#c13946] text-white px-4 py-2 rounded-md flex items-center gap-2 text-sm font-medium transition-colors shadow-sm"
         >
           <Plus size={18} />
-          Add Donor
+          Add Members & Contributions
         </Link>
       </div>
 

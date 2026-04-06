@@ -2,7 +2,7 @@ import { ChevronLeft } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { API } from "../api/BaseURL";
-import { BLOOD_GROUP, GENDER } from "../utils/constants";
+import { BLOOD_GROUP, DONORTYPES, GENDER } from "../utils/constants";
 import { isValidAadhaar, isValidPAN } from "../utils/validation";
 
 const parseMaybeJson = (value) => {
@@ -51,11 +51,13 @@ function AddDonor() {
       panNumber: "",
       panFile: null,
       photo: null,
+      donorType:"",
     },
 
     contactPerson: {
       contactPersonName: "",
       contactPersonMobile: "",
+      contactPersonEmail:"",
     },
 
     residentialAddress: {
@@ -121,8 +123,9 @@ function AddDonor() {
       "nativePlace",
       "aadhaarNumber",
       "panNumber",
+      "donorType",
     ],
-    contactPerson: ["contactPersonName", "contactPersonMobile"],
+    contactPerson: ["contactPersonName", "contactPersonMobile", "contactPersonEmail"],
     residentialAddress: [
       "address1",
       "city",
@@ -770,80 +773,6 @@ function AddDonor() {
     });
   };
 
-  
-  // const handleNext = async (e) => {
-  //   e.preventDefault();
-
-  //   setRequiredValidationTriggered((prev) => ({
-  //     ...prev,
-  //     [currentStep]: true,
-  //   }));
-
-  //   if (currentStep === 1) {
-  //     const isValid = validateStep1(true, true);
-  //     if (!isValid) return;
-
-  //     // ✅ IMPORTANT CONDITION
-  //     if (!donorId && !isEditMode) {
-  //       const formDataToSend = new FormData();
-
-  //       formDataToSend.append("personalDetails", JSON.stringify(formData.personalDetails));
-  //       formDataToSend.append("contactPerson", JSON.stringify(formData.contactPerson));
-  //       formDataToSend.append("residentialAddress", JSON.stringify(formData.residentialAddress));
-  //       formDataToSend.append("communicationAddress", JSON.stringify(formData.communicationAddress));
-  //       formDataToSend.append("companyDetails", JSON.stringify(formData.companyDetails));
-
-  //       if (formData.personalDetails.photo) {
-  //         formDataToSend.append("photo", formData.personalDetails.photo);
-  //       }
-
-  //       if (formData.personalDetails.aadhaarFile) {
-  //         formDataToSend.append("aadhaarFile", formData.personalDetails.aadhaarFile);
-  //       }
-
-  //       if (formData.personalDetails.panFile) {
-  //         formDataToSend.append("panFile", formData.personalDetails.panFile);
-  //       }
-
-  //       const res = await fetch(`${API}/api/donor/create`, {
-  //         method: "POST",
-  //         body: formDataToSend,
-  //       });
-
-  //       const data = await res.json();
-
-  //       if (!data.success) {
-  //         alert("Step 1 save failed");
-  //         return;
-  //       }
-
-  //       setDonorId(data.donorId);
-  //     } else {
-  //       // ✅ already exists → update
-  //       await updateDonor();
-  //     }
-  //   }
-
-  //   // STEP 2
-  //   else if (currentStep === 2) {
-  //     const isValid = validateStep2(true, true);
-  //     if (!isValid) return;
-
-  //     await updateDonor();
-  //   }
-
-  //   // STEP 3
-  //   else if (currentStep === 3) {
-  //     const isValid = validateStep3(true, true);
-  //     if (!isValid) return;
-
-  //     await updateDonor();
-  //   }
-
-  //   setCurrentStep((prev) => prev + 1);
-  // };
-
-
   const handleNext = async (e) => {
   e.preventDefault();
 
@@ -1302,20 +1231,6 @@ function AddDonor() {
                       </option>
                     ))}
                   </select>
-
-
-                  {/* <input
-                    type="text"
-                    value={formData.personalDetails.motherTongue}
-                    onChange={(e) =>
-                      handleChange(
-                        "personalDetails",
-                        "motherTongue",
-                        e.target.value,
-                      )
-                    }
-                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
-                  /> */}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -1437,6 +1352,31 @@ function AddDonor() {
                     className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                   />
                 </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Members and Contributions
+                  </label>
+                  <select
+                    value={formData.personalDetails.donorType}
+                    onChange={(e) =>
+                      handleChange(
+                        "personalDetails",
+                        "donorType",
+                        e.target.value
+                      )
+                    }
+                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
+                  >
+                    <option value="">
+                      {isLanguageLoading ? "Loading languages..." : "Select"}
+                    </option>
+                    {DONORTYPES.map((item) => (
+                      <option key={item.value} value={item.value}>
+                        {item.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
               {/* SECTION: Contact Person Details */}
@@ -1479,6 +1419,20 @@ function AddDonor() {
                           onlyNumbers
                         )
                       }}
+                      className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      Assistant Email ID
+                      
+                    </label>
+                    <input
+                      type="email"
+                      value={formData.contactPerson.contactPersonEmail}
+                      onChange={(e) =>
+                        handleChange("contactPerson", "contactPersonEmail", e.target.value)
+                      }
                       className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                     />
                   </div>
@@ -1545,7 +1499,7 @@ function AddDonor() {
                   </div> */}
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">
-                      Res. Contact Number<span className="text-red-500">*</span>
+                      Res. Contact Number
                     </label>
                     <input
                       type="text"

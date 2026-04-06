@@ -456,11 +456,11 @@ const AssistancePage = () => {
         <table className="w-full h-9xl text-left border-collapse bg-white">
           <thead>
             <tr className="bg-[#fdf2d7]">
-              <th className="p-4 font-semibold text-slate-700 border-b">Diksharthi Name</th>
+              <th className="p-4 font-semibold text-slate-700 border-b">M.S. Name</th>
               <th className="p-4 font-semibold text-slate-700 border-b">Family Member</th>
-              <th className="p-4 font-semibold text-slate-700 border-b">Family Head Name</th>
+              <th className="p-4 font-semibold text-slate-700 border-b">Relation</th>
               <th className="p-4 font-semibold text-slate-700 border-b">Assistance</th>
-              <th className="p-4 font-semibold text-slate-700 border-b">Case ID</th>
+              <th className="p-4 font-semibold text-slate-700 border-b">F.A.N ID</th>
               <th className="p-4 font-semibold text-slate-700 border-b">Status</th>
               <th className="p-4 font-semibold text-slate-700 border-b text-center">Action</th>
             </tr>

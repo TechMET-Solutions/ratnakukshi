@@ -132,7 +132,7 @@ function App() {
           }
         />
         <Route
-          path="/donor"
+          path="/members-contributions"
           element={
             <ProtectedRoute>
               <Layout>

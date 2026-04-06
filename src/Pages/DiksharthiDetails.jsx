@@ -968,7 +968,7 @@ const DiksharthiListing = () => {
       {/* Header Section */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-slate-700">
-          {role === "staff" ? "Basic Family Member and MS Details" : "Family Details"}
+          {role === "staff" ? "Ratnakukshi Family Basic Info" : "Ratnakukshi Family Basic Info"}
         </h1>
         {role === "staff" && (
           <div className="flex gap-6">
@@ -982,10 +982,10 @@ const DiksharthiListing = () => {
 
             <Link
               to="/diksharthi-details-add"
-              className="bg-[#d94452] hover:bg-[#c13946] text-white px-4 py-2 rounded-md flex items-center gap-2 text-sm font-medium transition-colors shadow-sm"
+              className="bg-[#C62026] hover:bg-[#c13946] text-white px-4 py-2 rounded-md flex items-center gap-2 text-sm font-medium transition-colors shadow-sm"
             >
               <Plus size={18} />
-              Add New Diksharthi
+              Add New M.S.
             </Link>
           </div>
         )}
@@ -1036,10 +1036,10 @@ const DiksharthiListing = () => {
                 Date
               </th>
               <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">
-                Diksharthi ID
+                M.S. ID
               </th>
               <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">
-                Diksharthi Name
+                M.S. Name
               </th>
               <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">
                 RBF Criteria
@@ -1075,8 +1075,8 @@ const DiksharthiListing = () => {
               {role === "karyakarta" && (
 
                 <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">
-                is Visted ?
-              </th>
+                  is Visted ?
+                </th>
               )}
             </tr>
           </thead>
@@ -1398,14 +1398,14 @@ const DiksharthiListing = () => {
                             </div>
                           )}
 
-                          {!isAdminUnassigned(diksharthi) && (
+                          {/* {!isAdminUnassigned(diksharthi) && (
                             <button
                               className="rounded-lg bg-emerald-600 text-sm px-2 py-1 text-white"
                               onClick={() => openScheduleVisitModal(diksharthi)}
                             >
                               {shouldUseRescheduleFlow(diksharthi) ? "Reschedule Visit" : "Schedule Visit"}
                             </button>
-                          )}
+                          )} */}
                         </>
                       )}
 
@@ -1602,7 +1602,7 @@ const DiksharthiListing = () => {
             </div>
           </div>
         )} */}
-      
+
 
       {(role === "operations-manager" || role === "staff") &&
         (viewModalData || isViewLoading) && (
@@ -1611,8 +1611,8 @@ const DiksharthiListing = () => {
 
               {/* Header */}
               <div className="flex items-center justify-between px-6 py-4 border-b">
-                <h3 className="text-xl font-bold text-gray-800">
-                {viewModalData?.sadhu_sadhvi_name || "N/A"} -  {viewModalData?.id || "-"}
+              <h3 className="text-xl font-bold text-gray-800">M.S. Name : 
+                  {viewModalData?.sadhu_sadhvi_name || "N/A"} -  {viewModalData?.id || "-"}
                 </h3>
                 <button
                   onClick={() => {
@@ -1636,21 +1636,21 @@ const DiksharthiListing = () => {
                   </div>
                 ) : (
                   <div className="space-y-6">
-                    
+
                     {(viewModalData?.rbf_criteria === "Yes" ||
                       viewModalData?.rbfCriteria === "Yes") && (
-                        <Section title="RBF Details">
+                      <Section title="Ratnakukshi Family Basic Info">
                           <Grid>
                             <DetailItem label="Relation" value={viewModalData?.relation} />
                             <DetailItem
                               label="Relation Name"
                               value={
                                 viewModalData?.family_member_name ||
-                                `${viewModalData?.family_member_firstName || ""} ${viewModalData?.family_member_lastName || ""}`.trim()
+                                `${viewModalData?.family_member_firstName || "N/A"} ${viewModalData?.family_member_lastName || ""}`.trim()
                               }
                             />
                             <DetailItem label="Assistance" value={viewModalData?.assistance_received} />
-                            <DetailItem label="Mobile No" value={viewModalData?.mobile_no} />
+                            <DetailItem label="Mobile No" value={viewModalData?.mobile_no || "N/A"} />
                             {/* <DetailItem label="Alt Mobile No" value={viewModalData?.alt_mobile_no} /> */}
                           </Grid>
                         </Section>
@@ -1659,20 +1659,20 @@ const DiksharthiListing = () => {
                     {/* ADDRESS */}
                     <Section title="Address Details">
                       <Grid>
-                        <DetailItem label="Permanent Address" value={viewModalData?.permanent_address} />
-                        <DetailItem label="Current Address" value={viewModalData?.current_address} />
-                        <DetailItem label="Village" value={viewModalData?.village} />
-                        <DetailItem label="Taluka" value={viewModalData?.taluka} />
-                        <DetailItem label="District" value={viewModalData?.district} />
-                        <DetailItem label="State" value={viewModalData?.state} />
-                        <DetailItem label="Pin Code" value={viewModalData?.pin_code} />
+                        <DetailItem label="Permanent Address" value={viewModalData?.permanent_address || "N/A"} />
+                        <DetailItem label="Current Address" value={viewModalData?.current_address || "N/A"} />
+                        <DetailItem label="Village" value={viewModalData?.village || "N/A"} />
+                        <DetailItem label="Taluka" value={viewModalData?.taluka || "N/A"} />
+                        <DetailItem label="District" value={viewModalData?.district || "N/A"} />
+                        <DetailItem label="State" value={viewModalData?.state || "N/A"} />
+                        <DetailItem label="Pin Code" value={viewModalData?.pin_code || "N/A"} />
                       </Grid>
                     </Section>
                     {/* TOP SECTION */}
                     <div className="flex flex-col md:flex-row gap-6 border-t  py-6">
                       {/* LEFT */}
                       <div className="flex-1 space-y-3">
-                        
+
                         {/* BASIC INFO */}
                         <Section title="MS Details">
                           <Grid>
@@ -1694,14 +1694,14 @@ const DiksharthiListing = () => {
                             <DetailItem label="Samudaay" value={viewModalData?.samudaay} />
                             <DetailItem label="Guru" value={viewModalData?.guru_name || viewModalData?.guruName} />
                             <DetailItem label="Acharya" value={viewModalData?.acharya} />
-                            <DetailItem label="Gadipati" value={viewModalData?.gadipati} />
+                            <DetailItem label="Gachadhipati" value={viewModalData?.gadipati} />
                           </Grid>
                         </Section>
 
 
-                      
-                        
-                       
+
+
+
                       </div>
 
                       {/* RIGHT IMAGE */}
@@ -1714,23 +1714,23 @@ const DiksharthiListing = () => {
                           />
                           <span
                             className={`absolute bottom-25 -right-2 px-2 py-1 text-xs text-white rounded ${(viewModalData?.is_alive || viewModalData?.isAlive) === "No"
-                                ? "bg-red-500"
-                                : "bg-green-500"
+                              ? "bg-red-500"
+                              : "bg-green-500"
                               }`}
                           >
                             {(viewModalData?.is_alive || viewModalData?.isAlive) === "Yes"
                               ? "Alive"
-                              : "Dead"}
+                              : "Kaaldharma"}
                           </span>
                         </div>
                       </div>
                     </div>
 
-                   
-                   
+
+
 
                     {/* RBF SECTION */}
-                    
+
 
                     {/* STATUS BASED */}
                     {(viewModalData?.is_alive || viewModalData?.isAlive) === "Yes" && (
@@ -1794,8 +1794,21 @@ const DiksharthiListing = () => {
             </div>
             <div className="px-5 py-4 space-y-3 text-sm">
               <p>
-                <span className="font-semibold">Diksharthi:</span>{" "}
+                <span className="font-semibold">M.S. ID:</span>{" "}
+                {assignModalData?.id || "-"}
+              </p>
+              <p>
+                <span className="font-semibold">M.S. Name:</span>{" "}
                 {assignModalData?.sadhu_sadhvi_name || "-"}
+              </p>
+              <p>
+                <span className="font-semibold">Family Member Name:</span>{" "}
+                {assignModalData?.family_member_firstName || "-"} { " "}
+                {assignModalData?.family_member_lastName || "-"}
+              </p>
+              <p>
+                <span className="font-semibold">Mobile No :</span>{" "}
+                {assignModalData?.mobile_no || "-"}
               </p>
               <label className="block">
                 <span className="font-semibold">Karyakarta :</span>
@@ -2067,7 +2080,7 @@ const DiksharthiListing = () => {
                     <table className="w-full text-sm text-left">
                       <tbody className="divide-y divide-gray-100">
                         <tr className="bg-white">
-                          <td className="px-1 py-1 font-semibold text-gray-600 w-1/3">Diksharthi</td>
+                          <td className="px-1 py-1 font-semibold text-gray-600 w-1/3">M.S. Name</td>
                           <td className="px-4 py-1 text-gray-900">{viewScheduleModalData.diksharthi?.sadhu_sadhvi_name || "-"}</td>
                         </tr>
                         <tr className="bg-gray-50/50">
@@ -2121,11 +2134,11 @@ const DiksharthiListing = () => {
                         Scheduling Details
                       </h4>
                       <div className="grid grid-cols-2 gap-y-2 text-xs">
-                          <span className="text-amber-700">Schedule:</span>
+                        <span className="text-amber-700">Schedule:</span>
                         <span className="font-medium text-amber-900 text-right">
                           {formatIndianDate(viewScheduleModalData?.originalSchedule?.date)} @ {viewScheduleModalData?.originalSchedule?.time}
                         </span>
-                          <span className="text-amber-700">Re-Schedule:</span>
+                        <span className="text-amber-700">Re-Schedule:</span>
                         <span className="font-medium text-amber-900 text-right">
                           {formatIndianDate(viewScheduleModalData?.reschedule?.date)} @ {viewScheduleModalData?.reschedule?.time}
                         </span>
@@ -2175,8 +2188,17 @@ const DiksharthiListing = () => {
             </div>
             <div className="px-5 py-4 space-y-3 text-sm">
               <p>
-                <span className="font-semibold">Diksharthi:</span>{" "}
+                <span className="font-semibold">M.S. ID:</span>{" "}
+                {feedbackModalData?.id || "-"}
+              </p>
+              <p>
+                <span className="font-semibold">M.S. Name:</span>{" "}
                 {feedbackModalData?.sadhu_sadhvi_name || "-"}
+              </p>
+              <p>
+                <span className="font-semibold">Family Member Name :</span>{" "}
+                {`${feedbackModalData?.family_member_firstName || ""} ${feedbackModalData?.family_member_lastName || ""
+                  }`.trim() || "-"}
               </p>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -2220,7 +2242,7 @@ const DiksharthiListing = () => {
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 px-4">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col overflow-hidden">
             <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-              <h3 className="text-lg font-semibold text-gray-800">Feedback</h3>
+              <h3 className="text-lg font-semibold text-gray-800">View Feedback</h3>
               <button
                 type="button"
                 className="p-1 rounded hover:bg-gray-100"
@@ -2231,8 +2253,17 @@ const DiksharthiListing = () => {
             </div>
             <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3 text-sm">
               <p>
-                <span className="font-semibold">Diksharthi:</span>{" "}
+                <span className="font-semibold">M.S. ID :</span>{" "}
+                {viewFeedbackModalData.diksharthi?.id || "-"}
+              </p>
+              <p>
+                <span className="font-semibold">M.S. Name :</span>{" "}
                 {viewFeedbackModalData.diksharthi?.sadhu_sadhvi_name || "-"}
+              </p>
+              <p>
+                <span className="font-semibold">Family Member Name :</span>{" "}
+                {`${viewFeedbackModalData.diksharthi?.family_member_firstName || ""} ${viewFeedbackModalData.diksharthi?.family_member_lastName || ""
+                  }`.trim() || "-"}
               </p>
               {isFeedbackLoading ? (
                 <p className="text-gray-500 animate-pulse">Loading feedback...</p>

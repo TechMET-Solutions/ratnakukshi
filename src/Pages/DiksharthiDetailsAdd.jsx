@@ -420,10 +420,10 @@ if (name === "isMarried" && value === "Yes") {
   };
 
   const filteredRelations = RELATIONS.filter((item) => {
-    if (formData.gender === "Sadhu" && item.value === "husband") {
+    if (formData.gender === "Sadhu" && item.value === "Husband") {
       return false;
     }
-    if (formData.gender === "Sadhvi" && item.value === "wife") {
+    if (formData.gender === "Sadhvi" && item.value === "Wife") {
       return false;
     }
     return true;
@@ -434,7 +434,7 @@ if (name === "isMarried" && value === "Yes") {
       <div className="w-full max-w-8xl bg-white p-6 shadow-sm">
         <div className="flex items-center gap-2 mb-8 text-slate-800">
           <FileText size={20} />
-          <h2 className="text-xl font-bold"> Diksharthi Details</h2>
+          <h2 className="text-xl font-bold"> Ratnakukshi Family Basic Info</h2>
         </div>
 
         <div className="grid grid-cols-4 gap-6 mt-5">
@@ -447,13 +447,13 @@ if (name === "isMarried" && value === "Yes") {
 
           {/* DOB (Optional) */}
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Date of Birth of Maharaj saheb</label>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Date of Birth of M.S.</label>
             <input name="dob" max={getMaxDOB()} value={formData.dob} onChange={handleChange} type="date" className="w-full p-2 border border-slate-300 rounded-md outline-none" />
           </div>
 
           {/* Age (Manual Input) */}
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Age of Maharaj saheb</label>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Age of M.S.</label>
             <input name="age" type="number" value={formData.age} onChange={handleChange} className="w-full p-2 border border-slate-300 rounded-md outline-none" />
           </div>
 
@@ -599,7 +599,7 @@ if (name === "isMarried" && value === "Yes") {
             </div>
           )}
 
-            {formData.relation === "other" && (
+            {formData.relation === "Other" && (
       <div>
         <label className="block text-sm font-medium text-slate-700 mb-1">
           Relation Name <span className="text-red-500">*</span>
@@ -620,7 +620,7 @@ if (name === "isMarried" && value === "Yes") {
       </div>
     )}
 
-          {(formData.relation === "sister" || formData.relation === "daughter") && (
+          {(formData.relation === "Sister" || formData.relation === "Daughter") && (
   <div>
     <label className="block text-sm font-medium text-slate-700 mb-1">
       Is Married? <span className="text-red-500">*</span>

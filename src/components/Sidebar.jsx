@@ -96,13 +96,10 @@ const Sidebar = () => {
           to="/diksharthi-details"
           icon={<FileBadge size={22} />}
           label={isStaff
-            ? "Diksharthi Details"
-            : "Family Details"}
+            ? "Ratnakukshi Family Info"
+            : "Ratnakukshi Family Info"}
         />
-        
-        {isKaryakarta && (
-          <NavItem isCollapsed={isCollapsed} to="/profile" icon={<UserCircle size={22} />} label="Profile" />
-        )}
+     
 
         {(isAdmin || isKaryakarta || isCaseCoordinator || isExpertPanel || isCommitteeMember) && (
           <>
@@ -111,12 +108,17 @@ const Sidebar = () => {
           </>
         )}
 
+
+        {isKaryakarta && (
+          <NavItem isCollapsed={isCollapsed} to="/profile" icon={<UserCircle size={22} />} label="Profile" />
+        )}
+
         {(isAdmin || isStaff) && (
           <NavItem
             isCollapsed={isCollapsed}
-            to="/donor"
+            to="/members-contributions"
             icon={<Users size={22} />}
-            label="Donor"
+            label="Members and Contributions"
           />
         )}
         
