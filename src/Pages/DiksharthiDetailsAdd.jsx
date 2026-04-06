@@ -771,7 +771,24 @@ if (name === "isMarried" && value === "Yes") {
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Village / Post Office</label>
 
+              {/* <select
+                value={formData.village || ""}
+                onChange={(e) => {
+                  const selected = JSON.parse(e.target.value);
+
+                  setFormData((prev) => ({
+                    ...prev,
+                    village: selected.Name,
+                    taluka: selected.Block,
+                    district: selected.District,
+                    state: selected.State,
+                  }));
+                }}
+                className="w-full p-2 border rounded-md"
+              > */}
+
               <select
+                value={formData.village || ""}
                 onChange={(e) => {
                   const selected = JSON.parse(e.target.value);
 

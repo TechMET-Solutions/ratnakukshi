@@ -111,6 +111,7 @@ const DiksharthiListing = () => {
   const [scheduleForm, setScheduleForm] = useState(emptyScheduleForm);
   const [isSchedulingVisit, setIsSchedulingVisit] = useState(false);
   const [isViewScheduleLoading, setIsViewScheduleLoading] = useState(false);
+  const [updatingVisitStatusId, setUpdatingVisitStatusId] = useState(null);
 
   // Feedback states
   const [feedbackModalData, setFeedbackModalData] = useState(null);
@@ -319,6 +320,12 @@ const DiksharthiListing = () => {
   const hasAnyVisitSchedule = (diksharthi) =>
     hasVisitDateTime(diksharthi) || hasRescheduledVisit(diksharthi);
 
+  const isVisitMarkedYes = (diksharthi) =>
+    String(diksharthi?.current_visit_status || "").trim().toLowerCase() === "yes";
+
+  const shouldUseRescheduleFlow = (diksharthi) =>
+    hasAnyVisitSchedule(diksharthi) && !isVisitMarkedYes(diksharthi);
+
   const fetchAdminUsers = async () => {
     try {
       setIsAdminListLoading(true);
@@ -350,13 +357,18 @@ const DiksharthiListing = () => {
 
   const openScheduleVisitModal = (diksharthi) => {
     const isRescheduled = hasRescheduledVisit(diksharthi);
+    const openForFreshSchedule = !shouldUseRescheduleFlow(diksharthi);
     setScheduleVisitModalData(diksharthi);
     setScheduleForm({
       ...emptyScheduleForm,
-      date: isRescheduled ? diksharthi?.revisit_date || "" : diksharthi?.visit_date || "",
+      date: openForFreshSchedule
+        ? ""
+        : isRescheduled
+          ? diksharthi?.revisit_date || ""
+          : diksharthi?.visit_date || "",
       time: isRescheduled
-        ? (diksharthi?.resvisit_time ? String(diksharthi.resvisit_time).slice(0, 5) : "")
-        : (diksharthi?.visit_time ? String(diksharthi.visit_time).slice(0, 5) : ""),
+        ? (openForFreshSchedule ? "" : (diksharthi?.resvisit_time ? String(diksharthi.resvisit_time).slice(0, 5) : ""))
+        : (openForFreshSchedule ? "" : (diksharthi?.visit_time ? String(diksharthi.visit_time).slice(0, 5) : "")),
       mobile: diksharthi?.mobile_no || "",
     });
   };
@@ -380,7 +392,7 @@ const DiksharthiListing = () => {
     try {
       setIsSchedulingVisit(true);
 
-      const isReschedule = hasVisitDateTime(scheduleVisitModalData);
+      const isReschedule = shouldUseRescheduleFlow(scheduleVisitModalData);
       const endpoint = isReschedule
         ? `${API}/api/reschedule/${scheduleVisitModalData.id}`
         : `${API}/api/schedule-visit/${scheduleVisitModalData.id}`;
@@ -411,6 +423,33 @@ const DiksharthiListing = () => {
       alert(error?.message || "Failed to schedule visit");
     } finally {
       setIsSchedulingVisit(false);
+    }
+  };
+
+  const handleVisitStatusChange = async (diksharthi, nextStatus) => {
+    if (!diksharthi?.id || !nextStatus) return;
+
+    try {
+      setUpdatingVisitStatusId(diksharthi.id);
+      const response = await fetch(`${API}/api/visit-status/${diksharthi.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ is_visited: nextStatus }),
+      });
+
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(result?.message || "Failed to update visit status");
+      }
+
+      await fetchDiksharthiList();
+    } catch (error) {
+      console.error(error);
+      alert(error?.message || "Failed to update visit status");
+    } finally {
+      setUpdatingVisitStatusId(null);
     }
   };
 
@@ -1011,6 +1050,9 @@ const DiksharthiListing = () => {
               <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">
                 Actions
               </th>
+              <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">
+                is Visted ?
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -1174,7 +1216,7 @@ const DiksharthiListing = () => {
                               className="rounded-lg bg-emerald-600 text-sm px-2 py-1 text-white"
                               onClick={() => openScheduleVisitModal(diksharthi)}
                             >
-                              {hasVisitDateTime(diksharthi) ? "Reschedule Visit" : "Schedule Visit"}
+                              {shouldUseRescheduleFlow(diksharthi) ? "Reschedule Visit" : "Schedule Visit"}
                             </button>
                           )}
 
@@ -1239,12 +1281,24 @@ const DiksharthiListing = () => {
                           )}
 
                           {hasAnyVisitSchedule(diksharthi) && (
-                            <button
-                              className="rounded-lg bg-indigo-600 text-sm px-2 py-1 text-white"
-                              onClick={() => openViewScheduleModal(diksharthi)}
-                            >
-                              View Schedule
-                            </button>
+                            <div className="flex items-center gap-2">
+                              <button
+                                className="rounded-lg bg-indigo-600 text-sm px-2 py-1 text-white"
+                                onClick={() => openViewScheduleModal(diksharthi)}
+                              >
+                                View Schedule
+                              </button>
+                              <select
+                                className="rounded-lg border border-gray-300 text-sm px-2 py-1"
+                                value={diksharthi?.current_visit_status || ""}
+                                disabled={updatingVisitStatusId === diksharthi.id}
+                                onChange={(e) => handleVisitStatusChange(diksharthi, e.target.value)}
+                              >
+                                <option value="">Is Visited?</option>
+                                <option value="Yes">Yes</option>
+                                <option value="No">No</option>
+                              </select>
+                            </div>
                           )}
 
                           {!feedbackStatus[diksharthi.id] && (
@@ -1334,11 +1388,14 @@ const DiksharthiListing = () => {
                               className="rounded-lg bg-emerald-600 text-sm px-2 py-1 text-white"
                               onClick={() => openScheduleVisitModal(diksharthi)}
                             >
-                              {hasVisitDateTime(diksharthi) ? "Reschedule Visit" : "Schedule Visit"}
+                              {shouldUseRescheduleFlow(diksharthi) ? "Reschedule Visit" : "Schedule Visit"}
                             </button>
                           )}
                         </>
                       )}
+
+                    </td>
+                    <td className="px-6 py-3">
 
                     </td>
                   </tr>
@@ -1753,7 +1810,7 @@ const DiksharthiListing = () => {
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg">
             <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
               <h3 className="text-lg font-semibold text-gray-800">
-                {hasVisitDateTime(scheduleVisitModalData) ? "Reschedule Visit" : "Schedule Visit"}
+                {shouldUseRescheduleFlow(scheduleVisitModalData) ? "Reschedule Visit" : "Schedule Visit"}
               </h3>
               <button
                 type="button"
@@ -1767,7 +1824,7 @@ const DiksharthiListing = () => {
               </button>
             </div>
 
-            {hasVisitDateTime(scheduleVisitModalData) && (
+            {shouldUseRescheduleFlow(scheduleVisitModalData) && (
               <div className=" px-6 rounded-lg overflow-hidden text-sm">
                 <div className="py-2 font-medium text-gray-900">
                   Current Scheduled Visit
@@ -1846,7 +1903,7 @@ const DiksharthiListing = () => {
               >
                 {isSchedulingVisit
                   ? "Saving..."
-                  : hasVisitDateTime(scheduleVisitModalData)
+                  : shouldUseRescheduleFlow(scheduleVisitModalData)
                     ? "Save Reschedule"
                     : "Save Visit Schedule"}
               </button>
