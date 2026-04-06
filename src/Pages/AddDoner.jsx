@@ -427,12 +427,6 @@ function AddDonor() {
         },
       };
 
-      // delete payload.personalDetails.gender;
-      // delete payload.personalDetails.dob;
-      // delete payload.personalDetails.mobileNumber;
-      // delete payload.personalDetails.altMobileNumber;
-      // delete payload.familyDetails.spouseDob;
-
       if (isEditMode) {
         if (!resolvedDonorId) {
           alert("Donor id is missing for update.");
@@ -477,13 +471,13 @@ function AddDonor() {
       }
 
       const response = await fetch(
-        isEditMode
-          ? `${API}/api/donor/update/${resolvedDonorId}`
-          : `${API}/api/donor/create`,
+        donorId
+          ? `${API}/api/donor/update/${donorId}`  // ✅ UPDATE
+          : `${API}/api/donor/create`,           // fallback
         {
-          method: isEditMode ? "PUT" : "POST",
+          method: donorId ? "PUT" : "POST",
           body: requestData,
-        },
+        }
       );
 
       const data = await response.json();

@@ -74,6 +74,7 @@ const FamilyDetailsForm = () => {
     "Housing",
     "Vaiyavacch",
     "LivelihoodExpenses",
+    "Business"
   ]);
 
   ;

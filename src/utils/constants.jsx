@@ -1,12 +1,12 @@
 export const RELATIONS = [
-    { label: "Father", value: "father" },
-    { label: "Mother", value: "mother" },
-    { label: "Husband", value: "husband" },
-    { label: "Wife", value: "wife" },
-    { label: "Son", value: "son" },
-    { label: "Daughter", value: "daughter" },
-    { label: "Sister", value: "sister" },
-    { label: "Other", value: "other" },
+    { label: "Father", value: "Father" },
+    { label: "Mother", value: "Mother" },
+    { label: "Husband", value: "Husband" },
+    { label: "Wife", value: "Wife" },
+    { label: "Son", value: "Son" },
+    { label: "Daughter", value: "Daughter" },
+    { label: "Sister", value: "Sister" },
+    { label: "Other", value: "Other" },
 ];
 
 export const GENDER = [

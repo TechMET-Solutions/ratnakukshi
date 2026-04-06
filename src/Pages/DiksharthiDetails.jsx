@@ -23,6 +23,21 @@ const MenuItem = ({ children, onClick }) => (
   </button>
 );
 
+const Section = ({ title, children }) => (
+  <div className="space-y-3">
+    <h4 className="text-sm font-semibold text-blue-600 uppercase tracking-wide">
+      {title}
+    </h4>
+    {children}
+  </div>
+);
+
+const Grid = ({ children }) => (
+  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    {children}
+  </div>
+);
+
 const normalizeRole = (value) => {
   const rawRole = String(value || "").trim().toLowerCase();
 
@@ -298,6 +313,12 @@ const DiksharthiListing = () => {
     return Boolean(diksharthi?.visit_date && diksharthi?.visit_time);
   };
 
+  const hasRescheduledVisit = (diksharthi) =>
+    Boolean(diksharthi?.revisit_date && diksharthi?.resvisit_time);
+
+  const hasAnyVisitSchedule = (diksharthi) =>
+    hasVisitDateTime(diksharthi) || hasRescheduledVisit(diksharthi);
+
   const fetchAdminUsers = async () => {
     try {
       setIsAdminListLoading(true);
@@ -328,11 +349,14 @@ const DiksharthiListing = () => {
   };
 
   const openScheduleVisitModal = (diksharthi) => {
+    const isRescheduled = hasRescheduledVisit(diksharthi);
     setScheduleVisitModalData(diksharthi);
     setScheduleForm({
       ...emptyScheduleForm,
-      date: diksharthi?.visit_date || "",
-      time: diksharthi?.visit_time ? String(diksharthi.visit_time).slice(0, 5) : "",
+      date: isRescheduled ? diksharthi?.revisit_date || "" : diksharthi?.visit_date || "",
+      time: isRescheduled
+        ? (diksharthi?.resvisit_time ? String(diksharthi.resvisit_time).slice(0, 5) : "")
+        : (diksharthi?.visit_time ? String(diksharthi.visit_time).slice(0, 5) : ""),
       mobile: diksharthi?.mobile_no || "",
     });
   };
@@ -356,15 +380,20 @@ const DiksharthiListing = () => {
     try {
       setIsSchedulingVisit(true);
 
-      const response = await fetch(`${API}/api/schedule-visit/${scheduleVisitModalData.id}`, {
+      const isReschedule = hasVisitDateTime(scheduleVisitModalData);
+      const endpoint = isReschedule
+        ? `${API}/api/reschedule/${scheduleVisitModalData.id}`
+        : `${API}/api/schedule-visit/${scheduleVisitModalData.id}`;
+      const payload = isReschedule
+        ? { revisit_date: scheduleForm.date, resvisit_time: scheduleForm.time }
+        : { visit_date: scheduleForm.date, visit_time: scheduleForm.time };
+
+      const response = await fetch(endpoint, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          visit_date: scheduleForm.date,
-          visit_time: scheduleForm.time,
-        }),
+        body: JSON.stringify(payload),
       });
 
       const result = await response.json().catch(() => ({}));
@@ -375,7 +404,7 @@ const DiksharthiListing = () => {
 
       setScheduleVisitModalData(null);
       setScheduleForm(emptyScheduleForm);
-      alert(result?.message || "Visit schedule saved successfully");
+      alert(result?.message || (isReschedule ? "Visit rescheduled successfully" : "Visit schedule saved successfully"));
       await fetchDiksharthiList();
     } catch (error) {
       console.error(error);
@@ -391,9 +420,18 @@ const DiksharthiListing = () => {
       setViewScheduleModalData({
         diksharthi,
         schedule: {
+          date: diksharthi?.revisit_date || diksharthi?.visit_date || "",
+          time: diksharthi?.resvisit_time || diksharthi?.visit_time || "",
+        },
+        originalSchedule: {
           date: diksharthi?.visit_date || "",
           time: diksharthi?.visit_time || "",
         },
+        rescheduled: hasRescheduledVisit(diksharthi),
+        reschedule: {
+          date: diksharthi?.revisit_date || "",
+          time: diksharthi?.resvisit_time || "",
+        }
       });
     } finally {
       setIsViewScheduleLoading(false);
@@ -869,7 +907,7 @@ const DiksharthiListing = () => {
       {/* Header Section */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-slate-700">
-          {role === "staff" ? "Add Basic Family Member Details and MS Details" : "Family Details"}
+          {role === "staff" ? "Basic Family Member and MS Details" : "Family Details"}
         </h1>
         {role === "staff" && (
           <div className="flex gap-6">
@@ -1131,12 +1169,12 @@ const DiksharthiListing = () => {
                             </button>
                           )}
 
-                          {!isAdminUnassigned(diksharthi) && !hasVisitDateTime(diksharthi) && (
+                          {!isAdminUnassigned(diksharthi) && (
                             <button
                               className="rounded-lg bg-emerald-600 text-sm px-2 py-1 text-white"
                               onClick={() => openScheduleVisitModal(diksharthi)}
                             >
-                              Schedule Visit
+                              {hasVisitDateTime(diksharthi) ? "Reschedule Visit" : "Schedule Visit"}
                             </button>
                           )}
 
@@ -1200,7 +1238,7 @@ const DiksharthiListing = () => {
                             </button>
                           )}
 
-                          {hasVisitDateTime(diksharthi) && (
+                          {hasAnyVisitSchedule(diksharthi) && (
                             <button
                               className="rounded-lg bg-indigo-600 text-sm px-2 py-1 text-white"
                               onClick={() => openViewScheduleModal(diksharthi)}
@@ -1290,6 +1328,15 @@ const DiksharthiListing = () => {
                               </button>
                             </div>
                           )}
+
+                          {!isAdminUnassigned(diksharthi) && (
+                            <button
+                              className="rounded-lg bg-emerald-600 text-sm px-2 py-1 text-white"
+                              onClick={() => openScheduleVisitModal(diksharthi)}
+                            >
+                              {hasVisitDateTime(diksharthi) ? "Reschedule Visit" : "Schedule Visit"}
+                            </button>
+                          )}
                         </>
                       )}
 
@@ -1327,11 +1374,10 @@ const DiksharthiListing = () => {
         </div>
       </div>
 
-      {(role === "operations-manager" || role === "staff") &&
+      {/* {(role === "operations-manager" || role === "staff") &&
         (viewModalData || isViewLoading) && (
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 px-4">
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
-              {/* Modal Header */}
               <div className="flex items-center justify-between px-6 pt-6 ">
                 <h3 className="text-xl font-bold text-gray-800">Diksharthi Profile</h3>
                 <button
@@ -1346,7 +1392,6 @@ const DiksharthiListing = () => {
                 </button>
               </div>
 
-              {/* Modal Body */}
               <div className="flex-1 overflow-y-auto px-6 pb-6 mt-4">
                 {isViewLoading ? (
                   <div className="flex justify-center py-10">
@@ -1354,7 +1399,6 @@ const DiksharthiListing = () => {
                   </div>
                 ) : (
                   <div className="space-y-6">
-                    {/* Top Section: Info + Image */}
                     <div className="flex flex-col-reverse sm:flex-row gap-6 pb-4 border-b border-gray-100">
                       <div className="flex-1 space-y-3">
                         <div>
@@ -1385,7 +1429,6 @@ const DiksharthiListing = () => {
                         <DetailItem label="Alt Mobile No" value={viewModalData?.alt_mobile_no} />
                       </div>
 
-                      {/* Image Section */}
                       <div className="flex-shrink-0 flex justify-center sm:justify-end">
                         <div className="relative">
                           <img
@@ -1402,11 +1445,8 @@ const DiksharthiListing = () => {
                         </div>
                       </div>
                     </div>
-
-                    {/* Detailed Data Grid */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
                       <DetailItem label="Date of Birth" value={formatIndianDate(viewModalData?.dob)} />
-                      {/* Fixed Age: Removed formatIndianDate wrap since age is a number/string */}
                       <DetailItem label="Age" value={viewModalData?.age || "N/A"} />
 
                       <DetailItem label="Gender" value={viewModalData?.gender} />
@@ -1433,7 +1473,6 @@ const DiksharthiListing = () => {
                         }
                       />
 
-                      {/* RBF Fields */}
                       <DetailItem label="RBF Criteria" value={viewModalData?.rbf_criteria || viewModalData?.rbfCriteria || "No"} />
                       {(viewModalData?.rbf_criteria === "Yes" || viewModalData?.rbfCriteria === "Yes") && (
                         <>
@@ -1450,12 +1489,10 @@ const DiksharthiListing = () => {
                         </>
                       )}
 
-                      {/* Alive Specific Info */}
                       {(viewModalData?.is_alive || viewModalData?.isAlive) === "Yes" && (
                         <DetailItem label="Current Vihar Location" value={viewModalData?.vihar_location || viewModalData?.viharLocation} />
                       )}
 
-                      {/* Dead Specific Info */}
                       {(viewModalData?.is_alive || viewModalData?.isAlive) === "No" && (
                         <>
                           <DetailItem label="Samadhi Date" value={formatIndianDate(viewModalData?.samadhi_date || viewModalData?.samadhiDate)} />
@@ -1471,6 +1508,182 @@ const DiksharthiListing = () => {
                           dangerouslySetInnerHTML={{ __html: viewModalData.summary }}
                         />
                       </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )} */}
+      
+
+      {(role === "operations-manager" || role === "staff") &&
+        (viewModalData || isViewLoading) && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 px-4">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden">
+
+              {/* Header */}
+              <div className="flex items-center justify-between px-6 py-4 border-b">
+                <h3 className="text-xl font-bold text-gray-800">
+                {viewModalData?.sadhu_sadhvi_name || "N/A"} -  {viewModalData?.id || "-"}
+                </h3>
+                <button
+                  onClick={() => {
+                    setViewModalData(null);
+                    setIsViewLoading(false);
+                  }}
+                  className="p-2 rounded-full hover:bg-gray-200"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              {/* Body */}
+              <div className="flex-1 overflow-y-auto px-6 py-5">
+
+                {isViewLoading ? (
+                  <div className="flex justify-center py-10">
+                    <p className="text-gray-500 animate-pulse">
+                      Loading profile data...
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    
+                    {(viewModalData?.rbf_criteria === "Yes" ||
+                      viewModalData?.rbfCriteria === "Yes") && (
+                        <Section title="RBF Details">
+                          <Grid>
+                            <DetailItem label="Relation" value={viewModalData?.relation} />
+                            <DetailItem
+                              label="Relation Name"
+                              value={
+                                viewModalData?.family_member_name ||
+                                `${viewModalData?.family_member_firstName || ""} ${viewModalData?.family_member_lastName || ""}`.trim()
+                              }
+                            />
+                            <DetailItem label="Assistance" value={viewModalData?.assistance_received} />
+                            <DetailItem label="Mobile No" value={viewModalData?.mobile_no} />
+                            {/* <DetailItem label="Alt Mobile No" value={viewModalData?.alt_mobile_no} /> */}
+                          </Grid>
+                        </Section>
+                      )}
+
+                    {/* ADDRESS */}
+                    <Section title="Address Details">
+                      <Grid>
+                        <DetailItem label="Permanent Address" value={viewModalData?.permanent_address} />
+                        <DetailItem label="Current Address" value={viewModalData?.current_address} />
+                        <DetailItem label="Village" value={viewModalData?.village} />
+                        <DetailItem label="Taluka" value={viewModalData?.taluka} />
+                        <DetailItem label="District" value={viewModalData?.district} />
+                        <DetailItem label="State" value={viewModalData?.state} />
+                        <DetailItem label="Pin Code" value={viewModalData?.pin_code} />
+                      </Grid>
+                    </Section>
+                    {/* TOP SECTION */}
+                    <div className="flex flex-col md:flex-row gap-6 border-t  py-6">
+                      {/* LEFT */}
+                      <div className="flex-1 space-y-3">
+                        
+                        {/* BASIC INFO */}
+                        <Section title="MS Details">
+                          <Grid>
+                            <DetailItem
+                              label="DOB / Age"
+                              value={
+                                viewModalData?.age
+                                  ? `${viewModalData.age} yrs${viewModalData?.dob
+                                    ? ` (${formatIndianDate(viewModalData.dob)})`
+                                    : ""
+                                  }`
+                                  : viewModalData?.dob
+                                    ? `${formatIndianDate(viewModalData.dob)}`
+                                    : "N/A"
+                              }
+                            />
+                            <DetailItem label="Gender" value={viewModalData?.gender} />
+                            <DetailItem label="Pad" value={viewModalData?.pad} />
+                            <DetailItem label="Samudaay" value={viewModalData?.samudaay} />
+                            <DetailItem label="Guru" value={viewModalData?.guru_name || viewModalData?.guruName} />
+                            <DetailItem label="Acharya" value={viewModalData?.acharya} />
+                            <DetailItem label="Gadipati" value={viewModalData?.gadipati} />
+                          </Grid>
+                        </Section>
+
+
+                      
+                        
+                       
+                      </div>
+
+                      {/* RIGHT IMAGE */}
+                      <div className="flex justify-center md:justify-end">
+                        <div className="relative">
+                          <img
+                            src={getProfileImageUrl(viewModalData?.photo)}
+                            onError={(e) => (e.currentTarget.src = "/user.png")}
+                            className="w-32 h-32 rounded-xl object-cover border-4 border-white shadow-md"
+                          />
+                          <span
+                            className={`absolute bottom-25 -right-2 px-2 py-1 text-xs text-white rounded ${(viewModalData?.is_alive || viewModalData?.isAlive) === "No"
+                                ? "bg-red-500"
+                                : "bg-green-500"
+                              }`}
+                          >
+                            {(viewModalData?.is_alive || viewModalData?.isAlive) === "Yes"
+                              ? "Alive"
+                              : "Dead"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                   
+                   
+
+                    {/* RBF SECTION */}
+                    
+
+                    {/* STATUS BASED */}
+                    {(viewModalData?.is_alive || viewModalData?.isAlive) === "Yes" && (
+                      <Section title="Current Status">
+                        <DetailItem
+                          label="Vihar Location"
+                          value={viewModalData?.vihar_location}
+                        />
+                      </Section>
+                    )}
+
+                    {(viewModalData?.is_alive === "No" || viewModalData?.isAlive === "No") &&
+                      (viewModalData?.samadhi_date || viewModalData?.samadhi_place) && (
+                        <Section title="Samadhi Details">
+                          <Grid>
+                            {viewModalData?.samadhi_date && (
+                              <DetailItem
+                                label="Date"
+                                value={formatIndianDate(viewModalData?.samadhi_date)}
+                              />
+                            )}
+
+                            {viewModalData?.samadhi_place && (
+                              <DetailItem
+                                label="Place"
+                                value={viewModalData?.samadhi_place}
+                              />
+                            )}
+                          </Grid>
+                        </Section>
+                      )}
+
+                    {/* SUMMARY */}
+                    {viewModalData?.summary && (
+                      <Section title="Summary">
+                        <div
+                          className="text-sm text-gray-700 prose max-w-none"
+                          dangerouslySetInnerHTML={{ __html: viewModalData.summary }}
+                        />
+                      </Section>
                     )}
                   </div>
                 )}
@@ -1535,11 +1748,13 @@ const DiksharthiListing = () => {
         </div>
       )}
 
-      {role === "operations-manager" && scheduleVisitModalData && (
+      {(role === "operations-manager" || role === "case-coordinator") && scheduleVisitModalData && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 px-4">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg">
             <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-              <h3 className="text-lg font-semibold text-gray-800">Schedule Visit</h3>
+              <h3 className="text-lg font-semibold text-gray-800">
+                {hasVisitDateTime(scheduleVisitModalData) ? "Reschedule Visit" : "Schedule Visit"}
+              </h3>
               <button
                 type="button"
                 className="p-1 rounded hover:bg-gray-100"
@@ -1551,6 +1766,38 @@ const DiksharthiListing = () => {
                 <X size={18} className="text-gray-600" />
               </button>
             </div>
+
+            {hasVisitDateTime(scheduleVisitModalData) && (
+              <div className=" px-6 rounded-lg overflow-hidden text-sm">
+                <div className="py-2 font-medium text-gray-900">
+                  Current Scheduled Visit
+                </div>
+
+                <table className="w-full border-collapse text-left">
+                  <thead className="bg-gray-100">
+                    <tr>
+                      <th className="px-3 py-2 border">Sr No</th>
+                      <th className="px-3 py-2 border">Visit Date</th>
+                      <th className="px-3 py-2 border">Visit Time</th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    <tr>
+                      <td className="px-3 py-2 border">1</td>
+                      <td className="px-3 py-2 border">
+                        {scheduleVisitModalData?.visit_date
+                          ? new Date(scheduleVisitModalData.visit_date).toLocaleDateString("en-GB")
+                          : "-"}
+                      </td>
+                      <td className="px-3 py-2 border">
+                        {scheduleVisitModalData?.visit_time || "-"}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            )}
             <div className="px-5 py-4 grid grid-cols-1 gap-4 text-sm">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
@@ -1597,7 +1844,11 @@ const DiksharthiListing = () => {
                 onClick={handleSaveVisitSchedule}
                 disabled={isSchedulingVisit}
               >
-                {isSchedulingVisit ? "Saving..." : "Save Visit Schedule"}
+                {isSchedulingVisit
+                  ? "Saving..."
+                  : hasVisitDateTime(scheduleVisitModalData)
+                    ? "Save Reschedule"
+                    : "Save Visit Schedule"}
               </button>
             </div>
           </div>
@@ -1660,6 +1911,26 @@ const DiksharthiListing = () => {
                     <span className="font-semibold">Time:</span>{" "}
                     {viewScheduleModalData.schedule.time || "-"}
                   </p>
+                  {viewScheduleModalData?.rescheduled && (
+                    <>
+                      <p>
+                        <span className="font-semibold">Original Date:</span>{" "}
+                        {formatIndianDate(viewScheduleModalData?.originalSchedule?.date)}
+                      </p>
+                      <p>
+                        <span className="font-semibold">Original Time:</span>{" "}
+                        {viewScheduleModalData?.originalSchedule?.time || "-"}
+                      </p>
+                      <p>
+                        <span className="font-semibold">Rescheduled Date:</span>{" "}
+                        {formatIndianDate(viewScheduleModalData?.reschedule?.date)}
+                      </p>
+                      <p>
+                        <span className="font-semibold">Rescheduled Time:</span>{" "}
+                        {viewScheduleModalData?.reschedule?.time || "-"}
+                      </p>
+                    </>
+                  )}
                 </>
               ) : (
                 <p className="text-gray-600">

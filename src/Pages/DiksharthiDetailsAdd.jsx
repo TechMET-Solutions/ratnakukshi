@@ -170,7 +170,7 @@ const DiksharthiDetailsAdd = () => {
     "state",
   ];
 
-  const [assistanceTypes] = useState(["Medical", "Education", "Job", "Food", "Rent", "Housing", "Vaiyavacch", "LivelihoodExpenses",]);
+  const [assistanceTypes] = useState(["Medical", "Education", "Job", "Food", "Rent", "Housing", "Vaiyavacch", "LivelihoodExpenses", "Business"]);
 
 
   const validateRbfField = (fieldName, fieldValue, rbfCriteria) => {
@@ -854,92 +854,7 @@ if (name === "isMarried" && value === "Yes") {
   </div>
 )}
 
-          {formData.assistanceReceived === "Yes" && (
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Assistance</label>
-              {/* <input name="state" value={formData.state} onChange={handleChange} type="text" className="w-full p-2 border border-slate-300 rounded-md outline-none" />
-
-              <input
-                type="checkbox"
-                value={formData.}
-                // checked={formData.relation.includes(item.value)}
-                onChange={handleChange}
-              /> */}
-
-              {/* <div className="flex flex-wrap gap-4">
-                {RELATIONS.map((item) => (
-                  <label key={item.value} className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      value={item.value}
-                      checked={formData.relation === item.value}
-                      onChange={(e) =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          relation: e.target.value,
-                        }))
-                      }
-                    />
-                    {item.label}
-                  </label>
-                ))}
-              </div> */}
-
-              {/* <div className="flex flex-wrap gap-4">
-                {RELATIONS.map((item) => (
-                  <label key={item.value} className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      value={item.value}
-                      checked={formData.family_relation.includes(item.value)}
-                      onChange={(e) => {
-                        const value = e.target.value;
-
-                        setFormData((prev) => {
-                          const exists = prev.family_relation.includes(value);
-
-                          return {
-                            ...prev,
-                            family_relation: exists
-                              ? prev.family_relation.filter((r) => r !== value)
-                              : [...prev.family_relation, value],
-                          };
-                        });
-                      }}
-                    />
-                    {item.label}
-                  </label>
-                ))}
-              </div> */}
-
-              <div className="flex flex-wrap gap-4">
-                {assistanceTypes.map((type) => (
-                  <label key={type} className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      value={type}
-                      checked={formData.assistance?.includes(type)}
-                      onChange={(e) => {
-                        const value = e.target.value;
-
-                        setFormData((prev) => {
-                          const exists = prev.assistance?.includes(value);
-
-                          return {
-                            ...prev,
-                            assistance: exists
-                              ? prev.assistance.filter((a) => a !== value)
-                              : [...(prev.assistance || []), value],
-                          };
-                        });
-                      }}
-                    />
-                    {type}
-                  </label>
-                ))}
-              </div>
-            </div>
-          )}
+         
 
           {formData.assistanceReceived === "Yes" && (
 
@@ -953,6 +868,38 @@ if (name === "isMarried" && value === "Yes") {
             </div>
           )}
         </div>
+
+        {formData.assistanceReceived === "Yes" && (
+          <div className="my-6">
+            <label className="block text-sm font-medium text-slate-700 mb-1">Assistance</label>
+            <div className="flex flex-wrap gap-4">
+              {assistanceTypes.map((type) => (
+                <label key={type} className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    value={type}
+                    checked={formData.assistance?.includes(type)}
+                    onChange={(e) => {
+                      const value = e.target.value;
+
+                      setFormData((prev) => {
+                        const exists = prev.assistance?.includes(value);
+
+                        return {
+                          ...prev,
+                          assistance: exists
+                            ? prev.assistance.filter((a) => a !== value)
+                            : [...(prev.assistance || []), value],
+                        };
+                      });
+                    }}
+                  />
+                  {type}
+                </label>
+              ))}
+            </div>
+          </div>
+        )}
 
 
         <div className="col-span-4">
@@ -971,19 +918,17 @@ if (name === "isMarried" && value === "Yes") {
           />
         </div>
 
-        <div className="col-span-4 mt-2">
+        {/* <div className="col-span-4 mt-2">
           <label className="block text-sm font-medium text-slate-700 mb-1 ">
             Assistance Reasons
           </label>
 
           {formData?.deselected_assistance?.length > 0 ? (
             <div className="space-y-2">
-              {/* Summary Message */}
               <p className="text-sm text-red-500">
                 The Karyakarta has deselected assistance for the following reason(s):
               </p>
 
-              {/* List */}
               <ul className="list-disc pl-5 text-sm text-red-500">
                 {formData.deselected_assistance.map((item, index) => (
                   <li key={index} className="leading-relaxed">
@@ -999,9 +944,33 @@ if (name === "isMarried" && value === "Yes") {
               No assistance reasons selected.
             </p>
           )}
+        </div> */}
+
+        <div className="col-span-4 mt-2">
+          {formData?.deselected_assistance?.length ? (
+            <>
+              <label className="block text-sm font-medium text-slate-700 mb-1">
+                Assistance Reasons
+              </label>
+
+              <div className="space-y-2">
+                <p className="text-sm text-red-500">
+                  The Karyakarta has deselected assistance for the following reason(s):
+                </p>
+
+                <ul className="list-disc pl-5 text-sm text-red-500">
+                  {formData.deselected_assistance.map((item, index) => (
+                    <li key={index} className="leading-relaxed">
+                      <span className="font-semibold">{item.type}</span>{" "}
+                      — {item.reason}{" "}
+                      <span className="text-red-500">({item.relation})</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </>
+          ) : null}
         </div>
-
-
 
         <div className="p-6 flex justify-between items-center bg-white mt-4">
           <button onClick={() => navigate(-1)} className="bg-[#fbc02d] text-white px-10 py-2 rounded font-bold uppercase text-sm">Cancel</button>
