@@ -310,12 +310,41 @@ const DiksharthiListing = () => {
     return matchedUser?.name || matchedUser?.email || String(userId);
   };
 
-  const hasVisitDateTime = (diksharthi) => {
-    return Boolean(diksharthi?.visit_date && diksharthi?.visit_time);
+  const getVisitScheduleObject = (diksharthi) => {
+    const raw = diksharthi?.visit_schedule_json;
+    if (!raw) return { cycles: [] };
+    if (typeof raw === "object") {
+      return { cycles: Array.isArray(raw?.cycles) ? raw.cycles : [] };
+    }
+    try {
+      const parsed = JSON.parse(raw);
+      return { cycles: Array.isArray(parsed?.cycles) ? parsed.cycles : [] };
+    } catch (_error) {
+      return { cycles: [] };
+    }
   };
 
-  const hasRescheduledVisit = (diksharthi) =>
-    Boolean(diksharthi?.revisit_date && diksharthi?.resvisit_time);
+  const getLatestVisitCycle = (diksharthi) => {
+    const schedule = getVisitScheduleObject(diksharthi);
+    return schedule.cycles[schedule.cycles.length - 1] || null;
+  };
+
+  const getCurrentSchedule = (diksharthi) => {
+    const latest = getLatestVisitCycle(diksharthi);
+    const rescheduled = latest?.rescheduled || null;
+    const scheduled = latest?.scheduled || null;
+    return rescheduled || scheduled || null;
+  };
+
+  const hasVisitDateTime = (diksharthi) => {
+    const current = getCurrentSchedule(diksharthi);
+    return Boolean(current?.date && current?.time);
+  };
+
+  const hasRescheduledVisit = (diksharthi) => {
+    const latest = getLatestVisitCycle(diksharthi);
+    return Boolean(latest?.rescheduled?.date && latest?.rescheduled?.time);
+  };
 
   const hasAnyVisitSchedule = (diksharthi) =>
     hasVisitDateTime(diksharthi) || hasRescheduledVisit(diksharthi);
@@ -356,19 +385,17 @@ const DiksharthiListing = () => {
   };
 
   const openScheduleVisitModal = (diksharthi) => {
-    const isRescheduled = hasRescheduledVisit(diksharthi);
+    const current = getCurrentSchedule(diksharthi);
     const openForFreshSchedule = !shouldUseRescheduleFlow(diksharthi);
     setScheduleVisitModalData(diksharthi);
     setScheduleForm({
       ...emptyScheduleForm,
       date: openForFreshSchedule
         ? ""
-        : isRescheduled
-          ? diksharthi?.revisit_date || ""
-          : diksharthi?.visit_date || "",
-      time: isRescheduled
-        ? (openForFreshSchedule ? "" : (diksharthi?.resvisit_time ? String(diksharthi.resvisit_time).slice(0, 5) : ""))
-        : (openForFreshSchedule ? "" : (diksharthi?.visit_time ? String(diksharthi.visit_time).slice(0, 5) : "")),
+        : String(current?.date || "").slice(0, 10),
+      time: openForFreshSchedule
+        ? ""
+        : String(current?.time || "").slice(0, 5),
       mobile: diksharthi?.mobile_no || "",
     });
   };
@@ -396,9 +423,7 @@ const DiksharthiListing = () => {
       const endpoint = isReschedule
         ? `${API}/api/reschedule/${scheduleVisitModalData.id}`
         : `${API}/api/schedule-visit/${scheduleVisitModalData.id}`;
-      const payload = isReschedule
-        ? { revisit_date: scheduleForm.date, resvisit_time: scheduleForm.time }
-        : { visit_date: scheduleForm.date, visit_time: scheduleForm.time };
+      const payload = { date: scheduleForm.date, time: scheduleForm.time };
 
       const response = await fetch(endpoint, {
         method: "PUT",
@@ -458,18 +483,15 @@ const DiksharthiListing = () => {
     try {
       setViewScheduleModalData({
         diksharthi,
-        schedule: {
-          date: diksharthi?.revisit_date || diksharthi?.visit_date || "",
-          time: diksharthi?.resvisit_time || diksharthi?.visit_time || "",
-        },
+        schedule: getCurrentSchedule(diksharthi) || { date: "", time: "" },
         originalSchedule: {
-          date: diksharthi?.visit_date || "",
-          time: diksharthi?.visit_time || "",
+          date: getLatestVisitCycle(diksharthi)?.scheduled?.date || "",
+          time: getLatestVisitCycle(diksharthi)?.scheduled?.time || "",
         },
         rescheduled: hasRescheduledVisit(diksharthi),
         reschedule: {
-          date: diksharthi?.revisit_date || "",
-          time: diksharthi?.resvisit_time || "",
+          date: getLatestVisitCycle(diksharthi)?.rescheduled?.date || "",
+          time: getLatestVisitCycle(diksharthi)?.rescheduled?.time || "",
         }
       });
     } finally {
@@ -878,10 +900,10 @@ const DiksharthiListing = () => {
         PinCode: item.pin_code,
 
         // ================= VISIT =================
-        Visit_Date: item.visit_date
-          ? formatIndianDate(item.visit_date)
+        Visit_Date: getCurrentSchedule(item)?.date
+          ? formatIndianDate(getCurrentSchedule(item)?.date)
           : "",
-        Visit_Time: item.visit_time,
+        Visit_Time: getCurrentSchedule(item)?.time || "",
 
         // ================= SYSTEM =================
         Status: item.status,
@@ -1050,9 +1072,12 @@ const DiksharthiListing = () => {
               <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">
                 Actions
               </th>
-              <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">
+              {role === "karyakarta" && (
+
+                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">
                 is Visted ?
               </th>
+              )}
             </tr>
           </thead>
           <tbody>
@@ -1288,16 +1313,6 @@ const DiksharthiListing = () => {
                               >
                                 View Schedule
                               </button>
-                              <select
-                                className="rounded-lg border border-gray-300 text-sm px-2 py-1"
-                                value={diksharthi?.current_visit_status || ""}
-                                disabled={updatingVisitStatusId === diksharthi.id}
-                                onChange={(e) => handleVisitStatusChange(diksharthi, e.target.value)}
-                              >
-                                <option value="">Is Visited?</option>
-                                <option value="Yes">Yes</option>
-                                <option value="No">No</option>
-                              </select>
                             </div>
                           )}
 
@@ -1395,9 +1410,24 @@ const DiksharthiListing = () => {
                       )}
 
                     </td>
-                    <td className="px-6 py-3">
-
-                    </td>
+                    {role === "karyakarta" && (
+                      <td className="px-6 py-3">
+                        {hasAnyVisitSchedule(diksharthi) && (
+                          <div className="flex items-center gap-2">
+                            <select
+                              className="rounded-lg border border-gray-300 text-sm px-2 py-1"
+                              value={diksharthi?.current_visit_status || ""}
+                              disabled={updatingVisitStatusId === diksharthi.id}
+                              onChange={(e) => handleVisitStatusChange(diksharthi, e.target.value)}
+                            >
+                              <option value="">Is Visited?</option>
+                              <option value="Yes">Yes</option>
+                              <option value="No">No</option>
+                            </select>
+                          </div>
+                        )}
+                      </td>
+                    )}
                   </tr>
                 );
               })
@@ -1843,12 +1873,12 @@ const DiksharthiListing = () => {
                     <tr>
                       <td className="px-3 py-2 border">1</td>
                       <td className="px-3 py-2 border">
-                        {scheduleVisitModalData?.visit_date
-                          ? new Date(scheduleVisitModalData.visit_date).toLocaleDateString("en-GB")
+                        {getLatestVisitCycle(scheduleVisitModalData)?.scheduled?.date
+                          ? new Date(getLatestVisitCycle(scheduleVisitModalData).scheduled.date).toLocaleDateString("en-GB")
                           : "-"}
                       </td>
                       <td className="px-3 py-2 border">
-                        {scheduleVisitModalData?.visit_time || "-"}
+                        {getLatestVisitCycle(scheduleVisitModalData)?.scheduled?.time || "-"}
                       </td>
                     </tr>
                   </tbody>
@@ -1912,7 +1942,7 @@ const DiksharthiListing = () => {
         </div>
       )}
 
-      {role === "karyakarta" && viewScheduleModalData && (
+      {/* {role === "karyakarta" && viewScheduleModalData && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 px-4">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg">
             <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
@@ -1999,6 +2029,125 @@ const DiksharthiListing = () => {
               <button
                 type="button"
                 className="rounded-lg bg-indigo-600 text-sm px-4 py-2 text-white"
+                onClick={() => setViewScheduleModalData(null)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )} */}
+
+
+      {role === "karyakarta" && viewScheduleModalData && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 px-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden">
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 bg-gray-50 border-b border-gray-100">
+              <h3 className="text-xl font-bold text-gray-800">Visit Details</h3>
+              <button
+                type="button"
+                className="p-2 rounded-full hover:bg-gray-200 transition-colors"
+                onClick={() => setViewScheduleModalData(null)}
+              >
+                <X size={20} className="text-gray-500" />
+              </button>
+            </div>
+
+            <div className="px-6 py-6">
+              {isViewScheduleLoading ? (
+                <div className="flex flex-col items-center py-10 space-y-3">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+                  <p className="text-gray-500 font-medium">Loading visit schedule...</p>
+                </div>
+              ) : viewScheduleModalData?.schedule ? (
+                <div className="space-y-6">
+                  {/* Contact Information Table */}
+                  <div className="overflow-hidden ">
+                    <table className="w-full text-sm text-left">
+                      <tbody className="divide-y divide-gray-100">
+                        <tr className="bg-white">
+                          <td className="px-1 py-1 font-semibold text-gray-600 w-1/3">Diksharthi</td>
+                          <td className="px-4 py-1 text-gray-900">{viewScheduleModalData.diksharthi?.sadhu_sadhvi_name || "-"}</td>
+                        </tr>
+                        <tr className="bg-gray-50/50">
+                          <td className="px-1 py-1 font-semibold text-gray-600">Family Head</td>
+                          <td className="px-4 py-1 text-gray-900">
+                            {`${viewScheduleModalData.diksharthi?.family_member_firstName || "-"} ${viewScheduleModalData.diksharthi?.family_member_lastName || ""}`}
+                          </td>
+                        </tr>
+                        <tr className="bg-white">
+                          <td className="px-1 py-1 font-semibold text-gray-600">Contact</td>
+                          <td className="px-4 py-1 text-gray-900">
+                            <div className="flex flex-col">
+                              <span>{viewScheduleModalData.diksharthi?.mobile_no || "-"}</span>
+                              {viewScheduleModalData.diksharthi?.alt_mobile_no && (
+                                <span className="text-gray-400 text-xs italic">{viewScheduleModalData.diksharthi.alt_mobile_no}</span>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                        <tr className="bg-gray-50/50">
+                          <td className="px-1 py-1 font-semibold text-gray-600">Address</td>
+                          <td className="px-4 py-1 text-gray-900 leading-relaxed">
+                            {viewScheduleModalData.diksharthi?.current_address || "-"}
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Schedule Highlights */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-indigo-50 p-4 rounded-xl border border-indigo-100">
+                      <p className="text-xs uppercase tracking-wider font-bold text-indigo-600 mb-1">Scheduled Date</p>
+                      <p className="text-lg font-semibold text-indigo-900">
+                        {formatIndianDate(viewScheduleModalData.schedule.date)}
+                      </p>
+                    </div>
+                    <div className="bg-emerald-50 p-4 rounded-xl border border-emerald-100">
+                      <p className="text-xs uppercase tracking-wider font-bold text-emerald-600 mb-1">Scheduled Time</p>
+                      <p className="text-lg font-semibold text-emerald-900">
+                        {viewScheduleModalData.schedule.time || "-"}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Rescheduling History (If Applicable) */}
+                  {viewScheduleModalData?.rescheduled && (
+                    <div className="mt-4 p-4 bg-amber-50 rounded-xl border border-amber-100">
+                      <h4 className="text-sm font-bold text-amber-800 mb-2 flex items-center gap-2">
+                        <span className="flex h-2 w-2 rounded-full bg-amber-500"></span>
+                        Scheduling Details
+                      </h4>
+                      <div className="grid grid-cols-2 gap-y-2 text-xs">
+                          <span className="text-amber-700">Schedule:</span>
+                        <span className="font-medium text-amber-900 text-right">
+                          {formatIndianDate(viewScheduleModalData?.originalSchedule?.date)} @ {viewScheduleModalData?.originalSchedule?.time}
+                        </span>
+                          <span className="text-amber-700">Re-Schedule:</span>
+                        <span className="font-medium text-amber-900 text-right">
+                          {formatIndianDate(viewScheduleModalData?.reschedule?.date)} @ {viewScheduleModalData?.reschedule?.time}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="py-10 text-center">
+                  <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gray-100 text-gray-400 mb-3">
+                    <Calendar size={24} />
+                  </div>
+                  <p className="text-gray-500">No visit schedule has been set for this diksharthi yet.</p>
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end">
+              <button
+                type="button"
+                className="rounded-lg bg-gray-800 hover:bg-black transition-colors text-sm font-medium px-6 py-2.5 text-white shadow-sm"
                 onClick={() => setViewScheduleModalData(null)}
               >
                 Close
