@@ -31,8 +31,6 @@ const normalizeUser = (item) => ({
     mobile: item?.mobile || item?.mobileNo || item?.phone || "",
     profilePhoto:
         item?.profilePhoto || item?.profile_photo || item?.photo || item?.image || null,
-
-    // ✅ IMPORTANT FIX
     assign_locations: item?.assign_locations
         ? typeof item.assign_locations === "string"
             ? JSON.parse(item.assign_locations)
@@ -79,24 +77,6 @@ const validateUserForm = (values, mode = "create") => {
     return errors;
 };
 
-// const buildUserFormData = (values, isUpdate = false) => {
-//     const payload = new FormData();
-//     payload.append("name", values.name.trim());
-//     payload.append("role", values.role);
-//     payload.append("email", values.email.trim().toLowerCase());
-//     payload.append("mobile", values.mobile.trim());
-
-//     if (!isUpdate || values.password) payload.append("password", values.password);
-//     if (!isUpdate || values.confirmPassword) {
-//         payload.append("confirmPassword", values.confirmPassword);
-//     }
-//     if (values.profilePhoto) payload.append("profilePhoto", values.profilePhoto);
-
-//     return payload;
-// };
-
-
-
 const buildUserFormData = (values, isUpdate = false) => {
     const payload = new FormData();
 
@@ -106,12 +86,10 @@ const buildUserFormData = (values, isUpdate = false) => {
     payload.append("mobile", values.mobile.trim());
 
     // ✅ ADD THIS
-    if (values.role === "karyakarta") {
-        payload.append(
-            "assign_locations",   // ✅ FIXED KEY
-            JSON.stringify((values.assignLocations || []).filter(Boolean))
-        );
-    }
+    payload.append(
+        "assignLocations",
+        JSON.stringify(values.assignLocations || [])
+    );
 
     if (!isUpdate || values.password) payload.append("password", values.password);
     if (!isUpdate || values.confirmPassword) {
@@ -122,8 +100,6 @@ const buildUserFormData = (values, isUpdate = false) => {
 
     return payload;
 };
-
-
 
 function UserList() {
     const navigate = useNavigate();
@@ -225,6 +201,10 @@ function UserList() {
 
 
     const openUpdateModal = (user) => {
+        setApiError("");
+        setFormErrors({});
+        setIsSubmitting(false);
+        setSelectedUser(user);
         setFormValues({
             name: user.name || "",
             role: String(user.role || "staff").toLowerCase(),
@@ -270,6 +250,7 @@ function UserList() {
     };
 
     const createUser = async (e) => {
+        debugger
         e.preventDefault();
         setApiError("");
 
@@ -598,3 +579,4 @@ function UserList() {
 }
 
 export default UserList;
+

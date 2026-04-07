@@ -111,6 +111,10 @@ function AddDonor() {
   });
 
 
+    const [postOffices, setPostOffices] = useState([]);
+  
+
+
   const requiredFields = {
     personalDetails: [
       "salutation",
@@ -351,64 +355,70 @@ function AddDonor() {
     return Object.keys(e).length === 0;
   };
 
-  const validateStep4 = (showAlert = false, showRequired = true) => {
-    const e = {};
+  // ============ STEP 4 Validation REMOVE ===================
+  // const validateStep4 = (showAlert = false, showRequired = true) => {
+  //   const e = {};
 
-    // Check total amount
-    if (showRequired && !formData.paymentDetails.totalInstallmentsAmount) {
-      e.totalInstallmentsAmount = "Total installment amount is required";
-    }
+  //   // Check total amount
+  //   if (showRequired && !formData.paymentDetails.totalInstallmentsAmount) {
+  //     e.totalInstallmentsAmount = "Total installment amount is required";
+  //   }
 
-    // Check if installments are added
-    if (
-      showRequired &&
-      (!formData.paymentDetails.installments || formData.paymentDetails.installments.length === 0)
-    ) {
-      e.installments = "Please add at least one installment";
-    }
+  //   // Check if installments are added
+  //   if (
+  //     showRequired &&
+  //     (!formData.paymentDetails.installments || formData.paymentDetails.installments.length === 0)
+  //   ) {
+  //     e.installments = "Please add at least one installment";
+  //   }
 
-    // ✅ Validate each installment due date
-    if (showRequired && formData.paymentDetails.installments) {
-      formData.paymentDetails.installments.forEach((inst, index) => {
-        if (!inst.dueDate) {
-          if (!e.installmentDueDates) e.installmentDueDates = {};
-          e.installmentDueDates[index] = "Due date is required";
-        }
-      });
-    }
+  //   // ✅ Validate each installment due date
+  //   if (showRequired && formData.paymentDetails.installments) {
+  //     formData.paymentDetails.installments.forEach((inst, index) => {
+  //       if (!inst.dueDate) {
+  //         if (!e.installmentDueDates) e.installmentDueDates = {};
+  //         e.installmentDueDates[index] = "Due date is required";
+  //       }
+  //     });
+  //   }
 
-    // Validate installments sum
-    const installmentError = validateInstallments();
-    if (installmentError) {
-      e.installmentValidation = installmentError;
-    }
+  //   // Validate installments sum
+  //   const installmentError = validateInstallments();
+  //   if (installmentError) {
+  //     e.installmentValidation = installmentError;
+  //   }
 
-    setErrors(e);
+  //   setErrors(e);
 
-    if (showAlert && Object.keys(e).length > 0) {
-      alert(installmentError || "Please complete all payment details");
-    }
+  //   if (showAlert && Object.keys(e).length > 0) {
+  //     alert(installmentError || "Please complete all payment details");
+  //   }
 
-    return Object.keys(e).length === 0;
+  //   return Object.keys(e).length === 0;
+  // };
+
+  const validateStep4 = () => {
+    return true;
   };
-
   
   const handleSubmit = async () => {
     try {
+      // ============ STEP 4 Validation REMOVE ===================
       // Validate Step 4 (Payment Details) before submission
-      const isValidStep4 = validateStep4();
-      if (!isValidStep4) {
-        return;
-      }
+      // const isValidStep4 = validateStep4();
+      // if (!isValidStep4) {
+      //   return;
+      // }
 
       const resolvedDonorId =
         editDonorId || formData?.id || formData?.donor_id || null;
-
-      const error = validateInstallments();
-      if (error) {
-        alert(error);
-        return;
-      }
+      
+// ============ STEP 4 Validation REMOVE ===================
+      // const error = validateInstallments();
+      // if (error) {
+      //   alert(error);
+      //   return;
+      // }
 
       if (!isValidAadhaar(formData.personalDetails.aadhaarNumber)) {
         alert("Aadhaar must be 12 digits only");
@@ -493,7 +503,7 @@ function AddDonor() {
         isEditMode ? "Donor Updated Successfully" : "Donor Created Successfully",
       );
 
-      navigate("/donor");
+      navigate("/members-contributions");
 
       console.log(data);
     } catch (error) {
@@ -946,10 +956,10 @@ function AddDonor() {
       validateStep3(false, true);
       return;
     }
-
-    if (currentStep === 4 && requiredValidationTriggered[4]) {
-      validateStep4(false, true);
-    }
+    // ============ STEP 4 Validation REMOVE ===================
+    // if (currentStep === 4 && requiredValidationTriggered[4]) {
+    //   validateStep4(false, true);
+    // }
   }, [formData, currentStep, requiredValidationTriggered]);
 
   const handleCommAddressSelect = (type) => {
@@ -971,6 +981,24 @@ function AddDonor() {
       },
     }));
   };
+
+
+  // PINCODE VAlication
+
+    const fetchPincodeDetails = async (pincode) => {
+      try {
+        const res = await axios.get(`https://api.postalpincode.in/pincode/${pincode}`);
+        const data = res.data;
+  
+        if (data[0].Status === "Success") {
+          setPostOffices(data[0].PostOffice); // 👈 all villages
+        } else {
+          setPostOffices([]);
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    };
 
 
   return (
@@ -2064,6 +2092,25 @@ function AddDonor() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Pin Code<span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.nomineeDetails.nomineepincode}
+                    onChange={(e) => {
+                      const value = e.target.value;
+
+                      handleChange("nomineeDetails", "nomineepincode", value);
+
+                      if (value.length === 6) {
+                        fetchPincodeDetails(value); // 🔥 API call
+                      }
+                    }}
+                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
                     City<span className="text-red-500">*</span>
                   </label>
                   <input
@@ -2081,21 +2128,22 @@ function AddDonor() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Pin Code<span className="text-red-500">*</span>
+                    State<span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
-                    value={formData.nomineeDetails.nomineepincode}
+                    value={formData.nomineeDetails.nomineecity}
                     onChange={(e) =>
                       handleChange(
                         "nomineeDetails",
-                        "nomineepincode",
+                        "nomineecity",
                         e.target.value,
                       )
                     }
                     className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                   />
                 </div>
+                
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
                     Relation<span className="text-red-500">*</span>
