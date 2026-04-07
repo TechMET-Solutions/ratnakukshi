@@ -279,6 +279,7 @@ const FamilyDetailsForm = () => {
           firstName: "",
           lastName: "",
           aadharNumber: "",
+          mobileNumber: "",
           photo: null,
           photoPreview: "",
           ayushman: null,
@@ -306,6 +307,25 @@ const FamilyDetailsForm = () => {
           [field]: value,
         },
       };
+
+      if (field === "mobileNumber") {
+        const trimmedValue = String(value || "").trim();
+
+        setValidationErrors((prevErrors) => {
+          const nextErrors = { ...prevErrors };
+
+          if (!trimmedValue) {
+            nextErrors[`mobile_${relation}`] = "Mobile number is required";
+          } else if (!/^[6-9]\d{9}$/.test(trimmedValue)) {
+            nextErrors[`mobile_${relation}`] =
+              "Mobile number must be 10 digits and start with 6-9";
+          } else {
+            delete nextErrors[`mobile_${relation}`];
+          }
+
+          return nextErrors;
+        });
+      }
 
       if (field === "aadharNumber") {
         const trimmedValue = String(value || "").trim();
@@ -1074,6 +1094,10 @@ const FamilyDetailsForm = () => {
             firstName: relationDetailsRaw[key]?.firstName || "",
             lastName: relationDetailsRaw[key]?.lastName || "",
             aadharNumber: relationDetailsRaw[key]?.aadharNumber || "",
+            mobileNumber:
+              relationDetailsRaw[key]?.mobileNumber ||
+              relationDetailsRaw[key]?.mobile_no ||
+              "",
             panNumber: relationDetailsRaw[key]?.panNumber || "",
             photo: relationDetailsRaw[key]?.photo || "",
             ayushman: relationDetailsRaw[key]?.ayushman || null,
@@ -1177,6 +1201,14 @@ const FamilyDetailsForm = () => {
           if (!isValidAadhaar(details.aadharNumber)) {
             errors[`aadhar_${rel}`] = "Aadhar number must be exactly 12 digits";
           }
+        }
+
+        // Validate Mobile Number
+        if (!details?.mobileNumber) {
+          errors[`mobile_${rel}`] = "Mobile number is required";
+        } else if (!/^[6-9]\d{9}$/.test(details.mobileNumber)) {
+          errors[`mobile_${rel}`] =
+            "Mobile number must be 10 digits and start with 6-9";
         }
 
         // Validate PAN Number
@@ -1983,6 +2015,28 @@ const FamilyDetailsForm = () => {
                           {/* Aadhar Number */}
                           <div className="w-[250px]">
                             <label className="block text-sm font-medium text-slate-700 mb-1">
+                              Mobile Number
+                              
+                            </label>
+
+                            <input
+                              type="text"
+                              value={relationDetails[rel]?.mobileNumber || ""}
+                              maxLength={10}
+                              onChange={(e) => {
+                                const onlyNumbers = e.target.value.replace(/\D/g, "");
+                                handleRelationDetailChange(rel, "mobileNumber", onlyNumbers);
+                              }}
+                              className="w-full p-2 border border-slate-300 rounded-md"
+                            />
+                            {validationErrors[`mobile_${rel}`] && (
+                              <p className="text-red-500 text-xs mt-1">
+                                {validationErrors[`mobile_${rel}`]}
+                              </p>
+                            )}
+                          </div>
+                          <div className="w-[250px]">
+                            <label className="block text-sm font-medium text-slate-700 mb-1">
                               Aadhar Number
                               <span className="text-red-500">*</span>
                             </label>
@@ -1991,16 +2045,6 @@ const FamilyDetailsForm = () => {
                               type="text"
                               value={relationDetails[rel]?.aadharNumber || ""}
                               maxLength={12}
-                              // onChange={(e) => {
-                              //   const onlyNumbers = e.target.value.replace(/\D/g, "");
-
-                              //   if (onlyNumbers.length === 12 && isAadharDuplicate(rel, onlyNumbers)) {
-                              //     alert("Aadhar number must be unique");
-                              //     return;
-                              //   }
-
-                              //   handleRelationDetailChange(rel, "aadharNumber", onlyNumbers);
-                              // }}
                               onChange={(e) => {
                                 const onlyNumbers = e.target.value.replace(/\D/g, "");
                                 handleRelationDetailChange(rel, "aadharNumber", onlyNumbers);
@@ -4741,7 +4785,7 @@ const FamilyDetailsForm = () => {
                                         }
                                       />
                                     </div>
-                                    <div>
+                                    {/* <div>
                                       <label className="text-[11px] font-bold uppercase text-gray-500">
                                         Mobile Number.*
                                       </label>
@@ -4760,7 +4804,7 @@ const FamilyDetailsForm = () => {
                                           )
                                         }
                                       />
-                                    </div>
+                                    </div> */}
                                   </div>
 
                                   <div className="mt-6">

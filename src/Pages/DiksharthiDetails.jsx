@@ -570,18 +570,91 @@ const DiksharthiListing = () => {
     setFeedbackForm(emptyFeedbackForm);
   };
 
+  // const openFamilyDetailsModal = async (diksharthi) => {
+  //   if (!diksharthi?.id) return;
+  //   setIsFamilyDetailsLoading(true);
+  //   setFamilyDetailsModalData({ diksharthi, details: null });
+  //   try {
+  //     const response = await fetch(`${API}/api/family-details/${diksharthi.id}`);
+  //     const result = await response.json().catch(() => ({}));
+  //     if (response.ok && result?.success) {
+  //       setFamilyDetailsModalData({ diksharthi, details: result?.data });
+  //     } else {
+  //       setFamilyDetailsModalData({ diksharthi, details: null });
+  //     }
+  //   } catch (error) {
+  //     console.error("Failed to fetch family details", error);
+  //     setFamilyDetailsModalData({ diksharthi, details: null });
+  //   } finally {
+  //     setIsFamilyDetailsLoading(false);
+  //   }
+  // };
+
+
   const openFamilyDetailsModal = async (diksharthi) => {
     if (!diksharthi?.id) return;
+
     setIsFamilyDetailsLoading(true);
     setFamilyDetailsModalData({ diksharthi, details: null });
+
     try {
       const response = await fetch(`${API}/api/family-details/${diksharthi.id}`);
       const result = await response.json().catch(() => ({}));
-      if (response.ok && result?.success) {
-        setFamilyDetailsModalData({ diksharthi, details: result?.data });
+
+      if (response.ok && result?.success && result?.data?.length > 0) {
+
+        // ✅ FIX: take first object
+        const apiData = result.data[0];
+
+        // ✅ TRANSFORM DATA
+        const transformed = {
+          permanent_address: apiData.formData?.permanentAddress,
+          current_address: apiData.formData?.currentAddress,
+          village: apiData.formData?.village,
+          taluka: apiData.formData?.taluka,
+          district: apiData.formData?.district,
+          states: apiData.formData?.state,
+          pin_code: apiData.formData?.pinCode,
+          house_details: apiData.formData?.houseDetails,
+          type_of_house: apiData.formData?.typeOfHouse,
+          maintenance_cost: apiData.formData?.maintenanceCost,
+          light_bill_cost: apiData.formData?.lightBillCost,
+          rent_cost: apiData.formData?.rentCost,
+          mediclaim: apiData.formData?.mediclaim === "Yes" ? "1" : "0",
+          family_mediclaim_amount: apiData.formData?.Family_mediclaim_amount,
+          mediclaim_premium_amount: apiData.formData?.mediclaimPremiumAmount,
+          ngo_assistance: apiData.formData?.ngoAssistance,
+          ngo_sangh_name: apiData.formData?.sanghName,
+          ngo_amount: apiData.formData?.ngoAmount,
+          ngo_remark: apiData.formData?.ngoRemark,
+
+          // ✅ relation mapping
+          relation_details: Object.fromEntries(
+            Object.entries(apiData.relationDetails || {}).map(([key, val]) => [
+              key,
+              {
+                firstName: val.firstName,
+                lastName: val.lastName,
+                aadharNumber: val.aadharNumber,
+                panNumber: val.panNumber,
+                ayushman: val.ayushman === "Yes",
+                mediclaim: val.mediclaim === "Yes",
+                mediclaim_amount: val.mediclaimAmount,
+                needAssistance: val.needAssistance === "Yes",
+                family_head: val.family_head,
+                assistanceCategories: val.assistanceCategories || [],
+                photo: val.photo,
+              },
+            ])
+          ),
+        };
+
+        setFamilyDetailsModalData({ diksharthi, details: transformed });
+
       } else {
         setFamilyDetailsModalData({ diksharthi, details: null });
       }
+
     } catch (error) {
       console.error("Failed to fetch family details", error);
       setFamilyDetailsModalData({ diksharthi, details: null });
@@ -2332,14 +2405,8 @@ const DiksharthiListing = () => {
                     </h4>
 
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                      <DetailItem
-                        label="Head of Family"
-                        value={
-                          familyDetailsModalData.details.head_of_family_name ||
-                          familyDetailsModalData.details.head_of_family
-                        }
-                      />
-                      <DetailItem label="Permanent Address" value={familyDetailsModalData.details.permanent_address} />
+                      
+                        <DetailItem label="Permanent Address" value={familyDetailsModalData.details.permanent_address} />
                       <DetailItem label="Current Address" value={familyDetailsModalData.details.current_address} />
                       <DetailItem label="Village" value={familyDetailsModalData.details.village} />
                       <DetailItem label="Taluka" value={familyDetailsModalData.details.taluka} />

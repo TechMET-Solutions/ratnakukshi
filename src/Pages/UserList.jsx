@@ -13,6 +13,7 @@ const initialFormState = {
     password: "",
     confirmPassword: "",
     profilePhoto: null,
+    assignLocations: [""],
 };
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -30,6 +31,13 @@ const normalizeUser = (item) => ({
     mobile: item?.mobile || item?.mobileNo || item?.phone || "",
     profilePhoto:
         item?.profilePhoto || item?.profile_photo || item?.photo || item?.image || null,
+
+    // ✅ IMPORTANT FIX
+    assign_locations: item?.assign_locations
+        ? typeof item.assign_locations === "string"
+            ? JSON.parse(item.assign_locations)
+            : item.assign_locations
+        : [],
 });
 
 const roleLabel = (role) =>
@@ -71,23 +79,49 @@ const validateUserForm = (values, mode = "create") => {
     return errors;
 };
 
+// const buildUserFormData = (values, isUpdate = false) => {
+//     const payload = new FormData();
+//     payload.append("name", values.name.trim());
+//     payload.append("role", values.role);
+//     payload.append("email", values.email.trim().toLowerCase());
+//     payload.append("mobile", values.mobile.trim());
+
+//     if (!isUpdate || values.password) payload.append("password", values.password);
+//     if (!isUpdate || values.confirmPassword) {
+//         payload.append("confirmPassword", values.confirmPassword);
+//     }
+//     if (values.profilePhoto) payload.append("profilePhoto", values.profilePhoto);
+
+//     return payload;
+// };
+
+
+
 const buildUserFormData = (values, isUpdate = false) => {
     const payload = new FormData();
+
     payload.append("name", values.name.trim());
     payload.append("role", values.role);
     payload.append("email", values.email.trim().toLowerCase());
     payload.append("mobile", values.mobile.trim());
 
+    // ✅ ADD THIS
+    if (values.role === "karyakarta") {
+        payload.append(
+            "assignLocations",
+            JSON.stringify((values.assignLocations || []).filter(Boolean))
+        );
+    }
+
     if (!isUpdate || values.password) payload.append("password", values.password);
     if (!isUpdate || values.confirmPassword) {
         payload.append("confirmPassword", values.confirmPassword);
     }
+
     if (values.profilePhoto) payload.append("profilePhoto", values.profilePhoto);
 
     return payload;
 };
-
-
 
 
 
@@ -179,6 +213,7 @@ function UserList() {
         setFormValues({
             name: user.name || "",
             role: String(user.role || "staff").toLowerCase(),
+            assignLocations: user.assign_locations || [""],
             email: user.email || "",
             mobile: user.mobile || "",
             password: "",
