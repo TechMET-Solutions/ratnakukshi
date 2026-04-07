@@ -108,7 +108,7 @@ const buildUserFormData = (values, isUpdate = false) => {
     // ✅ ADD THIS
     if (values.role === "karyakarta") {
         payload.append(
-            "assignLocations",
+            "assign_locations",   // ✅ FIXED KEY
             JSON.stringify((values.assignLocations || []).filter(Boolean))
         );
     }
@@ -206,22 +206,45 @@ function UserList() {
         setIsAddModalOpen(true);
     };
 
+    // const openUpdateModal = (user) => {
+    //     setApiError("");
+    //     setFormErrors({});
+    //     setSelectedUser(user);
+    //     setFormValues({
+    //         name: user.name || "",
+    //         role: String(user.role || "staff").toLowerCase(),
+    //         assignLocations: user.assign_locations || [""],
+    //         email: user.email || "",
+    //         mobile: user.mobile || "",
+    //         password: "",
+    //         confirmPassword: "",
+    //         profilePhoto: null,
+    //     });
+    //     setIsUpdateModalOpen(true);
+    // };
+
+
     const openUpdateModal = (user) => {
-        setApiError("");
-        setFormErrors({});
-        setSelectedUser(user);
         setFormValues({
             name: user.name || "",
             role: String(user.role || "staff").toLowerCase(),
-            assignLocations: user.assign_locations || [""],
+
+            // ✅ FIX HERE
+            assignLocations:
+                Array.isArray(user.assign_locations) && user.assign_locations.length > 0
+                    ? user.assign_locations
+                    : [""],
+
             email: user.email || "",
             mobile: user.mobile || "",
             password: "",
             confirmPassword: "",
             profilePhoto: null,
         });
+
         setIsUpdateModalOpen(true);
     };
+
 
     const openDeleteModal = (user) => {
         setApiError("");

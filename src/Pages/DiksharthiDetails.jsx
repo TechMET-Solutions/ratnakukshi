@@ -62,11 +62,22 @@ const normalizeRole = (value) => {
   return rawRole;
 };
 
+// const normalizeUser = (item) => ({
+//   id: item?.id || item?.userId || item?._id || "",
+//   name: item?.name || item?.fullName || item?.full_name || "",
+//   email: item?.email || "",
+//   role: String(item?.role || "").toLowerCase(),
+// });
+
+
 const normalizeUser = (item) => ({
-  id: item?.id || item?.userId || item?._id || "",
-  name: item?.name || item?.fullName || item?.full_name || "",
-  email: item?.email || "",
-  role: String(item?.role || "").toLowerCase(),
+  id: item?.id,
+  name: item?.name,
+  role: item?.role,
+  email: item?.email,
+
+  // ✅ IMPORTANT
+  assign_locations: item?.assign_locations || [],
 });
 
 const getProfileImageUrl = (photoValue) => {
@@ -101,6 +112,7 @@ const DiksharthiListing = () => {
   const [isViewLoading, setIsViewLoading] = useState(false);
   const [assignModalData, setAssignModalData] = useState(null);
   const [adminUsers, setAdminUsers] = useState([]);
+  console.log(adminUsers, "adminUsers")
   const [selectedAdminId, setSelectedAdminId] = useState("");
   const [isAssigningAdmin, setIsAssigningAdmin] = useState(false);
   const [isAdminListLoading, setIsAdminListLoading] = useState(false);
@@ -356,34 +368,76 @@ const DiksharthiListing = () => {
     hasAnyVisitSchedule(diksharthi) && !isVisitMarkedYes(diksharthi);
 
   const fetchAdminUsers = async () => {
-    try {
-      setIsAdminListLoading(true);
-      const response = await fetch(`${API}/api/user/list`);
-      const result = await response.json();
-      const rows = Array.isArray(result?.data) ? result.data : [];
-      const normalizedUsers = rows.map(normalizeUser);
-      setUserDirectory(normalizedUsers);
-      const Karyakarta = normalizedUsers.filter(
-        (user) => String(user?.role || "").toLowerCase() === "karyakarta"
-      );
-      setAdminUsers(Karyakarta);
-      console.log(Karyakarta, "Karyakarta")
-    } catch (error) {
-      console.error(error);
-      alert("Failed to fetch Karyakarta list");
-    } finally {
-      setIsAdminListLoading(false);
-    }
+    const response = await fetch(`${API}/api/user/list`);
+    const result = await response.json();
+    const rows = Array.isArray(result?.data) ? result.data : [];
+
+    const normalizedUsers = rows.map(normalizeUser);
+
+    const karyakarta = normalizedUsers.filter(
+      (user) => String(user?.role || "").toLowerCase() === "karyakarta"
+    );
+
+    setUserDirectory(normalizedUsers);
+    setAdminUsers(karyakarta);
+
+    return karyakarta; // ✅ RETURN
   };
+
+  // const fetchAdminUsers = async () => {
+  //   debugger
+  //   try {
+  //     setIsAdminListLoading(true);
+  //     const response = await fetch(`${API}/api/user/list`);
+  //     const result = await response.json();
+  //     const rows = Array.isArray(result?.data) ? result.data : [];
+  //     const normalizedUsers = rows.map(normalizeUser);
+  //     setUserDirectory(normalizedUsers);
+  //     const Karyakarta = normalizedUsers.filter(
+  //       (user) => String(user?.role || "").toLowerCase() === "karyakarta"
+  //     );
+  //     setAdminUsers(Karyakarta);
+  //     console.log(Karyakarta, "Karyakarta")
+  //   } catch (error) {
+  //     console.error(error);
+  //     alert("Failed to fetch Karyakarta list");
+  //   } finally {
+  //     setIsAdminListLoading(false);
+  //   }
+  // };
+
+  // const openAssignAdminModal = async (diksharthi) => {
+  //   setAssignModalData(diksharthi);
+  //   setSelectedAdminId("");
+  //   await fetchAdminUsers();
+
+  //   console.log(fetchAdminUsers)
+  // };
+
 
   const openAssignAdminModal = async (diksharthi) => {
     setAssignModalData(diksharthi);
     setSelectedAdminId("");
-    await fetchAdminUsers();
 
-    console.log(fetchAdminUsers)
+    const karyakartaList = await fetchAdminUsers();
+
+    const diksharthiPin = String(diksharthi?.pin_code || "").trim();
+
+    const filtered = karyakartaList.filter((user) => {
+      let locations = user.assign_locations || [];
+
+      if (typeof locations === "string") {
+        locations = locations.split(",");
+      }
+
+      locations = locations.map((p) => String(p).trim());
+
+      return locations.includes(diksharthiPin);
+    });
+
+    setAdminUsers(filtered);
   };
-
+  
   const openScheduleVisitModal = (diksharthi) => {
     const current = getCurrentSchedule(diksharthi);
     const openForFreshSchedule = !shouldUseRescheduleFlow(diksharthi);
@@ -523,14 +577,69 @@ const DiksharthiListing = () => {
     }
   };
 
+  // const handleAssignAdmin = async () => {
+  //   if (!assignModalData?.id || !selectedAdminId) {
+  //     alert("Please select an admin");
+  //     return;
+  //   }
+
+  //   try {
+  //     setIsAssigningAdmin(true);
+  //     const payload = {
+  //       id: assignModalData.id,
+  //       karykarata_id: selectedAdminId,
+  //     };
+
+  //     const response = await fetch(`${API}/api/assign-karyakarta`, {
+  //       method: "PUT",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //       },
+  //       body: JSON.stringify(payload),
+  //     });
+
+  //     if (!response.ok) {
+  //       throw new Error("Failed to assign Karyakarta");
+  //     }
+
+  //     alert("Karyakarta assigned successfully");
+  //     setAssignModalData(null);
+  //     setSelectedAdminId("");
+  //     await fetchDiksharthiList();
+  //   } catch (error) {
+  //     console.error(error);
+  //     alert("Failed to assign Karyakarta");
+  //   } finally {
+  //     setIsAssigningAdmin(false);
+  //   }
+  // };
+
   const handleAssignAdmin = async () => {
+    
     if (!assignModalData?.id || !selectedAdminId) {
-      alert("Please select an admin");
+      alert("Please select a Karyakarta");
+      return;
+    }
+
+    // ✅ selected Karyakarta find
+    const selectedUser = adminUsers.find(
+      (u) => String(u.id) === String(selectedAdminId)
+    );
+
+    const diksharthiPin = String(assignModalData?.pin_code || "").trim();
+
+    const userLocations = (selectedUser?.assign_locations || []).map(p =>
+      String(p).trim()
+    );
+
+    if (!userLocations.includes(diksharthiPin)) {
+      alert(`❌ This Karyakarta is not assigned to pin code ${diksharthiPin}`);
       return;
     }
 
     try {
       setIsAssigningAdmin(true);
+
       const payload = {
         id: assignModalData.id,
         karykarata_id: selectedAdminId,
@@ -538,9 +647,7 @@ const DiksharthiListing = () => {
 
       const response = await fetch(`${API}/api/assign-karyakarta`, {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
 
@@ -548,10 +655,12 @@ const DiksharthiListing = () => {
         throw new Error("Failed to assign Karyakarta");
       }
 
-      alert("Karyakarta assigned successfully");
+      alert("✅ Karyakarta assigned successfully");
       setAssignModalData(null);
       setSelectedAdminId("");
+
       await fetchDiksharthiList();
+
     } catch (error) {
       console.error(error);
       alert("Failed to assign Karyakarta");
@@ -667,14 +776,49 @@ const DiksharthiListing = () => {
   const canDownloadApplication =
     role === "admin" || role === "case-coordinator" || role === "operations-manager";
 
+  // const handleDownloadApplicationExcel = async (diksharthi) => {
+  //   if (!diksharthi?.id) return;
+
+  //   try {
+  //     setDownloadingApplicationId(diksharthi.id);
+
+  //     const response = await fetch(
+  //       `${API}/api/generateDiksharthiExcel/?id=${diksharthi.id}`
+  //     );
+
+  //     if (!response.ok) {
+  //       const result = await response.json().catch(() => ({}));
+  //       throw new Error(result?.message || "Failed to download application Excel");
+  //     }
+
+  //     const blob = await response.blob();
+  //     const downloadUrl = window.URL.createObjectURL(blob);
+  //     const link = document.createElement("a");
+
+  //     link.href = downloadUrl;
+  //     link.download = `Diksharthi_Application_${diksharthi.id}.xlsx`;
+  //     document.body.appendChild(link);
+  //     link.click();
+  //     link.remove();
+  //     window.URL.revokeObjectURL(downloadUrl);
+  //   } catch (error) {
+  //     console.error(error);
+  //     alert(error?.message || "Failed to download application Excel");
+  //   } finally {
+  //     setDownloadingApplicationId(null);
+  //   }
+  // };
+
+
   const handleDownloadApplicationExcel = async (diksharthi) => {
     if (!diksharthi?.id) return;
 
     try {
       setDownloadingApplicationId(diksharthi.id);
 
+      // ✅ FIXED URL (use params, not query)
       const response = await fetch(
-        `${API}/api/report/generateDiksharthiExcel?id=${diksharthi.id}`
+        `${API}/api/diksharthi/excel/${diksharthi.id}`
       );
 
       if (!response.ok) {
@@ -683,15 +827,24 @@ const DiksharthiListing = () => {
       }
 
       const blob = await response.blob();
-      const downloadUrl = window.URL.createObjectURL(blob);
+
+      // ✅ Excel MIME type safety
+      const file = new Blob([blob], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+
+      const downloadUrl = window.URL.createObjectURL(file);
       const link = document.createElement("a");
 
       link.href = downloadUrl;
       link.download = `Diksharthi_Application_${diksharthi.id}.xlsx`;
+
       document.body.appendChild(link);
       link.click();
-      link.remove();
+
+      document.body.removeChild(link);
       window.URL.revokeObjectURL(downloadUrl);
+
     } catch (error) {
       console.error(error);
       alert(error?.message || "Failed to download application Excel");
@@ -700,6 +853,7 @@ const DiksharthiListing = () => {
     }
   };
 
+
   const handleDownloadApplicationPdf = async (diksharthi) => {
     if (!diksharthi?.id) return;
 
@@ -707,7 +861,7 @@ const DiksharthiListing = () => {
       setDownloadingPdfId(diksharthi.id);
 
       const response = await fetch(
-        `${API}/api/report/generateDikshartiReport/${diksharthi.id}`
+        `${API}/api/generateDikshartiReport/${diksharthi.id}`
       );
 
       if (!response.ok) {
