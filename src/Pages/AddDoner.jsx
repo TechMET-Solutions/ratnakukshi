@@ -95,6 +95,7 @@ function AddDonor() {
       nomineeContact: "",
       nomineeAddress: "",
       nomineecity: "",
+      nomineestate: "",
       nomineepincode: "",
       nomineerelation: "",
       nomineehasCompany: "",
@@ -143,6 +144,7 @@ function AddDonor() {
       "nomineeContact",
       "nomineeAddress",
       "nomineecity",
+      "nomineestate",
       "nomineepincode",
       "nomineerelation",
       "nomineehasCompany",
@@ -336,6 +338,9 @@ function AddDonor() {
     }
     if (showRequired && !data.nomineecity) {
       e.nomineecity = "Nominee city is required";
+    }
+    if (showRequired && !data.nomineestate) {
+      e.nomineestate = "Nominee state is required";
     }
     if (showRequired && !data.nomineepincode) {
       e.nomineepincode = "Nominee pincode is required";
@@ -986,19 +991,27 @@ function AddDonor() {
   // PINCODE VAlication
 
     const fetchPincodeDetails = async (pincode) => {
-      try {
-        const res = await axios.get(`https://api.postalpincode.in/pincode/${pincode}`);
-        const data = res.data;
-  
-        if (data[0].Status === "Success") {
-          setPostOffices(data[0].PostOffice); // 👈 all villages
-        } else {
-          setPostOffices([]);
-        }
-      } catch (error) {
-        console.error(error);
-      }
-    };
+  try {
+    const response = await fetch(`https://api.postalpincode.in/pincode/${pincode}`);
+    const data = await response.json();
+    const postOffice = data?.[0]?.PostOffice?.[0];
+
+    if (data?.[0]?.Status === "Success" && postOffice) {
+      setPostOffices(data[0].PostOffice);
+      handleChange("nomineeDetails", "nomineecity", postOffice.District || "");
+      handleChange("nomineeDetails", "nomineestate", postOffice.State || "");
+    } else {
+      setPostOffices([]);
+      handleChange("nomineeDetails", "nomineecity", "");
+      handleChange("nomineeDetails", "nomineestate", "");
+    }
+  } catch (error) {
+    console.error(error);
+    setPostOffices([]);
+    handleChange("nomineeDetails", "nomineecity", "");
+    handleChange("nomineeDetails", "nomineestate", "");
+  }
+};
 
 
   return (
@@ -2098,12 +2111,14 @@ function AddDonor() {
                     type="text"
                     value={formData.nomineeDetails.nomineepincode}
                     onChange={(e) => {
-                      const value = e.target.value;
-
+                      const value = e.target.value.replace(/\D/g, "").slice(0, 6);
                       handleChange("nomineeDetails", "nomineepincode", value);
 
                       if (value.length === 6) {
-                        fetchPincodeDetails(value); // 🔥 API call
+                        fetchPincodeDetails(value);
+                      } else {
+                        handleChange("nomineeDetails", "nomineecity", "");
+                        handleChange("nomineeDetails", "nomineestate", "");
                       }
                     }}
                     className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
@@ -2132,11 +2147,11 @@ function AddDonor() {
                   </label>
                   <input
                     type="text"
-                    value={formData.nomineeDetails.nomineecity}
+                    value={formData.nomineeDetails.nomineestate}
                     onChange={(e) =>
                       handleChange(
                         "nomineeDetails",
-                        "nomineecity",
+                        "nomineestate",
                         e.target.value,
                       )
                     }
@@ -2454,4 +2469,6 @@ function AddDonor() {
 }
 
 export default AddDonor;
+
+
 
