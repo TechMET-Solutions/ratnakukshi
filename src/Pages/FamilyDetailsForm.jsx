@@ -1611,6 +1611,10 @@ const FamilyDetailsForm = () => {
 
         <form className="space-y-6">
           {/* Address Row */}
+
+          <div className="flex items-center gap-2 mb-4 text-slate-800">
+            <h2 className="text-sx font-bold">Family Address Details</h2>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Permanent Address */}
             <div>
@@ -1712,6 +1716,9 @@ const FamilyDetailsForm = () => {
 
 
 
+          <div className="flex items-center gap-2 mb-4 text-slate-800">
+            <h2 className="text-sx font-bold">Family House Details</h2>
+          </div>
 
           <div className="grid grid-cols-1 md:grid-cols-5 gap-6 items-start">
 
@@ -1719,7 +1726,7 @@ const FamilyDetailsForm = () => {
             {/* 2. House Details (Radio) */}
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-3">
-                House Details<span className="text-red-500">*</span>
+                House <span className="text-red-500">*</span>
               </label>
               <div className="flex gap-4 pt-1">
                 <label className="flex items-center gap-2 cursor-pointer text-sm">
