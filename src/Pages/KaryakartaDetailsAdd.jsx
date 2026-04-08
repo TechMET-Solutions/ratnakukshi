@@ -132,6 +132,56 @@ function KaryakartaDetailsAdd() {
     const [loading, setLoading] = useState(Boolean(user?.id));
     const [saving, setSaving] = useState(false);
 
+    const [errors, setErrors] = useState({});
+
+    const setAddressFromPostOffice = (section, postOffice) => {
+        setFormData((prev) => ({
+            ...prev,
+            [section]: {
+                ...prev[section],
+                city: postOffice?.District || "",
+                taluka: postOffice?.Block || postOffice?.Name || "",
+                district: postOffice?.District || "",
+                state: postOffice?.State || "",
+            },
+        }));
+    };
+
+    const clearAddressBySection = (section) => {
+        setFormData((prev) => ({
+            ...prev,
+            [section]: {
+                ...prev[section],
+                city: "",
+                taluka: "",
+                district: "",
+                state: "",
+            },
+        }));
+    };
+
+    const fetchPincodeDetails = async (section, pincode) => {
+        try {
+            const res = await axios.get(`https://api.postalpincode.in/pincode/${pincode}`);
+            const data = res?.data;
+            const firstResult = Array.isArray(data) ? data[0] : null;
+            const offices =
+                firstResult?.Status === "Success" && Array.isArray(firstResult?.PostOffice)
+                    ? firstResult.PostOffice
+                    : [];
+
+            if (offices.length > 0) {
+                setAddressFromPostOffice(section, offices[0]);
+                return;
+            }
+
+            clearAddressBySection(section);
+        } catch (error) {
+            console.error("Failed to fetch pincode details:", error);
+            clearAddressBySection(section);
+        }
+    };
+
     const pageTitle = useMemo(
         () =>
             user?.name
@@ -188,6 +238,23 @@ function KaryakartaDetailsAdd() {
                 [field]: value,
             },
         }));
+
+        validateField(section, field, value);
+    };
+
+    const handlePinCodeChange = (section, value) => {
+        const sanitizedPinCode = String(value || "")
+            .replace(/\D/g, "")
+            .slice(0, 6);
+
+        updateSection(section, "pinCode", sanitizedPinCode);
+
+        if (sanitizedPinCode.length === 6) {
+            fetchPincodeDetails(section, sanitizedPinCode);
+            return;
+        }
+
+        clearAddressBySection(section);
     };
 
     const nextStep = () => {
@@ -197,6 +264,61 @@ function KaryakartaDetailsAdd() {
     const previousStep = () => {
         setCurrentStep((prev) => Math.max(prev - 1, 1));
     };
+
+
+    // const validateField = (section, field, value) => {
+    //     let error = "";
+
+    //     if (field === "email") {
+    //         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    //         if (value && !emailRegex.test(value)) {
+    //             error = "Invalid email format";
+    //         }
+    //     }
+
+    //     if (field === "mobile") {
+    //         const mobileRegex = /^[6-9]\d{9}$/;
+    //         if (value && !mobileRegex.test(value)) {
+    //             error = "Invalid mobile number";
+    //         }
+    //     }
+
+    //     setErrors((prev) => ({
+    //         ...prev,
+    //         [`${section}.${field}`]: error,
+    //     }));
+    // };
+
+
+    const validateField = (section, field, value) => {
+        let error = "";
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        const mobileRegex = /^[6-9]\d{9}$/;
+
+        // EMAIL VALIDATION
+        if (field.toLowerCase().includes("email")) {
+            if (value && !emailRegex.test(value)) {
+                error = "Invalid email format";
+            }
+        }
+
+        // MOBILE VALIDATION
+        if (
+            field.toLowerCase().includes("mobile") ||
+            field.toLowerCase().includes("phone")
+        ) {
+            if (value && !mobileRegex.test(value)) {
+                error = "Invalid mobile number";
+            }
+        }
+
+        setErrors((prev) => ({
+            ...prev,
+            [`${section}.${field}`]: error,
+        }));
+    };
+
 
     const handleSubmit = async (event) => {
         event.preventDefault();
@@ -267,16 +389,41 @@ function KaryakartaDetailsAdd() {
             ...prev,
             familyDetails: {
                 ...prev.familyDetails,
-                members: prev.familyDetails.members.map((member, itemIndex) =>
-                    itemIndex === index ? { ...member, [field]: value } : member
+                members: prev.familyDetails.members.map((member, i) =>
+                    i === index ? { ...member, [field]: value } : member
                 ),
             },
         }));
+
+        // validation
+        let error = "";
+        const mobileRegex = /^[6-9]\d{9}$/;
+
+        if (field === "mobileNo" && value && !mobileRegex.test(value)) {
+            error = "Invalid mobile number";
+        }
+
+        setErrors((prev) => ({
+            ...prev,
+            [`familyDetails.members.${index}.${field}`]: error,
+        }));
     };
+
+    // const updateFamilyMember = (index, field, value) => {
+    //     setFormData((prev) => ({
+    //         ...prev,
+    //         familyDetails: {
+    //             ...prev.familyDetails,
+    //             members: prev.familyDetails.members.map((member, itemIndex) =>
+    //                 itemIndex === index ? { ...member, [field]: value } : member
+    //             ),
+    //         },
+    //     }));
+    // };
 
     return (
         <div className="min-h-screen bg-slate-50 p-6 md:p-8">
-            <div className="mx-auto max-w-6xl">
+            <div className="mx-auto max-w-8xl">
                 <button
                     type="button"
                     onClick={() => navigate(-1)}
@@ -289,18 +436,10 @@ function KaryakartaDetailsAdd() {
                 <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
                     <div className="border-b border-slate-100 px-6 py-6 md:px-8">
                         <h1 className="text-2xl font-bold text-slate-900">{pageTitle}</h1>
-                        <p className="mt-2 text-sm text-slate-500">
-                            Fill the personal, company, and family details for this karyakarta.
-                        </p>
-                        {detailsId ? (
-                            <p className="mt-2 text-xs font-medium uppercase tracking-wide text-emerald-600">
-                                Editing saved profile
-                            </p>
-                        ) : null}
                     </div>
 
                     <div className="border-b border-slate-100 px-6 py-5 md:px-8">
-                        <div className="grid gap-3 md:grid-cols-3">
+                        <div className="grid gap-3 md:grid-cols-4">
                             {steps.map((step) => {
                                 const isActive = currentStep === step.id;
                                 const isCompleted = currentStep > step.id;
@@ -346,16 +485,22 @@ function KaryakartaDetailsAdd() {
                             Loading karyakarta details...
                         </div>
                     ) : (
-                    <form onSubmit={handleSubmit} className="px-6 py-6 md:px-8">
+                            <form
+                                // onSubmit={handleSubmit}
+                                onSubmit={(e) => e.preventDefault()}
+                                // onKeyDown={(e) => {
+                                //     if (e.key === "Enter") {
+                                //         e.preventDefault();
+                                //     }
+                                // }}
+                                className="px-6 py-6 md:px-8">
                         {currentStep === 1 && (
                             <div className="space-y-6">
                                 <div>
                                     <h2 className="text-lg font-semibold text-slate-900">
                                         Personal Details
                                     </h2>
-                                    <p className="mt-1 text-sm text-slate-500">
-                                        Basic profile and address information.
-                                    </p>
+                                   
                                 </div>
 
                                 <div className="grid gap-4 md:grid-cols-3">
@@ -376,7 +521,12 @@ function KaryakartaDetailsAdd() {
                                             onChange={(e) =>
                                                 updateSection("personalDetails", "email", e.target.value)
                                             }
-                                        />
+                                                />
+                                                {errors["personalDetails.email"] && (
+                                                    <p className="text-red-500 text-xs mt-1">
+                                                        {errors["personalDetails.email"]}
+                                                    </p>
+                                                )}
                                     </Field>
 
                                     <Field label="Mobile Number">
@@ -386,7 +536,12 @@ function KaryakartaDetailsAdd() {
                                             onChange={(e) =>
                                                 updateSection("personalDetails", "mobile", e.target.value)
                                             }
-                                        />
+                                                />
+                                                {errors["personalDetails.mobile"] && (
+                                                    <p className="text-red-500 text-xs mt-1">
+                                                        {errors["personalDetails.mobile"]}
+                                                    </p>
+                                                )}
                                     </Field>
 
                                     <Field label="Role">
@@ -472,9 +627,19 @@ function KaryakartaDetailsAdd() {
                                                 updateSection("personalDetails", "address", e.target.value)
                                             }
                                         />
-                                    </Field>
+                                            </Field>
+                                            
+                                            <Field label="Pin Code">
+                                                <input
+                                                    className={fieldClassName}
+                                                    value={formData.personalDetails.pinCode}
+                                                    onChange={(e) =>
+                                                        handlePinCodeChange("personalDetails", e.target.value)
+                                                    }
+                                                />
+                                            </Field>
 
-                                    <Field label="City">
+                                    {/* <Field label="City">
                                         <input
                                             className={fieldClassName}
                                             value={formData.personalDetails.city}
@@ -482,7 +647,7 @@ function KaryakartaDetailsAdd() {
                                                 updateSection("personalDetails", "city", e.target.value)
                                             }
                                         />
-                                    </Field>
+                                    </Field> */}
 
                                     <Field label="Taluka">
                                         <input
@@ -494,7 +659,7 @@ function KaryakartaDetailsAdd() {
                                         />
                                     </Field>
 
-                                    <Field label="District">
+                                    <Field label="District / City">
                                         <input
                                             className={fieldClassName}
                                             value={formData.personalDetails.district}
@@ -514,15 +679,7 @@ function KaryakartaDetailsAdd() {
                                         />
                                     </Field>
 
-                                    <Field label="Pin Code">
-                                        <input
-                                            className={fieldClassName}
-                                            value={formData.personalDetails.pinCode}
-                                            onChange={(e) =>
-                                                updateSection("personalDetails", "pinCode", e.target.value)
-                                            }
-                                        />
-                                    </Field>
+                                    
                                 </div>
                             </div>
                         )}
@@ -533,9 +690,7 @@ function KaryakartaDetailsAdd() {
                                     <h2 className="text-lg font-semibold text-slate-900">
                                         Company Details
                                     </h2>
-                                    <p className="mt-1 text-sm text-slate-500">
-                                        Office and company contact information.
-                                    </p>
+                                   
                                 </div>
 
                                 <div className="grid gap-4 md:grid-cols-3">
@@ -547,16 +702,55 @@ function KaryakartaDetailsAdd() {
                                                 updateSection("companyDetails", "companyName", e.target.value)
                                             }
                                         />
-                                    </Field>
+                                            </Field>
+                                            
+                                            <Field label="Company Contact Number">
+                                                <input
+                                                    className={fieldClassName}
+                                                    value={formData.companyDetails.officePhone1}
+                                                    onChange={(e) => {
+                                                        const value = e.target.value
+                                                            .replace(/\D/g, "")   // sirf number allow
+                                                            .slice(0, 10);       // max 10 digit
 
-                                    <Field label="Office Email">
+                                                        updateSection("companyDetails", "officePhone1", value);
+                                                    }}
+                                                />
+                                                {errors["companyDetails.officePhone1"] && (
+                                                    <p className="text-red-500 text-xs mt-1">
+                                                        {errors["companyDetails.officePhone1"]}
+                                                    </p>
+                                                )}
+                                            </Field>
+
+                                            <Field label="Company Alt Contact Number">
+                                                <input
+                                                    className={fieldClassName}
+                                                    value={formData.companyDetails.officePhone2}
+                                                    onChange={(e) => {
+                                                        const value = e.target.value
+                                                            .replace(/\D/g, "")   // sirf number allow
+                                                            .slice(0, 10);       // max 10 digit
+
+                                                        updateSection("companyDetails", "officePhone2", value);
+                                                    }}
+                                                   
+                                                />
+                                            </Field>
+
+                                            <Field label="Company Email">
                                         <input
                                             className={fieldClassName}
                                             value={formData.companyDetails.email}
                                             onChange={(e) =>
                                                 updateSection("companyDetails", "email", e.target.value)
                                             }
-                                        />
+                                                />
+                                                {errors["companyDetails.email"] && (
+                                                    <p className="text-red-500 text-xs mt-1">
+                                                        {errors["companyDetails.email"]}
+                                                    </p>
+                                                )}
                                     </Field>
 
                                     <Field label="Website">
@@ -566,10 +760,11 @@ function KaryakartaDetailsAdd() {
                                             onChange={(e) =>
                                                 updateSection("companyDetails", "website", e.target.value)
                                             }
-                                        />
+                                                />
+                                               
                                     </Field>
 
-                                    <Field label="Office Address" className="md:col-span-3">
+                                            <Field label="Company Address" className="md:col-span-3">
                                         <textarea
                                             rows={3}
                                             className={fieldClassName}
@@ -582,9 +777,19 @@ function KaryakartaDetailsAdd() {
                                                 )
                                             }
                                         />
-                                    </Field>
+                                            </Field>
+                                            
+                                            <Field label="Pin Code">
+                                                <input
+                                                    className={fieldClassName}
+                                                    value={formData.companyDetails.pinCode}
+                                                    onChange={(e) =>
+                                                        handlePinCodeChange("companyDetails", e.target.value)
+                                                    }
+                                                />
+                                            </Field>
 
-                                    <Field label="City">
+                                    {/* <Field label="City">
                                         <input
                                             className={fieldClassName}
                                             value={formData.companyDetails.city}
@@ -592,7 +797,7 @@ function KaryakartaDetailsAdd() {
                                                 updateSection("companyDetails", "city", e.target.value)
                                             }
                                         />
-                                    </Field>
+                                    </Field> */}
 
                                     <Field label="Taluka">
                                         <input
@@ -624,43 +829,9 @@ function KaryakartaDetailsAdd() {
                                         />
                                     </Field>
 
-                                    <Field label="Pin Code">
-                                        <input
-                                            className={fieldClassName}
-                                            value={formData.companyDetails.pinCode}
-                                            onChange={(e) =>
-                                                updateSection("companyDetails", "pinCode", e.target.value)
-                                            }
-                                        />
-                                    </Field>
+                                   
 
-                                    <Field label="Office Phone 1">
-                                        <input
-                                            className={fieldClassName}
-                                            value={formData.companyDetails.officePhone1}
-                                            onChange={(e) =>
-                                                updateSection(
-                                                    "companyDetails",
-                                                    "officePhone1",
-                                                    e.target.value
-                                                )
-                                            }
-                                        />
-                                    </Field>
-
-                                    <Field label="Office Phone 2">
-                                        <input
-                                            className={fieldClassName}
-                                            value={formData.companyDetails.officePhone2}
-                                            onChange={(e) =>
-                                                updateSection(
-                                                    "companyDetails",
-                                                    "officePhone2",
-                                                    e.target.value
-                                                )
-                                            }
-                                        />
-                                    </Field>
+                                   
                                 </div>
                             </div>
                         )}
@@ -671,9 +842,7 @@ function KaryakartaDetailsAdd() {
                                     <h2 className="text-lg font-semibold text-slate-900">
                                         Family Details
                                     </h2>
-                                    <p className="mt-1 text-sm text-slate-500">
-                                        You can add multiple family member entries here.
-                                    </p>
+                                   
                                 </div>
 
                                 <div className="space-y-4">
@@ -740,13 +909,42 @@ function KaryakartaDetailsAdd() {
 
                                                 <Field label="Mobile No">
                                                     <input
+                                                        type="tel"
+                                                        inputMode="numeric"
+                                                        maxLength={10}
                                                         className={fieldClassName}
                                                         value={member.mobileNo}
+                                                        onChange={(e) => {
+                                                            const value = e.target.value
+                                                                .replace(/\D/g, "")   // sirf number
+                                                                .slice(0, 10);       // max 10 digit
+
+                                                            updateFamilyMember(index, "mobileNo", value);
+                                                        }}
+                                                    />
+
+                                                    {errors[`familyDetails.members.${index}.mobileNo`] && (
+                                                        <p className="text-red-500 text-xs mt-1">
+                                                            {errors[`familyDetails.members.${index}.mobileNo`]}
+                                                        </p>
+                                                    )}
+                                                </Field>
+
+                                                {/* <Field label="Mobile No">
+                                                    <input
+                                                        className={fieldClassName}
+                                                        value={member.mobileNo}
+                                                        
                                                         onChange={(e) =>
                                                             updateFamilyMember(index, "mobileNo", e.target.value)
                                                         }
                                                     />
-                                                </Field>
+                                                    {errors[`familyDetails.members.${index}.mobileNo`] && (
+                                                        <p className="text-red-500 text-xs mt-1">
+                                                            {errors[`familyDetails.members.${index}.mobileNo`]}
+                                                        </p>
+                                                    )}
+                                                </Field> */}
 
                                                 <Field label="Qualification">
                                                     <input
@@ -778,9 +976,7 @@ function KaryakartaDetailsAdd() {
                                     <h2 className="text-lg font-semibold text-slate-900">
                                         Social Activity Details
                                     </h2>
-                                    <p className="mt-1 text-sm text-slate-500">
-                                        Add organization and JEET joining details.
-                                    </p>
+                                   
                                 </div>
 
                                 <div className="grid gap-4 md:grid-cols-3">
@@ -854,7 +1050,7 @@ function KaryakartaDetailsAdd() {
                                         />
                                     </Field>
 
-                                    <Field label="Mobile No">
+                                    {/* <Field label="Mobile No">
                                         <input
                                             className={fieldClassName}
                                             value={formData.socialActivityDetails.mobileNo}
@@ -865,8 +1061,40 @@ function KaryakartaDetailsAdd() {
                                                     e.target.value
                                                 )
                                             }
-                                        />
-                                    </Field>
+                                                />
+                                                {errors["socialActivityDetails.mobileNo"] && (
+                                                    <p className="text-red-500 text-xs mt-1">
+                                                        {errors["socialActivityDetails.mobileNo"]}
+                                                    </p>
+                                                )}
+                                    </Field> */}
+
+                                            <Field label="Mobile No">
+                                                <input
+                                                    type="tel"
+                                                    inputMode="numeric"
+                                                    maxLength={10}
+                                                    className={fieldClassName}
+                                                    value={formData.socialActivityDetails.mobileNo}
+                                                    onChange={(e) => {
+                                                        const value = e.target.value
+                                                            .replace(/\D/g, "")   // only numbers
+                                                            .slice(0, 10);       // max 10 digits
+
+                                                        updateSection(
+                                                            "socialActivityDetails",
+                                                            "mobileNo",
+                                                            value
+                                                        );
+                                                    }}
+                                                />
+
+                                                {errors["socialActivityDetails.mobileNo"] && (
+                                                    <p className="text-red-500 text-xs mt-1">
+                                                        {errors["socialActivityDetails.mobileNo"]}
+                                                    </p>
+                                                )}
+                                            </Field>
 
                                     <Field
                                         label="I Want to Join with JEET Because"
@@ -940,8 +1168,9 @@ function KaryakartaDetailsAdd() {
                                     </button>
                                 ) : (
                                     <button
-                                        type="submit"
-                                        disabled={saving}
+                                                    type="button"
+                                                    onClick={handleSubmit}
+                                                    disabled={saving}
                                         className="rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-emerald-700"
                                     >
                                         {saving ? "Saving..." : "Save Details"}
@@ -958,3 +1187,6 @@ function KaryakartaDetailsAdd() {
 }
 
 export default KaryakartaDetailsAdd;
+
+
+

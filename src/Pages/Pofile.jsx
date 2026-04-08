@@ -4,11 +4,12 @@ import { Edit3, Mail, MapPin, Phone, UserCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { API } from "../api/BaseURL";
+import { formatIndianDate } from "../utils/formatIndianDate";
 
 const DetailCard = ({ title, items }) => (
   <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
     <h2 className="text-lg font-semibold text-slate-900">{title}</h2>
-    <div className="mt-4 grid gap-3 md:grid-cols-2">
+    <div className="mt-4 grid gap-3 md:grid-cols-4">
       {items.map(({ label, value }) => (
         <div key={label} className="rounded-xl bg-slate-50 px-4 py-3">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
@@ -70,7 +71,7 @@ function Pofile() {
 
   return (
     <div className="min-h-screen bg-slate-50 p-6 md:p-8">
-      <div className="mx-auto max-w-6xl space-y-6">
+      <div className="mx-auto max-w-8xl space-y-6">
         <div className="overflow-hidden rounded-3xl bg-gradient-to-r from-sky-600 via-blue-600 to-cyan-500 p-6 text-white shadow-lg">
           <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
             <div className="flex items-center gap-4">
@@ -139,13 +140,12 @@ function Pofile() {
             { label: "Full Name", value: personalDetails.fullName || user?.name },
             { label: "Email", value: personalDetails.email || user?.email },
             { label: "Mobile", value: personalDetails.mobile || user?.mobile },
-            { label: "Date of Birth", value: personalDetails.dateOfBirth },
+            { label: "Date of Birth", value: formatIndianDate(personalDetails.dateOfBirth) },
             { label: "Gender", value: personalDetails.gender },
             { label: "Education", value: personalDetails.education },
             { label: "Blood Group", value: personalDetails.bloodGroup },
             { label: "Marital Status", value: personalDetails.maritalStatus },
             { label: "Address", value: personalDetails.address },
-            { label: "City", value: personalDetails.city },
             { label: "Taluka", value: personalDetails.taluka },
             { label: "District", value: personalDetails.district },
             { label: "State", value: personalDetails.state },
@@ -157,16 +157,15 @@ function Pofile() {
           title="Company Details"
           items={[
             { label: "Company Name", value: companyDetails.companyName },
-            { label: "Office Address", value: companyDetails.officeAddress },
-            { label: "City", value: companyDetails.city },
+            { label: "Company Contact Number", value: companyDetails.officePhone1 },
+            { label: "Company Alt Contact Number", value: companyDetails.officePhone2 },
+            { label: "Website", value: companyDetails.website },
+            { label: "Email", value: companyDetails.email },
+            { label: "Company Address", value: companyDetails.officeAddress },
             { label: "Taluka", value: companyDetails.taluka },
             { label: "District", value: companyDetails.district },
             { label: "State", value: companyDetails.state },
             { label: "Pin Code", value: companyDetails.pinCode },
-            { label: "Office Phone 1", value: companyDetails.officePhone1 },
-            { label: "Office Phone 2", value: companyDetails.officePhone2 },
-            { label: "Website", value: companyDetails.website },
-            { label: "Email", value: companyDetails.email },
           ]}
         />
 
@@ -196,7 +195,7 @@ function Pofile() {
                   </p>
                   <div className="mt-3 grid gap-2 text-sm text-slate-600">
                     <p>Relation: {member.relation || "-"}</p>
-                    <p>DOB: {member.dob || "-"}</p>
+                    <p>DOB: {formatIndianDate(member.dob)}</p>
                     <p>Blood Group: {member.bloodGroup || "-"}</p>
                     <p>Mobile: {member.mobileNo || "-"}</p>
                     <p>Qualification: {member.qualification || "-"}</p>

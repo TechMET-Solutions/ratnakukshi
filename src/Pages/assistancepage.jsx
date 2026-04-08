@@ -61,6 +61,11 @@ const getExpertPanelAssistanceType = (roleValue) => {
   return map[subRole] || null;
 };
 
+const capitalizeFirst = (text) => {
+  if (!text) return "";
+  return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
+};
+
 const STATUS_LABELS = {
   pending: "Pending11",
   approve: "Approve",
@@ -485,7 +490,7 @@ const AssistancePage = () => {
                   <td className="p-4 text-slate-600">{asDisplayText(row.assistance_type)}</td>
                   <td className="p-4 text-slate-600">{asDisplayText(row.case_id)}</td>
                   <td className={`p-4 font-semibold ${getStatusToneClass(row.status)}`}>
-                    {asDisplayText(row.status)}
+                    {capitalizeFirst(asDisplayText(row.status))}
                   </td>
 
                   <td className="relative p-4 text-center">
