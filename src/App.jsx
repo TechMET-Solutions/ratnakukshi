@@ -20,6 +20,7 @@ import KaryakartaDetailsAdd from "./pages/KaryakartaDetailsAdd";
 import Pofile from "./pages/Pofile";
 import Language from "./pages/Language";
 import ResProof from "./pages/ResProof";
+import RBFBankDetails from "./pages/RBFBankDetails";
 
 const Layout = ({ children }) => {
   return (
@@ -228,6 +229,16 @@ function App() {
             <ProtectedRoute>
               <Layout>
                 <ResProof />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/bank-details"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <RBFBankDetails />
               </Layout>
             </ProtectedRoute>
           }

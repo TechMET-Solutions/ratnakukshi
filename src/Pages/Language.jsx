@@ -239,7 +239,7 @@ function Language() {
         setSelectedLanguage(null);
     };
 
-    
+
 
     return (
         <div className="p-8 min-h-screen bg-gray-50">
@@ -250,7 +250,7 @@ function Language() {
                     onClick={() => {
                         setSelectedLanguage(null); // Ensure no old data is loaded
                         setIsAddModalOpen(true);
-                    }}                    className="bg-[#d94452] hover:bg-[#c13946] text-white px-4 py-2 rounded-md flex items-center gap-2 text-sm font-medium transition-colors shadow-sm"
+                    }} className="bg-[#d94452] hover:bg-[#c13946] text-white px-4 py-2 rounded-md flex items-center gap-2 text-sm font-medium transition-colors shadow-sm"
                 >
                     <Plus size={18} />
                     Add Mother Tongue
