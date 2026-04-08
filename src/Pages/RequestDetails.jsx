@@ -1,5 +1,5 @@
 import axios from "axios";
-import { ChevronLeft, Eye, FileText } from "lucide-react";
+import { ChevronLeft, FileText } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { API } from "../api/BaseURL";
@@ -148,14 +148,136 @@ const formatValue = (value) => {
   return String(value);
 };
 
+const getAmountValue = (assistance) => {
+  const data = parseAssistanceData(assistance);
+  const amountKeys = [
+    "amountRequired",
+    "supportAmount",
+    "amount",
+    "totalEstimatedCost",
+    "estimatedExpense",
+    "monthlyAmount",
+    "totalCost",
+    "totalExpenses",
+  ];
+
+  for (const key of amountKeys) {
+    const value = data?.[key];
+    if (value !== undefined && value !== null && String(value).trim() !== "") {
+      return `Rs ${value}`;
+    }
+  }
+
+  return "-";
+};
+
+const fileNameFromPath = (value) => {
+  if (!value) return "Document";
+  const parts = String(value).split(/[\\/]/);
+  return parts[parts.length - 1] || "Document";
+};
+
+const normalizeApiRoot = (apiValue) =>
+  String(apiValue || "").replace(/\/?api\/?$/i, "");
+
+const resolveFileUrl = (value) => {
+  if (!value) return "";
+  const raw = String(value).trim();
+  if (!raw) return "";
+  if (/^https?:\/\//i.test(raw)) return raw;
+  if (raw.startsWith("/")) return `${normalizeApiRoot(API)}${raw}`;
+  return `${normalizeApiRoot(API)}/${raw}`;
+};
+
+const collectDocumentFiles = (assistanceData) => {
+  const docs = [];
+  const seen = new Set();
+
+  const addDoc = (name, rawPath) => {
+    const docName = name || fileNameFromPath(rawPath);
+    const url = resolveFileUrl(rawPath);
+    const key = `${docName}__${url}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    docs.push({ name: docName, url });
+  };
+
+  const walk = (value, keyHint = "") => {
+    if (value == null) return;
+
+    if (Array.isArray(value)) {
+      value.forEach((item) => walk(item, keyHint));
+      return;
+    }
+
+    if (typeof value === "string") {
+      if (/(file|doc|proof|quotation|attachment|image)/i.test(keyHint)) {
+        addDoc(fileNameFromPath(value), value);
+      }
+      return;
+    }
+
+    if (typeof value !== "object") return;
+
+    if (value.documentName && Array.isArray(value.files)) {
+      value.files.forEach((item, index) => {
+        if (typeof item === "string") {
+          addDoc(`${value.documentName} ${index + 1}`, item);
+        } else if (item && typeof item === "object") {
+          addDoc(
+            item.name || item.filename || value.documentName,
+            item.url || item.path || item.file || item.location || "",
+          );
+        }
+      });
+    }
+
+    Object.entries(value).forEach(([key, val]) => {
+      const looksLikeFileField = /(file|doc|document|proof|quotation|attachment|image)/i.test(key);
+
+      if (looksLikeFileField) {
+        if (typeof val === "string") {
+          addDoc(fileNameFromPath(val), val);
+          return;
+        }
+
+        if (Array.isArray(val)) {
+          val.forEach((item, index) => {
+            if (typeof item === "string") {
+              addDoc(`${key} ${index + 1}`, item);
+            } else if (item && typeof item === "object") {
+              addDoc(
+                item.documentName || item.name || item.filename || `${key} ${index + 1}`,
+                item.url || item.path || item.file || item.location || "",
+              );
+            }
+          });
+          return;
+        }
+
+        if (val && typeof val === "object") {
+          addDoc(
+            val.documentName || val.name || val.filename || key,
+            val.url || val.path || val.file || val.location || "",
+          );
+        }
+      }
+
+      walk(val, key);
+    });
+  };
+
+  walk(assistanceData);
+  return docs.filter((doc) => doc.name || doc.url);
+};
+
 const RequestDetails = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const row = location.state || {};
 
-  const [assistanceData, setAssistanceData] = useState(
-    parseAssistanceData(row?.assistance_data),
-  );
+  const [assistanceData, setAssistanceData] = useState(parseAssistanceData(row?.assistance_data));
+  const [allRows, setAllRows] = useState([]);
   const [loading, setLoading] = useState(false);
 
   const normalizedType = useMemo(
@@ -165,35 +287,35 @@ const RequestDetails = () => {
 
   useEffect(() => {
     const initialData = parseAssistanceData(row?.assistance_data);
-    if (Object.keys(initialData).length > 0) {
-      setAssistanceData(initialData);
-      return;
-    }
+    setAssistanceData(initialData);
 
     if (!row?.diksharthi_id) return;
 
     const fetchData = async () => {
       setLoading(true);
       try {
-        const res = await axios.get(
-          `${API}/api/assistance/all-assistance/${row.diksharthi_id}`,
-        );
+        const res = await axios.get(`${API}/api/assistance/all-assistance/${row.diksharthi_id}`);
 
-        const rows = Array.isArray(res?.data?.data) ? res.data.data : [];
+        const fetchedRows = Array.isArray(res?.data?.data) ? res.data.data : [];
+        setAllRows(fetchedRows);
 
-        const matchedRow = rows.find((item) => {
-          const sameRelation =
-            String(item?.relation_key || item?.relation || "").trim().toLowerCase() ===
-            String(row?.relation_key || row?.relation || "").trim().toLowerCase();
-          const sameType =
-            toCanonicalType(item?.assistance_type) === normalizedType;
-          return sameRelation && sameType;
-        });
+        if (Object.keys(initialData).length === 0) {
+          const matchedRow = fetchedRows.find((item) => {
+            const sameRelation =
+              String(item?.relation_key || item?.relation || "").trim().toLowerCase() ===
+              String(row?.relation_key || row?.relation || "").trim().toLowerCase();
+            const sameType = toCanonicalType(item?.assistance_type) === normalizedType;
+            return sameRelation && sameType;
+          });
 
-        setAssistanceData(parseAssistanceData(matchedRow?.assistance_data));
+          setAssistanceData(parseAssistanceData(matchedRow?.assistance_data));
+        }
       } catch (error) {
         console.error("Request details fetch failed:", error);
-        setAssistanceData({});
+        setAllRows([]);
+        if (Object.keys(initialData).length === 0) {
+          setAssistanceData({});
+        }
       } finally {
         setLoading(false);
       }
@@ -224,13 +346,31 @@ const RequestDetails = () => {
     }));
 
   const renderFields = [...configuredFields, ...dynamicDateFields];
+
   const memberName =
     `${row?.family_member_firstName || ""} ${row?.family_member_lastName || ""}`.trim() ||
     row?.member_name ||
     "-";
 
-  const remarks =
-    row?.query_reason || row?.remarks || row?.remark || "-";
+  const remarks = row?.query_reason || row?.remarks || row?.remark || "-";
+
+  const previousAssistanceRows = useMemo(() => {
+    const currentId = Number(row?.id);
+    const currentRelation = String(row?.relation_key || row?.relation || "").trim().toLowerCase();
+
+    return allRows
+      .filter((item) => Number(item?.id) !== currentId)
+      .filter((item) => {
+        const relation = String(item?.relation_key || item?.relation || "").trim().toLowerCase();
+        return !currentRelation || relation === currentRelation;
+      })
+      .sort((a, b) => new Date(b?.created_at || 0) - new Date(a?.created_at || 0));
+  }, [allRows, row?.id, row?.relation, row?.relation_key]);
+
+  const uploadedDocuments = useMemo(
+    () => collectDocumentFiles(assistanceData),
+    [assistanceData],
+  );
 
   return (
     <div className="min-h-screen bg-gray-50 p-6 font-sans">
@@ -295,82 +435,82 @@ const RequestDetails = () => {
                 </div>
               ))
             ) : (
-              <p className="text-sm text-gray-500 italic">
-                No assistance fields available for this type.
-              </p>
+              <p className="text-sm text-gray-500 italic">No assistance fields available for this type.</p>
             )}
           </div>
         </div>
       )}
 
-      <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6 shadow-sm">
-        <h3 className="text-red-500 font-bold mb-4">Previous Assistance</h3>
-        <table className="w-full border-collapse">
-          <thead>
-            <tr className="bg-[#ECB0004D]/80">
-              <th className="p-3 text-left text-xs font-bold text-gray-600 border-b">Family Member</th>
-              <th className="p-3 text-left text-xs font-bold text-gray-600 border-b">Family Head</th>
-              <th className="p-3 text-left text-xs font-bold text-gray-600 border-b">Date</th>
-              <th className="p-3 text-left text-xs font-bold text-gray-600 border-b">Assistance</th>
-              <th className="p-3 text-left text-xs font-bold text-gray-600 border-b">Amount</th>
-              <th className="p-3 text-left text-xs font-bold text-gray-600 border-b">Renewal</th>
-              <th className="p-3 text-left text-xs font-bold text-gray-600 border-b text-center">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
-              <td className="p-3 text-sm text-gray-700">Prakash Shah</td>
-              <td className="p-3 text-sm text-gray-700">Ravi Shah</td>
-              <td className="p-3 text-sm text-gray-700">05/02/2026</td>
-              <td className="p-3 text-sm text-gray-700">Medical</td>
-              <td className="p-3 text-sm text-gray-700 font-semibold">Rs 50,000</td>
-              <td className="p-3 text-sm text-gray-700">Rs 50,000</td>
-              <td className="p-3 text-center">
-                <button className="text-yellow-600 hover:scale-110 transition-transform">
-                  <Eye size={18} />
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      {previousAssistanceRows.length > 0 && (
+        <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6 shadow-sm">
+          <h3 className="text-red-500 font-bold mb-4">Previous Assistance</h3>
+          <table className="w-full border-collapse">
+            <thead>
+              <tr className="bg-[#ECB0004D]/80">
+                <th className="p-3 text-left text-xs font-bold text-gray-600 border-b">Family Member</th>
+                <th className="p-3 text-left text-xs font-bold text-gray-600 border-b">Family Head</th>
+                <th className="p-3 text-left text-xs font-bold text-gray-600 border-b">Date</th>
+                <th className="p-3 text-left text-xs font-bold text-gray-600 border-b">Assistance</th>
+                <th className="p-3 text-left text-xs font-bold text-gray-600 border-b">Amount</th>
+                <th className="p-3 text-left text-xs font-bold text-gray-600 border-b">Renewal</th>
+              </tr>
+            </thead>
+            <tbody>
+              {previousAssistanceRows.map((item) => {
+                const rowMemberName =
+                  `${item?.family_member_firstName || ""} ${item?.family_member_lastName || ""}`.trim() || "-";
 
-      <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6 shadow-sm">
-        <h3 className="text-red-500 font-bold mb-4">Uploaded Documents</h3>
-        <div className="flex gap-4">
-          {["MedicalReport.pdf", "IncomeCer.pdf"].map((doc, idx) => (
-            <div
-              key={idx}
-              className="flex items-center gap-3 border border-gray-200 rounded p-3 min-w-[280px]"
-            >
-              <div className="bg-red-50 p-2 rounded">
-                <FileText className="text-red-500" size={24} />
-              </div>
-              <div>
-                <p className="text-xs font-semibold text-gray-700">Ravi_Shah_{doc}</p>
-                <button className="text-blue-500 text-[10px] flex items-center gap-0.5 hover:underline uppercase font-bold">
-                  Download
-                </button>
-              </div>
-            </div>
-          ))}
+                return (
+                  <tr
+                    key={item?.id || `${item?.assistance_type}-${item?.created_at}`}
+                    className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors"
+                  >
+                    <td className="p-3 text-sm text-gray-700">{rowMemberName}</td>
+                    <td className="p-3 text-sm text-gray-700">{item?.sadhu_sadhvi_name || "-"}</td>
+                    <td className="p-3 text-sm text-gray-700">{formatDate(item?.created_at)}</td>
+                    <td className="p-3 text-sm text-gray-700">{item?.assistance_type || "-"}</td>
+                    <td className="p-3 text-sm text-gray-700 font-semibold">{getAmountValue(item?.assistance_data)}</td>
+                    <td className="p-3 text-sm text-gray-700">-</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
-      </div>
+      )}
 
-      <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6 shadow-sm">
-        <h3 className="text-red-500 font-bold mb-4">Additional Uploaded Documents</h3>
-        <div className="flex items-center gap-3 border border-gray-200 rounded p-3 w-fit min-w-[280px]">
-          <div className="bg-red-50 p-2 rounded">
-            <FileText className="text-red-500" size={24} />
-          </div>
-          <div>
-            <p className="text-xs font-semibold text-gray-700">Ravi_Shah_IncomeCer.pdf</p>
-            <button className="text-blue-500 text-[10px] flex items-center gap-0.5 hover:underline uppercase font-bold">
-              Download
-            </button>
+      {uploadedDocuments.length > 0 && (
+        <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6 shadow-sm">
+          <h3 className="text-red-500 font-bold mb-4">Uploaded Documents</h3>
+          <div className="flex flex-wrap gap-4">
+            {uploadedDocuments.map((doc, idx) => (
+              <div
+                key={`${doc.name}-${idx}`}
+                className="flex items-center gap-3 border border-gray-200 rounded p-3 min-w-[280px]"
+              >
+                <div className="bg-red-50 p-2 rounded">
+                  <FileText className="text-red-500" size={24} />
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-gray-700">{doc.name || "Document"}</p>
+                  {doc.url ? (
+                    <a
+                      href={doc.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-blue-500 text-[10px] flex items-center gap-0.5 hover:underline uppercase font-bold"
+                    >
+                      View
+                    </a>
+                  ) : (
+                    <span className="text-gray-400 text-[10px] uppercase font-bold">No Link</span>
+                  )}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
-      </div>
+      )}
 
       <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
         <h3 className="text-red-500 font-bold mb-2">Remark</h3>
