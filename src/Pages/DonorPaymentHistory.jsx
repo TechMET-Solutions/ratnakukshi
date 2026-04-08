@@ -12,6 +12,7 @@ function DonorPaymentHistory() {
   const [payments, setPayments] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
+  const [activeBanks, setActiveBanks] = useState([]);
 
   const [showModal, setShowModal] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState(null);
@@ -25,6 +26,7 @@ function DonorPaymentHistory() {
     status: "Completed",
     payFrom: "",
     accountName: "",
+    fromRbfBankAccount: "",
   });
 
   const openEditModal = (payment) => {
@@ -37,6 +39,10 @@ function DonorPaymentHistory() {
       paymentMode: payment.paymentMode || "",
       utrNo: payment.utrNo || "",
       status: payment.status || "Completed",
+      payFrom: payment.payFrom || "",
+      accountName: payment.accountName || "",
+      fromRbfBankAccount:
+        payment.fromRbfBankAccount || payment.rbfBankAccount || payment.rbfBankId || "",
     });
 
     setShowModal(true);
@@ -102,6 +108,40 @@ function DonorPaymentHistory() {
 
     fetchInstallments();
   }, [donorId]);
+
+  useEffect(() => {
+    const isActiveBank = (status) => {
+      const normalized = String(status ?? "").trim().toLowerCase();
+      return (
+        status === 1 ||
+        status === "1" ||
+        status === true ||
+        normalized === "active"
+      );
+    };
+
+    const fetchActiveBanks = async () => {
+      try {
+        const response = await fetch(`${API}/api/banks`);
+        const data = await response.json();
+
+        const bankList = Array.isArray(data)
+          ? data
+          : Array.isArray(data?.data)
+            ? data.data
+            : Array.isArray(data?.banks)
+              ? data.banks
+              : [];
+
+        setActiveBanks(bankList.filter((bank) => isActiveBank(bank?.status)));
+      } catch (error) {
+        console.error("Error fetching active banks:", error);
+        setActiveBanks([]);
+      }
+    };
+
+    fetchActiveBanks();
+  }, []);
 
   const filteredPayments = payments.filter((payment, index) => {
     const installmentLabel =
@@ -406,6 +446,26 @@ function DonorPaymentHistory() {
                     className="w-ll border border-slate-300 p-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                   />
                 </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-1.5">
+                <label className="text-sm font-medium text-slate-700">
+                  From RBF Bank Account
+                </label>
+
+                <select
+                  name="fromRbfBankAccount"
+                  value={formData.fromRbfBankAccount}
+                  onChange={handleChange}
+                  className="w-full border border-slate-300 p-2.5 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 outline-none"
+                >
+                  <option value="">Select</option>
+                  {activeBanks.map((bank) => (
+                    <option key={bank.id} value={bank.id}>
+                      {bank.bank_name} - {bank.account_no}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               {/* Status Field */}

@@ -128,7 +128,7 @@ const Sidebar = () => {
             <NavItem isCollapsed={isCollapsed} to="/user" icon={<Users size={22} />} label="User Management" />
             <NavItem isCollapsed={isCollapsed} to="/mother-tongue" icon={<Globe size={22} />} label="Mother Tongue" />
             <NavItem isCollapsed={isCollapsed} to="/res-proof" icon={<FileText size={22} />} label="Res. Proof" />
-            <NavItem isCollapsed={isCollapsed} to="/religious-practices" icon={<Home size={22} />} label="Religious" />
+            {/* <NavItem isCollapsed={isCollapsed} to="/religious-practices" icon={<Home size={22} />} label="Religious" /> */}
             <NavItem isCollapsed={isCollapsed} to="/bank-details" icon={<Home size={22} />} label="Bank Details" />
             <NavItem isCollapsed={isCollapsed} to="/settings" icon={<Settings size={22} />} label="Settings" />
           </>
