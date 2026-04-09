@@ -890,7 +890,7 @@ const DiksharthiListing = () => {
   const handleOpenDiksharthiPdf = (id) => {
     if (!id) return;
     window.open(
-      `https://karyakarta.ratnakukshi.org/api/diksharthi/pdf/${id}`,
+      `${API}/api/diksharthi/pdf/${id}`,
       "_blank",
       "noopener,noreferrer"
     );

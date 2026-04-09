@@ -5,3 +5,6 @@
 
 // Production
 export const API = "https://karyakarta.ratnakukshi.org";
+
+// ==================== UAT ==================================
+// export const API = "https://uat.ratnakukshi.org";

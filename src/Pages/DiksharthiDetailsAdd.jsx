@@ -345,11 +345,11 @@ if (name === "isMarried" && value === "Yes") {
 
     if (!formData.sadhu_sadhvi_name) newErrors.sadhu_sadhvi_name = "Required";
     if (!formData.gender) newErrors.gender = "Required";
-    if (!formData.pad) newErrors.pad = "Required";
+    // if (!formData.pad) newErrors.pad = "Required";
     if (!formData.samudaay) newErrors.samudaay = "Required";
-    if (!formData.guruName) newErrors.guruName = "Required";
+    // if (!formData.guruName) newErrors.guruName = "Required";
     if (!formData.gadipati) newErrors.gadipati = "Required";
-    if (!formData.isAlive) newErrors.isAlive = "Required";
+    // if (!formData.isAlive) newErrors.isAlive = "Required";
     if (!formData.rbfCriteria) newErrors.rbfCriteria = "Required";
 
     if (formData.rbfCriteria === "Yes" && !formData.relation) {
