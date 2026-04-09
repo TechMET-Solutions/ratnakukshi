@@ -16,6 +16,7 @@ function DonorPaymentHistory() {
 
   const [showModal, setShowModal] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState(null);
+  const [modalMode, setModalMode] = useState("pay");
 
   const [formData, setFormData] = useState({
     amount: "",
@@ -29,8 +30,9 @@ function DonorPaymentHistory() {
     fromRbfBankAccount: "",
   });
 
-  const openEditModal = (payment) => {
+  const openInstallmentModal = (payment, mode = "pay") => {
     setSelectedPayment(payment);
+    setModalMode(mode);
 
     setFormData({
       amount: payment.amount || "",
@@ -47,6 +49,9 @@ function DonorPaymentHistory() {
 
     setShowModal(true);
   };
+
+  const openPayModal = (payment) => openInstallmentModal(payment, "pay");
+  const openEditModal = (payment) => openInstallmentModal(payment, "edit");
 
   useEffect(() => {
     if (!donorId) return;
@@ -168,13 +173,22 @@ function DonorPaymentHistory() {
 
   const updateInstallment = async () => {
     try {
+      const routeName =
+        modalMode === "edit" ? "edit-installment" : "update-installment";
+
       await axios.put(
-        `${API}/api/donor/update-installment/${donorId}/${selectedPayment.id}`,
+        `${API}/api/donor/${routeName}/${donorId}/${selectedPayment.id}`,
         formData
       );
 
+      setPayments((prev) =>
+        prev.map((item) =>
+          String(item?.id) === String(selectedPayment?.id)
+            ? { ...item, ...formData }
+            : item
+        )
+      );
       setShowModal(false);
-      window.location.reload(); // simple refresh
     } catch (error) {
       console.error("Update error:", error);
     }
@@ -228,7 +242,7 @@ function DonorPaymentHistory() {
   return (
     <div className="p-8 min-h-screen bg-gray-50 relative">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-slate-700">Donor Payment History</h1>
+        <h1 className="text-2xl font-bold text-slate-700">Members and Contributions Payment History</h1>
       </div>
 
       <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
@@ -266,7 +280,7 @@ function DonorPaymentHistory() {
           <tbody className="divide-y divide-gray-50">
             {loading ? (
               <tr>
-                <td colSpan="7" className="px-6 py-10 text-center text-gray-400">
+                <td colSpan="8" className="px-6 py-10 text-center text-gray-400">
                   Loading payment records...
                 </td>
               </tr>
@@ -303,19 +317,36 @@ function DonorPaymentHistory() {
                     </td>
                     <td className="px-6 py-4 text-sm">
                       {payment.status === "Completed" ? (
-                        <button
-                          onClick={() => downloadReceipt(donorId, payment.id, index)}
-                          className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs"
-                        >
-                          Download
-                        </button>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => openEditModal(payment)}
+                            className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => downloadReceipt(donorId, payment.id, index)}
+                            className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs"
+                          >
+                            Download
+                          </button>
+                         
+                        </div>
                       ) : (
-                        <button
-                          onClick={() => openEditModal(payment)}
-                          className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded text-xs"
-                        >
-                          Pay
-                        </button>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => openPayModal(payment)}
+                            className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded text-xs"
+                          >
+                            Pay
+                          </button>
+                          {/* <button
+                            onClick={() => openEditModal(payment)}
+                            className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs"
+                          >
+                            Edit
+                          </button> */}
+                        </div>
                       )}
                     </td>
                   </tr>
@@ -323,7 +354,7 @@ function DonorPaymentHistory() {
               })
             ) : (
               <tr>
-                <td colSpan="7" className="px-6 py-10 text-center text-gray-400">
+                <td colSpan="8" className="px-6 py-10 text-center text-gray-400">
                   No payment records found.
                 </td>
               </tr>
@@ -338,7 +369,9 @@ function DonorPaymentHistory() {
 
             {/* Header */}
             <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50">
-              <h2 className="text-xl font-semibold text-slate-800">Pay Installment</h2>
+              <h2 className="text-xl font-semibold text-slate-800">
+                {modalMode === "edit" ? "Edit Installment" : "Pay Installment"}
+              </h2>
             </div>
 
             {/* Form Body */}
@@ -499,7 +532,7 @@ function DonorPaymentHistory() {
                 onClick={updateInstallment}
                 className="px-5 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-sm shadow-blue-200 transition-all active:scale-95"
               >
-                Pay Installment
+                {modalMode === "edit" ? "Update Installment" : "Pay Installment"}
               </button>
             </div>
 
