@@ -990,7 +990,7 @@ function AddDonor() {
 
   // PINCODE VAlication
 
-    const fetchPincodeDetails = async (pincode) => {
+  const fetchPincodeDetails = async (pincode) => {
   try {
     const response = await fetch(`https://api.postalpincode.in/pincode/${pincode}`);
     const data = await response.json();
@@ -1012,6 +1012,30 @@ function AddDonor() {
     handleChange("nomineeDetails", "nomineestate", "");
   }
 };
+
+  const getFilePreviewUrl = (fileValue) => {
+    if (!fileValue) return "";
+    if (fileValue instanceof File) return URL.createObjectURL(fileValue);
+    if (typeof fileValue === "string") return fileValue;
+    return "";
+  };
+
+  const handleViewFile = (fileValue) => {
+    const previewUrl = getFilePreviewUrl(fileValue);
+    if (!previewUrl) {
+      alert("No file available to view");
+      return;
+    }
+
+    const newWindow = window.open(previewUrl, "_blank", "noopener,noreferrer");
+    if (!newWindow) {
+      // alert("Please allow popups to view file");
+    }
+
+    if (fileValue instanceof File) {
+      setTimeout(() => URL.revokeObjectURL(previewUrl), 60 * 1000);
+    }
+  };
 
 
   return (
@@ -1329,6 +1353,15 @@ function AddDonor() {
                     }}
                     className="w-full p-2 border border-slate-300 rounded-md"
                   />
+                  {formData.personalDetails.aadhaarFile && (
+                    <button
+                      type="button"
+                      onClick={() => handleViewFile(formData.personalDetails.aadhaarFile)}
+                      className="mt-2 text-xs px-3 py-1 rounded bg-blue-600 text-white"
+                    >
+                      View
+                    </button>
+                  )}
                 </div>
 
                 <div>
@@ -1371,6 +1404,15 @@ function AddDonor() {
                     }}
                     className="w-full p-2 border border-slate-300 rounded-md"
                   />
+                  {formData.personalDetails.panFile && (
+                    <button
+                      type="button"
+                      onClick={() => handleViewFile(formData.personalDetails.panFile)}
+                      className="mt-2 text-xs px-3 py-1 rounded bg-blue-600 text-white"
+                    >
+                      View
+                    </button>
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -1392,6 +1434,15 @@ function AddDonor() {
                     }}
                     className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                   />
+                  {formData.personalDetails.photo && (
+                    <button
+                      type="button"
+                      onClick={() => handleViewFile(formData.personalDetails.photo)}
+                      className="mt-2 text-xs px-3 py-1 rounded bg-blue-600 text-white"
+                    >
+                      View
+                    </button>
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
