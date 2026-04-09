@@ -116,7 +116,7 @@ const getAllowedActions = ({ role, status }) => {
   // ✅ EXPERT PANEL
   if (isExpertPanelRole(normalizedRole)) {
     if (normalizedStatus === "expert panel") {
-      return [];
+      return ["queries"];
     }
   }
 
@@ -472,12 +472,11 @@ const AssistancePage = () => {
           </thead>
           <tbody className="divide-y divide-slate-100">
             {getFilteredData().map((row, index) => {
-              const isExpertPanelUser = isExpertPanelRole(role);
               const hasQuery = Boolean(getQueryText(row));
               const rowActionKey = getRowActionKey(row, index);
               const isOpen = openDropdownId === rowActionKey;
               const allowedActions = getAllowedActions({ role, status: row.status });
-              const canTakeAction = !isExpertPanelUser && allowedActions.length > 0;
+              const canTakeAction = allowedActions.length > 0;
 
               return (
                 <tr key={rowActionKey} className="hover:bg-slate-50 transition-colors">
@@ -519,7 +518,7 @@ const AssistancePage = () => {
                               <Eye size={16} className="text-yellow-500" /> View Details
                             </button>
 
-                            {!isExpertPanelUser && hasQuery && (
+                            {hasQuery && (
                               <button
                                 onClick={() => { setViewQueryRow(row); setOpenDropdownId(null); }}
                                 className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
@@ -990,6 +989,7 @@ const AssistancePage = () => {
 };
 
 export default AssistancePage;
+
 
 
 

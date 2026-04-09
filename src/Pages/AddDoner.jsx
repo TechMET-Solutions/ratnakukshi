@@ -306,9 +306,9 @@ function AddDonor() {
         if (!child.relation) {
           e[`child_${index}_relation`] = "Child relation is required";
         }
-        if (!child.dob) {
-          e[`child_${index}_dob`] = "Child DOB is required";
-        }
+        // if (!child.dob) {
+        //   e[`child_${index}_dob`] = "Child DOB is required";
+        // }
       });
     }
 
@@ -328,11 +328,11 @@ function AddDonor() {
     if (showRequired && !data.nomineeName) {
       e.nomineeName = "Nominee name is required";
     }
-    if (showRequired && !data.nomineeContact) {
-      e.nomineeContact = "Valid 10-digit contact number is required";
-    } else if (data.nomineeContact && !/^\d{10}$/.test(data.nomineeContact)) {
-      e.nomineeContact = "Valid 10-digit contact number is required";
-    }
+    // if (showRequired && !data.nomineeContact) {
+    //   e.nomineeContact = "Valid 10-digit contact number is required";
+    // } else if (data.nomineeContact && !/^\d{10}$/.test(data.nomineeContact)) {
+    //   e.nomineeContact = "Valid 10-digit contact number is required";
+    // }
     if (showRequired && !data.nomineeAddress) {
       e.nomineeAddress = "Nominee address is required";
     }
@@ -1969,7 +1969,6 @@ function AddDonor() {
                           <div>
                             <label className="block text-sm font-medium text-slate-700 mb-1">
                               Date of Birth
-                              <span className="text-red-500">*</span>
                             </label>
                             <input
                               type="date"
