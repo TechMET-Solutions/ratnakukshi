@@ -278,6 +278,9 @@ const FamilyDetailsForm = () => {
           relationDetailsName: "",
           firstName: "",
           lastName: "",
+          dob: "",
+          age: "",
+          guardian: "",
           aadharNumber: "",
           mobileNumber: "",
           photo: null,
@@ -307,6 +310,15 @@ const FamilyDetailsForm = () => {
           [field]: value,
         },
       };
+
+      if (field === "dob") {
+        const calculatedAge = calculateAgeFromDob(value);
+        nextRelationDetails[relation].age = calculatedAge;
+
+        if (calculatedAge === "" || Number(calculatedAge) >= 18) {
+          nextRelationDetails[relation].guardian = "";
+        }
+      }
 
       if (field === "mobileNumber") {
         const trimmedValue = String(value || "").trim();
@@ -393,6 +405,23 @@ const FamilyDetailsForm = () => {
 
     // If stored as filename/path from backend
     return `${API}/uploads/${photo}`;
+  };
+
+  const calculateAgeFromDob = (dobValue) => {
+    if (!dobValue) return "";
+    const dob = new Date(dobValue);
+    if (Number.isNaN(dob.getTime())) return "";
+
+    const today = new Date();
+    let age = today.getFullYear() - dob.getFullYear();
+    const monthDiff = today.getMonth() - dob.getMonth();
+    const dayDiff = today.getDate() - dob.getDate();
+
+    if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) {
+      age -= 1;
+    }
+
+    return age < 0 ? "" : age;
   };
 
   const validateAadharUnique = () => {
@@ -672,6 +701,9 @@ const FamilyDetailsForm = () => {
         relationDetailsName: "",
         firstName: "",
         lastName: "",
+        dob: "",
+        age: "",
+        guardian: "",
         aadharNumber: "",
         photo: null,
         photoPreview: "",
@@ -1089,10 +1121,26 @@ const FamilyDetailsForm = () => {
 
         Object.keys(relationDetailsRaw).forEach((key) => {
           const formattedKey = key.charAt(0).toUpperCase() + key.slice(1).toLowerCase();
+          const dobValue =
+            relationDetailsRaw[key]?.dob ||
+            relationDetailsRaw[key]?.dateOfBirth ||
+            "";
+          const derivedAge = calculateAgeFromDob(dobValue);
           normalizedRelationDetails[formattedKey] = {
             relationName: formattedKey,
             firstName: relationDetailsRaw[key]?.firstName || "",
             lastName: relationDetailsRaw[key]?.lastName || "",
+            dob: dobValue,
+            age:
+              relationDetailsRaw[key]?.age !== undefined &&
+              relationDetailsRaw[key]?.age !== null &&
+              relationDetailsRaw[key]?.age !== ""
+                ? relationDetailsRaw[key]?.age
+                : derivedAge,
+            guardian:
+              relationDetailsRaw[key]?.guardian ||
+              relationDetailsRaw[key]?.guardianName ||
+              "",
             aadharNumber: relationDetailsRaw[key]?.aadharNumber || "",
             mobileNumber:
               relationDetailsRaw[key]?.mobileNumber ||
@@ -1840,6 +1888,11 @@ const FamilyDetailsForm = () => {
             {selectedRelations.map((rel) => {
               const baseRelation = rel.split("-")[0];
               const isAdditionalRow = rel !== baseRelation;
+              const relationAge = Number(relationDetails?.[rel]?.age);
+              const showGuardianDropdown =
+                relationDetails?.[rel]?.age !== "" &&
+                !Number.isNaN(relationAge) &&
+                relationAge < 18;
 
               return (
                 <div
@@ -2085,6 +2138,55 @@ const FamilyDetailsForm = () => {
                               <p className="text-red-500 text-xs mt-1">{validationErrors[`pan_${rel}`]}</p>
                             )}
                           </div>
+                        </div>
+
+                        <div className="flex gap-4 mt-4">
+                          <div className="w-[200px]">
+                            <label className="block text-sm font-medium text-slate-700 mb-1">
+                              DOB
+                            </label>
+                            <input
+                              type="date"
+                              value={relationDetails[rel]?.dob || ""}
+                              max={new Date().toISOString().split("T")[0]}
+                              onChange={(e) =>
+                                handleRelationDetailChange(rel, "dob", e.target.value)
+                              }
+                              className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
+                            />
+                          </div>
+
+                          <div className="w-[120px]">
+                            <label className="block text-sm font-medium text-slate-700 mb-1">
+                              Age
+                            </label>
+                            <input
+                              type="text"
+                              value={relationDetails[rel]?.age ?? ""}
+                              readOnly
+                              className="w-full p-2 border border-slate-300 rounded-md bg-gray-50 text-slate-600"
+                            />
+                          </div>
+
+                          {showGuardianDropdown && (
+                            <div className="w-[200px]">
+                              <label className="block text-sm font-medium text-slate-700 mb-1">
+                                Guardian
+                              </label>
+                              <select
+                                value={relationDetails[rel]?.guardian || ""}
+                                onChange={(e) =>
+                                  handleRelationDetailChange(rel, "guardian", e.target.value)
+                                }
+                                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
+                              >
+                                <option value="">Select Guardian</option>
+                                <option value="Father">Father</option>
+                                <option value="Mother">Mother</option>
+                                <option value="Other">Other</option>
+                              </select>
+                            </div>
+                          )}
                         </div>
 
                         <div className="flex gap-6 mt-4 w-full">
