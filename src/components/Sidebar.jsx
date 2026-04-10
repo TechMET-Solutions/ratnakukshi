@@ -94,7 +94,7 @@ const Sidebar = () => {
       {/* Navigation */}
       <nav className="flex-1 mt-6 overflow-y-auto overflow-x-hidden custom-scrollbar">
         <NavItem isCollapsed={isCollapsed} to="/" icon={<LayoutDashboard size={22} />} label="Dashboard" />
-        {(isAdmin || isKaryakarta || isCaseCoordinator || isExpertPanel || isCommitteeMember) && (
+        {(isAdmin || isStaff || isOperationsManager || isKaryakarta || isCaseCoordinator || isExpertPanel || isCommitteeMember) && (
           <NavItem
             isCollapsed={isCollapsed}
             to="/diksharthi-details"
@@ -104,7 +104,7 @@ const Sidebar = () => {
 
 
         )}
-        {(isAdmin || isKaryakarta  || isStaff  || isExpertPanel || isCommitteeMember) && (
+        {(isAdmin || isKaryakarta || isExpertPanel || isCommitteeMember) && (
 
           <>
             <NavItem isCollapsed={isCollapsed} to="/assistance" icon={<HeartHandshake size={22} />} label="Assistance" />
@@ -115,8 +115,12 @@ const Sidebar = () => {
         {isAdmin || isAccount && (
           <NavItem isCollapsed={isCollapsed} to="/bank-details" icon={<Home size={22} />} label="Bank Details" />
         )}
-        { isAccount && (
-          <NavItem isCollapsed={isCollapsed} to="/credit-account" icon={<Home size={22} />} label="Credit Account" />
+        {isAccount && (
+          <>
+            <NavItem isCollapsed={isCollapsed} to="/account-assistnce" icon={<Home size={22} />} label="Assistance" />
+            <NavItem isCollapsed={isCollapsed} to="/credit-account" icon={<Home size={22} />} label="Credit Account" />
+            <NavItem isCollapsed={isCollapsed} to="/debit-account" icon={<Home size={22} />} label="Debit Account" />
+          </>
         )}
 
         {isKaryakarta && (

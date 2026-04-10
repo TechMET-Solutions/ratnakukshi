@@ -22,6 +22,8 @@ import Language from "./pages/Language";
 import ResProof from "./pages/ResProof";
 import RBFBankDetails from "./pages/RBFBankDetails";
 import CreditPage from "./pages/CreditPage";
+import DebitAccountPage from "./pages/DebitAccountPage";
+import AccontAssistncePage from "./pages/AccontAssistncePage";
 
 const Layout = ({ children }) => {
   return (
@@ -245,11 +247,31 @@ function App() {
           }
         />
         <Route
+          path="/account-assistnce"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <AccontAssistncePage />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/credit-account"
           element={
             <ProtectedRoute>
               <Layout>
                 <CreditPage />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/debit-account"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <DebitAccountPage />
               </Layout>
             </ProtectedRoute>
           }

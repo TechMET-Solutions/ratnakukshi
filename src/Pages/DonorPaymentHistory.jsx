@@ -495,7 +495,7 @@ function DonorPaymentHistory() {
                   <option value="">Select</option>
                   {activeBanks.map((bank) => (
                     <option key={bank.id} value={bank.id}>
-                      {bank.bank_name} - {bank.account_no}
+                      {bank.bank_name} (***{String(bank.account_no).slice(-4)})
                     </option>
                   ))}
                 </select>
