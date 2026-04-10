@@ -25,6 +25,7 @@ const Sidebar = () => {
   const role = String(user?.role || "").trim().toLowerCase();
   const isAdmin = role === "admin";
   const isStaff = role === "staff";
+  const isAccount = role === "account"
   const isOperationsManager = role === "operations-manager";
   const isKaryakarta = role === "karyakarta";
   const isCaseCoordinator = role === "case-coordinator";
@@ -67,7 +68,7 @@ const Sidebar = () => {
           )}
         </div>
 
-     
+
         {!isCollapsed && (
           <div className="bg-white/10 backdrop-blur-md text-white px-4 py-1.5 rounded-full flex items-center gap-2 text-[10px]  uppercase tracking-wider border border-white/20">
             <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
@@ -83,7 +84,9 @@ const Sidebar = () => {
                       ? "Expert Panel"
                       : isCommitteeMember
                         ? "Committee Member"
-                        : "Staff"}
+                        : isAccount
+                          ? "Account Panal"
+                          : "Staff"}
           </div>
         )}
       </div>
@@ -91,29 +94,33 @@ const Sidebar = () => {
       {/* Navigation */}
       <nav className="flex-1 mt-6 overflow-y-auto overflow-x-hidden custom-scrollbar">
         <NavItem isCollapsed={isCollapsed} to="/" icon={<LayoutDashboard size={22} />} label="Dashboard" />
-        <NavItem
-          isCollapsed={isCollapsed}
-          to="/diksharthi-details"
-          icon={<FileBadge size={22} />}
-          label={isStaff
-            ? "Ratnakukshi Family Info"
-            : "Ratnakukshi Family Info"}
-        />
-     
-
         {(isAdmin || isKaryakarta || isCaseCoordinator || isExpertPanel || isCommitteeMember) && (
+          <NavItem
+            isCollapsed={isCollapsed}
+            to="/diksharthi-details"
+            icon={<FileBadge size={22} />}
+            label="Ratnakukshi Family Info"
+          />
+
+
+        )}
+        {(isAdmin || isKaryakarta  || isStaff  || isExpertPanel || isCommitteeMember) && (
+
           <>
             <NavItem isCollapsed={isCollapsed} to="/assistance" icon={<HeartHandshake size={22} />} label="Assistance" />
-           
+
           </>
         )}
 
+        {isAdmin || isAccount && (
+          <NavItem isCollapsed={isCollapsed} to="/bank-details" icon={<Home size={22} />} label="Bank Details" />
+        )}
 
         {isKaryakarta && (
           <NavItem isCollapsed={isCollapsed} to="/profile" icon={<UserCircle size={22} />} label="Profile" />
         )}
 
-        {(isAdmin || isStaff) && (
+        {(isAdmin || isStaff || isAccount) && (
           <NavItem
             isCollapsed={isCollapsed}
             to="/members-contributions"
@@ -121,7 +128,7 @@ const Sidebar = () => {
             label="Members and Contributions"
           />
         )}
-        
+
 
         {isAdmin && (
           <>
@@ -129,7 +136,6 @@ const Sidebar = () => {
             <NavItem isCollapsed={isCollapsed} to="/mother-tongue" icon={<Globe size={22} />} label="Mother Tongue" />
             <NavItem isCollapsed={isCollapsed} to="/res-proof" icon={<FileText size={22} />} label="Res. Proof" />
             {/* <NavItem isCollapsed={isCollapsed} to="/religious-practices" icon={<Home size={22} />} label="Religious" /> */}
-            <NavItem isCollapsed={isCollapsed} to="/bank-details" icon={<Home size={22} />} label="Bank Details" />
             <NavItem isCollapsed={isCollapsed} to="/settings" icon={<Settings size={22} />} label="Settings" />
           </>
         )}
@@ -157,7 +163,7 @@ const NavItem = ({ icon, label, to, onClick, isCollapsed, variant }) => (
     className={({ isActive }) => `
       flex items-center gap-4 px-6 py-4 cursor-pointer transition-all duration-200 group
       ${isActive
-      ? 'bg-[#fbc02d] text-white font-bold'
+        ? 'bg-[#fbc02d] text-white font-bold'
         : 'text-white'
       }
       ${isCollapsed ? 'justify-center px-0' : ''}

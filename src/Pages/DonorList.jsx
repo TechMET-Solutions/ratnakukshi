@@ -1,18 +1,52 @@
 import {
-    Award,
-    CreditCard,
-    Edit,
-    FileText,
-    Filter,
-    Plus,
-    Search,
+  Award,
+  CreditCard,
+  Edit,
+  FileText,
+  Filter,
+  Plus,
+  Search,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { API } from "../api/BaseURL";
+import { useAuth } from "../context/AuthContext";
 
 function DonorList() {
   const navigate = useNavigate();
+
+
+
+  const normalizeRole = (value) => {
+    const rawRole = String(value || "").trim().toLowerCase();
+
+    if (
+      ["case coordinator", "case cordinator", "case-coordinator"].includes(rawRole)
+    ) {
+      return "case-coordinator";
+    }
+
+    if (
+      [
+        "operations-manager",
+        "operations manager",
+        "operation manage",
+        "opration manage",
+        "opration manager",
+      ].includes(rawRole)
+    ) {
+      return "operations-manager";
+    }
+
+    return rawRole;
+  };
+
+
+  const { user: loggedInUser } = useAuth();
+  const role = normalizeRole(loggedInUser?.role || "");
+  const loggedInUserId = loggedInUser?.id ?? null;
+
+
   const [donors, setDonors] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("All");
@@ -22,7 +56,7 @@ function DonorList() {
       const response = await fetch(`${API}/api/donor/list`);
       const data = await response.json();
 
-      console.log(response,"DAta")
+      console.log(response, "DAta")
 
       if (data.success) {
         setDonors(data.data);
@@ -37,20 +71,6 @@ function DonorList() {
   }, []);
 
 
-  // 2. Search and Filter Logic
-  // const filteredDonors = donors.filter((donor) => {
-  //   const name = donor.personalDetails?.name || "";
-  //   const mobile = donor.personalDetails?.mobile || "";
-
-  //   const matchesSearch =
-  //     name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-  //     mobile.includes(searchTerm);
-
-  //   if (filterStatus === "Due") return matchesSearch && donor.dueAmount > 0;
-  //   if (filterStatus === "Paid") return matchesSearch && donor.dueAmount === 0;
-
-  //   return matchesSearch;
-  // });
 
   const filteredDonors = donors.filter((donor) => {
     const name = donor.personalDetails?.name?.toLowerCase() || "";
@@ -70,13 +90,15 @@ function DonorList() {
       {/* Header Section */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-slate-700">Members and Contributions</h1>
-        <Link
-          to="/donor/add"
-          className="bg-[#C62026] hover:bg-[#c13946] text-white px-4 py-2 rounded-md flex items-center gap-2 text-sm font-medium transition-colors shadow-sm"
-        >
-          <Plus size={18} />
-          Add Members & Contributions
-        </Link>
+        {role === "staff" && (
+          <Link
+            to="/donor/add"
+            className="bg-[#C62026] hover:bg-[#c13946] text-white px-4 py-2 rounded-md flex items-center gap-2 text-sm font-medium transition-colors shadow-sm"
+          >
+            <Plus size={18} />
+            Add Members & Contributions
+          </Link>
+        )}
       </div>
 
       {/* Table Container */}
@@ -96,7 +118,7 @@ function DonorList() {
             />
           </div>
 
-          <div className="flex items-center gap-2">
+          {/* <div className="flex items-center gap-2">
             <Filter size={18} className="text-gray-400" />
             <select
               className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-100"
@@ -107,7 +129,7 @@ function DonorList() {
               <option value="Due">Due Amount</option>
               <option value="Paid">Fully Paid</option>
             </select>
-          </div>
+          </div> */}
         </div>
 
         {/* Table */}
@@ -182,44 +204,46 @@ function DonorList() {
                   <td className="px-6 py-4 text-sm">
                     <span
                       className={`px-2 py-1 rounded-full text-xs font-medium ${donor.dueAmount > 0
-                          ? "bg-red-50 text-red-600"
-                          : "bg-green-50 text-green-600"
+                        ? "bg-red-50 text-red-600"
+                        : "bg-green-50 text-green-600"
                         }`}
                     >
                       ₹{donor.dueAmount?.toLocaleString() || 0}
                     </span>
                   </td>
                   <td className="px-6 py-4 text-sm">
-                 <div className="flex gap-3 text-gray-400">
-                   <button
-                     onClick={() =>
-                       navigate("/donor/add", {
-                         state: { id: donor.id },
-                       })
-                     }
-                     className="hover:text-blue-600 transition-colors"
-                   >
-                     <Edit size={18} />
-                   </button>
-                   <button
-                     onClick={() =>
-                       navigate("/donor/payment-history", {
-                         state: {
-                           id: donor.id,
-                           donorName: donor.personalDetails?.name || "",
-                         },
-                       })
-                     }
-                     className="hover:text-green-600 transition-colors"
-                   >
-                     <CreditCard size={18} />
-                   </button>
-                   <button className="hover:text-red-600 transition-colors">
+                    <div className="flex gap-3 text-gray-400">
+                        <button
+                          onClick={() =>
+                            navigate("/donor/add", {
+                              state: { id: donor.id },
+                            })
+                          }
+                          className="hover:text-blue-600 transition-colors"
+                        >
+                          <Edit size={18} />
+                        </button>
+                      {role === "account" && (
+                      <button
+                        onClick={() =>
+                          navigate("/donor/payment-history", {
+                            state: {
+                              id: donor.id,
+                              donorName: donor.personalDetails?.name || "",
+                            },
+                          })
+                        }
+                        className="hover:text-green-600 transition-colors"
+                      >
+                        <CreditCard size={18} />
+                        </button>
+                      )}
+                      {/* <button className="hover:text-red-600 transition-colors">
                      <Award size={18} />
-                   </button>
-                 </div>
-               </td>
-               {/* <td className="px-6 py-4 text-sm text-center">
+                   </button> */}
+                    </div>
+                  </td>
+                  {/* <td className="px-6 py-4 text-sm text-center">
                  <button className="text-yellow-600 hover:text-yellow-700 inline-flex items-center gap-1 font-medium">
                    <FileText size={16} />
                    View
