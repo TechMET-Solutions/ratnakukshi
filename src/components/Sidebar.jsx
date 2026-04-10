@@ -115,6 +115,9 @@ const Sidebar = () => {
         {isAdmin || isAccount && (
           <NavItem isCollapsed={isCollapsed} to="/bank-details" icon={<Home size={22} />} label="Bank Details" />
         )}
+        { isAccount && (
+          <NavItem isCollapsed={isCollapsed} to="/credit-account" icon={<Home size={22} />} label="Credit Account" />
+        )}
 
         {isKaryakarta && (
           <NavItem isCollapsed={isCollapsed} to="/profile" icon={<UserCircle size={22} />} label="Profile" />

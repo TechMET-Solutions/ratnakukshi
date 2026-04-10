@@ -21,6 +21,7 @@ import Pofile from "./pages/Pofile";
 import Language from "./pages/Language";
 import ResProof from "./pages/ResProof";
 import RBFBankDetails from "./pages/RBFBankDetails";
+import CreditPage from "./pages/CreditPage";
 
 const Layout = ({ children }) => {
   return (
@@ -239,6 +240,16 @@ function App() {
             <ProtectedRoute>
               <Layout>
                 <RBFBankDetails />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/credit-account"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <CreditPage />
               </Layout>
             </ProtectedRoute>
           }
