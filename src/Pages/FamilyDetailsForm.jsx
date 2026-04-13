@@ -447,6 +447,21 @@ const FamilyDetailsForm = () => {
     return `${year}-${month}-${day}`;
   };
 
+  const normalizeYesNoToBoolean = (value) => {
+    if (value === true || value === false) return value;
+    if (value === null || value === undefined || value === "") return null;
+    const normalized = String(value).trim().toLowerCase();
+    if (["yes", "y", "true", "1"].includes(normalized)) return true;
+    if (["no", "n", "false", "0"].includes(normalized)) return false;
+    return null;
+  };
+
+  const normalizeRelationLabel = (value) => {
+    const raw = String(value || "").trim();
+    if (!raw) return "";
+    return raw.charAt(0).toUpperCase() + raw.slice(1).toLowerCase();
+  };
+
   const validateAadharUnique = () => {
     const aadharList = Object.values(relationDetails)
       .map(r => r?.aadharNumber)
@@ -1083,7 +1098,9 @@ const FamilyDetailsForm = () => {
       try {
         const [diksharthiRes, familyRes] = await Promise.all([
           axios.get(`${API}/api/diksharthi/${id}`),
-          axios.get(`${API}/api/family-details/${id}`),
+          axios
+            .get(`${API}/api/family-details/${id}`)
+            .catch(() => ({ data: { data: [] } })),
         ]);
 
         const diksharthiData = diksharthiRes?.data?.data || {};
@@ -1091,63 +1108,105 @@ const FamilyDetailsForm = () => {
 
         // ================= FORM DATA =================
         const normalizedFormData = {
-          permanentAddress: familyData?.formData?.permanentAddress || "",
-          currentAddress: familyData?.formData?.currentAddress || "",
-          village: familyData?.formData?.village || "",
-          taluka: familyData?.formData?.taluka || "",
-          district: familyData?.formData?.district || "",
-          state: familyData?.formData?.state || "",
-          pinCode: familyData?.formData?.pinCode || "",
+          permanentAddress:
+            familyData?.formData?.permanentAddress ||
+            diksharthiData?.permanent_address ||
+            "",
+          currentAddress:
+            familyData?.formData?.currentAddress ||
+            diksharthiData?.current_address ||
+            "",
+          village: familyData?.formData?.village || diksharthiData?.village || "",
+          taluka: familyData?.formData?.taluka || diksharthiData?.taluka || "",
+          district: familyData?.formData?.district || diksharthiData?.district || "",
+          state: familyData?.formData?.state || diksharthiData?.state || "",
+          pinCode: familyData?.formData?.pinCode || diksharthiData?.pin_code || "",
 
-          houseDetails: familyData?.formData?.houseDetails || "",
-          typeOfHouse: familyData?.formData?.typeOfHouse || "",
-          maintenanceCost: familyData?.formData?.maintenanceCost || "",
-          lightBillCost: familyData?.formData?.lightBillCost || "",
-          rentCost: familyData?.formData?.rentCost || "",
+          houseDetails:
+            familyData?.formData?.houseDetails || diksharthiData?.house_details || "",
+          typeOfHouse:
+            familyData?.formData?.typeOfHouse || diksharthiData?.type_of_house || "",
+          maintenanceCost:
+            familyData?.formData?.maintenanceCost ||
+            diksharthiData?.maintenance_cost ||
+            "",
+          lightBillCost:
+            familyData?.formData?.lightBillCost ||
+            diksharthiData?.light_bill_cost ||
+            "",
+          rentCost: familyData?.formData?.rentCost || diksharthiData?.rent_cost || "",
 
-          mediclaim: familyData?.formData?.mediclaim || null,
-          family_mediclaim_type: familyData?.formData?.family_mediclaim_type || "",
-          Family_mediclaim_amount: familyData?.formData?.Family_mediclaim_amount || "",
-          mediclaimPremiumAmount: familyData?.formData?.mediclaimPremiumAmount || "",
+          mediclaim:
+            familyData?.formData?.mediclaim ??
+            normalizeYesNoToBoolean(diksharthiData?.mediclaim),
+          family_mediclaim_type:
+            familyData?.formData?.family_mediclaim_type ||
+            diksharthiData?.Family_mediclaim_type ||
+            "",
+          Family_mediclaim_amount:
+            familyData?.formData?.Family_mediclaim_amount ||
+            diksharthiData?.family_mediclaim_amount ||
+            "",
+          mediclaimPremiumAmount:
+            familyData?.formData?.mediclaimPremiumAmount ||
+            diksharthiData?.mediclaim_premium_amount ||
+            "",
           family_mediclaim_companyName:
-            familyData?.formData?.family_mediclaim_companyName || "",
+            familyData?.formData?.family_mediclaim_companyName ||
+            diksharthiData?.family_mediclaim_companyName ||
+            "",
 
-          ngoAssistance: familyData?.formData?.ngoAssistance || null,
-          sanghName: familyData?.formData?.sanghName || "",
-          ngoAmount: familyData?.formData?.ngoAmount || "",
+          ngoAssistance:
+            familyData?.formData?.ngoAssistance ??
+            normalizeYesNoToBoolean(diksharthiData?.ngo_assistance),
+          sanghName:
+            familyData?.formData?.sanghName || diksharthiData?.ngo_sangh_name || "",
+          ngoAmount: familyData?.formData?.ngoAmount || diksharthiData?.ngo_amount || "",
           ngoFrequency:
             familyData?.formData?.ngoFrequency ||
             familyData?.formData?.ngo_frequency ||
+            diksharthiData?.ngo_frequency ||
             "",
-          ngoRemark: familyData?.formData?.ngoRemark || "",
+          ngoRemark: familyData?.formData?.ngoRemark || diksharthiData?.ngo_remark || "",
         };
 
         // ================= RELATIONS FROM API =================
+        const diksharthiRelations = String(
+          diksharthiData?.family_relation || ""
+        )
+          .split(",")
+          .map((r) => normalizeRelationLabel(r))
+          .filter(Boolean);
+
         const apiRelations = [
           ...new Set(
             (familyData?.formData?.relations || []).map(
-              (r) => r.charAt(0).toUpperCase() + r.slice(1).toLowerCase()
+              (r) => normalizeRelationLabel(r)
             )
           ),
         ];
 
         // ================= SELECTED RELATION =================
-        const relationFromApiRaw = familyData?.relation || null;
-        const formattedRelation = relationFromApiRaw
-          ? relationFromApiRaw.charAt(0).toUpperCase() + relationFromApiRaw.slice(1).toLowerCase()
-          : null;
+        const relationFromApiRaw = familyData?.relation || diksharthiData?.relation || null;
+        const formattedRelation = normalizeRelationLabel(relationFromApiRaw) || null;
 
         // ================= FINAL RELATIONS ARRAY =================
-        const finalRelations = formattedRelation
-          ? Array.from(new Set([...apiRelations, formattedRelation])) // merge default relation
-          : apiRelations;
+        const finalRelations = Array.from(
+          new Set(
+            [
+              ...apiRelations,
+              ...diksharthiRelations,
+              formattedRelation,
+            ].filter(Boolean)
+          )
+        );
 
         // ================= RELATION DETAILS =================
         const relationDetailsRaw = familyData?.relationDetails ?? {};
         const normalizedRelationDetails = {};
 
         Object.keys(relationDetailsRaw).forEach((key) => {
-          const formattedKey = key.charAt(0).toUpperCase() + key.slice(1).toLowerCase();
+          const formattedKey = normalizeRelationLabel(key);
           const dobValue =
             relationDetailsRaw[key]?.dob ||
             relationDetailsRaw[key]?.dateOfBirth ||
@@ -1193,9 +1252,36 @@ const FamilyDetailsForm = () => {
           };
         });
 
+        if (!Object.keys(normalizedRelationDetails).length && formattedRelation) {
+          normalizedRelationDetails[formattedRelation] = {
+            relationName: formattedRelation,
+            firstName: diksharthiData?.family_member_firstName || "",
+            lastName: diksharthiData?.family_member_lastName || "",
+            dob: "",
+            age: "",
+            guardian: "",
+            aadharNumber: "",
+            mobileNumber: diksharthiData?.mobile_no || "",
+            panNumber: "",
+            photo: "",
+            ayushman: null,
+            mediclaim: null,
+            ayushman_Amount: null,
+            mediclaim_amount: null,
+            member_mediclaim_premium_amount: null,
+            mediclaim_company_name: null,
+            mediclaim_type: null,
+            needAssistance: null,
+            family_head: true,
+            assistanceCategories: [],
+          };
+        }
+
         // ================= HEAD OF FAMILY =================
         const apiHead =
-          Object.entries(normalizedRelationDetails).find(([_, val]) => val?.family_head)?.[0] || null;
+          Object.entries(normalizedRelationDetails).find(([_, val]) => val?.family_head)?.[0] ||
+          formattedRelation ||
+          null;
 
         // ================= ASSISTANCE DATA =================
         const assistanceRaw = familyData?.assistanceData ?? {};
@@ -2101,7 +2187,7 @@ const FamilyDetailsForm = () => {
                           </div>
 
                           {/* Aadhar Number */}
-                          <div className="w-[250px]">
+                          <div className="w-[200px]">
                             <label className="block text-sm font-medium text-slate-700 mb-1">
                               Mobile Number
                               
@@ -2123,7 +2209,7 @@ const FamilyDetailsForm = () => {
                               </p>
                             )}
                           </div>
-                          <div className="w-[250px]">
+                          <div className="w-[200px]">
                             <label className="block text-sm font-medium text-slate-700 mb-1">
                               Aadhar Number
                               <span className="text-red-500">*</span>
@@ -2143,6 +2229,11 @@ const FamilyDetailsForm = () => {
                               <p className="text-red-500 text-xs mt-1">{validationErrors[`aadhar_${rel}`]}</p>
                             )}
                           </div>
+
+                        </div>
+
+                        <div className="flex gap-4 mt-4">
+
 
                           {/* Pan Number */}
                           <div className="w-[200px]">
@@ -2166,9 +2257,6 @@ const FamilyDetailsForm = () => {
                               <p className="text-red-500 text-xs mt-1">{validationErrors[`pan_${rel}`]}</p>
                             )}
                           </div>
-                        </div>
-
-                        <div className="flex gap-4 mt-4">
                           <div className="w-[200px]">
                             <label className="block text-sm font-medium text-slate-700 mb-1">
                               DOB

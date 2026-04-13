@@ -409,10 +409,27 @@ if (name === "isMarried" && value === "Yes") {
         ? await axios.put(`${API}/api/update-diksharthi/${editId}`, data)
         : await axios.post(`${API}/api/create-diksharthi`, data);
 
-      const diksharthi = response?.data?.data || editRecord;
+      const diksharthi = response?.data?.data || editRecord || {};
+      const targetId = diksharthi?.id || editId || null;
+      const targetCode = diksharthi?.diksharthi_code || editRecord?.diksharthi_code || "";
+      const targetName = diksharthi?.sadhu_sadhvi_name || formData?.sadhu_sadhvi_name || "";
+      const targetGender = diksharthi?.gender || formData?.gender || "";
+
       setSavedId(diksharthi?.diksharthi_code || diksharthi?.id);
       setShowModal(!isEditMode);
-      navigate("/diksharthi-details");
+      // if (!targetId) {
+      //   // navigate("/diksharthi-details");
+      //   navigate("/family-details");
+      //   return;
+      // }
+      navigate("/family-details", {
+        state: {
+          id: targetId,
+          diksharthi_code: targetCode,
+          sadhu_sadhvi_name: targetName,
+          gender: targetGender,
+        },
+      });
     } catch (error) {
       console.error(error);
       alert("Error saving data");
@@ -993,7 +1010,7 @@ if (name === "isMarried" && value === "Yes") {
 
         <div className="p-6 flex justify-between items-center bg-white mt-4">
           <button onClick={() => navigate(-1)} className="bg-[#fbc02d] text-white px-10 py-2 rounded font-bold uppercase text-sm">Cancel</button>
-          <button onClick={handleSave} className="bg-[#fbc02d] text-white px-10 py-2 rounded font-bold uppercase text-sm">{isEditMode ? "Update" : "Save"}</button>
+          <button onClick={handleSave} className="bg-[#fbc02d] text-white px-10 py-2 rounded font-bold uppercase text-sm">{isEditMode ? "Update & Next" : "Save & Next"}</button>
         </div>
       </div>
     </div>
