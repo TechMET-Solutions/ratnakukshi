@@ -170,7 +170,7 @@ const DiksharthiDetailsAdd = () => {
     "state",
   ];
 
-  const [assistanceTypes] = useState(["Medical", "Education", "Job", "Food", "Rent", "Housing", "Vaiyavacch", "LivelihoodExpenses", "Business"]);
+  const [assistanceTypes] = useState(["Medical", "Education", "Job", "Grocery", "Rent", "Housing", "Vaiyavacch", "LivelihoodExpenses", "Business"]);
 
 
   const validateRbfField = (fieldName, fieldValue, rbfCriteria) => {

@@ -17,7 +17,7 @@ const Login = () => {
     { value: "expert-panel-medical", label: "Expert Panel - Medical" },
     { value: "expert-panel-job", label: "Expert Panel - Job" },
     { value: "expert-panel-educations", label: "Expert Panel - Educations" },
-    { value: "expert-panel-food", label: "Expert Panel - Food" },
+    { value: "expert-panel-food", label: "Expert Panel - Grocery" },
     { value: "expert-panel-rent", label: "Expert Panel - Rent" },
     { value: "expert-panel-housing", label: "Expert Panel - Housing" },
     { value: "expert-panel-vaiyavacch", label: "Expert Panel - Vaiyavacch" },

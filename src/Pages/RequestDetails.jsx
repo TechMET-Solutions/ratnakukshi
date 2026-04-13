@@ -8,7 +8,7 @@ const typeTitleMap = {
   medical: "Medical Assistance",
   education: "Education Assistance",
   job: "Job Assistance",
-  food: "Food Assistance",
+  food: "Grocery Assistance",
   rent: "Rent Assistance",
   housing: "Housing Assistance",
   vaiyavacch: "Vaiyavacch Assistance",
@@ -47,7 +47,7 @@ const typeFieldConfig = {
   ],
   food: [
     { label: "Family Member Count", key: "memberCount" },
-    { label: "Food Support Type", key: "foodType" },
+    { label: "Grocery Support Type", key: "foodType" },
     { label: "Duration", key: "duration" },
     { label: "Frequency", key: "FrequencyDuration" },
     { label: "Urgency", key: "urgency" },

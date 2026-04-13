@@ -765,6 +765,7 @@ const DiksharthiListing = () => {
           ngo_assistance: apiData.formData?.ngoAssistance,
           ngo_sangh_name: apiData.formData?.sanghName,
           ngo_amount: apiData.formData?.ngoAmount,
+          ngo_frequency: apiData.formData?.ngoFrequency || apiData.formData?.ngo_frequency,
           ngo_remark: apiData.formData?.ngoRemark,
 
           // ✅ relation mapping
@@ -2487,6 +2488,7 @@ const DiksharthiListing = () => {
                       <DetailItem label="NGO Assistance" value={familyDetailsModalData.details.ngo_assistance} />
                       <DetailItem label="NGO Sangh Name" value={familyDetailsModalData.details.ngo_sangh_name} />
                       <DetailItem label="NGO Amount" value={familyDetailsModalData.details.ngo_amount} />
+                      <DetailItem label="NGO Frequency" value={familyDetailsModalData.details.ngo_frequency} />
                       <DetailItem label="NGO Remark" value={familyDetailsModalData.details.ngo_remark} />
                     </div>
                   </div>

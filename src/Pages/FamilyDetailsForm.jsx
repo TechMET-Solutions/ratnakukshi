@@ -27,6 +27,7 @@ const INITIAL_FORM_DATA = {
   ngoAssistance: null,
   sanghName: "",
   ngoAmount: "",
+  ngoFrequency: "",
   ngoRemark: "",
 };
 
@@ -69,7 +70,7 @@ const FamilyDetailsForm = () => {
     "Medical",
     "Education",
     "Job",
-    "Food",
+    "Grocery",
     "Rent",
     "Housing",
     "Vaiyavacch",
@@ -1092,6 +1093,10 @@ const FamilyDetailsForm = () => {
           ngoAssistance: familyData?.formData?.ngoAssistance || null,
           sanghName: familyData?.formData?.sanghName || "",
           ngoAmount: familyData?.formData?.ngoAmount || "",
+          ngoFrequency:
+            familyData?.formData?.ngoFrequency ||
+            familyData?.formData?.ngo_frequency ||
+            "",
           ngoRemark: familyData?.formData?.ngoRemark || "",
         };
 
@@ -3799,8 +3804,8 @@ const FamilyDetailsForm = () => {
                               //   selectedAssistance?.includes("Food")
                               // ) &&
 
-                              (relationDetails[rel]?.assistanceCategories?.includes("Food") ||
-                                (selectedRelation === rel && selectedAssistance?.includes("Food"))) &&
+                              (relationDetails[rel]?.assistanceCategories?.includes("Grocery") ||
+                                (selectedRelation === rel && selectedAssistance?.includes("Grocery"))) &&
 
                               (
                                 <div className="mt-6 p-6 border rounded-lg bg-white shadow-sm font-sans">
@@ -3866,7 +3871,7 @@ const FamilyDetailsForm = () => {
 
                                     <div className="flex flex-col gap-1">
                                       <label className="text-[11px] font-bold uppercase text-gray-500">
-                                        Type of Food Support Required?*
+                                        Type of Grocery Support Required?*
                                       </label>
                                       <div className="flex gap-4 mt-2">
                                         {["Dry ration", "Cooked meals"].map(
