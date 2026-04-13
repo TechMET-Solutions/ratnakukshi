@@ -425,6 +425,28 @@ const FamilyDetailsForm = () => {
     return age < 0 ? "" : age;
   };
 
+  const normalizeDateForInput = (value) => {
+    if (!value) return "";
+    const rawValue = String(value).trim();
+    if (!rawValue) return "";
+
+    const yyyyMmDd = rawValue.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (yyyyMmDd) return rawValue;
+
+    const ddMmYyyy = rawValue.match(/^(\d{2})-(\d{2})-(\d{4})$/);
+    if (ddMmYyyy) {
+      return `${ddMmYyyy[3]}-${ddMmYyyy[2]}-${ddMmYyyy[1]}`;
+    }
+
+    const parsed = new Date(rawValue);
+    if (Number.isNaN(parsed.getTime())) return "";
+
+    const year = parsed.getUTCFullYear();
+    const month = String(parsed.getUTCMonth() + 1).padStart(2, "0");
+    const day = String(parsed.getUTCDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+
   const validateAadharUnique = () => {
     const aadharList = Object.values(relationDetails)
       .map(r => r?.aadharNumber)
@@ -1130,12 +1152,13 @@ const FamilyDetailsForm = () => {
             relationDetailsRaw[key]?.dob ||
             relationDetailsRaw[key]?.dateOfBirth ||
             "";
-          const derivedAge = calculateAgeFromDob(dobValue);
+          const normalizedDobValue = normalizeDateForInput(dobValue);
+          const derivedAge = calculateAgeFromDob(normalizedDobValue);
           normalizedRelationDetails[formattedKey] = {
             relationName: formattedKey,
             firstName: relationDetailsRaw[key]?.firstName || "",
             lastName: relationDetailsRaw[key]?.lastName || "",
-            dob: dobValue,
+            dob: normalizedDobValue,
             age:
               relationDetailsRaw[key]?.age !== undefined &&
               relationDetailsRaw[key]?.age !== null &&
