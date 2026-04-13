@@ -477,6 +477,8 @@ if (name === "isMarried" && value === "Yes") {
                 <option>Upadyay</option>
                 <option>Gani</option>
                 <option>Muni</option>
+                <option>Panyas</option>
+                <option>Sadhviji</option>
                 <option>Other</option>
               </select>
               <ChevronDown size={16} className="absolute right-3 top-3 text-gray-400" />

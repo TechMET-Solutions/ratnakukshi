@@ -141,6 +141,14 @@ const DiksharthiListing = () => {
   const [userDirectory, setUserDirectory] = useState([]);
   const [feedbackStatus, setFeedbackStatus] = useState({});
 
+  const [searchAdmin, setSearchAdmin] = useState("");
+
+  const filteredAdmins = adminUsers.filter((admin) =>
+    (admin.name || admin.email || "")
+      .toLowerCase()
+      .includes(searchAdmin.toLowerCase())
+  );
+
   const fetchFeedbackStatus = async (records) => {
     try {
       if (!Array.isArray(records) || records.length === 0) {
@@ -414,30 +422,14 @@ const DiksharthiListing = () => {
   //   console.log(fetchAdminUsers)
   // };
 
-
   const openAssignAdminModal = async (diksharthi) => {
     setAssignModalData(diksharthi);
     setSelectedAdminId("");
-
-    const karyakartaList = await fetchAdminUsers();
-
-    const diksharthiPin = String(diksharthi?.pin_code || "").trim();
-
-    const filtered = karyakartaList.filter((user) => {
-      let locations = user.assign_locations || [];
-
-      if (typeof locations === "string") {
-        locations = locations.split(",");
-      }
-
-      locations = locations.map((p) => String(p).trim());
-
-      return locations.includes(diksharthiPin);
-    });
-
-    setAdminUsers(filtered);
+    setSearchAdmin(""); // ✅ ADD THIS
+    await fetchAdminUsers();
   };
-  
+
+
   const openScheduleVisitModal = (diksharthi) => {
     const current = getCurrentSchedule(diksharthi);
     const openForFreshSchedule = !shouldUseRescheduleFlow(diksharthi);
@@ -577,14 +569,69 @@ const DiksharthiListing = () => {
     }
   };
 
+  const handleAssignAdmin = async () => {
+    if (!assignModalData?.id || !selectedAdminId) {
+      alert("Please select an admin");
+      return;
+    }
+
+    try {
+      setIsAssigningAdmin(true);
+      const payload = {
+        id: assignModalData.id,
+        karykarata_id: selectedAdminId,
+      };
+
+      const response = await fetch(`${API}/api/assign-karyakarta`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to assign Karyakarta");
+      }
+
+      alert("Karyakarta assigned successfully");
+      setAssignModalData(null);
+      setSelectedAdminId("");
+      await fetchDiksharthiList();
+    } catch (error) {
+      console.error(error);
+      alert("Failed to assign Karyakarta");
+    } finally {
+      setIsAssigningAdmin(false);
+    }
+  };
+
   // const handleAssignAdmin = async () => {
+    
   //   if (!assignModalData?.id || !selectedAdminId) {
-  //     alert("Please select an admin");
+  //     alert("Please select a Karyakarta");
+  //     return;
+  //   }
+
+  //   // ✅ selected Karyakarta find
+  //   const selectedUser = adminUsers.find(
+  //     (u) => String(u.id) === String(selectedAdminId)
+  //   );
+
+  //   const diksharthiPin = String(assignModalData?.pin_code || "").trim();
+
+  //   const userLocations = (selectedUser?.assign_locations || []).map(p =>
+  //     String(p).trim()
+  //   );
+
+  //   if (!userLocations.includes(diksharthiPin)) {
+  //     alert(`❌ This Karyakarta is not assigned to pin code ${diksharthiPin}`);
   //     return;
   //   }
 
   //   try {
   //     setIsAssigningAdmin(true);
+
   //     const payload = {
   //       id: assignModalData.id,
   //       karykarata_id: selectedAdminId,
@@ -592,9 +639,7 @@ const DiksharthiListing = () => {
 
   //     const response = await fetch(`${API}/api/assign-karyakarta`, {
   //       method: "PUT",
-  //       headers: {
-  //         "Content-Type": "application/json",
-  //       },
+  //       headers: { "Content-Type": "application/json" },
   //       body: JSON.stringify(payload),
   //     });
 
@@ -602,10 +647,12 @@ const DiksharthiListing = () => {
   //       throw new Error("Failed to assign Karyakarta");
   //     }
 
-  //     alert("Karyakarta assigned successfully");
+  //     alert("✅ Karyakarta assigned successfully");
   //     setAssignModalData(null);
   //     setSelectedAdminId("");
+
   //     await fetchDiksharthiList();
+
   //   } catch (error) {
   //     console.error(error);
   //     alert("Failed to assign Karyakarta");
@@ -614,60 +661,43 @@ const DiksharthiListing = () => {
   //   }
   // };
 
-  const handleAssignAdmin = async () => {
-    
-    if (!assignModalData?.id || !selectedAdminId) {
-      alert("Please select a Karyakarta");
-      return;
-    }
+  // const handleAssignAdmin = async () => {
+  //   if (!assignModalData?.id || !selectedAdminId) {
+  //     alert("Please select a Karyakarta");
+  //     return;
+  //   }
 
-    // ✅ selected Karyakarta find
-    const selectedUser = adminUsers.find(
-      (u) => String(u.id) === String(selectedAdminId)
-    );
+  //   try {
+  //     setIsAssigningAdmin(true);
 
-    const diksharthiPin = String(assignModalData?.pin_code || "").trim();
+  //     const payload = {
+  //       id: assignModalData.id,
+  //       karykarata_id: selectedAdminId,
+  //     };
 
-    const userLocations = (selectedUser?.assign_locations || []).map(p =>
-      String(p).trim()
-    );
+  //     const response = await fetch(`${API}/api/assign-karyakarta`, {
+  //       method: "PUT",
+  //       headers: { "Content-Type": "application/json" },
+  //       body: JSON.stringify(payload),
+  //     });
 
-    if (!userLocations.includes(diksharthiPin)) {
-      alert(`❌ This Karyakarta is not assigned to pin code ${diksharthiPin}`);
-      return;
-    }
+  //     if (!response.ok) {
+  //       throw new Error("Failed to assign Karyakarta");
+  //     }
 
-    try {
-      setIsAssigningAdmin(true);
+  //     alert("✅ Karyakarta assigned successfully");
+  //     setAssignModalData(null);
+  //     setSelectedAdminId("");
 
-      const payload = {
-        id: assignModalData.id,
-        karykarata_id: selectedAdminId,
-      };
+  //     await fetchDiksharthiList();
 
-      const response = await fetch(`${API}/api/assign-karyakarta`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to assign Karyakarta");
-      }
-
-      alert("✅ Karyakarta assigned successfully");
-      setAssignModalData(null);
-      setSelectedAdminId("");
-
-      await fetchDiksharthiList();
-
-    } catch (error) {
-      console.error(error);
-      alert("Failed to assign Karyakarta");
-    } finally {
-      setIsAssigningAdmin(false);
-    }
-  };
+  //   } catch (error) {
+  //     console.error(error);
+  //     alert("Failed to assign Karyakarta");
+  //   } finally {
+  //     setIsAssigningAdmin(false);
+  //   }
+  // };
 
   // Feedback handlers
   const openFeedbackModal = (diksharthi) => {
@@ -1463,14 +1493,14 @@ const DiksharthiListing = () => {
                             </button>
                           )}
 
-                          {!isAdminUnassigned(diksharthi) && (
+                          {/* {!isAdminUnassigned(diksharthi) && (
                             <button
                               className="rounded-lg bg-emerald-600 text-sm px-2 py-1 text-white"
                               onClick={() => openScheduleVisitModal(diksharthi)}
                             >
                               {shouldUseRescheduleFlow(diksharthi) ? "Reschedule Visit" : "Schedule Visit"}
                             </button>
-                          )}
+                          )} */}
 
                           {feedbackStatus[diksharthi.id] && (
                             <button
@@ -1532,7 +1562,7 @@ const DiksharthiListing = () => {
                             </button>
                           )}
 
-                          {hasAnyVisitSchedule(diksharthi) && (
+                          {/* {hasAnyVisitSchedule(diksharthi) && (
                             <div className="flex items-center gap-2">
                               <button
                                 className="rounded-lg bg-indigo-600 text-sm px-2 py-1 text-white"
@@ -1541,7 +1571,7 @@ const DiksharthiListing = () => {
                                 View Schedule
                               </button>
                             </div>
-                          )}
+                          )} */}
 
                           {!feedbackStatus[diksharthi.id] && (
                             <button
@@ -1639,7 +1669,7 @@ const DiksharthiListing = () => {
                     </td>
                     {role === "karyakarta" && (
                       <td className="px-6 py-3">
-                        {hasAnyVisitSchedule(diksharthi) && (
+                        {/* {hasAnyVisitSchedule(diksharthi) && ( */}
                           <div className="flex items-center gap-2">
                             <select
                               className="rounded-lg border border-gray-300 text-sm px-2 py-1"
@@ -1652,7 +1682,7 @@ const DiksharthiListing = () => {
                               <option value="No">No</option>
                             </select>
                           </div>
-                        )}
+                        {/* )} */}
                       </td>
                     )}
                   </tr>
@@ -1803,7 +1833,7 @@ const DiksharthiListing = () => {
                               }`}
                           >
                             {(viewModalData?.is_alive || viewModalData?.isAlive) === "Yes"
-                              ? "Alive"
+                              ? "Vidyamaan"
                               : "Kaaldharma"}
                           </span>
                         </div>
@@ -1876,52 +1906,74 @@ const DiksharthiListing = () => {
                 <X size={18} className="text-gray-600" />
               </button>
             </div>
+
             <div className="px-5 py-4 space-y-3 text-sm">
+              {/* Data Display Section */}
+              <p><span className="font-semibold">M.S. ID:</span> {assignModalData?.id || "-"}</p>
+              <p><span className="font-semibold">M.S. Name:</span> {assignModalData?.sadhu_sadhvi_name || "-"}</p>
               <p>
-                <span className="font-semibold">M.S. ID:</span>{" "}
-                {assignModalData?.id || "-"}
+                <span className="font-semibold">Family Member:</span>{" "}
+                {assignModalData?.family_member_firstName} {assignModalData?.family_member_lastName}
               </p>
-              <p>
-                <span className="font-semibold">M.S. Name:</span>{" "}
-                {assignModalData?.sadhu_sadhvi_name || "-"}
-              </p>
-              <p>
-                <span className="font-semibold">Family Member Name:</span>{" "}
-                {assignModalData?.family_member_firstName || "-"} { " "}
-                {assignModalData?.family_member_lastName || "-"}
-              </p>
-              <p>
-                <span className="font-semibold">Mobile No :</span>{" "}
-                {assignModalData?.mobile_no || "-"}
-              </p>
-              <label className="block">
-                <span className="font-semibold">Karyakarta :</span>
-                <select
-                  value={selectedAdminId}
-                  onChange={(e) => setSelectedAdminId(e.target.value)}
-                  className="mt-2 w-full p-2 border border-slate-300 rounded-md outline-none"
-                  disabled={isAdminListLoading}
-                >
-                  <option value="">Select Karyakarta</option>
-                  {adminUsers.map((admin) => (
-                    <option key={admin.id} value={admin.id}>
-                      {admin.name || admin.email || `Admin #${admin.id}`}
-                    </option>
-                  ))}
-                </select>
-              </label>
+
+              {/* Search & Selection Section */}
+              <div className="mt-4">
+                <label className="block font-semibold mb-1">Search Karyakarta :</label>
+
+                <input
+                  type="text"
+                  placeholder="Type name to search..."
+                  value={searchAdmin}
+                  onChange={(e) => setSearchAdmin(e.target.value)}
+                  className="w-full p-2 border border-gray-600 rounded-md"
+                />
+
+                {searchAdmin.trim().length > 0 && (
+                  <div className="mt-2 max-h-40 overflow-y-auto border rounded-md">
+                    {filteredAdmins.length === 0 ? (
+                      <p className="p-2 text-sm text-gray-500">No result found</p>
+                    ) : (
+                      filteredAdmins.map((admin) => (
+                        <div
+                          key={admin.id}
+                          onClick={() => setSelectedAdminId(admin.id)}
+                          className={`p-2 cursor-pointer hover:bg-gray-100 ${String(selectedAdminId) === String(admin.id)
+                              ? "bg-purple-100"
+                              : ""
+                            }`}
+                        >
+                          {admin.name || admin.email || `Admin #${admin.id}`}
+                        </div>
+                      ))
+                    )}
+                  </div>
+                )}
+
+                {/* Selected */}
+                {selectedAdminId && (
+                  <p className="mt-2 text-green-600 text-sm">
+                    Selected:{" "}
+                    {
+                      adminUsers.find(
+                        (a) => String(a.id) === String(selectedAdminId)
+                      )?.name
+                    }
+                  </p>
+                )}
+              </div>
             </div>
+
             <div className="px-5 py-4 border-t border-gray-100 flex gap-2 justify-end">
               <button
                 type="button"
-                className="rounded-lg bg-gray-200 text-sm px-4 py-2 text-gray-800"
+                className="rounded-lg bg-gray-200 text-sm px-4 py-2 text-gray-800 hover:bg-gray-300"
                 onClick={() => setAssignModalData(null)}
               >
                 Cancel
               </button>
               <button
                 type="button"
-                className="rounded-lg bg-purple-600 text-sm px-4 py-2 text-white disabled:opacity-60"
+                className="rounded-lg bg-purple-600 text-sm px-4 py-2 text-white disabled:opacity-60 hover:bg-purple-700"
                 onClick={handleAssignAdmin}
                 disabled={isAssigningAdmin || !selectedAdminId}
               >

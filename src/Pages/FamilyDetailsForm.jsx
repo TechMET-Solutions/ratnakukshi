@@ -2839,7 +2839,7 @@ const FamilyDetailsForm = () => {
                                     {/* Row 2 */}
                                     <div className="flex flex-col gap-1">
                                       <label className="text-[11px] font-bold uppercase text-gray-500">
-                                        Estimated Medical Expense*
+                                        Estimated/Actual Medical Expenses*
                                       </label>
                                       <input
                                         type="number"
@@ -3805,7 +3805,7 @@ const FamilyDetailsForm = () => {
                               (
                                 <div className="mt-6 p-6 border rounded-lg bg-white shadow-sm font-sans">
                                   <h3 className="text-xl font-semibold mb-6 text-gray-800">
-                                    Food support Assistance
+                                    Grocery Support Assistance
                                   </h3>
 
                                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-6">
@@ -5440,7 +5440,7 @@ const FamilyDetailsForm = () => {
             </div>
             <div>
               <p className="text-sm font-medium text-slate-700 mb-2">
-                Is any NGO assistance received?
+                Is any Sangh/NGO  assistance received?
                 <span className="text-red-500">*</span>
               </p>
               <div className="flex gap-4">
@@ -5600,6 +5600,28 @@ const FamilyDetailsForm = () => {
                     }
                     className="w-full p-2 border border-slate-300 rounded-md outline-none"
                   />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Frequency
+                  </label>
+
+                  <select
+                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
+                    value={formData.ngoFrequency || ""}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        ngoFrequency: e.target.value,
+                      })
+                    }
+                  >
+                    <option value="">Select Frequency</option>
+                    <option value="Monthly">Monthly</option>
+                    <option value="Quarterly">Quarterly</option>
+                    <option value="Annually">Annually</option>
+                  </select>
                 </div>
 
                 <div className="md:col-span-3">
