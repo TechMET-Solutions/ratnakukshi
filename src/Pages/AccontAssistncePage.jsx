@@ -3,8 +3,111 @@ import { API } from "../api/BaseURL";
 import { ClipboardList, Loader2, AlertCircle, Eye, Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-const BankDetailsModal = ({ isOpen, onClose }) => {
-    const [accountType, setAccountType] = useState("self");
+const initialBankForm = {
+    account_type: "self",
+    bank_name: "",
+    account_holder_name: "",
+    branch_name: "",
+    account_no: "",
+    ifsc_code: "",
+};
+
+const BankDetailsModal = ({ isOpen, onClose, selectedItem, onSaved }) => {
+    const [formData, setFormData] = useState(initialBankForm);
+    const [loading, setLoading] = useState(false);
+    const [saving, setSaving] = useState(false);
+    const [error, setError] = useState("");
+
+    useEffect(() => {
+        if (!isOpen || !selectedItem?.id) return;
+
+        const fetchBankDetails = async () => {
+            try {
+                setLoading(true);
+                setError("");
+                const res = await fetch(`${API}/api/assistance/bank-details/${selectedItem.id}`);
+                const data = await res.json().catch(() => ({}));
+
+                if (!res.ok || data?.success === false) {
+                    throw new Error(data?.message || "Failed to fetch bank details");
+                }
+
+                const details = data?.data;
+                if (details) {
+                    setFormData({
+                        account_type: details.account_type || "self",
+                        bank_name: details.bank_name || "",
+                        account_holder_name: details.account_holder_name || "",
+                        branch_name: details.branch_name || "",
+                        account_no: details.account_no || "",
+                        ifsc_code: details.ifsc_code || "",
+                    });
+                } else {
+                    setFormData(initialBankForm);
+                }
+            } catch (err) {
+                console.error("Error loading bank details:", err);
+                setError(err?.message || "Failed to fetch bank details");
+                setFormData(initialBankForm);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchBankDetails();
+    }, [isOpen, selectedItem?.id]);
+
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormData((prev) => ({
+            ...prev,
+            [name]: name === "ifsc_code" ? value.toUpperCase() : value,
+        }));
+    };
+
+    const handleSave = async () => {
+        if (!selectedItem?.id) return;
+        try {
+            setSaving(true);
+            setError("");
+
+            const payload = {
+                diksharthi_id: selectedItem?.diksharthi_id || null,
+                family_id: selectedItem?.family_id || null,
+                account_type: formData.account_type,
+                bank_name: String(formData.bank_name || "").trim(),
+                account_holder_name: String(formData.account_holder_name || "").trim(),
+                branch_name: String(formData.branch_name || "").trim(),
+                account_no: String(formData.account_no || "").trim(),
+                ifsc_code: String(formData.ifsc_code || "").trim().toUpperCase(),
+            };
+
+            if (!payload.bank_name || !payload.account_holder_name || !payload.account_no) {
+                throw new Error("Bank Name, Account Holder Name and Account Number are required");
+            }
+
+            const res = await fetch(`${API}/api/assistance/bank-details/${selectedItem.id}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(payload),
+            });
+
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok || data?.success === false) {
+                throw new Error(data?.message || "Failed to save bank details");
+            }
+
+            onSaved?.();
+            onClose();
+        } catch (err) {
+            console.error("Error saving bank details:", err);
+            setError(err?.message || "Failed to save bank details");
+        } finally {
+            setSaving(false);
+        }
+    };
 
     if (!isOpen) return null;
 
@@ -24,59 +127,91 @@ const BankDetailsModal = ({ isOpen, onClose }) => {
 
                 {/* BODY */}
                 <div className="p-6 space-y-4">
+                    {loading ? (
+                        <div className="py-8 text-center text-sm text-slate-500">Loading bank details...</div>
+                    ) : (
+                        <>
+                            {/* RADIO BUTTON */}
+                            <div className="flex gap-6">
+                                <label className="flex items-center gap-2">
+                                    <input
+                                        type="radio"
+                                        name="account_type"
+                                        value="self"
+                                        checked={formData.account_type === "self"}
+                                        onChange={handleChange}
+                                    />
+                                    Self Account
+                                </label>
 
-                    {/* RADIO BUTTON */}
-                    <div className="flex gap-6">
-                        <label className="flex items-center gap-2">
-                            <input
-                                type="radio"
-                                value="self"
-                                checked={accountType === "self"}
-                                onChange={(e) => setAccountType(e.target.value)}
-                            />
-                            Self Account
-                        </label>
+                                <label className="flex items-center gap-2">
+                                    <input
+                                        type="radio"
+                                        name="account_type"
+                                        value="third"
+                                        checked={formData.account_type === "third"}
+                                        onChange={handleChange}
+                                    />
+                                    Third Party
+                                </label>
+                            </div>
 
-                        <label className="flex items-center gap-2">
-                            <input
-                                type="radio"
-                                value="third"
-                                checked={accountType === "third"}
-                                onChange={(e) => setAccountType(e.target.value)}
-                            />
-                            Third Party
-                        </label>
-                    </div>
+                            {/* FORM */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="text-sm font-medium">Bank Name</label>
+                                    <input
+                                        name="bank_name"
+                                        value={formData.bank_name}
+                                        onChange={handleChange}
+                                        className="w-full border rounded px-3 py-2"
+                                    />
+                                </div>
 
-                    {/* FORM */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="text-sm font-medium">Account Holder Name</label>
+                                    <input
+                                        name="account_holder_name"
+                                        value={formData.account_holder_name}
+                                        onChange={handleChange}
+                                        className="w-full border rounded px-3 py-2"
+                                    />
+                                </div>
 
-                        <div>
-                            <label className="text-sm font-medium">Bank Name</label>
-                            <input className="w-full border rounded px-3 py-2" />
-                        </div>
+                                <div>
+                                    <label className="text-sm font-medium">Branch Name</label>
+                                    <input
+                                        name="branch_name"
+                                        value={formData.branch_name}
+                                        onChange={handleChange}
+                                        className="w-full border rounded px-3 py-2"
+                                    />
+                                </div>
 
-                        <div>
-                            <label className="text-sm font-medium">Account Holder Name</label>
-                            <input className="w-full border rounded px-3 py-2" />
-                        </div>
+                                <div>
+                                    <label className="text-sm font-medium">Account Number</label>
+                                    <input
+                                        name="account_no"
+                                        value={formData.account_no}
+                                        onChange={handleChange}
+                                        className="w-full border rounded px-3 py-2"
+                                    />
+                                </div>
 
-                        <div>
-                            <label className="text-sm font-medium">Branch Name</label>
-                            <input className="w-full border rounded px-3 py-2" />
-                        </div>
+                                <div>
+                                    <label className="text-sm font-medium">IFSC Code</label>
+                                    <input
+                                        name="ifsc_code"
+                                        value={formData.ifsc_code}
+                                        onChange={handleChange}
+                                        className="w-full border rounded px-3 py-2"
+                                    />
+                                </div>
+                            </div>
 
-                        <div>
-                            <label className="text-sm font-medium">Account Number</label>
-                            <input className="w-full border rounded px-3 py-2" />
-                        </div>
-
-                        <div>
-                            <label className="text-sm font-medium">IFSC Code</label>
-                            <input className="w-full border rounded px-3 py-2" />
-                        </div>
-
-                    </div>
+                            {error && <p className="text-sm text-red-600">{error}</p>}
+                        </>
+                    )}
                 </div>
 
                 {/* FOOTER */}
@@ -87,8 +222,12 @@ const BankDetailsModal = ({ isOpen, onClose }) => {
                     >
                         Cancel
                     </button>
-                    <button className="px-4 py-2 bg-[#d94452] text-white rounded text-sm">
-                        Save
+                    <button
+                        onClick={handleSave}
+                        disabled={loading || saving}
+                        className="px-4 py-2 bg-[#d94452] text-white rounded text-sm disabled:opacity-60"
+                    >
+                        {saving ? "Saving..." : "Save"}
                     </button>
                 </div>
             </div>
@@ -298,7 +437,9 @@ function AccontAssistncePage() {
             </div>
             <BankDetailsModal
                 isOpen={isBankModalOpen}
+                selectedItem={selectedItem}
                 onClose={() => setIsBankModalOpen(false)}
+                onSaved={() => {}}
             />
         </div>
     );
