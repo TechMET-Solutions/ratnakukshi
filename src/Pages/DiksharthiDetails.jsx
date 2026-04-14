@@ -1349,6 +1349,11 @@ const DiksharthiListing = () => {
                   Karyakarta Name
                 </th>
               )}
+              {role === "operations-manager" && (
+                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">
+                  Is Visited ?
+                </th>
+              )}
               {role === "admin" && (
                 <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">
                   Status
@@ -1436,6 +1441,22 @@ const DiksharthiListing = () => {
                       </td>
                     )}
 
+                    {role === "operations-manager" && (
+                      <td className="px-6 py-3">
+                        <div>
+                          {diksharthi.current_visit_status || "No"}
+                        </div>
+
+                        {diksharthi.visited_history?.length > 0 && (() => {
+                          const lastVisit = diksharthi.visited_history[diksharthi.visited_history.length - 1];
+                          return (
+                            <div className="text-[10px]">
+                              {formatIndianDate(lastVisit.date)} {lastVisit.time}
+                            </div>
+                          );
+                        })()}
+                      </td>
+                    )}
                     {role === "admin" && (
                       <td className="px-6 py-3">{status}</td>
                     )}
@@ -1470,6 +1491,24 @@ const DiksharthiListing = () => {
                             onClick={() => handleOpenDiksharthiPdf(diksharthi.id)}
                           >
                             PDF
+                          </button>
+
+                          <button
+                            className="rounded-lg bg-yellow-500 text-sm px-2 py-1 text-white"
+                            onClick={() =>
+                              navigate("/family-details", {
+                                state: {
+                                  id: diksharthi.id,
+                                  diksharthi_code: diksharthi.diksharthi_code,
+                                  sadhu_sadhvi_name: diksharthi.sadhu_sadhvi_name,
+                                  gender: diksharthi.gender,
+                                },
+                              })
+                            }
+                          >
+                            {diksharthi.family_details
+                              ? "Update Family Details"
+                              : "Add Family Details"}
                           </button>
 
                           {getDiksharthiStatus(diksharthi) !== "send" && (
