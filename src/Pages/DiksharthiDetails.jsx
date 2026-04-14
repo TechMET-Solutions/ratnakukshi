@@ -1321,6 +1321,9 @@ const DiksharthiListing = () => {
                 Date
               </th>
               <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">
+              F.A.N ID
+              </th>
+              <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">
                 M.S. ID
               </th>
               <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">
@@ -1335,9 +1338,7 @@ const DiksharthiListing = () => {
               <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">
                 RBF Family Member Name
               </th>
-              {/* <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">
-                Alive Status
-              </th> */}
+             
 
               {role === "operations-manager" && (
                 <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">
@@ -1392,7 +1393,6 @@ const DiksharthiListing = () => {
 
                 return (
                   <tr key={diksharthi.id} className="border-b border-gray-100">
-                    {/* Photo */}
                     {role === "staff" && (
                       <td className="px-6 py-3">
                         <input
@@ -1409,22 +1409,18 @@ const DiksharthiListing = () => {
                       </td>
                     )}
 
-                    {/* Date */}
                     <td className="px-6 py-3">{formatIndianDate(diksharthi.created_at)}</td>
 
 
-                    {/* ID */}
+                    <td className="px-6 py-3">{diksharthi.fan_id}</td>
                     <td className="px-6 py-3">{diksharthi.id}</td>
 
 
-                    {/* Name */}
                     <td className="px-6 py-3">{diksharthi.sadhu_sadhvi_name}</td>
 
 
-                    {/* Alive */}
                     <td className="px-6 py-3">{diksharthi.rbf_criteria}</td>
 
-                    {/* Pad */}
                     <td className="px-6 py-3">{diksharthi.relation || "-"}</td>
                     <td className="px-6 py-3">{diksharthi.family_member_firstName || "-"} {diksharthi.family_member_lastName || "-"}</td>
 
@@ -1461,11 +1457,9 @@ const DiksharthiListing = () => {
                       <td className="px-6 py-3">{status}</td>
                     )}
 
-                    {/* Actions */}
                     <td className="px-6 py-3 flex gap-3 flex-wrap">
 
 
-                      {/* ================= STAFF ================= */}
                       {role === "staff" && (
                         <>
                           <button
@@ -1506,7 +1500,6 @@ const DiksharthiListing = () => {
                         </>
                       )}
 
-                      {/* ================= OPERATIONS MANAGER ================= */}
                       {role === "operations-manager" && (
                         <>
                           <button
@@ -1544,14 +1537,7 @@ const DiksharthiListing = () => {
                             </button>
                           )}
 
-                          {/* {!isAdminUnassigned(diksharthi) && (
-                            <button
-                              className="rounded-lg bg-emerald-600 text-sm px-2 py-1 text-white"
-                              onClick={() => openScheduleVisitModal(diksharthi)}
-                            >
-                              {shouldUseRescheduleFlow(diksharthi) ? "Reschedule Visit" : "Schedule Visit"}
-                            </button>
-                          )} */}
+                         
 
                           {feedbackStatus[diksharthi.id] && (
                             <button
@@ -1564,7 +1550,6 @@ const DiksharthiListing = () => {
                         </>
                       )}
 
-                      {/* ================= KARYAKARTA ================= */}
                       {role === "karyakarta" && (
                         <>
                           {canDownloadApplication && (
@@ -1613,17 +1598,7 @@ const DiksharthiListing = () => {
                             </button>
                           )}
 
-                          {/* {hasAnyVisitSchedule(diksharthi) && (
-                            <div className="flex items-center gap-2">
-                              <button
-                                className="rounded-lg bg-indigo-600 text-sm px-2 py-1 text-white"
-                                onClick={() => openViewScheduleModal(diksharthi)}
-                              >
-                                View Schedule
-                              </button>
-                            </div>
-                          )} */}
-
+                       
                           {!feedbackStatus[diksharthi.id] && (
                             <button
                               className="rounded-lg bg-orange-500 text-sm px-2 py-1 text-white"
@@ -1644,7 +1619,6 @@ const DiksharthiListing = () => {
                         </>
                       )}
 
-                      {/* ================= ADMIN ================= */}
                       {role === "admin" && (
                         <>
                           {canDownloadApplication && (
@@ -1684,7 +1658,6 @@ const DiksharthiListing = () => {
                         </>
                       )}
 
-                      {/* ================= CASE COORDINATOR ================= */}
                       {role === "case-coordinator" && (
                         <>
                           {canDownloadApplication && (
@@ -1706,21 +1679,13 @@ const DiksharthiListing = () => {
                             </div>
                           )}
 
-                          {/* {!isAdminUnassigned(diksharthi) && (
-                            <button
-                              className="rounded-lg bg-emerald-600 text-sm px-2 py-1 text-white"
-                              onClick={() => openScheduleVisitModal(diksharthi)}
-                            >
-                              {shouldUseRescheduleFlow(diksharthi) ? "Reschedule Visit" : "Schedule Visit"}
-                            </button>
-                          )} */}
+                          
                         </>
                       )}
 
                     </td>
                     {role === "karyakarta" && (
                       <td className="px-6 py-3">
-                        {/* {hasAnyVisitSchedule(diksharthi) && ( */}
                           <div className="flex items-center gap-2">
                             <select
                               className="rounded-lg border border-gray-300 text-sm px-2 py-1"
@@ -1733,7 +1698,6 @@ const DiksharthiListing = () => {
                               <option value="No">No</option>
                             </select>
                           </div>
-                        {/* )} */}
                       </td>
                     )}
                   </tr>
@@ -1767,7 +1731,10 @@ const DiksharthiListing = () => {
             </button>
           </div>
         </div>
-      </div>
+      </div> 
+
+
+   
 
       {(role === "operations-manager" || role === "staff") &&
         (viewModalData || isViewLoading) && (

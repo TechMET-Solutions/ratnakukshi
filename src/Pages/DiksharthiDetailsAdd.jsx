@@ -24,6 +24,8 @@ const initialFormData = {
   samadhiPlace: "", // Optional
   rbfCriteria: "",
   relation: "",
+  fanIdExists: "",
+  fan_id: "",
   relation_name: "",   // ✅ add this
   isMarried: "",       // add this
   familyRelations: [],
@@ -222,6 +224,8 @@ const mapDiksharthiToFormData = (record) => {
     samadhiDate: toInputDate(record?.samadhiDate || record?.samadhi_date),
     samadhiPlace: record?.samadhiPlace || record?.samadhi_place || "",
     rbfCriteria: record?.rbfCriteria || record?.rbf_criteria || "",
+    fanIdExists: record?.fan_id ? "Yes" : "",
+    fan_id: record?.fan_id || "",
     relation: record?.relation || "",
     relation_name: record?.relation_name || "",
     isMarried: record?.isMarried || record?.is_married || "",
@@ -280,6 +284,8 @@ const mapFormDataToApiPayload = (formData, userId, currentStep = 1) => {
     samadhi_date: formData.samadhiDate || null,
     samadhi_place: formData.samadhiPlace || null,
     rbf_criteria: formData.rbfCriteria,
+    fan_id_exists: formData.fanIdExists || null,
+    fan_id: formData.fan_id || null,
     relation: formData.relation,
     relation_name: formData.relation_name || null,
     is_married: formData.isMarried || null,
@@ -355,6 +361,7 @@ const DiksharthiDetailsAdd = () => {
   const [allDiksharthi, setAllDiksharthi] = useState([]);
   const [isDiksharthiListLoading, setIsDiksharthiListLoading] = useState(false);
   const [diksharthiSearch, setDiksharthiSearch] = useState("");
+  const [fanIdSearch, setFanIdSearch] = useState("");
   const [selectedSourceDiksharthi, setSelectedSourceDiksharthi] = useState(null);
   const [currentStep, setCurrentStep] = useState(1);
 
@@ -425,7 +432,9 @@ const DiksharthiDetailsAdd = () => {
         const response = await fetch(`${API}/api/diksharthi/${editId}`);
         const result = await response.json().catch(() => ({}));
         if (!response.ok || !result?.data) throw new Error("Fetch failed");
-        setFormData(mapDiksharthiToFormData(result?.data));
+        const mapped = mapDiksharthiToFormData(result?.data);
+        setFormData(mapped);
+        setFanIdSearch(mapped?.fan_id || "");
         setCurrentStep(Number(result?.data?.form_step) || 1);
       } catch (error) {
         console.error(error);
@@ -618,6 +627,16 @@ const DiksharthiDetailsAdd = () => {
           nextState.samadhiPlace = "";
         }
       }
+
+      if (name === "fanIdExists") {
+        if (sanitizedValue === "No") {
+          nextState.fan_id = "";
+          setFanIdSearch("");
+        }
+        if (sanitizedValue === "Yes" && prev?.fan_id) {
+          setFanIdSearch(prev.fan_id);
+        }
+      }
       if (name === "rbfCriteria" && sanitizedValue === "No") {
         nextState.relation = "";
         nextState.family_member_firstName = "";
@@ -708,6 +727,10 @@ const DiksharthiDetailsAdd = () => {
     // if (!formData.guruName) newErrors.guruName = "Required";
     if (!formData.gadipati) newErrors.gadipati = "Required";
     // if (!formData.isAlive) newErrors.isAlive = "Required";
+    if (!formData.fanIdExists) newErrors.fanIdExists = "Required";
+    if (formData.fanIdExists === "Yes" && !String(formData.fan_id || "").trim()) {
+      newErrors.fan_id = "Select FAN ID";
+    }
     if (!formData.rbfCriteria) newErrors.rbfCriteria = "Required";
 
     if (formData.rbfCriteria === "Yes" && !formData.relation) {
@@ -908,6 +931,31 @@ const DiksharthiDetailsAdd = () => {
       .slice(0, 8)
     : [];
 
+  const uniqueFanOptions = Array.from(
+    new Map(
+      (allDiksharthi || [])
+        .filter((item) => String(item?.fan_id || "").trim())
+        .map((item) => [
+          String(item.fan_id).trim(),
+          {
+            fan_id: String(item.fan_id).trim(),
+            sadhu_sadhvi_name: item?.sadhu_sadhvi_name || "",
+          },
+        ])
+    ).values()
+  );
+
+  const normalizedFanIdSearch = String(fanIdSearch || "").trim().toLowerCase();
+  const filteredFanOptions = normalizedFanIdSearch
+    ? uniqueFanOptions
+      .filter((item) =>
+        `${item?.fan_id || ""} ${item?.sadhu_sadhvi_name || ""}`
+          .toLowerCase()
+          .includes(normalizedFanIdSearch)
+      )
+      .slice(0, 8)
+    : [];
+
   return (
     <div className="min-h-full bg-gray-50 flex p-6 justify-center">
       <div className="w-full max-w-8xl bg-white p-6 shadow-sm">
@@ -1013,6 +1061,99 @@ const DiksharthiDetailsAdd = () => {
             <input name="sadhu_sadhvi_name" value={formData.sadhu_sadhvi_name} onChange={handleChange} type="text" className="w-full p-2 border border-slate-300 rounded-md outline-none" />
             {errors.sadhu_sadhvi_name && <p className="text-red-500 text-xs">{errors.sadhu_sadhvi_name}</p>}
           </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">
+              FAN ID Exist? <span className="text-red-500">*</span>
+            </label>
+            <div className="flex gap-4 mt-2">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name="fanIdExists"
+                  value="Yes"
+                  checked={formData.fanIdExists === "Yes"}
+                  onChange={handleChange}
+                />
+                Yes
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name="fanIdExists"
+                  value="No"
+                  checked={formData.fanIdExists === "No"}
+                  onChange={handleChange}
+                />
+                No
+              </label>
+            </div>
+            {errors.fanIdExists && <p className="text-red-500 text-xs">{errors.fanIdExists}</p>}
+          </div>
+
+          {formData.fanIdExists === "Yes" && (
+            <div className="col-span-1 md:col-span-2">
+              <label className="block text-sm font-medium text-slate-700 mb-1">Search FAN ID</label>
+              <div className="relative">
+                <Search size={16} className="absolute left-3 top-3 text-slate-400" />
+                <input
+                  type="text"
+                  value={fanIdSearch}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setFanIdSearch(value);
+                    setFormData((prev) => ({ ...prev, fan_id: value.trim() }));
+                  }}
+                  placeholder="Type FAN ID..."
+                  className="w-full pl-9 pr-10 py-2 border border-slate-300 rounded-md outline-none"
+                />
+                {fanIdSearch && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFanIdSearch("");
+                      setFormData((prev) => ({ ...prev, fan_id: "" }));
+                    }}
+                    className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600"
+                  >
+                    <X size={16} />
+                  </button>
+                )}
+              </div>
+              {errors.fan_id && <p className="text-red-500 text-xs mt-1">{errors.fan_id}</p>}
+
+              {filteredFanOptions.length > 0 && (
+                <div className="mt-2 border border-slate-200 rounded-md bg-white max-h-56 overflow-auto">
+                  {filteredFanOptions.map((item) => (
+                    <button
+                      key={item.fan_id}
+                      type="button"
+                      onClick={() => {
+                        setFanIdSearch(item.fan_id);
+                        setFormData((prev) => ({ ...prev, fan_id: item.fan_id }));
+                      }}
+                      className="w-full text-left px-3 py-2 border-b border-slate-100 last:border-b-0 hover:bg-yellow-50"
+                    >
+                      <p className="text-sm font-medium text-slate-800">{item.fan_id}</p>
+                      <p className="text-xs text-slate-500">{item.sadhu_sadhvi_name || "-"}</p>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {formData.fanIdExists === "No" && (
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">FAN ID</label>
+              <input
+                type="text"
+                value="Will be auto-generated (RBF/YY/0001)"
+                readOnly
+                className="w-full p-2 border border-slate-300 rounded-md outline-none bg-gray-100 text-gray-600"
+              />
+            </div>
+          )}
 
           {/* DOB (Optional) */}
           <div>
