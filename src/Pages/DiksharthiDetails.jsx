@@ -1731,10 +1731,7 @@ const DiksharthiListing = () => {
             </button>
           </div>
         </div>
-      </div> 
-
-
-   
+      </div>
 
       {(role === "operations-manager" || role === "staff") &&
         (viewModalData || isViewLoading) && (
