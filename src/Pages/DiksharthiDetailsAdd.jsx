@@ -1374,7 +1374,7 @@ const DiksharthiDetailsAdd = () => {
               );
             })}
 
-          {formData.rbfCriteria === "Yes" && (
+          {/* {formData.rbfCriteria === "Yes" && (
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Alternate Mobile Number</label>
               <input name="altMobileNo"
@@ -1386,7 +1386,7 @@ const DiksharthiDetailsAdd = () => {
                 className="w-full p-2 border border-slate-300 rounded-md outline-none" />
               {errors.altMobileNo && <p className="text-red-500 text-xs">{errors.altMobileNo}</p>}
             </div>
-          )}
+          )} */}
             </>
           )}
 
