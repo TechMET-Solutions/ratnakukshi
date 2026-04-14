@@ -388,9 +388,9 @@ const FamilyDetailsForm = () => {
 
           if (!trimmedValue) {
             nextErrors[`mobile_${relation}`] = "Mobile number is required";
-          } else if (!/^[6-9]\d{9}$/.test(trimmedValue)) {
+          } else if (!/^[1-9]\d{9}$/.test(trimmedValue)) {
             nextErrors[`mobile_${relation}`] =
-              "Mobile number must be 10 digits and start with 6-9";
+              "Mobile number must be 10 digits";
           } else {
             delete nextErrors[`mobile_${relation}`];
           }
@@ -1462,9 +1462,9 @@ const FamilyDetailsForm = () => {
         // Validate Mobile Number
         if (!details?.mobileNumber) {
           errors[`mobile_${rel}`] = "Mobile number is required";
-        } else if (!/^[6-9]\d{9}$/.test(details.mobileNumber)) {
+        } else if (!/^[1-9]\d{9}$/.test(details.mobileNumber)) {
           errors[`mobile_${rel}`] =
-            "Mobile number must be 10 digits and start with 6-9";
+            "Mobile number must be 10 digits ";
         }
 
         // Validate PAN Number

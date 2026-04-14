@@ -25,7 +25,9 @@ const initialFormData = {
   rbfCriteria: "",
   relation: "",
   relation_name: "",   // ✅ add this
-  isMarried: "",       // ✅ add this
+  isMarried: "",       // add this
+  familyRelations: [],
+  familyRelationDetails: {},
   family_member_firstName: "",
   family_member_lastName: "",
   mobileNo: "",
@@ -88,115 +90,237 @@ const toBooleanOrNull = (value) => {
   return null;
 };
 
-const mapDiksharthiToFormData = (record) => ({
-  sadhu_sadhvi_name: record?.sadhu_sadhvi_name || "",
-  dob: toInputDate(record?.dob),
-  age: record?.age || calculateAge(record?.dob),
-  gender: record?.gender || "",
-  pad: record?.pad || "",
-  samudaay: record?.samudaay || "",
-  guruName: record?.guruName || record?.guru_name || "",
-  acharya: record?.acharya || "",
-  gadipati: record?.gadipati || "",
-  isAlive: record?.isAlive || record?.is_alive || "",
-  viharLocation: record?.viharLocation || record?.vihar_location || "",
-  samadhiDate: toInputDate(record?.samadhiDate || record?.samadhi_date),
-  samadhiPlace: record?.samadhiPlace || record?.samadhi_place || "",
-  rbfCriteria: record?.rbfCriteria || record?.rbf_criteria || "",
-  relation: record?.relation || "",
-  relation_name: record?.relation_name || "",
-  isMarried: record?.isMarried || record?.is_married || "",
-  family_member_firstName: record?.family_member_firstName || "",
-  family_member_lastName: record?.family_member_lastName || "",
-  mobileNo: record?.mobileNo || record?.mobile_no || "",
-  altMobileNo: record?.altMobileNo || record?.alt_mobile_no || "",
-  permanentAddress: record?.permanentAddress || record?.permanent_address || "",
-  currentAddress: record?.currentAddress || record?.current_address || "",
-  village: record?.village || "",
-  taluka: record?.taluka || "",
-  district: record?.district || "",
-  state: record?.state || "",
-  houseDetails: record?.houseDetails || record?.house_details || "",
-  typeOfHouse: record?.typeOfHouse || record?.type_of_house || "",
-  maintenanceCost: record?.maintenanceCost || record?.maintenance_cost || "",
-  rentCost: record?.rentCost || record?.rent_cost || "",
-  lightBillCost: record?.lightBillCost || record?.light_bill_cost || "",
-  mediclaim: toBooleanOrNull(record?.mediclaim),
-  family_mediclaim_type:
-    record?.family_mediclaim_type || record?.Family_mediclaim_type || "",
-  Family_mediclaim_amount:
-    record?.Family_mediclaim_amount || record?.family_mediclaim_amount || "",
-  mediclaimPremiumAmount:
-    record?.mediclaimPremiumAmount || record?.mediclaim_premium_amount || "",
-  family_mediclaim_companyName:
-    record?.family_mediclaim_companyName || "",
-  ngoAssistance: toBooleanOrNull(record?.ngoAssistance || record?.ngo_assistance),
-  sanghName: record?.sanghName || record?.ngo_sangh_name || "",
-  ngoAmount: record?.ngoAmount || record?.ngo_amount || "",
-  ngoFrequency: record?.ngoFrequency || record?.ngo_frequency || "",
-  ngoRemark: record?.ngoRemark || record?.ngo_remark || "",
-  assistance: record?.assistance,
-  deselected_assistance: record?.deselected_assistance,
-  pinCode: record?.pinCode || record?.pin_code || "",
-  family_relation: String(record?.family_relation || "")
+const parseMaybeJsonObject = (value, fallback = {}) => {
+  if (!value) return fallback;
+  if (typeof value === "object" && !Array.isArray(value)) return value;
+  if (typeof value !== "string") return fallback;
+  try {
+    const parsed = JSON.parse(value);
+    return parsed && typeof parsed === "object" && !Array.isArray(parsed)
+      ? parsed
+      : fallback;
+  } catch (_error) {
+    return fallback;
+  }
+};
+
+const createEmptyFamilyRelationDetails = (overrides = {}) => ({
+  firstName: "",
+  lastName: "",
+  mobileNumber: "",
+  aadharNumber: "",
+  panNumber: "",
+  dob: "",
+  age: "",
+  ayushmanCoverage: "",
+  medicalPolicy: "",
+  needAssistance: "",
+  ...overrides,
+});
+
+const getPrimaryFamilyMember = (formData) => {
+  const selectedRelations = Array.isArray(formData?.familyRelations)
+    ? formData.familyRelations
+    : [];
+  const detailsMap = formData?.familyRelationDetails || {};
+  const preferredRelation = formData?.relation || selectedRelations[0] || "";
+  const relationKey =
+    preferredRelation && detailsMap[preferredRelation]
+      ? preferredRelation
+      : selectedRelations.find((item) => detailsMap[item]) || "";
+  return {
+    relationKey,
+    details: relationKey ? detailsMap[relationKey] || {} : {},
+  };
+};
+
+const mapDiksharthiToFormData = (record) => {
+  const rawRelations = String(record?.family_relation || "")
     .split(",")
     .map((item) => item.trim())
-    .filter(Boolean),
-  assistanceReceived: record?.assistanceReceived || record?.assistance_received || "",
-  summary: record?.summary || "",
-});
+    .filter(Boolean);
 
-const mapFormDataToApiPayload = (formData, userId, currentStep = 1) => ({
-  user_id: userId || "",
-  sadhu_sadhvi_name: formData.sadhu_sadhvi_name,
-  dob: formData.dob,
-  age: formData.age,
-  gender: formData.gender,
-  pad: formData.pad,
-  samudaay: formData.samudaay,
-  guru_name: formData.guruName,
-  acharya: formData.acharya,
-  gadipati: formData.gadipati,
-  is_alive: formData.isAlive,
-  vihar_location: formData.viharLocation || null,
-  samadhi_date: formData.samadhiDate || null,
-  samadhi_place: formData.samadhiPlace || null,
-  rbf_criteria: formData.rbfCriteria,
-  relation: formData.relation,
-  relation_name: formData.relation_name || null,
-  is_married: formData.isMarried || null,
-  family_member_firstName: formData.family_member_firstName,
-  family_member_lastName: formData.family_member_lastName,
-  mobile_no: formData.mobileNo,
-  alt_mobile_no: formData.altMobileNo,
-  permanent_address: formData.permanentAddress,
-  current_address: formData.currentAddress,
-  village: formData.village,
-  taluka: formData.taluka,
-  district: formData.district,
-  state: formData.state,
-  pin_code: formData.pinCode,
-  house_details: formData.houseDetails,
-  type_of_house: formData.typeOfHouse,
-  maintenance_cost: formData.maintenanceCost,
-  rent_cost: formData.rentCost,
-  light_bill_cost: formData.lightBillCost,
-  mediclaim: formData.mediclaim,
-  Family_mediclaim_type: formData.family_mediclaim_type,
-  family_mediclaim_amount: formData.Family_mediclaim_amount,
-  mediclaim_premium_amount: formData.mediclaimPremiumAmount,
-  family_mediclaim_companyName: formData.family_mediclaim_companyName,
-  ngo_assistance: formData.ngoAssistance,
-  ngo_sangh_name: formData.sanghName,
-  ngo_amount: formData.ngoAmount,
-  ngo_frequency: formData.ngoFrequency,
-  ngo_remark: formData.ngoRemark,
-  assistance: formData.assistance,
-  assistance_received: formData.assistanceReceived,
-  summary: formData.summary,
-  form_step: currentStep,
+  const relationDetailsFromRecord = parseMaybeJsonObject(
+    record?.family_relation_details_json,
+    {}
+  );
+  const relationDetailsFromFamily = parseMaybeJsonObject(
+    record?.family_details?.relationDetails,
+    {}
+  );
 
-});
+  const mergedDetails = {};
+  Object.entries({ ...relationDetailsFromRecord, ...relationDetailsFromFamily }).forEach(
+    ([key, value]) => {
+      mergedDetails[key] = createEmptyFamilyRelationDetails({
+        firstName: value?.firstName || "",
+        lastName: value?.lastName || "",
+        mobileNumber: value?.mobileNumber || value?.mobile_no || "",
+        aadharNumber: value?.aadharNumber || "",
+        panNumber: value?.panNumber || "",
+        dob: toInputDate(value?.dob || value?.dateOfBirth),
+        age: value?.age || "",
+        ayushmanCoverage:
+          value?.ayushmanCoverage ||
+          (typeof value?.ayushman === "boolean"
+            ? value?.ayushman
+              ? "Yes"
+              : "No"
+            : value?.ayushman) ||
+          "",
+        medicalPolicy:
+          value?.medicalPolicy ||
+          (typeof value?.mediclaim === "boolean"
+            ? value?.mediclaim
+              ? "Yes"
+              : "No"
+            : value?.mediclaim) ||
+          "",
+        needAssistance:
+          value?.needAssistance ||
+          (typeof value?.need_assistance === "boolean"
+            ? value?.need_assistance
+              ? "Yes"
+              : "No"
+            : value?.need_assistance) ||
+          "",
+      });
+    }
+  );
+
+  const inferredRelation = record?.relation || "";
+  const familyRelations = Array.from(
+    new Set([
+      ...rawRelations,
+      ...Object.keys(mergedDetails),
+      ...(inferredRelation ? [inferredRelation] : []),
+    ])
+  );
+
+  if (inferredRelation && !mergedDetails[inferredRelation]) {
+    mergedDetails[inferredRelation] = createEmptyFamilyRelationDetails({
+      firstName: record?.family_member_firstName || "",
+      lastName: record?.family_member_lastName || "",
+      mobileNumber: record?.mobileNo || record?.mobile_no || "",
+    });
+  }
+
+  return {
+    familyRelations,
+    familyRelationDetails: mergedDetails,
+    sadhu_sadhvi_name: record?.sadhu_sadhvi_name || "",
+    dob: toInputDate(record?.dob),
+    age: record?.age || calculateAge(record?.dob),
+    gender: record?.gender || "",
+    pad: record?.pad || "",
+    samudaay: record?.samudaay || "",
+    guruName: record?.guruName || record?.guru_name || "",
+    acharya: record?.acharya || "",
+    gadipati: record?.gadipati || "",
+    isAlive: record?.isAlive || record?.is_alive || "",
+    viharLocation: record?.viharLocation || record?.vihar_location || "",
+    samadhiDate: toInputDate(record?.samadhiDate || record?.samadhi_date),
+    samadhiPlace: record?.samadhiPlace || record?.samadhi_place || "",
+    rbfCriteria: record?.rbfCriteria || record?.rbf_criteria || "",
+    relation: record?.relation || "",
+    relation_name: record?.relation_name || "",
+    isMarried: record?.isMarried || record?.is_married || "",
+    family_member_firstName: record?.family_member_firstName || "",
+    family_member_lastName: record?.family_member_lastName || "",
+    mobileNo: record?.mobileNo || record?.mobile_no || "",
+    altMobileNo: record?.altMobileNo || record?.alt_mobile_no || "",
+    permanentAddress: record?.permanentAddress || record?.permanent_address || "",
+    currentAddress: record?.currentAddress || record?.current_address || "",
+    village: record?.village || "",
+    taluka: record?.taluka || "",
+    district: record?.district || "",
+    state: record?.state || "",
+    houseDetails: record?.houseDetails || record?.house_details || "",
+    typeOfHouse: record?.typeOfHouse || record?.type_of_house || "",
+    maintenanceCost: record?.maintenanceCost || record?.maintenance_cost || "",
+    rentCost: record?.rentCost || record?.rent_cost || "",
+    lightBillCost: record?.lightBillCost || record?.light_bill_cost || "",
+    mediclaim: toBooleanOrNull(record?.mediclaim),
+    family_mediclaim_type:
+      record?.family_mediclaim_type || record?.Family_mediclaim_type || "",
+    Family_mediclaim_amount:
+      record?.Family_mediclaim_amount || record?.family_mediclaim_amount || "",
+    mediclaimPremiumAmount:
+      record?.mediclaimPremiumAmount || record?.mediclaim_premium_amount || "",
+    family_mediclaim_companyName:
+      record?.family_mediclaim_companyName || "",
+    ngoAssistance: toBooleanOrNull(record?.ngoAssistance || record?.ngo_assistance),
+    sanghName: record?.sanghName || record?.ngo_sangh_name || "",
+    ngoAmount: record?.ngoAmount || record?.ngo_amount || "",
+    ngoFrequency: record?.ngoFrequency || record?.ngo_frequency || "",
+    ngoRemark: record?.ngoRemark || record?.ngo_remark || "",
+    assistance: record?.assistance,
+    deselected_assistance: record?.deselected_assistance,
+    pinCode: record?.pinCode || record?.pin_code || "",
+    assistanceReceived: record?.assistanceReceived || record?.assistance_received || "",
+    summary: record?.summary || "",
+  };
+};
+
+const mapFormDataToApiPayload = (formData, userId, currentStep = 1) => {
+  const primaryMember = getPrimaryFamilyMember(formData);
+  return {
+    user_id: userId || "",
+    sadhu_sadhvi_name: formData.sadhu_sadhvi_name,
+    dob: formData.dob,
+    age: formData.age,
+    gender: formData.gender,
+    pad: formData.pad,
+    samudaay: formData.samudaay,
+    guru_name: formData.guruName,
+    acharya: formData.acharya,
+    gadipati: formData.gadipati,
+    is_alive: formData.isAlive,
+    vihar_location: formData.viharLocation || null,
+    samadhi_date: formData.samadhiDate || null,
+    samadhi_place: formData.samadhiPlace || null,
+    rbf_criteria: formData.rbfCriteria,
+    relation: formData.relation,
+    relation_name: formData.relation_name || null,
+    is_married: formData.isMarried || null,
+    family_member_firstName:
+      primaryMember?.details?.firstName || formData.family_member_firstName,
+    family_member_lastName:
+      primaryMember?.details?.lastName || formData.family_member_lastName,
+    mobile_no:
+      primaryMember?.details?.mobileNumber || formData.mobileNo,
+    family_relation:
+      Array.isArray(formData?.familyRelations) ? formData.familyRelations : [],
+    family_relation_details_json: JSON.stringify(formData?.familyRelationDetails || {}),
+    alt_mobile_no: formData.altMobileNo,
+    permanent_address: formData.permanentAddress,
+    current_address: formData.currentAddress,
+    village: formData.village,
+    taluka: formData.taluka,
+    district: formData.district,
+    state: formData.state,
+    pin_code: formData.pinCode,
+    house_details: formData.houseDetails,
+    type_of_house: formData.typeOfHouse,
+    maintenance_cost: formData.maintenanceCost,
+    rent_cost: formData.rentCost,
+    light_bill_cost: formData.lightBillCost,
+    mediclaim: formData.mediclaim,
+    Family_mediclaim_type: formData.family_mediclaim_type,
+    family_mediclaim_amount: formData.Family_mediclaim_amount,
+    mediclaim_premium_amount: formData.mediclaimPremiumAmount,
+    family_mediclaim_companyName: formData.family_mediclaim_companyName,
+    ngo_assistance: formData.ngoAssistance,
+    ngo_sangh_name: formData.sanghName,
+    ngo_amount: formData.ngoAmount,
+    ngo_frequency: formData.ngoFrequency,
+    ngo_remark: formData.ngoRemark,
+    assistance: formData.assistance,
+    assistance_received: formData.assistanceReceived,
+    summary: formData.summary,
+    form_step: currentStep,
+  };
+};
 
 const MOBILE_REGEX = /^\d{10}$/;
 const PINCODE_REGEX = /^\d{6}$/;
@@ -235,15 +359,7 @@ const DiksharthiDetailsAdd = () => {
   const [currentStep, setCurrentStep] = useState(1);
 
   const [postOffices, setPostOffices] = useState([]);
-  const rbfMandatoryFields = [
-    "family_member_firstName",
-    "family_member_lastName",
-    "mobileNo",
-    "permanentAddress",
-    "pinCode",
-    "district",
-    "state",
-  ];
+  const rbfMandatoryFields = ["permanentAddress", "pinCode", "district", "state"];
 
   const [assistanceTypes] = useState(["Medical", "Education", "Job", "Grocery", "Rent", "Housing", "Vaiyavacch", "LivelihoodExpenses", "Business"]);
 
@@ -349,6 +465,46 @@ const DiksharthiDetailsAdd = () => {
     );
 
     setFormData((prev) => {
+      const selectedRelations = String(selected?.family_relation || "")
+        .split(",")
+        .map((item) => item.trim())
+        .filter(Boolean);
+      const selectedRelationDetails = parseMaybeJsonObject(
+        selected?.family_relation_details_json,
+        {}
+      );
+      const relationSeed = selected?.relation || prev.relation || "";
+      const normalizedRelations = Array.from(
+        new Set([
+          ...selectedRelations,
+          ...Object.keys(selectedRelationDetails),
+          ...(relationSeed ? [relationSeed] : []),
+        ])
+      );
+      const normalizedRelationDetails = {};
+      normalizedRelations.forEach((relationKey) => {
+        const current = selectedRelationDetails?.[relationKey] || {};
+        normalizedRelationDetails[relationKey] = createEmptyFamilyRelationDetails({
+          firstName: current?.firstName || "",
+          lastName: current?.lastName || "",
+          mobileNumber: current?.mobileNumber || "",
+          aadharNumber: current?.aadharNumber || "",
+          panNumber: current?.panNumber || "",
+          dob: toInputDate(current?.dob),
+          age: current?.age || "",
+          ayushmanCoverage: current?.ayushmanCoverage || "",
+          medicalPolicy: current?.medicalPolicy || "",
+          needAssistance: current?.needAssistance || "",
+        });
+      });
+      if (relationSeed && !normalizedRelationDetails[relationSeed]) {
+        normalizedRelationDetails[relationSeed] = createEmptyFamilyRelationDetails({
+          firstName: selected?.family_member_firstName || "",
+          lastName: selected?.family_member_lastName || "",
+          mobileNumber: selected?.mobile_no || "",
+        });
+      }
+
       const nextState = {
         ...prev,
         rbfCriteria: "Yes",
@@ -396,6 +552,8 @@ const DiksharthiDetailsAdd = () => {
         ngoAmount: selected?.ngo_amount || selected?.ngoAmount || prev.ngoAmount || "",
         ngoFrequency: selected?.ngo_frequency || selected?.ngoFrequency || prev.ngoFrequency || "",
         ngoRemark: selected?.ngo_remark || selected?.ngoRemark || prev.ngoRemark || "",
+        familyRelations: normalizedRelations,
+        familyRelationDetails: normalizedRelationDetails,
       };
 
       if (String(nextState.pinCode || "").length === 6) {
@@ -465,6 +623,8 @@ const DiksharthiDetailsAdd = () => {
         nextState.family_member_firstName = "";
         nextState.family_member_lastName = "";
         nextState.mobileNo = "";
+        nextState.familyRelations = [];
+        nextState.familyRelationDetails = {};
         nextState.permanentAddress = "";
         nextState.pinCode = "";
         nextState.district = "";
@@ -479,6 +639,21 @@ const DiksharthiDetailsAdd = () => {
 
       if (name === "relation" && value !== "sister" && value !== "daughter") {
         nextState.isMarried = "";
+      }
+
+      if (name === "relation" && String(sanitizedValue || "").trim()) {
+        const relations = Array.isArray(nextState?.familyRelations)
+          ? nextState.familyRelations
+          : [];
+        if (!relations.includes(sanitizedValue)) {
+          nextState.familyRelations = [...relations, sanitizedValue];
+        }
+        if (!nextState?.familyRelationDetails?.[sanitizedValue]) {
+          nextState.familyRelationDetails = {
+            ...(nextState.familyRelationDetails || {}),
+            [sanitizedValue]: createEmptyFamilyRelationDetails(),
+          };
+        }
       }
 
       if (name === "isMarried" && value === "Yes") {
@@ -538,16 +713,27 @@ const DiksharthiDetailsAdd = () => {
     if (formData.rbfCriteria === "Yes" && !formData.relation) {
       newErrors.relation = "Required for RBF";
     }
-    if (formData.rbfCriteria === "Yes" && !formData.family_member_firstName) {
-      newErrors.family_member_firstName = "Required for RBF";
-    }
-    if (formData.rbfCriteria === "Yes" && !formData.family_member_lastName) {
-      newErrors.family_member_lastName = "Required for RBF";
-    }
-    if (formData.rbfCriteria === "Yes" && !String(formData.mobileNo || "").trim()) {
-      newErrors.mobileNo = "Required";
-    } else if (formData.rbfCriteria === "Yes" && !MOBILE_REGEX.test(String(formData.mobileNo || "").trim())) {
-      newErrors.mobileNo = "Mobile number must be 10 digits";
+    if (formData.rbfCriteria === "Yes") {
+      const selectedRelations = Array.isArray(formData?.familyRelations)
+        ? formData.familyRelations
+        : [];
+      if (!selectedRelations.length) {
+        newErrors.familyRelations = "Select at least one family relation";
+      }
+      selectedRelations.forEach((relationKey) => {
+        const details = formData?.familyRelationDetails?.[relationKey] || {};
+        if (!String(details?.firstName || "").trim()) {
+          newErrors[`family_firstName_${relationKey}`] = "Required";
+        }
+        if (!String(details?.lastName || "").trim()) {
+          newErrors[`family_lastName_${relationKey}`] = "Required";
+        }
+        if (!String(details?.mobileNumber || "").trim()) {
+          newErrors[`family_mobile_${relationKey}`] = "Required";
+        } else if (!MOBILE_REGEX.test(String(details?.mobileNumber || "").trim())) {
+          newErrors[`family_mobile_${relationKey}`] = "Mobile number must be 10 digits";
+        }
+      });
     }
     if (formData.rbfCriteria === "Yes" && !String(formData.permanentAddress || "").trim()) {
       newErrors.permanentAddress = "Required";
@@ -644,6 +830,62 @@ const DiksharthiDetailsAdd = () => {
     }
     return true;
   });
+
+  const handleFamilyRelationToggle = (relationValue) => {
+    setFormData((prev) => {
+      const prevRelations = Array.isArray(prev?.familyRelations)
+        ? prev.familyRelations
+        : [];
+      const exists = prevRelations.includes(relationValue);
+      const nextRelations = exists
+        ? prevRelations.filter((item) => item !== relationValue)
+        : [...prevRelations, relationValue];
+
+      const nextDetails = { ...(prev?.familyRelationDetails || {}) };
+      if (exists) {
+        delete nextDetails[relationValue];
+      } else if (!nextDetails[relationValue]) {
+        nextDetails[relationValue] = createEmptyFamilyRelationDetails();
+      }
+
+      const nextRelation =
+        prev?.relation === relationValue && exists
+          ? (nextRelations[0] || "")
+          : (prev?.relation || relationValue);
+
+      return {
+        ...prev,
+        familyRelations: nextRelations,
+        familyRelationDetails: nextDetails,
+        relation: nextRelation,
+      };
+    });
+  };
+
+  const handleFamilyRelationDetailChange = (relationValue, fieldName, rawValue) => {
+    let nextValue = rawValue;
+    if (fieldName === "mobileNumber") {
+      nextValue = String(rawValue || "").replace(/\D/g, "").slice(0, 10);
+    }
+    if (fieldName === "aadharNumber") {
+      nextValue = String(rawValue || "").replace(/\D/g, "").slice(0, 12);
+    }
+
+    setFormData((prev) => {
+      const current = prev?.familyRelationDetails?.[relationValue] || createEmptyFamilyRelationDetails();
+      const updated = { ...current, [fieldName]: nextValue };
+      if (fieldName === "dob") {
+        updated.age = calculateAge(nextValue);
+      }
+      return {
+        ...prev,
+        familyRelationDetails: {
+          ...(prev?.familyRelationDetails || {}),
+          [relationValue]: updated,
+        },
+      };
+    });
+  };
 
   const normalizedDiksharthiSearch = String(diksharthiSearch || "").trim().toLowerCase();
   const filteredDiksharthiOptions = normalizedDiksharthiSearch
@@ -977,37 +1219,160 @@ const DiksharthiDetailsAdd = () => {
           )}
 
           {formData.rbfCriteria === "Yes" && (
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Family Member First Name<span className="text-red-500">*</span></label>
-              <input name="family_member_firstName" value={formData.family_member_firstName} onChange={handleChange} type="text" className="w-full p-2 border border-slate-300 rounded-md outline-none" />
-              {errors.family_member_firstName && <p className="text-red-500 text-xs">{errors.family_member_firstName}</p>}
+            <div className="col-span-1 md:col-span-2 xl:col-span-4">
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Family Relations <span className="text-red-500">*</span>
+              </label>
+              <div className="flex flex-wrap gap-4">
+                {filteredRelations
+                  .filter((item) => item.value !== "Other")
+                  .map((item) => {
+                    const checked = (formData?.familyRelations || []).includes(item.value);
+                    return (
+                      <label key={item.value} className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={() => handleFamilyRelationToggle(item.value)}
+                        />
+                        {item.label}
+                      </label>
+                    );
+                  })}
+              </div>
+              {errors.familyRelations && (
+                <p className="text-red-500 text-xs mt-1">{errors.familyRelations}</p>
+              )}
             </div>
           )}
 
-          {formData.rbfCriteria === "Yes" && (
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Family Member Last Name<span className="text-red-500">*</span></label>
-              <input name="family_member_lastName" value={formData.family_member_lastName} onChange={handleChange} type="text" className="w-full p-2 border border-slate-300 rounded-md outline-none" />
-              {errors.family_member_lastName && <p className="text-red-500 text-xs">{errors.family_member_lastName}</p>}
-            </div>
-          )}
-
-          {formData.rbfCriteria === "Yes" && (
-
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Mobile Number <span className="text-red-500">*</span></label>
-              <input
-                name="mobileNo"
-                value={formData.mobileNo}
-                onChange={handleChange}
-                type="text"
-                inputMode="numeric"
-                maxLength={10}
-                className="w-full p-2 border border-slate-300 rounded-md outline-none"
-              />
-              {errors.mobileNo && <p className="text-red-500 text-xs">{errors.mobileNo}</p>}
-            </div>
-          )}
+          {formData.rbfCriteria === "Yes" &&
+            (formData?.familyRelations || []).map((relationKey) => {
+              const details = formData?.familyRelationDetails?.[relationKey] || {};
+              return (
+                <div
+                  key={relationKey}
+                  className="col-span-1 md:col-span-2 xl:col-span-4 border border-slate-300 rounded-lg p-4"
+                >
+                  <h3 className="text-sm font-semibold text-slate-800 mb-3">{relationKey} Details</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">First Name *</label>
+                      <input
+                        type="text"
+                        value={details?.firstName || ""}
+                        onChange={(e) => handleFamilyRelationDetailChange(relationKey, "firstName", e.target.value)}
+                        className="w-full p-2 border border-slate-300 rounded-md outline-none"
+                      />
+                      {errors[`family_firstName_${relationKey}`] && (
+                        <p className="text-red-500 text-xs">{errors[`family_firstName_${relationKey}`]}</p>
+                      )}
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Last Name *</label>
+                      <input
+                        type="text"
+                        value={details?.lastName || ""}
+                        onChange={(e) => handleFamilyRelationDetailChange(relationKey, "lastName", e.target.value)}
+                        className="w-full p-2 border border-slate-300 rounded-md outline-none"
+                      />
+                      {errors[`family_lastName_${relationKey}`] && (
+                        <p className="text-red-500 text-xs">{errors[`family_lastName_${relationKey}`]}</p>
+                      )}
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Mobile No *</label>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        maxLength={10}
+                        value={details?.mobileNumber || ""}
+                        onChange={(e) => handleFamilyRelationDetailChange(relationKey, "mobileNumber", e.target.value)}
+                        className="w-full p-2 border border-slate-300 rounded-md outline-none"
+                      />
+                      {errors[`family_mobile_${relationKey}`] && (
+                        <p className="text-red-500 text-xs">{errors[`family_mobile_${relationKey}`]}</p>
+                      )}
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Aadhar No</label>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        maxLength={12}
+                        value={details?.aadharNumber || ""}
+                        onChange={(e) => handleFamilyRelationDetailChange(relationKey, "aadharNumber", e.target.value)}
+                        className="w-full p-2 border border-slate-300 rounded-md outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">PAN No</label>
+                      <input
+                        type="text"
+                        value={details?.panNumber || ""}
+                        onChange={(e) => handleFamilyRelationDetailChange(relationKey, "panNumber", e.target.value)}
+                        className="w-full p-2 border border-slate-300 rounded-md outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">DOB</label>
+                      <input
+                        type="date"
+                        max={getMaxDOB()}
+                        value={details?.dob || ""}
+                        onChange={(e) => handleFamilyRelationDetailChange(relationKey, "dob", e.target.value)}
+                        className="w-full p-2 border border-slate-300 rounded-md outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Age</label>
+                      <input
+                        type="number"
+                        value={details?.age || ""}
+                        onChange={(e) => handleFamilyRelationDetailChange(relationKey, "age", e.target.value)}
+                        className="w-full p-2 border border-slate-300 rounded-md outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Ayushman Coverage</label>
+                      <select
+                        value={details?.ayushmanCoverage || ""}
+                        onChange={(e) => handleFamilyRelationDetailChange(relationKey, "ayushmanCoverage", e.target.value)}
+                        className="w-full p-2 border border-slate-300 rounded-md outline-none"
+                      >
+                        <option value="">Select</option>
+                        <option value="Yes">Yes</option>
+                        <option value="No">No</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Medical Policy</label>
+                      <select
+                        value={details?.medicalPolicy || ""}
+                        onChange={(e) => handleFamilyRelationDetailChange(relationKey, "medicalPolicy", e.target.value)}
+                        className="w-full p-2 border border-slate-300 rounded-md outline-none"
+                      >
+                        <option value="">Select</option>
+                        <option value="Yes">Yes</option>
+                        <option value="No">No</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Need Assistance</label>
+                      <select
+                        value={details?.needAssistance || ""}
+                        onChange={(e) => handleFamilyRelationDetailChange(relationKey, "needAssistance", e.target.value)}
+                        className="w-full p-2 border border-slate-300 rounded-md outline-none"
+                      >
+                        <option value="">Select</option>
+                        <option value="Yes">Yes</option>
+                        <option value="No">No</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
 
           {formData.rbfCriteria === "Yes" && (
             <div>
@@ -1573,3 +1938,6 @@ const DiksharthiDetailsAdd = () => {
 };
 
 export default DiksharthiDetailsAdd;
+
+
+
