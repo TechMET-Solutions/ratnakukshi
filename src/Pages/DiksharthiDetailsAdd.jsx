@@ -502,12 +502,16 @@ const DiksharthiDetailsAdd = () => {
         : await axios.post(`${API}/api/create-diksharthi`, data);
 
       const diksharthi = response?.data?.data || editRecord || {};
-      const targetId = diksharthi?.id || editId || null;
+
       setSavedId(diksharthi?.diksharthi_code || diksharthi?.id);
-      setShowModal(!isEditMode);
-      if (!targetId) {
-        navigate("/diksharthi-details");
-        return;
+
+      if (isEditMode) {
+        alert("Updated successfully");
+        navigate("/diksharthi-details")
+      } else {
+        alert("Added successfully");
+        navigate("/diksharthi-details")
+        // setShowModal(true);
       }
     } catch (error) {
       console.error(error);
@@ -554,7 +558,7 @@ const DiksharthiDetailsAdd = () => {
           <FileText size={20} />
           <h2 className="text-xl font-bold"> Ratnakukshi Family Basic Info</h2>
         </div>
-
+{/* 
         <div className="mb-6 border border-slate-200 rounded-lg p-4 bg-slate-50">
           <label className="block text-sm font-semibold text-slate-700 mb-2">
             Search M.S. Name / MS ID
@@ -619,7 +623,7 @@ const DiksharthiDetailsAdd = () => {
               Family member fields are auto-filled.
             </div>
           )}
-        </div>
+        </div> */}
 
         <div className="grid grid-cols-4 gap-6 mt-5">
           {/* Name */}

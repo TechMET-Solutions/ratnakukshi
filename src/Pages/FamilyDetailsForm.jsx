@@ -3,6 +3,7 @@ import { ChevronDown, ChevronUp, Plus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { API } from "../api/BaseURL";
+import { useAuth } from "../context/AuthContext";
 import { isValidAadhaar, isValidPAN } from "../utils/validation";
 
 const INITIAL_FORM_DATA = {
@@ -35,6 +36,7 @@ const FamilyDetailsForm = () => {
 
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const id = location?.state?.id;
   const code = location?.state?.diksharthi_code;
@@ -47,8 +49,56 @@ const FamilyDetailsForm = () => {
   console.log("Gender:", gender);
 
   const [formData, setFormData] = useState(INITIAL_FORM_DATA);
+  const [initialLockSnapshot, setInitialLockSnapshot] = useState({
+    formData: INITIAL_FORM_DATA,
+    relationDetails: {},
+    assistanceData: {},
+    headOfFamily: null,
+  });
   const [states, setStates] = useState([]);
   const [districts, setDistricts] = useState([]);
+  const role = String(user?.role || "").trim().toLowerCase();
+  const isKaryakarta = role === "karyakarta";
+
+  const hasPrefilledValue = (value) => {
+    if (value === null || value === undefined) return false;
+    if (typeof value === "string") return value.trim() !== "";
+    if (typeof value === "number") return true;
+    if (typeof value === "boolean") return true;
+    if (Array.isArray(value)) return value.length > 0;
+    if (typeof value === "object") return Object.keys(value).length > 0;
+    return false;
+  };
+
+  const isFormFieldLocked = (fieldName) =>
+    isKaryakarta && hasPrefilledValue(initialLockSnapshot?.formData?.[fieldName]);
+
+  const isRelationFieldLocked = (relation, fieldName) =>
+    isKaryakarta &&
+    hasPrefilledValue(initialLockSnapshot?.relationDetails?.[relation]?.[fieldName]);
+
+  const isAssistanceFieldLocked = (relation, type, fieldName) =>
+    isKaryakarta &&
+    hasPrefilledValue(
+      initialLockSnapshot?.assistanceData?.[relation]?.[type]?.[fieldName]
+    );
+
+  const isHeadOfFamilyLocked =
+    isKaryakarta && hasPrefilledValue(initialLockSnapshot?.headOfFamily);
+
+  const lockInputClass = (isLocked) =>
+    isLocked
+      ? "bg-gray-100 text-gray-600 cursor-not-allowed"
+      : "";
+
+  const updateFormField = (fieldName, value, extra = {}) => {
+    if (isFormFieldLocked(fieldName)) return;
+    setFormData((prev) => ({
+      ...prev,
+      [fieldName]: value,
+      ...extra,
+    }));
+  };
   const selectedRelations = Array.isArray(formData?.relations)
     ? formData.relations
     : [];
@@ -237,6 +287,13 @@ const FamilyDetailsForm = () => {
   };
 
   const handleCheckbox = (relation) => {
+    if (
+      isKaryakarta &&
+      hasPrefilledValue(initialLockSnapshot?.relationDetails?.[relation])
+    ) {
+      return;
+    }
+
     setFormData((prev) => {
       const prevRelations = Array.isArray(prev?.relations) ? prev.relations : [];
       const isChecked = prevRelations.includes(relation);
@@ -303,6 +360,8 @@ const FamilyDetailsForm = () => {
   };
 
   const handleRelationDetailChange = (relation, field, value) => {
+    if (isRelationFieldLocked(relation, field)) return;
+
     setRelationDetails((prev) => {
       const nextRelationDetails = {
         ...prev,
@@ -390,6 +449,8 @@ const FamilyDetailsForm = () => {
   };
 
   const handleHeadOfFamilyChange = (relation) => {
+    if (isHeadOfFamilyLocked) return;
+
     // If the current head is being unchecked, set to null
     if (headOfFamily === relation) {
       setHeadOfFamily(null);
@@ -456,6 +517,12 @@ const FamilyDetailsForm = () => {
     return null;
   };
 
+  const normalizeBooleanWithFallback = (primaryValue, fallbackValue) => {
+    const normalizedPrimary = normalizeYesNoToBoolean(primaryValue);
+    if (normalizedPrimary !== null) return normalizedPrimary;
+    return normalizeYesNoToBoolean(fallbackValue);
+  };
+
   const normalizeRelationLabel = (value) => {
     const raw = String(value || "").trim();
     if (!raw) return "";
@@ -475,6 +542,8 @@ const FamilyDetailsForm = () => {
 
 
   const handleProfileUpload = (relation, event) => {
+    if (isRelationFieldLocked(relation, "photo")) return;
+
     const file = event.target.files?.[0];
 
     if (file) {
@@ -631,6 +700,8 @@ const FamilyDetailsForm = () => {
     isRemove = false,
     reason = ""
   ) => {
+    if (isRelationFieldLocked(relation, "assistanceCategories")) return;
+
     const lowerCategory = category.toLowerCase();
 
     // ✅ Update relationDetails
@@ -1136,9 +1207,10 @@ const FamilyDetailsForm = () => {
             "",
           rentCost: familyData?.formData?.rentCost || diksharthiData?.rent_cost || "",
 
-          mediclaim:
-            familyData?.formData?.mediclaim ??
-            normalizeYesNoToBoolean(diksharthiData?.mediclaim),
+          mediclaim: normalizeBooleanWithFallback(
+            familyData?.formData?.mediclaim,
+            diksharthiData?.mediclaim
+          ),
           family_mediclaim_type:
             familyData?.formData?.family_mediclaim_type ||
             diksharthiData?.Family_mediclaim_type ||
@@ -1156,9 +1228,10 @@ const FamilyDetailsForm = () => {
             diksharthiData?.family_mediclaim_companyName ||
             "",
 
-          ngoAssistance:
-            familyData?.formData?.ngoAssistance ??
-            normalizeYesNoToBoolean(diksharthiData?.ngo_assistance),
+          ngoAssistance: normalizeBooleanWithFallback(
+            familyData?.formData?.ngoAssistance,
+            diksharthiData?.ngo_assistance
+          ),
           sanghName:
             familyData?.formData?.sanghName || diksharthiData?.ngo_sangh_name || "",
           ngoAmount: familyData?.formData?.ngoAmount || diksharthiData?.ngo_amount || "",
@@ -1235,8 +1308,14 @@ const FamilyDetailsForm = () => {
               "",
             panNumber: relationDetailsRaw[key]?.panNumber || "",
             photo: relationDetailsRaw[key]?.photo || "",
-            ayushman: relationDetailsRaw[key]?.ayushman || null,
-            mediclaim: relationDetailsRaw[key]?.mediclaim || null,
+            ayushman: normalizeYesNoToBoolean(
+              relationDetailsRaw[key]?.ayushman ??
+                relationDetailsRaw[key]?.ayushman_coverage
+            ),
+            mediclaim: normalizeYesNoToBoolean(
+              relationDetailsRaw[key]?.mediclaim ??
+                relationDetailsRaw[key]?.has_mediclaim_policy
+            ),
             ayushman_Amount: relationDetailsRaw[key]?.amount || null,
             mediclaim_amount: relationDetailsRaw[key]?.mediclaimAmount || null,
             member_mediclaim_premium_amount: relationDetailsRaw[key]?.mediclaimPremiumAmount || null,
@@ -1246,7 +1325,10 @@ const FamilyDetailsForm = () => {
             // "mediclaimCompanyName": "uyhgtfd",
             // "mediclaimPremiumAmount": "1000",
 
-            needAssistance: relationDetailsRaw[key]?.needAssistance || null,
+            needAssistance: normalizeYesNoToBoolean(
+              relationDetailsRaw[key]?.needAssistance ??
+                relationDetailsRaw[key]?.need_assistance
+            ),
             family_head: relationDetailsRaw[key]?.family_head || false,
             assistanceCategories: relationDetailsRaw[key]?.assistanceCategories || [],
           };
@@ -1314,6 +1396,12 @@ const FamilyDetailsForm = () => {
         setSelectedRelation(formattedRelation); // default selected
         setExpandedRelations(expanded);
         setFamilyRecordId(familyData?.id ?? null);
+        setInitialLockSnapshot({
+          formData: normalizedFormData,
+          relationDetails: normalizedRelationDetails,
+          assistanceData: normalizedAssistanceData,
+          headOfFamily: apiHead,
+        });
 
         // ================= DEBUG =================
         console.log("FINAL relationDetails:", normalizedRelationDetails);
@@ -1332,6 +1420,12 @@ const FamilyDetailsForm = () => {
 
   const resetForm = () => {
     setFormData(INITIAL_FORM_DATA);
+    setInitialLockSnapshot({
+      formData: INITIAL_FORM_DATA,
+      relationDetails: {},
+      assistanceData: {},
+      headOfFamily: null,
+    });
 
     setRelationDetails({});
     setExpandedRelations({});
@@ -1508,6 +1602,8 @@ const FamilyDetailsForm = () => {
   };
 
   const handleMedicalChange = (relation, field, value) => {
+    if (isAssistanceFieldLocked(relation, "Medical", field)) return;
+
     setAssistanceData((prev) => {
       const nextMedical = {
         ...prev[relation]?.Medical,
@@ -1545,6 +1641,8 @@ const FamilyDetailsForm = () => {
   };
 
   const handleDiseaseChange = (relation, index, field, value) => {
+    if (isAssistanceFieldLocked(relation, "Medical", "diseases")) return;
+
     setAssistanceData((prev) => {
       if (field === "removeDisease") {
         const recalculatedDiseases = (value || []).map((item) => ({
@@ -1607,6 +1705,8 @@ const FamilyDetailsForm = () => {
   };
 
   const handleAddDisease = (relation) => {
+    if (isAssistanceFieldLocked(relation, "Medical", "diseases")) return;
+
     setAssistanceData((prev) => ({
       ...prev,
       [relation]: {
@@ -1628,6 +1728,8 @@ const FamilyDetailsForm = () => {
   };
 
   const handleEducationChange = (relation, field, value) => {
+    if (isAssistanceFieldLocked(relation, "Education", field)) return;
+
     setAssistanceData((prev) => ({
       ...prev,
       [relation]: {
@@ -1642,6 +1744,8 @@ const FamilyDetailsForm = () => {
   };
 
   const handleJobChange = (relation, field, value) => {
+    if (isAssistanceFieldLocked(relation, "Job", field)) return;
+
     setAssistanceData((prev) => ({
       ...prev,
       [relation]: {
@@ -1656,6 +1760,8 @@ const FamilyDetailsForm = () => {
   };
 
   const handleFoodChange = (relation, field, value) => {
+    if (isAssistanceFieldLocked(relation, "Food", field)) return;
+
     setAssistanceData((prev) => ({
       ...prev,
       [relation]: {
@@ -1669,6 +1775,8 @@ const FamilyDetailsForm = () => {
     }));
   };
   const handleRentChange = (relation, field, value) => {
+    if (isAssistanceFieldLocked(relation, "Rent", field)) return;
+
     setAssistanceData((prev) => ({
       ...prev,
       [relation]: {
@@ -1683,6 +1791,8 @@ const FamilyDetailsForm = () => {
   };
 
   const handleHousingChange = (relation, field, value) => {
+    if (isAssistanceFieldLocked(relation, "Housing", field)) return;
+
     setAssistanceData((prev) => ({
       ...prev,
       [relation]: {
@@ -1697,6 +1807,8 @@ const FamilyDetailsForm = () => {
   };
 
   const handleVaiyavacchChange = (relation, field, value) => {
+    if (isAssistanceFieldLocked(relation, "Vaiyavacch", field)) return;
+
     setAssistanceData((prev) => ({
       ...prev,
       [relation]: {
@@ -1710,6 +1822,8 @@ const FamilyDetailsForm = () => {
     }));
   };
   const handleEmergencyChange = (relation, field, value) => {
+    if (isAssistanceFieldLocked(relation, "LivelihoodExpenses", field)) return;
+
     setAssistanceData((prev) => ({
       ...prev,
       [relation]: {
@@ -1724,6 +1838,8 @@ const FamilyDetailsForm = () => {
   };
 
   const handleBusinessChange = (relation, field, value) => {
+    if (isAssistanceFieldLocked(relation, "Business", field)) return;
+
     setAssistanceData((prev) => ({
       ...prev,
       [relation]: {
@@ -1789,8 +1905,13 @@ const FamilyDetailsForm = () => {
               <input
                 type="text"
                 value={formData.permanentAddress}
-                readOnly
-                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
+                onChange={(e) =>
+                  updateFormField("permanentAddress", e.target.value)
+                }
+                readOnly={isFormFieldLocked("permanentAddress")}
+                className={`w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none ${lockInputClass(
+                  isFormFieldLocked("permanentAddress")
+                )}`}
               />
             </div>
 
@@ -1804,8 +1925,13 @@ const FamilyDetailsForm = () => {
               <input
                 type="text"
                 value={formData.currentAddress}
-                readOnly
-                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
+                onChange={(e) =>
+                  updateFormField("currentAddress", e.target.value)
+                }
+                readOnly={isFormFieldLocked("currentAddress")}
+                className={`w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none ${lockInputClass(
+                  isFormFieldLocked("currentAddress")
+                )}`}
               />
             </div>
           </div>
@@ -1819,8 +1945,11 @@ const FamilyDetailsForm = () => {
               <input
                 type="text"
                 value={formData.state}
-                readOnly
-                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
+                onChange={(e) => updateFormField("state", e.target.value)}
+                readOnly={isFormFieldLocked("state")}
+                className={`w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none ${lockInputClass(
+                  isFormFieldLocked("state")
+                )}`}
               />
             </div>
             <div>
@@ -1831,8 +1960,11 @@ const FamilyDetailsForm = () => {
               <input
                 type="text"
                 value={formData.district}
-                readOnly
-                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
+                onChange={(e) => updateFormField("district", e.target.value)}
+                readOnly={isFormFieldLocked("district")}
+                className={`w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none ${lockInputClass(
+                  isFormFieldLocked("district")
+                )}`}
               />
             </div>
             <div>
@@ -1842,8 +1974,11 @@ const FamilyDetailsForm = () => {
               <input
                 type="text"
                 value={formData.taluka}
-                readOnly
-                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
+                onChange={(e) => updateFormField("taluka", e.target.value)}
+                readOnly={isFormFieldLocked("taluka")}
+                className={`w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none ${lockInputClass(
+                  isFormFieldLocked("taluka")
+                )}`}
                 placeholder="Enter taluka"
               />
             </div>
@@ -1855,8 +1990,11 @@ const FamilyDetailsForm = () => {
               <input
                 type="text"
                 value={formData.village}
-                readOnly
-                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
+                onChange={(e) => updateFormField("village", e.target.value)}
+                readOnly={isFormFieldLocked("village")}
+                className={`w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none ${lockInputClass(
+                  isFormFieldLocked("village")
+                )}`}
               />
 
 
@@ -1870,8 +2008,11 @@ const FamilyDetailsForm = () => {
               <input
                 type="number"
                 value={formData.pinCode}
-                readOnly
-                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
+                onChange={(e) => updateFormField("pinCode", e.target.value)}
+                readOnly={isFormFieldLocked("pinCode")}
+                className={`w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none ${lockInputClass(
+                  isFormFieldLocked("pinCode")
+                )}`}
               />
             </div>
           </div>
@@ -1897,7 +2038,10 @@ const FamilyDetailsForm = () => {
                     name="house"
                     value="own"
                     checked={formData.houseDetails === "own"}
-                    onChange={(e) => setFormData({ ...formData, houseDetails: e.target.value, rentCost: "" })}
+                    onChange={(e) =>
+                      updateFormField("houseDetails", e.target.value, { rentCost: "" })
+                    }
+                    disabled={isFormFieldLocked("houseDetails")}
                     className="w-4 h-4 text-blue-600"
                   />
                   Own
@@ -1908,7 +2052,12 @@ const FamilyDetailsForm = () => {
                     name="house"
                     value="rented"
                     checked={formData.houseDetails === "rented"}
-                    onChange={(e) => setFormData({ ...formData, houseDetails: e.target.value, maintenanceCost: "" })}
+                    onChange={(e) =>
+                      updateFormField("houseDetails", e.target.value, {
+                        maintenanceCost: "",
+                      })
+                    }
+                    disabled={isFormFieldLocked("houseDetails")}
                     className="w-4 h-4 text-blue-600"
                   />
                   Rented
@@ -1925,8 +2074,11 @@ const FamilyDetailsForm = () => {
                 type="text"
                 placeholder="e.g. Apartment, Villa"
                 value={formData.typeOfHouse}
-                onChange={(e) => setFormData({ ...formData, typeOfHouse: e.target.value })}
-                className="w-full p-2 border border-slate-300 rounded-md outline-none"
+                onChange={(e) => updateFormField("typeOfHouse", e.target.value)}
+                readOnly={isFormFieldLocked("typeOfHouse")}
+                className={`w-full p-2 border border-slate-300 rounded-md outline-none ${lockInputClass(
+                  isFormFieldLocked("typeOfHouse")
+                )}`}
               />
             </div>
 
@@ -1940,8 +2092,13 @@ const FamilyDetailsForm = () => {
                   <input
                     type="number"
                     value={formData.maintenanceCost}
-                    onChange={(e) => setFormData({ ...formData, maintenanceCost: e.target.value })}
-                    className="w-full p-2 border border-slate-300 rounded-md outline-none"
+                    onChange={(e) =>
+                      updateFormField("maintenanceCost", e.target.value)
+                    }
+                    readOnly={isFormFieldLocked("maintenanceCost")}
+                    className={`w-full p-2 border border-slate-300 rounded-md outline-none ${lockInputClass(
+                      isFormFieldLocked("maintenanceCost")
+                    )}`}
                   />
                 </>
               ) : formData.houseDetails === "rented" ? (
@@ -1952,8 +2109,11 @@ const FamilyDetailsForm = () => {
                   <input
                     type="number"
                     value={formData.rentCost}
-                    onChange={(e) => setFormData({ ...formData, rentCost: e.target.value })}
-                    className="w-full p-2 border border-slate-300 rounded-md outline-none"
+                    onChange={(e) => updateFormField("rentCost", e.target.value)}
+                    readOnly={isFormFieldLocked("rentCost")}
+                    className={`w-full p-2 border border-slate-300 rounded-md outline-none ${lockInputClass(
+                      isFormFieldLocked("rentCost")
+                    )}`}
                   />
                 </>
               ) : (
@@ -1970,8 +2130,13 @@ const FamilyDetailsForm = () => {
               <input
                 type="number"
                 value={formData.lightBillCost}
-                onChange={(e) => setFormData({ ...formData, lightBillCost: e.target.value })}
-                className="w-full p-2 border border-slate-300 rounded-md outline-none"
+                onChange={(e) =>
+                  updateFormField("lightBillCost", e.target.value)
+                }
+                readOnly={isFormFieldLocked("lightBillCost")}
+                className={`w-full p-2 border border-slate-300 rounded-md outline-none ${lockInputClass(
+                  isFormFieldLocked("lightBillCost")
+                )}`}
               />
             </div>
           </div>
@@ -1991,6 +2156,10 @@ const FamilyDetailsForm = () => {
                     type="checkbox"
                     checked={Object.keys(relationDetails).includes(rel)}
                     onChange={() => handleCheckbox(rel)}
+                    disabled={
+                      isKaryakarta &&
+                      hasPrefilledValue(initialLockSnapshot?.relationDetails?.[rel])
+                    }
                     className="w-5 h-5 border-slate-400 rounded"
                   />
                   <span>{rel}</span>
@@ -2065,7 +2234,10 @@ const FamilyDetailsForm = () => {
                                 name="headOfFamily"
                                 checked={headOfFamily === rel}
                                 onChange={() => handleHeadOfFamilyChange(rel)}
-                                disabled={headOfFamily !== null && headOfFamily !== rel}
+                                disabled={
+                                  isHeadOfFamilyLocked ||
+                                  (headOfFamily !== null && headOfFamily !== rel)
+                                }
                                 className="w-5 h-5 border-slate-400 rounded"
                               />
                               <span className="font-semibold text-slate-700">
@@ -5533,9 +5705,8 @@ const FamilyDetailsForm = () => {
                     type="radio"
                     name="mediclaim"
                     checked={formData.mediclaim === true}
-                    onChange={() =>
-                      setFormData({ ...formData, mediclaim: true })
-                    }
+                    onChange={() => updateFormField("mediclaim", true)}
+                    disabled={isFormFieldLocked("mediclaim")}
                   />{" "}
                   Yes
                 </label>
@@ -5544,9 +5715,8 @@ const FamilyDetailsForm = () => {
                     type="radio"
                     name="mediclaim"
                     checked={formData.mediclaim === false}
-                    onChange={() =>
-                      setFormData({ ...formData, mediclaim: false })
-                    }
+                    onChange={() => updateFormField("mediclaim", false)}
+                    disabled={isFormFieldLocked("mediclaim")}
                   />{" "}
                   No
                 </label>
@@ -5565,9 +5735,8 @@ const FamilyDetailsForm = () => {
                     type="radio"
                     name="ngo"
                     checked={formData.ngoAssistance === true}
-                    onChange={() =>
-                      setFormData({ ...formData, ngoAssistance: true })
-                    }
+                    onChange={() => updateFormField("ngoAssistance", true)}
+                    disabled={isFormFieldLocked("ngoAssistance")}
                   />{" "}
                   Yes
                 </label>
@@ -5576,9 +5745,8 @@ const FamilyDetailsForm = () => {
                     type="radio"
                     name="ngo"
                     checked={formData.ngoAssistance === false}
-                    onChange={() =>
-                      setFormData({ ...formData, ngoAssistance: false })
-                    }
+                    onChange={() => updateFormField("ngoAssistance", false)}
+                    disabled={isFormFieldLocked("ngoAssistance")}
                   />{" "}
                   No
                 </label>
@@ -5598,14 +5766,14 @@ const FamilyDetailsForm = () => {
                   </label>
 
                   <select
-                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
+                    className={`w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none ${lockInputClass(
+                      isFormFieldLocked("family_mediclaim_type")
+                    )}`}
                     value={formData.family_mediclaim_type || ""}
                     onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        family_mediclaim_type: e.target.value,
-                      })
+                      updateFormField("family_mediclaim_type", e.target.value)
                     }
+                    disabled={isFormFieldLocked("family_mediclaim_type")}
                   >
                     <option value="">Select Type</option>
                     <option value="single">Single</option>
@@ -5621,12 +5789,12 @@ const FamilyDetailsForm = () => {
                     type="text"
                     value={formData.Family_mediclaim_amount || ""}
                     onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        Family_mediclaim_amount: e.target.value,
-                      })
+                      updateFormField("Family_mediclaim_amount", e.target.value)
                     }
-                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
+                    readOnly={isFormFieldLocked("Family_mediclaim_amount")}
+                    className={`w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none ${lockInputClass(
+                      isFormFieldLocked("Family_mediclaim_amount")
+                    )}`}
                   />
                 </div>
                 <div>
@@ -5637,6 +5805,7 @@ const FamilyDetailsForm = () => {
                     type="number"
                     value={formData.mediclaimPremiumAmount || ""}
                     onChange={(e) => {
+                      if (isFormFieldLocked("mediclaimPremiumAmount")) return;
                       let premiumAmount = Number(e.target.value);
                       const coverAmount = Number(formData.Family_mediclaim_amount) || 0;
 
@@ -5646,16 +5815,14 @@ const FamilyDetailsForm = () => {
                         premiumAmount = coverAmount > 0 ? coverAmount - 1 : 0; // automatically reduce by 1
                       }
 
-                      setFormData({
-                        ...formData,
-                        mediclaimPremiumAmount: premiumAmount,
-                      });
+                      updateFormField("mediclaimPremiumAmount", premiumAmount);
                     }}
+                    readOnly={isFormFieldLocked("mediclaimPremiumAmount")}
                     className={`w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-100 outline-none ${Number(formData.mediclaimPremiumAmount || 0) >= Number(formData.Family_mediclaim_amount || 0) &&
                       formData.Family_mediclaim_amount
                       ? "border-red-500 focus:ring-red-100"
                       : "border-slate-300"
-                      }`}
+                      } ${lockInputClass(isFormFieldLocked("mediclaimPremiumAmount"))}`}
                   />
                   {Number(formData.mediclaimPremiumAmount || 0) > Number(formData.Family_mediclaim_amount || 0) && formData.Family_mediclaim_amount && (
                     <p className="text-red-500 text-xs mt-1">
@@ -5671,12 +5838,12 @@ const FamilyDetailsForm = () => {
                     type="text"
                     value={formData.family_mediclaim_companyName || ""}
                     onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        family_mediclaim_companyName: e.target.value,
-                      })
+                      updateFormField("family_mediclaim_companyName", e.target.value)
                     }
-                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
+                    readOnly={isFormFieldLocked("family_mediclaim_companyName")}
+                    className={`w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none ${lockInputClass(
+                      isFormFieldLocked("family_mediclaim_companyName")
+                    )}`}
                   />
                 </div>
               </div>
@@ -5691,13 +5858,11 @@ const FamilyDetailsForm = () => {
                   <input
                     type="text"
                     value={formData.sanghName || ""}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        sanghName: e.target.value,
-                      })
-                    }
-                    className="w-full p-2 border border-slate-300 rounded-md outline-none"
+                    onChange={(e) => updateFormField("sanghName", e.target.value)}
+                    readOnly={isFormFieldLocked("sanghName")}
+                    className={`w-full p-2 border border-slate-300 rounded-md outline-none ${lockInputClass(
+                      isFormFieldLocked("sanghName")
+                    )}`}
                   />
                 </div>
 
@@ -5708,13 +5873,11 @@ const FamilyDetailsForm = () => {
                   <input
                     type="number"
                     value={formData.ngoAmount || ""}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        ngoAmount: e.target.value,
-                      })
-                    }
-                    className="w-full p-2 border border-slate-300 rounded-md outline-none"
+                    onChange={(e) => updateFormField("ngoAmount", e.target.value)}
+                    readOnly={isFormFieldLocked("ngoAmount")}
+                    className={`w-full p-2 border border-slate-300 rounded-md outline-none ${lockInputClass(
+                      isFormFieldLocked("ngoAmount")
+                    )}`}
                   />
                 </div>
 
@@ -5724,14 +5887,12 @@ const FamilyDetailsForm = () => {
                   </label>
 
                   <select
-                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
+                    className={`w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none ${lockInputClass(
+                      isFormFieldLocked("ngoFrequency")
+                    )}`}
                     value={formData.ngoFrequency || ""}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        ngoFrequency: e.target.value,
-                      })
-                    }
+                    onChange={(e) => updateFormField("ngoFrequency", e.target.value)}
+                    disabled={isFormFieldLocked("ngoFrequency")}
                   >
                     <option value="">Select Frequency</option>
                     <option value="Monthly">Monthly</option>
@@ -5746,13 +5907,11 @@ const FamilyDetailsForm = () => {
                   </label>
                   <textarea
                     value={formData.ngoRemark || ""}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        ngoRemark: e.target.value,
-                      })
-                    }
-                    className="w-full p-2 border border-slate-300 rounded-md outline-none resize-none"
+                    onChange={(e) => updateFormField("ngoRemark", e.target.value)}
+                    readOnly={isFormFieldLocked("ngoRemark")}
+                    className={`w-full p-2 border border-slate-300 rounded-md outline-none resize-none ${lockInputClass(
+                      isFormFieldLocked("ngoRemark")
+                    )}`}
                     rows={2}
                   />
                 </div>
