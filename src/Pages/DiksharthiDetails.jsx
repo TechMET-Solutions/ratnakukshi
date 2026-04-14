@@ -96,6 +96,20 @@ const emptyFeedbackForm = {
   feedback: "",
 };
 
+const getLocalVisitDateTime = () => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  const hours = String(now.getHours()).padStart(2, "0");
+  const minutes = String(now.getMinutes()).padStart(2, "0");
+
+  return {
+    date: `${year}-${month}-${day}`,
+    time: `${hours}:${minutes}`,
+  };
+};
+
 const DiksharthiListing = () => {
   const navigate = useNavigate();
   const { user: loggedInUser } = useAuth();
@@ -502,12 +516,25 @@ const DiksharthiListing = () => {
 
     try {
       setUpdatingVisitStatusId(diksharthi.id);
+      const currentSchedule = getCurrentSchedule(diksharthi);
+      const localVisitDateTime = getLocalVisitDateTime();
+      const shouldStoreVisitDateTime = String(nextStatus).trim().toLowerCase() === "yes";
+      const payload = {
+        is_visited: nextStatus,
+        ...(shouldStoreVisitDateTime
+          ? {
+              visit_date: currentSchedule?.date || localVisitDateTime.date,
+              visit_time: currentSchedule?.time || localVisitDateTime.time,
+            }
+          : {}),
+      };
+
       const response = await fetch(`${API}/api/visit-status/${diksharthi.id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ is_visited: nextStatus }),
+        body: JSON.stringify(payload),
       });
 
       const result = await response.json().catch(() => ({}));

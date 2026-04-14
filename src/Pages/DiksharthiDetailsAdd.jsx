@@ -24,7 +24,7 @@ const initialFormData = {
   samadhiPlace: "", // Optional
   rbfCriteria: "",
   relation: "",
-   relation_name: "",   // ✅ add this
+  relation_name: "",   // ✅ add this
   isMarried: "",       // ✅ add this
   family_member_firstName: "",
   family_member_lastName: "",
@@ -81,7 +81,7 @@ const mapDiksharthiToFormData = (record) => ({
   rbfCriteria: record?.rbfCriteria || record?.rbf_criteria || "",
   relation: record?.relation || "",
   relation_name: record?.relation_name || "",
-isMarried: record?.isMarried || record?.is_married || "",
+  isMarried: record?.isMarried || record?.is_married || "",
   family_member_firstName: record?.family_member_firstName || "",
   family_member_lastName: record?.family_member_lastName || "",
   mobileNo: record?.mobileNo || record?.mobile_no || "",
@@ -121,7 +121,7 @@ const mapFormDataToApiPayload = (formData, userId) => ({
   rbf_criteria: formData.rbfCriteria,
   relation: formData.relation,
   relation_name: formData.relation_name || null,
-is_married: formData.isMarried || null,
+  is_married: formData.isMarried || null,
   family_member_firstName: formData.family_member_firstName,
   family_member_lastName: formData.family_member_lastName,
   mobile_no: formData.mobileNo,
@@ -291,16 +291,16 @@ const DiksharthiDetailsAdd = () => {
       }
 
       if (name === "relation" && value !== "other") {
-  nextState.relation_name = "";
-}
+        nextState.relation_name = "";
+      }
 
-if (name === "relation" && value !== "sister" && value !== "daughter") {
-  nextState.isMarried = "";
-}
+      if (name === "relation" && value !== "sister" && value !== "daughter") {
+        nextState.isMarried = "";
+      }
 
-if (name === "isMarried" && value === "Yes") {
-  nextState.assistanceReceived = "";
-}
+      if (name === "isMarried" && value === "Yes") {
+        nextState.assistanceReceived = "";
+      }
       return nextState;
     });
 
@@ -417,19 +417,19 @@ if (name === "isMarried" && value === "Yes") {
 
       setSavedId(diksharthi?.diksharthi_code || diksharthi?.id);
       setShowModal(!isEditMode);
-      // if (!targetId) {
-      //   // navigate("/diksharthi-details");
-      //   navigate("/family-details");
-      //   return;
-      // }
-      navigate("/family-details", {
-        state: {
-          id: targetId,
-          diksharthi_code: targetCode,
-          sadhu_sadhvi_name: targetName,
-          gender: targetGender,
-        },
-      });
+      if (!targetId) {
+        navigate("/diksharthi-details");
+        // navigate("/family-details");
+        return;
+      }
+      // navigate("/family-details", {
+      //   state: {
+      //     id: targetId,
+      //     diksharthi_code: targetCode,
+      //     sadhu_sadhvi_name: targetName,
+      //     gender: targetGender,
+      //   },
+      // });
     } catch (error) {
       console.error(error);
       alert("Error saving data");
@@ -560,14 +560,14 @@ if (name === "isMarried" && value === "Yes") {
           {formData.isAlive === "No" && (
             <div className="flex-1">
               <label className="block text-sm font-medium text-slate-700 mb-1">Samadhi Date (Optional)</label>
-               <input
-    type="date"
-    name="samadhiDate"
-    value={formData.samadhiDate}
-    onChange={handleChange}
-    max={new Date().toISOString().split("T")[0]}  // ✅ TODAY MAX
-    className="w-full p-2 border border-slate-300 rounded-md"
-  />
+              <input
+                type="date"
+                name="samadhiDate"
+                value={formData.samadhiDate}
+                onChange={handleChange}
+                max={new Date().toISOString().split("T")[0]}  // ✅ TODAY MAX
+                className="w-full p-2 border border-slate-300 rounded-md"
+              />
             </div>
           )}
           {formData.isAlive === "No" && (
@@ -618,49 +618,49 @@ if (name === "isMarried" && value === "Yes") {
             </div>
           )}
 
-            {formData.relation === "Other" && (
-      <div>
-        <label className="block text-sm font-medium text-slate-700 mb-1">
-          Relation Name <span className="text-red-500">*</span>
-        </label>
+          {formData.relation === "Other" && (
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">
+                Relation Name <span className="text-red-500">*</span>
+              </label>
 
-        <input
-          type="text"
-          name="relation_name"
-          value={formData.relation_name || ""}
-          onChange={handleChange}
-          placeholder="Enter relation name"
-          className="w-full p-2 border border-slate-300 rounded-md outline-none"
-        />
+              <input
+                type="text"
+                name="relation_name"
+                value={formData.relation_name || ""}
+                onChange={handleChange}
+                placeholder="Enter relation name"
+                className="w-full p-2 border border-slate-300 rounded-md outline-none"
+              />
 
-        {errors.relation_name && (
-          <p className="text-red-500 text-xs">{errors.relation_name}</p>
-        )}
-      </div>
-    )}
+              {errors.relation_name && (
+                <p className="text-red-500 text-xs">{errors.relation_name}</p>
+              )}
+            </div>
+          )}
 
           {(formData.relation === "Sister" || formData.relation === "Daughter") && (
-  <div>
-    <label className="block text-sm font-medium text-slate-700 mb-1">
-      Is Married? <span className="text-red-500">*</span>
-    </label>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">
+                Is Married? <span className="text-red-500">*</span>
+              </label>
 
-    <select
-      name="isMarried"
-      value={formData.isMarried}
-      onChange={handleChange}
-      className="w-full p-2 border border-slate-300 rounded-md outline-none"
-    >
-      <option value="">Select</option>
-      <option value="yes">Yes</option>
-      <option value="no">No</option>
-    </select>
+              <select
+                name="isMarried"
+                value={formData.isMarried}
+                onChange={handleChange}
+                className="w-full p-2 border border-slate-300 rounded-md outline-none"
+              >
+                <option value="">Select</option>
+                <option value="yes">Yes</option>
+                <option value="no">No</option>
+              </select>
 
-    {errors.isMarried && (
-      <p className="text-red-500 text-xs">{errors.isMarried}</p>
-    )}
-  </div>
-)}
+              {errors.isMarried && (
+                <p className="text-red-500 text-xs">{errors.isMarried}</p>
+              )}
+            </div>
+          )}
 
           {formData.rbfCriteria === "Yes" && (
             <div>
@@ -709,65 +709,65 @@ if (name === "isMarried" && value === "Yes") {
             </div>
           )}
 
-        {formData.rbfCriteria === "Yes" && (
-  <>
-    {/* Permanent Address */}
-    <div>
-      <label className="block text-sm font-medium text-slate-700 mb-1">
-        Permanent Address <span className="text-red-500">*</span>
-      </label>
+          {formData.rbfCriteria === "Yes" && (
+            <>
+              {/* Permanent Address */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Permanent Address <span className="text-red-500">*</span>
+                </label>
 
-      <input
-        name="permanentAddress"
-        value={formData.permanentAddress}
-        onChange={handleChange}
-        type="text"
-        className="w-full p-2 border border-slate-300 rounded-md outline-none"
-      />
+                <input
+                  name="permanentAddress"
+                  value={formData.permanentAddress}
+                  onChange={handleChange}
+                  type="text"
+                  className="w-full p-2 border border-slate-300 rounded-md outline-none"
+                />
 
-      {errors.permanentAddress && (
-        <p className="text-red-500 text-xs">{errors.permanentAddress}</p>
-      )}
-    </div>
+                {errors.permanentAddress && (
+                  <p className="text-red-500 text-xs">{errors.permanentAddress}</p>
+                )}
+              </div>
 
-    {/* ✅ Checkbox */}
-    <div className="flex items-center gap-2 mt-2">
-      <input
-        type="checkbox"
-        name="sameAddress"
-        checked={formData.sameAddress || false}
-        onChange={(e) => {
-          const checked = e.target.checked;
+              {/* ✅ Checkbox */}
+              <div className="flex items-center gap-2 mt-2">
+                <input
+                  type="checkbox"
+                  name="sameAddress"
+                  checked={formData.sameAddress || false}
+                  onChange={(e) => {
+                    const checked = e.target.checked;
 
-          setFormData((prev) => ({
-            ...prev,
-            sameAddress: checked,
-            currentAddress: checked ? prev.permanentAddress : ""
-          }));
-        }}
-      />
-      <label className="text-sm text-slate-700 cursor-pointer">
-        Same as Permanent Address
-      </label>
-    </div>
+                    setFormData((prev) => ({
+                      ...prev,
+                      sameAddress: checked,
+                      currentAddress: checked ? prev.permanentAddress : ""
+                    }));
+                  }}
+                />
+                <label className="text-sm text-slate-700 cursor-pointer">
+                  Same as Permanent Address
+                </label>
+              </div>
 
-    {/* Current Address */}
-    <div>
-      <label className="block text-sm font-medium text-slate-700 mb-1">
-        Current Address
-      </label>
+              {/* Current Address */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Current Address
+                </label>
 
-      <input
-        name="currentAddress"
-        value={formData.currentAddress}
-        onChange={handleChange}
-        type="text"
-        disabled={formData.sameAddress} // ✅ disable when checked
-        className="w-full p-2 border border-slate-300 rounded-md outline-none bg-gray-100"
-      />
-    </div>
-  </>
-)}
+                <input
+                  name="currentAddress"
+                  value={formData.currentAddress}
+                  onChange={handleChange}
+                  type="text"
+                  disabled={formData.sameAddress} // ✅ disable when checked
+                  className="w-full p-2 border border-slate-300 rounded-md outline-none bg-gray-100"
+                />
+              </div>
+            </>
+          )}
 
           {formData.rbfCriteria === "Yes" && (
             <div>
@@ -789,23 +789,6 @@ if (name === "isMarried" && value === "Yes") {
           {formData.rbfCriteria === "Yes" && (
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Village / Post Office</label>
-
-              {/* <select
-                value={formData.village || ""}
-                onChange={(e) => {
-                  const selected = JSON.parse(e.target.value);
-
-                  setFormData((prev) => ({
-                    ...prev,
-                    village: selected.Name,
-                    taluka: selected.Block,
-                    district: selected.District,
-                    state: selected.State,
-                  }));
-                }}
-                className="w-full p-2 border rounded-md"
-              > */}
-
               <select
                 value={formData.village || ""}
                 onChange={(e) => {
@@ -828,7 +811,6 @@ if (name === "isMarried" && value === "Yes") {
                   </option>
                 ))}
               </select>
-              {/* <input name="village" value={formData.village} onChange={handleChange} type="text" className="w-full p-2 border border-slate-300 rounded-md outline-none" /> */}
             </div>
           )}
 
@@ -854,43 +836,43 @@ if (name === "isMarried" && value === "Yes") {
               {errors.state && <p className="text-red-500 text-xs">{errors.state}</p>}
             </div>
           )}
-         {formData.rbfCriteria === "Yes" && (
-  <div>
-    <label className="block text-sm font-medium text-slate-700 mb-1">
-      RBF Assistance Required ? <span className="text-red-500">*</span>
-    </label>
+          {formData.rbfCriteria === "Yes" && (
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">
+                RBF Assistance Required ? <span className="text-red-500">*</span>
+              </label>
 
-    <div className="flex gap-4 mt-2">
-      <label className="flex items-center gap-2 cursor-pointer">
-        <input
-          type="radio"
-          name="assistanceReceived"
-          value="Yes"
-          checked={formData.assistanceReceived === "Yes"}
-          onChange={handleChange}
-        />
-        Yes
-      </label>
+              <div className="flex gap-4 mt-2">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="assistanceReceived"
+                    value="Yes"
+                    checked={formData.assistanceReceived === "Yes"}
+                    onChange={handleChange}
+                  />
+                  Yes
+                </label>
 
-      <label className="flex items-center gap-2 cursor-pointer">
-        <input
-          type="radio"
-          name="assistanceReceived"
-          value="No"
-          checked={formData.assistanceReceived === "No"}
-          onChange={handleChange}
-        />
-        No
-      </label>
-    </div>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="assistanceReceived"
+                    value="No"
+                    checked={formData.assistanceReceived === "No"}
+                    onChange={handleChange}
+                  />
+                  No
+                </label>
+              </div>
 
-    {errors.assistanceReceived && (
-      <p className="text-red-500 text-xs">{errors.assistanceReceived}</p>
-    )}
-  </div>
-)}
+              {errors.assistanceReceived && (
+                <p className="text-red-500 text-xs">{errors.assistanceReceived}</p>
+              )}
+            </div>
+          )}
 
-         
+
 
           {formData.assistanceReceived === "Yes" && (
 
@@ -953,34 +935,6 @@ if (name === "isMarried" && value === "Yes") {
             }
           />
         </div>
-
-        {/* <div className="col-span-4 mt-2">
-          <label className="block text-sm font-medium text-slate-700 mb-1 ">
-            Assistance Reasons
-          </label>
-
-          {formData?.deselected_assistance?.length > 0 ? (
-            <div className="space-y-2">
-              <p className="text-sm text-red-500">
-                The Karyakarta has deselected assistance for the following reason(s):
-              </p>
-
-              <ul className="list-disc pl-5 text-sm text-red-500">
-                {formData.deselected_assistance.map((item, index) => (
-                  <li key={index} className="leading-relaxed">
-                    <span className="font-semibold">{item.type}</span>{" "}
-                    — {item.reason}{" "}
-                    <span className="text-red-500">({item.relation})</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ) : (
-            <p className="text-sm text-slate-400 italic">
-              No assistance reasons selected.
-            </p>
-          )}
-        </div> */}
 
         <div className="col-span-4 mt-2">
           {formData?.deselected_assistance?.length ? (

@@ -24,6 +24,7 @@ import RBFBankDetails from "./pages/RBFBankDetails";
 import CreditPage from "./pages/CreditPage";
 import DebitAccountPage from "./pages/DebitAccountPage";
 import AccontAssistncePage from "./pages/AccontAssistncePage";
+import FamilyBasicInfo from "./pages/FamilyBasicInfo";
 
 const Layout = ({ children }) => {
   return (
@@ -56,6 +57,16 @@ function App() {
             <ProtectedRoute>
               <Layout>
                 <DashboardPlaceholder />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/xyz"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <FamilyBasicInfo />
               </Layout>
             </ProtectedRoute>
           }
