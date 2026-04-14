@@ -1450,7 +1450,7 @@ const DiksharthiListing = () => {
                         {diksharthi.visited_history?.length > 0 && (() => {
                           const lastVisit = diksharthi.visited_history[diksharthi.visited_history.length - 1];
                           return (
-                            <div className="text-[10px]">
+                            <div className="mt-1 text-sm">
                               {formatIndianDate(lastVisit.date)} {lastVisit.time}
                             </div>
                           );

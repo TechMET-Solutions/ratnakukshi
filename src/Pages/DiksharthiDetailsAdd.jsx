@@ -1,6 +1,6 @@
 import axios from "axios";
 import JoditEditor from "jodit-react";
-import { ChevronDown, FileText } from "lucide-react";
+import { ChevronDown, FileText, Search, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { API } from "../api/BaseURL";
@@ -142,6 +142,17 @@ const mapFormDataToApiPayload = (formData, userId) => ({
 const MOBILE_REGEX = /^\d{10}$/;
 const PINCODE_REGEX = /^\d{6}$/;
 
+const getFamilyNumber = (record) =>
+  record?.family_details?.family_id ||
+  record?.family_id ||
+  "";
+
+const getFamilyMemberLabel = (record) => {
+  const first = String(record?.family_member_firstName || "").trim();
+  const last = String(record?.family_member_lastName || "").trim();
+  return `${first} ${last}`.trim() || "-";
+};
+
 const DiksharthiDetailsAdd = () => {
   const location = useLocation();
   const { user } = useAuth();
@@ -158,6 +169,10 @@ const DiksharthiDetailsAdd = () => {
   const [isEditLoading, setIsEditLoading] = useState(false);
   const navigate = useNavigate();
   const [errors, setErrors] = useState({});
+  const [allDiksharthi, setAllDiksharthi] = useState([]);
+  const [isDiksharthiListLoading, setIsDiksharthiListLoading] = useState(false);
+  const [diksharthiSearch, setDiksharthiSearch] = useState("");
+  const [selectedSourceDiksharthi, setSelectedSourceDiksharthi] = useState(null);
 
   const [postOffices, setPostOffices] = useState([]);
   const rbfMandatoryFields = [
@@ -243,6 +258,83 @@ const DiksharthiDetailsAdd = () => {
     };
     fetchDiksharthiById();
   }, [isEditMode, editId]);
+
+  useEffect(() => {
+    const fetchAllDiksharthi = async () => {
+      try {
+        setIsDiksharthiListLoading(true);
+        const response = await fetch(`${API}/api/get-diksharthi`);
+        const result = await response.json().catch(() => ({}));
+        const rows = Array.isArray(result?.data) ? result.data : [];
+        const currentId = editId ? String(editId) : "";
+        const filteredRows = rows.filter((item) => String(item?.id) !== currentId);
+        setAllDiksharthi(filteredRows);
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setIsDiksharthiListLoading(false);
+      }
+    };
+
+    fetchAllDiksharthi();
+  }, [editId]);
+
+  const handleSelectSourceDiksharthi = (selected) => {
+    if (!selected) return;
+
+    setSelectedSourceDiksharthi(selected);
+    setDiksharthiSearch(
+      `${selected?.sadhu_sadhvi_name || ""} (${selected?.diksharthi_code || selected?.id || ""})`
+    );
+
+    setFormData((prev) => {
+      const nextState = {
+        ...prev,
+        rbfCriteria: "Yes",
+        relation: selected?.relation || prev.relation || "",
+        relation_name: selected?.relation_name || prev.relation_name || "",
+        isMarried: selected?.is_married || selected?.isMarried || prev.isMarried || "",
+        family_member_firstName: selected?.family_member_firstName || prev.family_member_firstName || "",
+        family_member_lastName: selected?.family_member_lastName || prev.family_member_lastName || "",
+        mobileNo: selected?.mobile_no || selected?.mobileNo || prev.mobileNo || "",
+        altMobileNo: selected?.alt_mobile_no || selected?.altMobileNo || prev.altMobileNo || "",
+        permanentAddress: selected?.permanent_address || selected?.permanentAddress || prev.permanentAddress || "",
+        currentAddress: selected?.current_address || selected?.currentAddress || prev.currentAddress || "",
+        village: selected?.village || prev.village || "",
+        taluka: selected?.taluka || prev.taluka || "",
+        district: selected?.district || prev.district || "",
+        state: selected?.state || prev.state || "",
+        pinCode: selected?.pin_code || selected?.pinCode || prev.pinCode || "",
+      };
+
+      if (String(nextState.pinCode || "").length === 6) {
+        fetchPincodeDetails(nextState.pinCode);
+      }
+
+      return nextState;
+    });
+
+    setErrors((prev) => {
+      const next = { ...prev };
+      [
+        "relation",
+        "family_member_firstName",
+        "family_member_lastName",
+        "mobileNo",
+        "altMobileNo",
+        "permanentAddress",
+        "pinCode",
+        "district",
+        "state",
+      ].forEach((field) => delete next[field]);
+      return next;
+    });
+  };
+
+  const clearSelectedSourceDiksharthi = () => {
+    setSelectedSourceDiksharthi(null);
+    setDiksharthiSearch("");
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -411,30 +503,18 @@ const DiksharthiDetailsAdd = () => {
 
       const diksharthi = response?.data?.data || editRecord || {};
       const targetId = diksharthi?.id || editId || null;
-      const targetCode = diksharthi?.diksharthi_code || editRecord?.diksharthi_code || "";
-      const targetName = diksharthi?.sadhu_sadhvi_name || formData?.sadhu_sadhvi_name || "";
-      const targetGender = diksharthi?.gender || formData?.gender || "";
-
       setSavedId(diksharthi?.diksharthi_code || diksharthi?.id);
       setShowModal(!isEditMode);
       if (!targetId) {
         navigate("/diksharthi-details");
-        // navigate("/family-details");
         return;
       }
-      // navigate("/family-details", {
-      //   state: {
-      //     id: targetId,
-      //     diksharthi_code: targetCode,
-      //     sadhu_sadhvi_name: targetName,
-      //     gender: targetGender,
-      //   },
-      // });
     } catch (error) {
       console.error(error);
       alert("Error saving data");
     }
   };
+
 
   const filteredRelations = RELATIONS.filter((item) => {
     if (formData.gender === "Sadhu" && item.value === "Husband") {
@@ -446,12 +526,99 @@ const DiksharthiDetailsAdd = () => {
     return true;
   });
 
+  const normalizedDiksharthiSearch = String(diksharthiSearch || "").trim().toLowerCase();
+  const filteredDiksharthiOptions = normalizedDiksharthiSearch
+    ? allDiksharthi
+      .filter((item) => {
+        const familyNumber = String(getFamilyNumber(item) || "").toLowerCase();
+        const searchFields = [
+          item?.sadhu_sadhvi_name,
+          item?.diksharthi_code,
+          item?.mobile_no,
+          item?.family_member_firstName,
+          item?.family_member_lastName,
+          familyNumber,
+        ]
+          .map((value) => String(value || "").toLowerCase())
+          .join(" ");
+
+        return searchFields.includes(normalizedDiksharthiSearch);
+      })
+      .slice(0, 8)
+    : [];
+
   return (
     <div className="min-h-full bg-gray-50 flex p-6 justify-center">
       <div className="w-full max-w-8xl bg-white p-6 shadow-sm">
         <div className="flex items-center gap-2 mb-8 text-slate-800">
           <FileText size={20} />
           <h2 className="text-xl font-bold"> Ratnakukshi Family Basic Info</h2>
+        </div>
+
+        <div className="mb-6 border border-slate-200 rounded-lg p-4 bg-slate-50">
+          <label className="block text-sm font-semibold text-slate-700 mb-2">
+            Search M.S. Name / MS ID
+          </label>
+          <div className="relative">
+            <Search size={16} className="absolute left-3 top-3 text-slate-400" />
+            <input
+              type="text"
+              value={diksharthiSearch}
+              onChange={(e) => {
+                setDiksharthiSearch(e.target.value);
+                if (selectedSourceDiksharthi) setSelectedSourceDiksharthi(null);
+              }}
+              placeholder="Type M.S. Name, M.S. ID..."
+              className="w-full pl-9 pr-10 py-2 border border-slate-300 rounded-md outline-none"
+            />
+            {diksharthiSearch && (
+              <button
+                type="button"
+                onClick={clearSelectedSourceDiksharthi}
+                className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600"
+              >
+                <X size={16} />
+              </button>
+            )}
+          </div>
+
+          {isDiksharthiListLoading && (
+            <p className="text-xs text-slate-500 mt-2">Loading diksharthi list...</p>
+          )}
+
+          {!isDiksharthiListLoading && normalizedDiksharthiSearch && filteredDiksharthiOptions.length > 0 && (
+            <div className="mt-2 border border-slate-200 rounded-md bg-white max-h-64 overflow-auto">
+              {filteredDiksharthiOptions.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => handleSelectSourceDiksharthi(item)}
+                  className="w-full text-left px-3 py-2 border-b border-slate-100 last:border-b-0 hover:bg-yellow-50"
+                >
+                  <p className="text-sm font-medium text-slate-800">
+                    {item?.sadhu_sadhvi_name || "-"} ({item?.diksharthi_code || item?.id})
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    Family No: {getFamilyNumber(item) || "-"} | Family Member: {getFamilyMemberLabel(item)}
+                  </p>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {!isDiksharthiListLoading && normalizedDiksharthiSearch && filteredDiksharthiOptions.length === 0 && (
+            <p className="text-xs text-slate-500 mt-2">No matching diksharthi found.</p>
+          )}
+
+          {selectedSourceDiksharthi && (
+            <div className="mt-3 text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-md px-3 py-2">
+              Selected: {selectedSourceDiksharthi?.sadhu_sadhvi_name || "-"} ({selectedSourceDiksharthi?.diksharthi_code || selectedSourceDiksharthi?.id})
+              {" | "}
+              Family No: {getFamilyNumber(selectedSourceDiksharthi) || "-"}
+              {" | "}
+              Family member fields are auto-filled.
+            </div>
+          )}
         </div>
 
         <div className="grid grid-cols-4 gap-6 mt-5">
@@ -542,8 +709,8 @@ const DiksharthiDetailsAdd = () => {
             <label className="block text-sm font-medium text-slate-700 mb-1">Is MS currently alive? <span className="text-red-500">*</span></label>
             <select name="isAlive" value={formData.isAlive} onChange={handleChange} className="w-full p-2 border border-slate-300 rounded-md">
               <option value="">Select</option>
-              <option>Yes</option>
-              <option>No</option>
+              <option value="Yes">Vidyamaan</option>
+              <option value="No">Kaaldharma</option>
             </select>
             {errors.isAlive && <p className="text-red-500 text-xs">{errors.isAlive}</p>}
           </div>
@@ -964,7 +1131,7 @@ const DiksharthiDetailsAdd = () => {
 
         <div className="p-6 flex justify-between items-center bg-white mt-4">
           <button onClick={() => navigate(-1)} className="bg-[#fbc02d] text-white px-10 py-2 rounded font-bold uppercase text-sm">Cancel</button>
-          <button onClick={handleSave} className="bg-[#fbc02d] text-white px-10 py-2 rounded font-bold uppercase text-sm">{isEditMode ? "Update & Next" : "Save & Next"}</button>
+          <button onClick={handleSave} className="bg-[#fbc02d] text-white px-10 py-2 rounded font-bold uppercase text-sm">{isEditMode ? "Update" : "Save"}</button>
         </div>
       </div>
     </div>
