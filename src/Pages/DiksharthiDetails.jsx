@@ -1493,23 +1493,7 @@ const DiksharthiListing = () => {
                             PDF
                           </button>
 
-                          <button
-                            className="rounded-lg bg-yellow-500 text-sm px-2 py-1 text-white"
-                            onClick={() =>
-                              navigate("/family-details", {
-                                state: {
-                                  id: diksharthi.id,
-                                  diksharthi_code: diksharthi.diksharthi_code,
-                                  sadhu_sadhvi_name: diksharthi.sadhu_sadhvi_name,
-                                  gender: diksharthi.gender,
-                                },
-                              })
-                            }
-                          >
-                            {diksharthi.family_details
-                              ? "Update Family Details"
-                              : "Add Family Details"}
-                          </button>
+                         
 
                           {getDiksharthiStatus(diksharthi) !== "send" && (
                             <button
