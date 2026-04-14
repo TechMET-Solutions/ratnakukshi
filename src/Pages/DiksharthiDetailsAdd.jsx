@@ -37,6 +37,21 @@ const initialFormData = {
   district: "",
   state: "",
   pinCode: "",
+  houseDetails: "",
+  typeOfHouse: "",
+  maintenanceCost: "",
+  rentCost: "",
+  lightBillCost: "",
+  mediclaim: null,
+  family_mediclaim_type: "",
+  Family_mediclaim_amount: "",
+  mediclaimPremiumAmount: "",
+  family_mediclaim_companyName: "",
+  ngoAssistance: null,
+  sanghName: "",
+  ngoAmount: "",
+  ngoFrequency: "",
+  ngoRemark: "",
   assistanceReceived: "",
   assistance: [], // checkbox ke liye array
   // family_relation: [], // checkbox ke liye array
@@ -62,6 +77,15 @@ const toInputDate = (value) => {
   const parsed = new Date(value);
   if (Number.isNaN(parsed.getTime())) return "";
   return parsed.toISOString().split("T")[0];
+};
+
+const toBooleanOrNull = (value) => {
+  if (value === null || value === undefined || value === "") return null;
+  if (typeof value === "boolean") return value;
+  const normalized = String(value).trim().toLowerCase();
+  if (["yes", "y", "true", "1"].includes(normalized)) return true;
+  if (["no", "n", "false", "0"].includes(normalized)) return false;
+  return null;
 };
 
 const mapDiksharthiToFormData = (record) => ({
@@ -92,6 +116,25 @@ const mapDiksharthiToFormData = (record) => ({
   taluka: record?.taluka || "",
   district: record?.district || "",
   state: record?.state || "",
+  houseDetails: record?.houseDetails || record?.house_details || "",
+  typeOfHouse: record?.typeOfHouse || record?.type_of_house || "",
+  maintenanceCost: record?.maintenanceCost || record?.maintenance_cost || "",
+  rentCost: record?.rentCost || record?.rent_cost || "",
+  lightBillCost: record?.lightBillCost || record?.light_bill_cost || "",
+  mediclaim: toBooleanOrNull(record?.mediclaim),
+  family_mediclaim_type:
+    record?.family_mediclaim_type || record?.Family_mediclaim_type || "",
+  Family_mediclaim_amount:
+    record?.Family_mediclaim_amount || record?.family_mediclaim_amount || "",
+  mediclaimPremiumAmount:
+    record?.mediclaimPremiumAmount || record?.mediclaim_premium_amount || "",
+  family_mediclaim_companyName:
+    record?.family_mediclaim_companyName || "",
+  ngoAssistance: toBooleanOrNull(record?.ngoAssistance || record?.ngo_assistance),
+  sanghName: record?.sanghName || record?.ngo_sangh_name || "",
+  ngoAmount: record?.ngoAmount || record?.ngo_amount || "",
+  ngoFrequency: record?.ngoFrequency || record?.ngo_frequency || "",
+  ngoRemark: record?.ngoRemark || record?.ngo_remark || "",
   assistance: record?.assistance,
   deselected_assistance: record?.deselected_assistance,
   pinCode: record?.pinCode || record?.pin_code || "",
@@ -103,7 +146,7 @@ const mapDiksharthiToFormData = (record) => ({
   summary: record?.summary || "",
 });
 
-const mapFormDataToApiPayload = (formData, userId) => ({
+const mapFormDataToApiPayload = (formData, userId, currentStep = 1) => ({
   user_id: userId || "",
   sadhu_sadhvi_name: formData.sadhu_sadhvi_name,
   dob: formData.dob,
@@ -133,9 +176,25 @@ const mapFormDataToApiPayload = (formData, userId) => ({
   district: formData.district,
   state: formData.state,
   pin_code: formData.pinCode,
+  house_details: formData.houseDetails,
+  type_of_house: formData.typeOfHouse,
+  maintenance_cost: formData.maintenanceCost,
+  rent_cost: formData.rentCost,
+  light_bill_cost: formData.lightBillCost,
+  mediclaim: formData.mediclaim,
+  Family_mediclaim_type: formData.family_mediclaim_type,
+  family_mediclaim_amount: formData.Family_mediclaim_amount,
+  mediclaim_premium_amount: formData.mediclaimPremiumAmount,
+  family_mediclaim_companyName: formData.family_mediclaim_companyName,
+  ngo_assistance: formData.ngoAssistance,
+  ngo_sangh_name: formData.sanghName,
+  ngo_amount: formData.ngoAmount,
+  ngo_frequency: formData.ngoFrequency,
+  ngo_remark: formData.ngoRemark,
   assistance: formData.assistance,
   assistance_received: formData.assistanceReceived,
   summary: formData.summary,
+  form_step: currentStep,
 
 });
 
@@ -173,6 +232,7 @@ const DiksharthiDetailsAdd = () => {
   const [isDiksharthiListLoading, setIsDiksharthiListLoading] = useState(false);
   const [diksharthiSearch, setDiksharthiSearch] = useState("");
   const [selectedSourceDiksharthi, setSelectedSourceDiksharthi] = useState(null);
+  const [currentStep, setCurrentStep] = useState(1);
 
   const [postOffices, setPostOffices] = useState([]);
   const rbfMandatoryFields = [
@@ -250,6 +310,7 @@ const DiksharthiDetailsAdd = () => {
         const result = await response.json().catch(() => ({}));
         if (!response.ok || !result?.data) throw new Error("Fetch failed");
         setFormData(mapDiksharthiToFormData(result?.data));
+        setCurrentStep(Number(result?.data?.form_step) || 1);
       } catch (error) {
         console.error(error);
       } finally {
@@ -305,6 +366,36 @@ const DiksharthiDetailsAdd = () => {
         district: selected?.district || prev.district || "",
         state: selected?.state || prev.state || "",
         pinCode: selected?.pin_code || selected?.pinCode || prev.pinCode || "",
+        houseDetails: selected?.house_details || selected?.houseDetails || prev.houseDetails || "",
+        typeOfHouse: selected?.type_of_house || selected?.typeOfHouse || prev.typeOfHouse || "",
+        maintenanceCost: selected?.maintenance_cost || selected?.maintenanceCost || prev.maintenanceCost || "",
+        rentCost: selected?.rent_cost || selected?.rentCost || prev.rentCost || "",
+        lightBillCost: selected?.light_bill_cost || selected?.lightBillCost || prev.lightBillCost || "",
+        mediclaim: toBooleanOrNull(selected?.mediclaim ?? prev.mediclaim),
+        family_mediclaim_type:
+          selected?.Family_mediclaim_type ||
+          selected?.family_mediclaim_type ||
+          prev.family_mediclaim_type ||
+          "",
+        Family_mediclaim_amount:
+          selected?.family_mediclaim_amount ||
+          selected?.Family_mediclaim_amount ||
+          prev.Family_mediclaim_amount ||
+          "",
+        mediclaimPremiumAmount:
+          selected?.mediclaim_premium_amount ||
+          selected?.mediclaimPremiumAmount ||
+          prev.mediclaimPremiumAmount ||
+          "",
+        family_mediclaim_companyName:
+          selected?.family_mediclaim_companyName ||
+          prev.family_mediclaim_companyName ||
+          "",
+        ngoAssistance: toBooleanOrNull(selected?.ngo_assistance ?? selected?.ngoAssistance ?? prev.ngoAssistance),
+        sanghName: selected?.ngo_sangh_name || selected?.sanghName || prev.sanghName || "",
+        ngoAmount: selected?.ngo_amount || selected?.ngoAmount || prev.ngoAmount || "",
+        ngoFrequency: selected?.ngo_frequency || selected?.ngoFrequency || prev.ngoFrequency || "",
+        ngoRemark: selected?.ngo_remark || selected?.ngoRemark || prev.ngoRemark || "",
       };
 
       if (String(nextState.pinCode || "").length === 6) {
@@ -477,6 +568,14 @@ const DiksharthiDetailsAdd = () => {
       newErrors.viharLocation = "Required";
     }
 
+    if (
+      formData.mediclaim === true &&
+      Number(formData.mediclaimPremiumAmount || 0) >
+      Number(formData.Family_mediclaim_amount || 0)
+    ) {
+      newErrors.mediclaimPremiumAmount = "Premium amount cannot exceed cover amount";
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -490,7 +589,7 @@ const DiksharthiDetailsAdd = () => {
         return;
       }
       const data = new FormData();
-      const payload = mapFormDataToApiPayload(formData, loggedInUserId);
+      const payload = mapFormDataToApiPayload(formData, loggedInUserId, currentStep);
       Object.entries(payload).forEach(([key, value]) => {
         data.append(key, value ?? "");
       });
@@ -517,6 +616,22 @@ const DiksharthiDetailsAdd = () => {
       console.error(error);
       alert("Error saving data");
     }
+  };
+
+  const stepTitles = [
+    "Diksharti Details",
+    "Family Details",
+    "Address and House Details",
+    "Mediclaims and NGO",
+    "Summary",
+  ];
+
+  const goToNextStep = () => {
+    setCurrentStep((prev) => Math.min(prev + 1, stepTitles.length));
+  };
+
+  const goToPreviousStep = () => {
+    setCurrentStep((prev) => Math.max(prev - 1, 1));
   };
 
 
@@ -625,7 +740,31 @@ const DiksharthiDetailsAdd = () => {
           )}
         </div> */}
 
-        <div className="grid grid-cols-4 gap-6 mt-5">
+        <div className="mb-6">
+          <div className="flex flex-wrap gap-2">
+            {stepTitles.map((title, index) => {
+              const stepNumber = index + 1;
+              const isActive = currentStep === stepNumber;
+              return (
+                <button
+                  key={title}
+                  type="button"
+                  onClick={() => setCurrentStep(stepNumber)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-semibold border ${isActive
+                    ? "bg-[#ECB000] text-white border-[#ECB000]"
+                    : "bg-white text-slate-600 border-slate-300"
+                    }`}
+                >
+                  {stepNumber}. {title}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mt-5">
+          {currentStep === 1 && (
+            <>
           {/* Name */}
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Name of P. Pujya. Sadhu/ Sadhvi Ji <span className="text-red-500">*</span></label>
@@ -756,7 +895,11 @@ const DiksharthiDetailsAdd = () => {
               onChange={(e) => setPhoto(e.target.files[0])}
               className="w-full p-2 border border-slate-300 rounded-md" />
           </div>
+            </>
+          )}
 
+          {currentStep === 2 && (
+            <>
 
           {/* RBF Criteria */}
           <div>
@@ -879,6 +1022,11 @@ const DiksharthiDetailsAdd = () => {
               {errors.altMobileNo && <p className="text-red-500 text-xs">{errors.altMobileNo}</p>}
             </div>
           )}
+            </>
+          )}
+
+          {currentStep === 3 && (
+            <>
 
           {formData.rbfCriteria === "Yes" && (
             <>
@@ -1007,6 +1155,256 @@ const DiksharthiDetailsAdd = () => {
               {errors.state && <p className="text-red-500 text-xs">{errors.state}</p>}
             </div>
           )}
+
+          {formData.rbfCriteria === "Yes" && (
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">
+                House <span className="text-red-500">*</span>
+              </label>
+              <div className="flex gap-4 mt-2">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="houseDetails"
+                    value="own"
+                    checked={formData.houseDetails === "own"}
+                    onChange={handleChange}
+                  />
+                  Own
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="houseDetails"
+                    value="rented"
+                    checked={formData.houseDetails === "rented"}
+                    onChange={handleChange}
+                  />
+                  Rented
+                </label>
+              </div>
+            </div>
+          )}
+
+          {formData.rbfCriteria === "Yes" && (
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Type Of House</label>
+              <input
+                name="typeOfHouse"
+                value={formData.typeOfHouse}
+                onChange={handleChange}
+                type="text"
+                placeholder="e.g. Apartment, Villa"
+                className="w-full p-2 border border-slate-300 rounded-md outline-none"
+              />
+            </div>
+          )}
+
+          {formData.rbfCriteria === "Yes" && formData.houseDetails === "own" && (
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Maintenance Cost (Monthly)</label>
+              <input
+                name="maintenanceCost"
+                value={formData.maintenanceCost}
+                onChange={handleChange}
+                type="number"
+                className="w-full p-2 border border-slate-300 rounded-md outline-none"
+              />
+            </div>
+          )}
+
+          {formData.rbfCriteria === "Yes" && formData.houseDetails === "rented" && (
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Rent Cost (Monthly)</label>
+              <input
+                name="rentCost"
+                value={formData.rentCost}
+                onChange={handleChange}
+                type="number"
+                className="w-full p-2 border border-slate-300 rounded-md outline-none"
+              />
+            </div>
+          )}
+
+          {formData.rbfCriteria === "Yes" && (
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Light Bill Cost</label>
+              <input
+                name="lightBillCost"
+                value={formData.lightBillCost}
+                onChange={handleChange}
+                type="number"
+                className="w-full p-2 border border-slate-300 rounded-md outline-none"
+              />
+            </div>
+          )}
+            </>
+          )}
+
+          {currentStep === 4 && (
+            <>
+          {formData.rbfCriteria === "Yes" && (
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">
+                Does the family have any Mediclaim policy?
+              </label>
+              <div className="flex gap-4 mt-2">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="mediclaim"
+                    checked={formData.mediclaim === true}
+                    onChange={() => setFormData((prev) => ({ ...prev, mediclaim: true }))}
+                  />
+                  Yes
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="mediclaim"
+                    checked={formData.mediclaim === false}
+                    onChange={() => setFormData((prev) => ({ ...prev, mediclaim: false }))}
+                  />
+                  No
+                </label>
+              </div>
+            </div>
+          )}
+
+          {formData.rbfCriteria === "Yes" && (
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">
+                Is any Sangh/NGO assistance received?
+              </label>
+              <div className="flex gap-4 mt-2">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="ngoAssistance"
+                    checked={formData.ngoAssistance === true}
+                    onChange={() => setFormData((prev) => ({ ...prev, ngoAssistance: true }))}
+                  />
+                  Yes
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="ngoAssistance"
+                    checked={formData.ngoAssistance === false}
+                    onChange={() => setFormData((prev) => ({ ...prev, ngoAssistance: false }))}
+                  />
+                  No
+                </label>
+              </div>
+            </div>
+          )}
+
+          {formData.rbfCriteria === "Yes" && formData.mediclaim === true && (
+            <>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Mediclaim Type</label>
+                <select
+                  name="family_mediclaim_type"
+                  value={formData.family_mediclaim_type || ""}
+                  onChange={handleChange}
+                  className="w-full p-2 border border-slate-300 rounded-md outline-none"
+                >
+                  <option value="">Select Type</option>
+                  <option value="single">Single</option>
+                  <option value="joint">Joint</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Family Mediclaim Policy Amount</label>
+                <input
+                  name="Family_mediclaim_amount"
+                  value={formData.Family_mediclaim_amount || ""}
+                  onChange={handleChange}
+                  type="number"
+                  className="w-full p-2 border border-slate-300 rounded-md outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Mediclaim Premium Amount</label>
+                <input
+                  name="mediclaimPremiumAmount"
+                  value={formData.mediclaimPremiumAmount || ""}
+                  onChange={handleChange}
+                  type="number"
+                  className="w-full p-2 border border-slate-300 rounded-md outline-none"
+                />
+                {errors.mediclaimPremiumAmount && (
+                  <p className="text-red-500 text-xs">{errors.mediclaimPremiumAmount}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Mediclaim Company Name</label>
+                <input
+                  name="family_mediclaim_companyName"
+                  value={formData.family_mediclaim_companyName || ""}
+                  onChange={handleChange}
+                  type="text"
+                  className="w-full p-2 border border-slate-300 rounded-md outline-none"
+                />
+              </div>
+            </>
+          )}
+
+          {formData.rbfCriteria === "Yes" && formData.ngoAssistance === true && (
+            <>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Sangh Name</label>
+                <input
+                  name="sanghName"
+                  value={formData.sanghName || ""}
+                  onChange={handleChange}
+                  type="text"
+                  className="w-full p-2 border border-slate-300 rounded-md outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Amount</label>
+                <input
+                  name="ngoAmount"
+                  value={formData.ngoAmount || ""}
+                  onChange={handleChange}
+                  type="number"
+                  className="w-full p-2 border border-slate-300 rounded-md outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Frequency</label>
+                <select
+                  name="ngoFrequency"
+                  value={formData.ngoFrequency || ""}
+                  onChange={handleChange}
+                  className="w-full p-2 border border-slate-300 rounded-md outline-none"
+                >
+                  <option value="">Select Frequency</option>
+                  <option value="Monthly">Monthly</option>
+                  <option value="Quarterly">Quarterly</option>
+                  <option value="Annually">Annually</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Details / Remark</label>
+                <textarea
+                  name="ngoRemark"
+                  value={formData.ngoRemark || ""}
+                  onChange={handleChange}
+                  rows={2}
+                  className="w-full p-2 border border-slate-300 rounded-md outline-none resize-none"
+                />
+              </div>
+            </>
+          )}
+
           {formData.rbfCriteria === "Yes" && (
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -1056,7 +1454,6 @@ const DiksharthiDetailsAdd = () => {
                 className="w-full p-2 border border-slate-300 rounded-md" />
             </div>
           )}
-        </div>
 
         {formData.assistanceReceived === "Yes" && (
           <div className="my-6">
@@ -1089,7 +1486,11 @@ const DiksharthiDetailsAdd = () => {
             </div>
           </div>
         )}
+            </>
+          )}
 
+          {currentStep === 5 && (
+            <>
 
         <div className="col-span-4">
           <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -1132,10 +1533,39 @@ const DiksharthiDetailsAdd = () => {
             </>
           ) : null}
         </div>
-
+            </>
+          )}
+        </div>
         <div className="p-6 flex justify-between items-center bg-white mt-4">
           <button onClick={() => navigate(-1)} className="bg-[#fbc02d] text-white px-10 py-2 rounded font-bold uppercase text-sm">Cancel</button>
-          <button onClick={handleSave} className="bg-[#fbc02d] text-white px-10 py-2 rounded font-bold uppercase text-sm">{isEditMode ? "Update" : "Save"}</button>
+          <div className="flex items-center gap-2">
+            {currentStep > 1 && (
+              <button
+                type="button"
+                onClick={goToPreviousStep}
+                className="bg-slate-500 text-white px-6 py-2 rounded font-bold uppercase text-sm"
+              >
+                Previous
+              </button>
+            )}
+            {currentStep < stepTitles.length ? (
+              <button
+                type="button"
+                onClick={goToNextStep}
+                className="bg-[#fbc02d] text-white px-10 py-2 rounded font-bold uppercase text-sm"
+              >
+                Next
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={handleSave}
+                className="bg-[#fbc02d] text-white px-10 py-2 rounded font-bold uppercase text-sm"
+              >
+                {isEditMode ? "Update" : "Save"}
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>
