@@ -107,6 +107,48 @@ const parseMaybeJsonObject = (value, fallback = {}) => {
   }
 };
 
+const normalizeRelationValue = (value) => {
+  const raw = String(value || "").trim();
+  if (!raw) return "";
+  const cleaned = raw.replace(/^[\[\{"'\s]+|[\]\}"'\s]+$/g, "");
+  if (!cleaned) return "";
+  const matched = RELATIONS.find(
+    (item) => String(item?.value || "").toLowerCase() === cleaned.toLowerCase()
+  );
+  return matched?.value || cleaned;
+};
+
+const parseFamilyRelations = (value) => {
+  if (Array.isArray(value)) {
+    return Array.from(
+      new Set(value.map(normalizeRelationValue).filter(Boolean))
+    );
+  }
+
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) return [];
+    if (trimmed.startsWith("[") || trimmed.startsWith("{")) {
+      const parsed = parseMaybeJsonObject(trimmed, null);
+      if (Array.isArray(parsed)) {
+        return Array.from(
+          new Set(parsed.map(normalizeRelationValue).filter(Boolean))
+        );
+      }
+    }
+    return Array.from(
+      new Set(
+        trimmed
+          .split(",")
+          .map((item) => normalizeRelationValue(item))
+          .filter(Boolean)
+      )
+    );
+  }
+
+  return [];
+};
+
 const createEmptyFamilyRelationDetails = (overrides = {}) => ({
   firstName: "",
   lastName: "",
@@ -144,24 +186,19 @@ const getPrimaryFamilyMember = (formData) => {
 };
 
 const mapDiksharthiToFormData = (record) => {
-  const rawRelations = String(record?.family_relation || "")
-    .split(",")
-    .map((item) => item.trim())
-    .filter(Boolean);
+  const rawRelations = parseFamilyRelations(record?.family_relation);
 
-  const relationDetailsFromRecord = parseMaybeJsonObject(
-    record?.family_relation_details_json,
-    {}
-  );
   const relationDetailsFromFamily = parseMaybeJsonObject(
     record?.family_details?.relationDetails,
     {}
   );
 
   const mergedDetails = {};
-  Object.entries({ ...relationDetailsFromRecord, ...relationDetailsFromFamily }).forEach(
+  Object.entries(relationDetailsFromFamily).forEach(
     ([key, value]) => {
-      mergedDetails[key] = createEmptyFamilyRelationDetails({
+      const normalizedKey = normalizeRelationValue(key);
+      if (!normalizedKey) return;
+      mergedDetails[normalizedKey] = createEmptyFamilyRelationDetails({
         firstName: value?.firstName || "",
         lastName: value?.lastName || "",
         mobileNumber: value?.mobileNumber || value?.mobile_no || "",
@@ -205,7 +242,7 @@ const mapDiksharthiToFormData = (record) => {
     }
   );
 
-  const inferredRelation = record?.relation || "";
+  const inferredRelation = normalizeRelationValue(record?.relation || "");
   const familyRelations = Array.from(
     new Set([
       ...rawRelations,
@@ -242,7 +279,7 @@ const mapDiksharthiToFormData = (record) => {
     fanIdExists: record?.fan_id ? "Yes" : "",
     fan_id: record?.fan_id || "",
     sameRelationsWithFan: false,
-    relation: record?.relation || "",
+    relation: inferredRelation,
     relation_name: record?.relation_name || "",
     isMarried: record?.isMarried || record?.is_married || "",
     family_member_firstName: record?.family_member_firstName || "",
@@ -314,7 +351,7 @@ const mapFormDataToApiPayload = (formData, userId, currentStep = 1) => {
       primaryMember?.details?.mobileNumber || formData.mobileNo,
     family_relation:
       Array.isArray(formData?.familyRelations) ? formData.familyRelations : [],
-    family_relation_details_json: JSON.stringify(formData?.familyRelationDetails || {}),
+    family_relation_details: JSON.stringify(formData?.familyRelationDetails || {}),
     alt_mobile_no: formData.altMobileNo,
     permanent_address: formData.permanentAddress,
     current_address: formData.currentAddress,
@@ -489,7 +526,7 @@ const DiksharthiDetailsAdd = () => {
     fetchAllDiksharthi();
   }, [editId]);
 
-  const handleSelectSourceDiksharthi = (selected) => {
+  const handleSelectSourceDiksharthi = async (selected) => {
     if (!selected) return;
 
     setSelectedSourceDiksharthi(selected);
@@ -497,16 +534,23 @@ const DiksharthiDetailsAdd = () => {
       `${selected?.sadhu_sadhvi_name || ""} (${selected?.diksharthi_code || selected?.id || ""})`
     );
 
+    let sourceFamilyData = {};
+    try {
+      const familyResponse = await axios.get(`${API}/api/family-details/${selected?.id}`);
+      sourceFamilyData = familyResponse?.data?.data?.[0] || {};
+    } catch (_error) {
+      sourceFamilyData = {};
+    }
+
     setFormData((prev) => {
-      const selectedRelations = String(selected?.family_relation || "")
-        .split(",")
-        .map((item) => item.trim())
-        .filter(Boolean);
+      const selectedRelations = parseFamilyRelations(selected?.family_relation);
       const selectedRelationDetails = parseMaybeJsonObject(
-        selected?.family_relation_details_json,
+        sourceFamilyData?.relationDetails,
         {}
       );
-      const relationSeed = selected?.relation || prev.relation || "";
+      const relationSeed = normalizeRelationValue(
+        selected?.relation || prev.relation || ""
+      );
       const normalizedRelations = Array.from(
         new Set([
           ...selectedRelations,
@@ -541,7 +585,10 @@ const DiksharthiDetailsAdd = () => {
       const nextState = {
         ...prev,
         rbfCriteria: "Yes",
-        relation: selected?.relation || prev.relation || "",
+        relation:
+          normalizeRelationValue(selected?.relation || "") ||
+          prev.relation ||
+          "",
         relation_name: selected?.relation_name || prev.relation_name || "",
         isMarried: selected?.is_married || selected?.isMarried || prev.isMarried || "",
         family_member_firstName: selected?.family_member_firstName || prev.family_member_firstName || "",
@@ -1078,60 +1125,72 @@ const DiksharthiDetailsAdd = () => {
     if (!formData?.sameRelationsWithFan) return;
     if (!fanSourceRecord) return;
 
-    const sourceRelations = String(fanSourceRecord?.family_relation || "")
-      .split(",")
-      .map((item) => item.trim())
-      .filter(Boolean);
-    const sourceRelationDetailsRaw = parseMaybeJsonObject(
-      fanSourceRecord?.family_relation_details_json,
-      {}
-    );
+    const applyFanRelations = async () => {
+      const sourceRelations = parseFamilyRelations(fanSourceRecord?.family_relation);
 
-    const mergedRelationDetails = {};
-    sourceRelations.forEach((relationKey) => {
-      const source = sourceRelationDetailsRaw?.[relationKey] || {};
-      mergedRelationDetails[relationKey] = createEmptyFamilyRelationDetails({
-        firstName: source?.firstName || "",
-        lastName: source?.lastName || "",
-        mobileNumber: source?.mobileNumber || "",
-        aadharNumber: source?.aadharNumber || "",
-        panNumber: source?.panNumber || "",
-        dob: toInputDate(source?.dob),
-        age: source?.age || "",
-        ayushmanCoverage: source?.ayushmanCoverage || "",
-        ayushmanAmount: source?.ayushmanAmount || source?.amount || "",
-        medicalPolicy: source?.medicalPolicy || "",
-        mediclaimAmount: source?.mediclaimAmount || "",
-        mediclaimPremiumAmount: source?.mediclaimPremiumAmount || "",
-        mediclaimCompanyName: source?.mediclaimCompanyName || "",
-        mediclaimType: source?.mediclaimType || source?.mediclaim_type || "",
-        needAssistance: source?.needAssistance || "",
-        assistanceCategories: Array.isArray(source?.assistanceCategories)
-          ? source.assistanceCategories
-          : [],
-      });
-    });
-
-    if (!sourceRelations.length && fanSourceRecord?.relation) {
-      const relationKey = String(fanSourceRecord.relation).trim();
-      if (relationKey) {
-        mergedRelationDetails[relationKey] = createEmptyFamilyRelationDetails({
-          firstName: fanSourceRecord?.family_member_firstName || "",
-          lastName: fanSourceRecord?.family_member_lastName || "",
-          mobileNumber: fanSourceRecord?.mobile_no || "",
-        });
-        sourceRelations.push(relationKey);
+      let sourceFamilyData = {};
+      try {
+        const familyResponse = await axios.get(
+          `${API}/api/family-details/${fanSourceRecord?.id}`
+        );
+        sourceFamilyData = familyResponse?.data?.data?.[0] || {};
+      } catch (_error) {
+        sourceFamilyData = {};
       }
-    }
 
-    if (!sourceRelations.length) return;
+      const sourceRelationDetailsRaw = parseMaybeJsonObject(
+        sourceFamilyData?.relationDetails,
+        {}
+      );
 
-    setFormData((prev) => ({
-      ...prev,
-      relation: prev?.relation || sourceRelations[0],
-      familyRelations: Array.from(new Set(sourceRelations)),
-      familyRelationDetails: mergedRelationDetails,
-    }));
+      const mergedRelationDetails = {};
+      sourceRelations.forEach((relationKey) => {
+        const source = sourceRelationDetailsRaw?.[relationKey] || {};
+        mergedRelationDetails[relationKey] = createEmptyFamilyRelationDetails({
+          firstName: source?.firstName || "",
+          lastName: source?.lastName || "",
+          mobileNumber: source?.mobileNumber || "",
+          aadharNumber: source?.aadharNumber || "",
+          panNumber: source?.panNumber || "",
+          dob: toInputDate(source?.dob),
+          age: source?.age || "",
+          ayushmanCoverage: source?.ayushmanCoverage || "",
+          ayushmanAmount: source?.ayushmanAmount || source?.amount || "",
+          medicalPolicy: source?.medicalPolicy || "",
+          mediclaimAmount: source?.mediclaimAmount || "",
+          mediclaimPremiumAmount: source?.mediclaimPremiumAmount || "",
+          mediclaimCompanyName: source?.mediclaimCompanyName || "",
+          mediclaimType: source?.mediclaimType || source?.mediclaim_type || "",
+          needAssistance: source?.needAssistance || "",
+          assistanceCategories: Array.isArray(source?.assistanceCategories)
+            ? source.assistanceCategories
+            : [],
+        });
+      });
+
+      if (!sourceRelations.length && fanSourceRecord?.relation) {
+        const relationKey = normalizeRelationValue(fanSourceRecord.relation);
+        if (relationKey) {
+          mergedRelationDetails[relationKey] = createEmptyFamilyRelationDetails({
+            firstName: fanSourceRecord?.family_member_firstName || "",
+            lastName: fanSourceRecord?.family_member_lastName || "",
+            mobileNumber: fanSourceRecord?.mobile_no || "",
+          });
+          sourceRelations.push(relationKey);
+        }
+      }
+
+      if (!sourceRelations.length) return;
+
+      setFormData((prev) => ({
+        ...prev,
+        relation: prev?.relation || sourceRelations[0],
+        familyRelations: Array.from(new Set(sourceRelations)),
+        familyRelationDetails: mergedRelationDetails,
+      }));
+    };
+
+    applyFanRelations();
   }, [formData?.sameRelationsWithFan, fanSourceRecord]);
 
   return (
