@@ -1998,7 +1998,7 @@ const DiksharthiDetailsAdd = () => {
           {currentStep === 4 && (
             <>
           {formData.rbfCriteria === "Yes" && (
-            <div>
+            <div className="col-span-1 md:col-span-2 xl:col-span-2 border border-slate-200 rounded-lg p-4 bg-slate-50">
               <label className="block text-sm font-medium text-slate-700 mb-1">
                 Does the family have any Mediclaim policy?
               </label>
@@ -2022,11 +2022,65 @@ const DiksharthiDetailsAdd = () => {
                   No
                 </label>
               </div>
+
+              {formData.mediclaim === true && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Mediclaim Type</label>
+                    <select
+                      name="family_mediclaim_type"
+                      value={formData.family_mediclaim_type || ""}
+                      onChange={handleChange}
+                      className="w-full p-2 border border-slate-300 rounded-md outline-none bg-white"
+                    >
+                      <option value="">Select Type</option>
+                      <option value="single">Single</option>
+                      <option value="joint">Joint</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Family Mediclaim Policy Amount</label>
+                    <input
+                      name="Family_mediclaim_amount"
+                      value={formData.Family_mediclaim_amount || ""}
+                      onChange={handleChange}
+                      type="number"
+                      className="w-full p-2 border border-slate-300 rounded-md outline-none bg-white"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Mediclaim Premium Amount</label>
+                    <input
+                      name="mediclaimPremiumAmount"
+                      value={formData.mediclaimPremiumAmount || ""}
+                      onChange={handleChange}
+                      type="number"
+                      className="w-full p-2 border border-slate-300 rounded-md outline-none bg-white"
+                    />
+                    {errors.mediclaimPremiumAmount && (
+                      <p className="text-red-500 text-xs">{errors.mediclaimPremiumAmount}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Mediclaim Company Name</label>
+                    <input
+                      name="family_mediclaim_companyName"
+                      value={formData.family_mediclaim_companyName || ""}
+                      onChange={handleChange}
+                      type="text"
+                      className="w-full p-2 border border-slate-300 rounded-md outline-none bg-white"
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
           {formData.rbfCriteria === "Yes" && (
-            <div>
+            <div className="col-span-1 md:col-span-2 xl:col-span-2 border border-slate-200 rounded-lg p-4 bg-slate-50">
               <label className="block text-sm font-medium text-slate-700 mb-1">
                 Is any Sangh/NGO assistance received?
               </label>
@@ -2050,113 +2104,59 @@ const DiksharthiDetailsAdd = () => {
                   No
                 </label>
               </div>
+
+              {formData.ngoAssistance === true && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Sangh Name</label>
+                    <input
+                      name="sanghName"
+                      value={formData.sanghName || ""}
+                      onChange={handleChange}
+                      type="text"
+                      className="w-full p-2 border border-slate-300 rounded-md outline-none bg-white"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Amount</label>
+                    <input
+                      name="ngoAmount"
+                      value={formData.ngoAmount || ""}
+                      onChange={handleChange}
+                      type="number"
+                      className="w-full p-2 border border-slate-300 rounded-md outline-none bg-white"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Frequency</label>
+                    <select
+                      name="ngoFrequency"
+                      value={formData.ngoFrequency || ""}
+                      onChange={handleChange}
+                      className="w-full p-2 border border-slate-300 rounded-md outline-none bg-white"
+                    >
+                      <option value="">Select Frequency</option>
+                      <option value="Monthly">Monthly</option>
+                      <option value="Quarterly">Quarterly</option>
+                      <option value="Annually">Annually</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Details / Remark</label>
+                    <textarea
+                      name="ngoRemark"
+                      value={formData.ngoRemark || ""}
+                      onChange={handleChange}
+                      rows={2}
+                      className="w-full p-2 border border-slate-300 rounded-md outline-none resize-none bg-white"
+                    />
+                  </div>
+                </div>
+              )}
             </div>
-          )}
-
-          {formData.rbfCriteria === "Yes" && formData.mediclaim === true && (
-            <>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Mediclaim Type</label>
-                <select
-                  name="family_mediclaim_type"
-                  value={formData.family_mediclaim_type || ""}
-                  onChange={handleChange}
-                  className="w-full p-2 border border-slate-300 rounded-md outline-none"
-                >
-                  <option value="">Select Type</option>
-                  <option value="single">Single</option>
-                  <option value="joint">Joint</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Family Mediclaim Policy Amount</label>
-                <input
-                  name="Family_mediclaim_amount"
-                  value={formData.Family_mediclaim_amount || ""}
-                  onChange={handleChange}
-                  type="number"
-                  className="w-full p-2 border border-slate-300 rounded-md outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Mediclaim Premium Amount</label>
-                <input
-                  name="mediclaimPremiumAmount"
-                  value={formData.mediclaimPremiumAmount || ""}
-                  onChange={handleChange}
-                  type="number"
-                  className="w-full p-2 border border-slate-300 rounded-md outline-none"
-                />
-                {errors.mediclaimPremiumAmount && (
-                  <p className="text-red-500 text-xs">{errors.mediclaimPremiumAmount}</p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Mediclaim Company Name</label>
-                <input
-                  name="family_mediclaim_companyName"
-                  value={formData.family_mediclaim_companyName || ""}
-                  onChange={handleChange}
-                  type="text"
-                  className="w-full p-2 border border-slate-300 rounded-md outline-none"
-                />
-              </div>
-            </>
-          )}
-
-          {formData.rbfCriteria === "Yes" && formData.ngoAssistance === true && (
-            <>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Sangh Name</label>
-                <input
-                  name="sanghName"
-                  value={formData.sanghName || ""}
-                  onChange={handleChange}
-                  type="text"
-                  className="w-full p-2 border border-slate-300 rounded-md outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Amount</label>
-                <input
-                  name="ngoAmount"
-                  value={formData.ngoAmount || ""}
-                  onChange={handleChange}
-                  type="number"
-                  className="w-full p-2 border border-slate-300 rounded-md outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Frequency</label>
-                <select
-                  name="ngoFrequency"
-                  value={formData.ngoFrequency || ""}
-                  onChange={handleChange}
-                  className="w-full p-2 border border-slate-300 rounded-md outline-none"
-                >
-                  <option value="">Select Frequency</option>
-                  <option value="Monthly">Monthly</option>
-                  <option value="Quarterly">Quarterly</option>
-                  <option value="Annually">Annually</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Details / Remark</label>
-                <textarea
-                  name="ngoRemark"
-                  value={formData.ngoRemark || ""}
-                  onChange={handleChange}
-                  rows={2}
-                  className="w-full p-2 border border-slate-300 rounded-md outline-none resize-none"
-                />
-              </div>
-            </>
           )}
 
           {formData.rbfCriteria === "Yes" && (
