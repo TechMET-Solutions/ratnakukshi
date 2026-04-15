@@ -1182,7 +1182,7 @@ const DiksharthiDetailsAdd = () => {
 
           {formData.fanIdExists === "Yes" && (
             <div className="col-span-1 md:col-span-2">
-              <label className="block text-sm font-medium text-slate-700 mb-1">Search FAN ID</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Search M.S. Name / F.A.N ID</label>
               <div className="relative">
                 <Search size={16} className="absolute left-3 top-3 text-slate-400" />
                 <input
@@ -1197,7 +1197,7 @@ const DiksharthiDetailsAdd = () => {
                       sameRelationsWithFan: false,
                     }));
                   }}
-                  placeholder="Type FAN ID..."
+                      placeholder="Type  M.S. Name / F.A.N ID..."
                   className="w-full pl-9 pr-10 py-2 border border-slate-300 rounded-md outline-none"
                 />
                 {fanIdSearch && (
@@ -1245,7 +1245,7 @@ const DiksharthiDetailsAdd = () => {
               <label className="block text-sm font-medium text-slate-700 mb-1">FAN ID</label>
               <input
                 type="text"
-                value="Will be auto-generated (RBF/YY/0001)"
+                value="Will be Auto-Generated"
                 readOnly
                 className="w-full p-2 border border-slate-300 rounded-md outline-none bg-gray-100 text-gray-600"
               />
@@ -2159,7 +2159,7 @@ const DiksharthiDetailsAdd = () => {
             </div>
           )}
 
-          {formData.rbfCriteria === "Yes" && (
+          {/* {formData.rbfCriteria === "Yes" && (
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">
                 RBF Assistance Required ? <span className="text-red-500">*</span>
@@ -2193,7 +2193,7 @@ const DiksharthiDetailsAdd = () => {
                 <p className="text-red-500 text-xs">{errors.assistanceReceived}</p>
               )}
             </div>
-          )}
+          )} */}
 
 
 
