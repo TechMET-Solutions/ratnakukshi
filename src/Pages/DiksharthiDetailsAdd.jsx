@@ -116,8 +116,14 @@ const createEmptyFamilyRelationDetails = (overrides = {}) => ({
   dob: "",
   age: "",
   ayushmanCoverage: "",
+  ayushmanAmount: "",
   medicalPolicy: "",
+  mediclaimAmount: "",
+  mediclaimPremiumAmount: "",
+  mediclaimCompanyName: "",
+  mediclaimType: "",
   needAssistance: "",
+  assistanceCategories: [],
   ...overrides,
 });
 
@@ -171,6 +177,7 @@ const mapDiksharthiToFormData = (record) => {
               : "No"
             : value?.ayushman) ||
           "",
+        ayushmanAmount: value?.ayushmanAmount || value?.amount || "",
         medicalPolicy:
           value?.medicalPolicy ||
           (typeof value?.mediclaim === "boolean"
@@ -179,6 +186,10 @@ const mapDiksharthiToFormData = (record) => {
               : "No"
             : value?.mediclaim) ||
           "",
+        mediclaimAmount: value?.mediclaimAmount || "",
+        mediclaimPremiumAmount: value?.mediclaimPremiumAmount || "",
+        mediclaimCompanyName: value?.mediclaimCompanyName || "",
+        mediclaimType: value?.mediclaimType || value?.mediclaim_type || "",
         needAssistance:
           value?.needAssistance ||
           (typeof value?.need_assistance === "boolean"
@@ -187,6 +198,9 @@ const mapDiksharthiToFormData = (record) => {
               : "No"
             : value?.need_assistance) ||
           "",
+        assistanceCategories: Array.isArray(value?.assistanceCategories)
+          ? value.assistanceCategories
+          : [],
       });
     }
   );
@@ -996,8 +1010,16 @@ const DiksharthiDetailsAdd = () => {
         dob: toInputDate(source?.dob),
         age: source?.age || "",
         ayushmanCoverage: source?.ayushmanCoverage || "",
+        ayushmanAmount: source?.ayushmanAmount || source?.amount || "",
         medicalPolicy: source?.medicalPolicy || "",
+        mediclaimAmount: source?.mediclaimAmount || "",
+        mediclaimPremiumAmount: source?.mediclaimPremiumAmount || "",
+        mediclaimCompanyName: source?.mediclaimCompanyName || "",
+        mediclaimType: source?.mediclaimType || source?.mediclaim_type || "",
         needAssistance: source?.needAssistance || "",
+        assistanceCategories: Array.isArray(source?.assistanceCategories)
+          ? source.assistanceCategories
+          : [],
       });
     });
 
@@ -1576,41 +1598,166 @@ const DiksharthiDetailsAdd = () => {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Ayushman Coverage</label>
-                      <select
-                        value={details?.ayushmanCoverage || ""}
-                        onChange={(e) => handleFamilyRelationDetailChange(relationKey, "ayushmanCoverage", e.target.value)}
-                        className="w-full p-2 border border-slate-300 rounded-md outline-none"
-                      >
-                        <option value="">Select</option>
-                        <option value="Yes">Yes</option>
-                        <option value="No">No</option>
-                      </select>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Does this person have Ayushman coverage?</label>
+                      <div className="flex gap-4 mt-2">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="radio"
+                            name={`ayushmanCoverage_${relationKey}`}
+                            value="Yes"
+                            checked={details?.ayushmanCoverage === "Yes"}
+                            onChange={(e) => handleFamilyRelationDetailChange(relationKey, "ayushmanCoverage", e.target.value)}
+                          />
+                          Yes
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="radio"
+                            name={`ayushmanCoverage_${relationKey}`}
+                            value="No"
+                            checked={details?.ayushmanCoverage === "No"}
+                            onChange={(e) => handleFamilyRelationDetailChange(relationKey, "ayushmanCoverage", e.target.value)}
+                          />
+                          No
+                        </label>
+                      </div>
                     </div>
+                    {details?.ayushmanCoverage === "Yes" && (
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">Do they have any Mediclaim policy?*</label>
+                        <input
+                          type="number"
+                          value={details?.ayushmanAmount || ""}
+                          onChange={(e) => handleFamilyRelationDetailChange(relationKey, "ayushmanAmount", e.target.value)}
+                          className="w-full p-2 border border-slate-300 rounded-md outline-none"
+                        />
+                      </div>
+                    )}
                     <div>
                       <label className="block text-sm font-medium text-slate-700 mb-1">Medical Policy</label>
-                      <select
-                        value={details?.medicalPolicy || ""}
-                        onChange={(e) => handleFamilyRelationDetailChange(relationKey, "medicalPolicy", e.target.value)}
-                        className="w-full p-2 border border-slate-300 rounded-md outline-none"
-                      >
-                        <option value="">Select</option>
-                        <option value="Yes">Yes</option>
-                        <option value="No">No</option>
-                      </select>
+                      <div className="flex gap-4 mt-2">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="radio"
+                            name={`medicalPolicy_${relationKey}`}
+                            value="Yes"
+                            checked={details?.medicalPolicy === "Yes"}
+                            onChange={(e) => handleFamilyRelationDetailChange(relationKey, "medicalPolicy", e.target.value)}
+                          />
+                          Yes
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="radio"
+                            name={`medicalPolicy_${relationKey}`}
+                            value="No"
+                            checked={details?.medicalPolicy === "No"}
+                            onChange={(e) => handleFamilyRelationDetailChange(relationKey, "medicalPolicy", e.target.value)}
+                          />
+                          No
+                        </label>
+                      </div>
                     </div>
+                    {details?.medicalPolicy === "Yes" && (
+                      <>
+                        <div>
+                          <label className="block text-sm font-medium text-slate-700 mb-1">Mediclaim Amount</label>
+                          <input
+                            type="number"
+                            value={details?.mediclaimAmount || ""}
+                            onChange={(e) => handleFamilyRelationDetailChange(relationKey, "mediclaimAmount", e.target.value)}
+                            className="w-full p-2 border border-slate-300 rounded-md outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-slate-700 mb-1">Yearly Premium Amount</label>
+                          <input
+                            type="number"
+                            value={details?.mediclaimPremiumAmount || ""}
+                            onChange={(e) => handleFamilyRelationDetailChange(relationKey, "mediclaimPremiumAmount", e.target.value)}
+                            className="w-full p-2 border border-slate-300 rounded-md outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-slate-700 mb-1">Mediclaim Company Name</label>
+                          <input
+                            type="text"
+                            value={details?.mediclaimCompanyName || ""}
+                            onChange={(e) => handleFamilyRelationDetailChange(relationKey, "mediclaimCompanyName", e.target.value)}
+                            className="w-full p-2 border border-slate-300 rounded-md outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-slate-700 mb-1">Mediclaim Type</label>
+                          <select
+                            value={details?.mediclaimType || ""}
+                            onChange={(e) => handleFamilyRelationDetailChange(relationKey, "mediclaimType", e.target.value)}
+                            className="w-full p-2 border border-slate-300 rounded-md outline-none"
+                          >
+                            <option value="">Select</option>
+                            <option value="single">Single</option>
+                            <option value="joint">Joint</option>
+                          </select>
+                        </div>
+                      </>
+                    )}
                     <div>
                       <label className="block text-sm font-medium text-slate-700 mb-1">Need Assistance</label>
-                      <select
-                        value={details?.needAssistance || ""}
-                        onChange={(e) => handleFamilyRelationDetailChange(relationKey, "needAssistance", e.target.value)}
-                        className="w-full p-2 border border-slate-300 rounded-md outline-none"
-                      >
-                        <option value="">Select</option>
-                        <option value="Yes">Yes</option>
-                        <option value="No">No</option>
-                      </select>
+                      <div className="flex gap-4 mt-2">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="radio"
+                            name={`needAssistance_${relationKey}`}
+                            value="Yes"
+                            checked={details?.needAssistance === "Yes"}
+                            onChange={(e) => handleFamilyRelationDetailChange(relationKey, "needAssistance", e.target.value)}
+                          />
+                          Yes
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="radio"
+                            name={`needAssistance_${relationKey}`}
+                            value="No"
+                            checked={details?.needAssistance === "No"}
+                            onChange={(e) => handleFamilyRelationDetailChange(relationKey, "needAssistance", e.target.value)}
+                          />
+                          No
+                        </label>
+                      </div>
                     </div>
+                    {details?.needAssistance === "Yes" && (
+                      <div className="md:col-span-2 xl:col-span-4">
+                        <label className="block text-sm font-medium text-slate-700 mb-2">Assistances</label>
+                        <div className="flex flex-wrap gap-4">
+                          {assistanceTypes.map((type) => {
+                            const selectedCategories = Array.isArray(details?.assistanceCategories)
+                              ? details.assistanceCategories
+                              : [];
+                            const checked = selectedCategories.includes(type);
+                            return (
+                              <label key={`${relationKey}_${type}`} className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={checked}
+                                  onChange={(e) => {
+                                    const nextCategories = e.target.checked
+                                      ? [...selectedCategories, type]
+                                      : selectedCategories.filter((item) => item !== type);
+                                    handleFamilyRelationDetailChange(
+                                      relationKey,
+                                      "assistanceCategories",
+                                      nextCategories
+                                    );
+                                  }}
+                                />
+                                {type}
+                              </label>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               );
