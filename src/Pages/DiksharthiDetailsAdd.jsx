@@ -26,6 +26,7 @@ const initialFormData = {
   relation: "",
   fanIdExists: "",
   fan_id: "",
+  sameRelationsWithFan: false,
   relation_name: "",   // ✅ add this
   isMarried: "",       // add this
   familyRelations: [],
@@ -226,6 +227,7 @@ const mapDiksharthiToFormData = (record) => {
     rbfCriteria: record?.rbfCriteria || record?.rbf_criteria || "",
     fanIdExists: record?.fan_id ? "Yes" : "",
     fan_id: record?.fan_id || "",
+    sameRelationsWithFan: false,
     relation: record?.relation || "",
     relation_name: record?.relation_name || "",
     isMarried: record?.isMarried || record?.is_married || "",
@@ -286,6 +288,7 @@ const mapFormDataToApiPayload = (formData, userId, currentStep = 1) => {
     rbf_criteria: formData.rbfCriteria,
     fan_id_exists: formData.fanIdExists || null,
     fan_id: formData.fan_id || null,
+    same_relations_with_fan: formData.sameRelationsWithFan ? "Yes" : "No",
     relation: formData.relation,
     relation_name: formData.relation_name || null,
     is_married: formData.isMarried || null,
@@ -631,6 +634,7 @@ const DiksharthiDetailsAdd = () => {
       if (name === "fanIdExists") {
         if (sanitizedValue === "No") {
           nextState.fan_id = "";
+          nextState.sameRelationsWithFan = false;
           setFanIdSearch("");
         }
         if (sanitizedValue === "Yes" && prev?.fan_id) {
@@ -855,6 +859,7 @@ const DiksharthiDetailsAdd = () => {
   });
 
   const handleFamilyRelationToggle = (relationValue) => {
+    if (formData?.sameRelationsWithFan) return;
     setFormData((prev) => {
       const prevRelations = Array.isArray(prev?.familyRelations)
         ? prev.familyRelations
@@ -886,6 +891,7 @@ const DiksharthiDetailsAdd = () => {
   };
 
   const handleFamilyRelationDetailChange = (relationValue, fieldName, rawValue) => {
+    if (formData?.sameRelationsWithFan) return;
     let nextValue = rawValue;
     if (fieldName === "mobileNumber") {
       nextValue = String(rawValue || "").replace(/\D/g, "").slice(0, 10);
@@ -955,6 +961,67 @@ const DiksharthiDetailsAdd = () => {
       )
       .slice(0, 8)
     : [];
+
+  const fanSourceRecord =
+    formData?.fan_id && String(formData.fan_id || "").trim()
+      ? (allDiksharthi || []).find(
+        (item) =>
+          String(item?.fan_id || "").trim() === String(formData.fan_id || "").trim() &&
+          String(item?.id || "") !== String(editId || "")
+      ) || null
+      : null;
+
+  useEffect(() => {
+    if (!formData?.sameRelationsWithFan) return;
+    if (!fanSourceRecord) return;
+
+    const sourceRelations = String(fanSourceRecord?.family_relation || "")
+      .split(",")
+      .map((item) => item.trim())
+      .filter(Boolean);
+    const sourceRelationDetailsRaw = parseMaybeJsonObject(
+      fanSourceRecord?.family_relation_details_json,
+      {}
+    );
+
+    const mergedRelationDetails = {};
+    sourceRelations.forEach((relationKey) => {
+      const source = sourceRelationDetailsRaw?.[relationKey] || {};
+      mergedRelationDetails[relationKey] = createEmptyFamilyRelationDetails({
+        firstName: source?.firstName || "",
+        lastName: source?.lastName || "",
+        mobileNumber: source?.mobileNumber || "",
+        aadharNumber: source?.aadharNumber || "",
+        panNumber: source?.panNumber || "",
+        dob: toInputDate(source?.dob),
+        age: source?.age || "",
+        ayushmanCoverage: source?.ayushmanCoverage || "",
+        medicalPolicy: source?.medicalPolicy || "",
+        needAssistance: source?.needAssistance || "",
+      });
+    });
+
+    if (!sourceRelations.length && fanSourceRecord?.relation) {
+      const relationKey = String(fanSourceRecord.relation).trim();
+      if (relationKey) {
+        mergedRelationDetails[relationKey] = createEmptyFamilyRelationDetails({
+          firstName: fanSourceRecord?.family_member_firstName || "",
+          lastName: fanSourceRecord?.family_member_lastName || "",
+          mobileNumber: fanSourceRecord?.mobile_no || "",
+        });
+        sourceRelations.push(relationKey);
+      }
+    }
+
+    if (!sourceRelations.length) return;
+
+    setFormData((prev) => ({
+      ...prev,
+      relation: prev?.relation || sourceRelations[0],
+      familyRelations: Array.from(new Set(sourceRelations)),
+      familyRelationDetails: mergedRelationDetails,
+    }));
+  }, [formData?.sameRelationsWithFan, fanSourceRecord]);
 
   return (
     <div className="min-h-full bg-gray-50 flex p-6 justify-center">
@@ -1102,7 +1169,11 @@ const DiksharthiDetailsAdd = () => {
                   onChange={(e) => {
                     const value = e.target.value;
                     setFanIdSearch(value);
-                    setFormData((prev) => ({ ...prev, fan_id: value.trim() }));
+                    setFormData((prev) => ({
+                      ...prev,
+                      fan_id: value.trim(),
+                      sameRelationsWithFan: false,
+                    }));
                   }}
                   placeholder="Type FAN ID..."
                   className="w-full pl-9 pr-10 py-2 border border-slate-300 rounded-md outline-none"
@@ -1112,7 +1183,7 @@ const DiksharthiDetailsAdd = () => {
                     type="button"
                     onClick={() => {
                       setFanIdSearch("");
-                      setFormData((prev) => ({ ...prev, fan_id: "" }));
+                      setFormData((prev) => ({ ...prev, fan_id: "", sameRelationsWithFan: false }));
                     }}
                     className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600"
                   >
@@ -1130,7 +1201,11 @@ const DiksharthiDetailsAdd = () => {
                       type="button"
                       onClick={() => {
                         setFanIdSearch(item.fan_id);
-                        setFormData((prev) => ({ ...prev, fan_id: item.fan_id }));
+                        setFormData((prev) => ({
+                          ...prev,
+                          fan_id: item.fan_id,
+                          sameRelationsWithFan: false,
+                        }));
                       }}
                       className="w-full text-left px-3 py-2 border-b border-slate-100 last:border-b-0 hover:bg-yellow-50"
                     >
@@ -1359,6 +1434,31 @@ const DiksharthiDetailsAdd = () => {
             </div>
           )}
 
+          {formData.rbfCriteria === "Yes" &&
+            formData.fanIdExists === "Yes" &&
+            String(formData.fan_id || "").trim() && (
+              <div className="col-span-1 md:col-span-2 xl:col-span-4">
+                <label className="flex items-center gap-2 text-sm font-medium text-slate-700 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={Boolean(formData.sameRelationsWithFan)}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        sameRelationsWithFan: e.target.checked,
+                      }))
+                    }
+                  />
+                  Same Relations as existing FAN ID
+                </label>
+                {formData.sameRelationsWithFan && !fanSourceRecord && (
+                  <p className="text-amber-600 text-xs mt-1">
+                    Existing FAN member details not found, please add relations manually.
+                  </p>
+                )}
+              </div>
+            )}
+
           {formData.rbfCriteria === "Yes" && (
             <div className="col-span-1 md:col-span-2 xl:col-span-4">
               <label className="block text-sm font-medium text-slate-700 mb-2">
@@ -1374,6 +1474,7 @@ const DiksharthiDetailsAdd = () => {
                         <input
                           type="checkbox"
                           checked={checked}
+                          disabled={Boolean(formData.sameRelationsWithFan)}
                           onChange={() => handleFamilyRelationToggle(item.value)}
                         />
                         {item.label}
