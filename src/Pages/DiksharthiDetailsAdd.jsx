@@ -417,8 +417,11 @@ const DiksharthiDetailsAdd = () => {
   const [isDiksharthiListLoading, setIsDiksharthiListLoading] = useState(false);
   const [diksharthiSearch, setDiksharthiSearch] = useState("");
   const [fanIdSearch, setFanIdSearch] = useState("");
+  console.log(fanIdSearch, "fanIdSearch")
   const [selectedSourceDiksharthi, setSelectedSourceDiksharthi] = useState(null);
   const [currentStep, setCurrentStep] = useState(1);
+
+  const [existingFanRelations, setExistingFanRelations] = useState(new Set());
 
   const [postOffices, setPostOffices] = useState([]);
   const rbfMandatoryFields = ["permanentAddress", "pinCode", "district", "state"];
@@ -823,11 +826,6 @@ const DiksharthiDetailsAdd = () => {
         } else if (!/^\d{12}$/.test(details?.aadharNumber)) {
           newErrors[`family_aadhar_${relationKey}`] = "Aadhar must be 12 digits";
         }
-
-        // ✅ PAN (optional or required)
-        // if (!String(details?.panNumber || "").trim()) {
-        //   newErrors[`family_pan_${relationKey}`] = "Required";
-        // }
       });
     }
 
@@ -877,7 +875,7 @@ const DiksharthiDetailsAdd = () => {
   };
 
   const stepTitles = [
-    "Diksharti Details",
+    "M.S. Details",
     "Family Details",
     "Address and House Details",
     "Mediclaims and NGO",
@@ -889,7 +887,39 @@ const DiksharthiDetailsAdd = () => {
   // };
 
 
+  const convertFamilyArrayToObject = (familyArray = []) => {
+    const result = {};
+
+    familyArray.forEach((member) => {
+      const key = member?.relation_key;
+      if (!key) return;
+
+      result[key] = {
+        firstName: member?.first_name || "",
+        lastName: member?.last_name || "",
+        mobileNumber: member?.mobile_number || "",
+        aadharNumber: member?.aadhar_number || "",
+        panNumber: member?.pan_number || "",
+        dob: member?.dob ? toInputDate(member.dob) : "",
+        age: member?.age || "",
+        ayushmanCoverage: member?.ayushman_coverage || "",
+        ayushmanAmount: member?.ayushman_amount || "",
+        medicalPolicy: member?.has_mediclaim_policy || "",
+        mediclaimAmount: member?.mediclaim_amount || "",
+        mediclaimPremiumAmount: member?.member_mediclaim_premium_amount || "",
+        mediclaimCompanyName: member?.mediclaim_company_name || "",
+        mediclaimType: member?.mediclaim_type || "",
+        needAssistance: member?.need_assistance || "",
+        assistanceCategories: [],
+      };
+    });
+
+    return result;
+  };
+
+
   const goToNextStep = async () => {
+    debugger
     const isValid = validate();
     if (!isValid) return;
 
@@ -918,7 +948,34 @@ const DiksharthiDetailsAdd = () => {
       if (persisted?.diksharthi_code || persisted?.id) {
         setSavedId(persisted?.diksharthi_code || persisted?.id);
       }
+      if (fanIdSearch) {
+        try {
+          const getRes = await axios.get(`${API}/api/search`, {
+            params: {
+              fan_id: fanIdSearch,
+            },
+          });
 
+          const latestData = getRes?.data?.data?.[0];
+
+          if (latestData?.family_details) {
+            const relationDetails = convertFamilyArrayToObject(
+              latestData.family_details
+            );
+
+            const relations = Object.keys(relationDetails);
+
+            setFormData((prev) => ({
+              ...prev,
+              familyRelations: relations,
+              familyRelationDetails: relationDetails,
+              relation: relations[0] || prev.relation,
+            }));
+          }
+        } catch (err) {
+          console.error("GET API failed", err);
+        }
+      }
       setCurrentStep((prev) => Math.min(prev + 1, stepTitles.length));
     } catch (err) {
       console.error(err);
@@ -930,14 +987,22 @@ const DiksharthiDetailsAdd = () => {
     setCurrentStep((prev) => Math.max(prev - 1, 1));
   };
 
+  
+
 
   const filteredRelations = RELATIONS.filter((item) => {
-    if (formData.gender === "Sadhu" && item.value === "Husband") {
+    // Gender restriction
+    if (formData.gender === "Sadhu" && item.value === "Husband") return false;
+    if (formData.gender === "Sadhvi" && item.value === "Wife") return false;
+
+    // 🚀 NEW: remove relations already present in FAN ID
+    if (
+      formData.sameRelationsWithFan &&
+      existingRelationsSet.has(item.value)
+    ) {
       return false;
     }
-    if (formData.gender === "Sadhvi" && item.value === "Wife") {
-      return false;
-    }
+
     return true;
   });
 
@@ -1143,6 +1208,14 @@ const DiksharthiDetailsAdd = () => {
         {}
       );
 
+      const existingRelationsSet = new Set([
+        ...sourceRelations,
+        ...Object.keys(sourceRelationDetailsRaw || {})
+      ]);
+
+      // Save it in state (NEW)
+      setExistingFanRelations(existingRelationsSet);
+
       const mergedRelationDetails = {};
       sourceRelations.forEach((relationKey) => {
         const source = sourceRelationDetailsRaw?.[relationKey] || {};
@@ -1200,73 +1273,6 @@ const DiksharthiDetailsAdd = () => {
           <FileText size={20} />
           <h2 className="text-xl font-bold"> Ratnakukshi Family Basic Info</h2>
         </div>
-        {/* 
-        <div className="mb-6 border border-slate-200 rounded-lg p-4 bg-slate-50">
-          <label className="block text-sm font-semibold text-slate-700 mb-2">
-            Search M.S. Name / MS ID
-          </label>
-          <div className="relative">
-            <Search size={16} className="absolute left-3 top-3 text-slate-400" />
-            <input
-              type="text"
-              value={diksharthiSearch}
-              onChange={(e) => {
-                setDiksharthiSearch(e.target.value);
-                if (selectedSourceDiksharthi) setSelectedSourceDiksharthi(null);
-              }}
-              placeholder="Type M.S. Name, M.S. ID..."
-              className="w-full pl-9 pr-10 py-2 border border-slate-300 rounded-md outline-none"
-            />
-            {diksharthiSearch && (
-              <button
-                type="button"
-                onClick={clearSelectedSourceDiksharthi}
-                className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600"
-              >
-                <X size={16} />
-              </button>
-            )}
-          </div>
-
-          {isDiksharthiListLoading && (
-            <p className="text-xs text-slate-500 mt-2">Loading diksharthi list...</p>
-          )}
-
-          {!isDiksharthiListLoading && normalizedDiksharthiSearch && filteredDiksharthiOptions.length > 0 && (
-            <div className="mt-2 border border-slate-200 rounded-md bg-white max-h-64 overflow-auto">
-              {filteredDiksharthiOptions.map((item) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => handleSelectSourceDiksharthi(item)}
-                  className="w-full text-left px-3 py-2 border-b border-slate-100 last:border-b-0 hover:bg-yellow-50"
-                >
-                  <p className="text-sm font-medium text-slate-800">
-                    {item?.sadhu_sadhvi_name || "-"} ({item?.diksharthi_code || item?.id})
-                  </p>
-                  <p className="text-xs text-slate-500">
-                    Family No: {getFamilyNumber(item) || "-"} | Family Member: {getFamilyMemberLabel(item)}
-                  </p>
-                </button>
-              ))}
-            </div>
-          )}
-
-          {!isDiksharthiListLoading && normalizedDiksharthiSearch && filteredDiksharthiOptions.length === 0 && (
-            <p className="text-xs text-slate-500 mt-2">No matching diksharthi found.</p>
-          )}
-
-          {selectedSourceDiksharthi && (
-            <div className="mt-3 text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-md px-3 py-2">
-              Selected: {selectedSourceDiksharthi?.sadhu_sadhvi_name || "-"} ({selectedSourceDiksharthi?.diksharthi_code || selectedSourceDiksharthi?.id})
-              {" | "}
-              Family No: {getFamilyNumber(selectedSourceDiksharthi) || "-"}
-              {" | "}
-              Family member fields are auto-filled.
-            </div>
-          )}
-        </div> */}
-
         <div className="mb-6">
           <div className="flex flex-wrap gap-2">
             {stepTitles.map((title, index) => {
@@ -1604,30 +1610,11 @@ const DiksharthiDetailsAdd = () => {
                 </div>
               )}
 
-              {formData.rbfCriteria === "Yes" &&
+              {/* {formData.rbfCriteria === "Yes" &&
                 formData.fanIdExists === "Yes" &&
                 String(formData.fan_id || "").trim() && (
-                  <div className="col-span-1 md:col-span-2 xl:col-span-4">
-                    <label className="flex items-center gap-2 text-sm font-medium text-slate-700 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={Boolean(formData.sameRelationsWithFan)}
-                        onChange={(e) =>
-                          setFormData((prev) => ({
-                            ...prev,
-                            sameRelationsWithFan: e.target.checked,
-                          }))
-                        }
-                      />
-                      Same Relations as existing FAN ID
-                    </label>
-                    {formData.sameRelationsWithFan && !fanSourceRecord && (
-                      <p className="text-amber-600 text-xs mt-1">
-                        Existing FAN member details not found, please add relations manually.
-                      </p>
-                    )}
-                  </div>
-                )}
+                  
+                )} */}
 
               {formData.rbfCriteria === "Yes" && (
                 <div className="col-span-1 md:col-span-2 xl:col-span-4">
@@ -1672,7 +1659,7 @@ const DiksharthiDetailsAdd = () => {
 
                 return allRelations.map((relationKey) => {
                   const details = formData?.familyRelationDetails?.[relationKey] || {};
-                  console.log(details,"family_member_firstName")
+                  console.log(details, "family_member_firstName")
                   return (
                     <div
                       key={relationKey}
