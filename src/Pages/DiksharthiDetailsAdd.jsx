@@ -370,6 +370,7 @@ const DiksharthiDetailsAdd = () => {
   const [uploadDoc, setUploadDoc] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [savedId, setSavedId] = useState("");
+  const [savedRecordId, setSavedRecordId] = useState(editId ? Number(editId) : null);
   const [formData, setFormData] = useState(initialFormData);
   console.log(formData, "formData")
   const [isEditLoading, setIsEditLoading] = useState(false);
@@ -461,6 +462,12 @@ const DiksharthiDetailsAdd = () => {
     };
     fetchDiksharthiById();
   }, [isEditMode, editId]);
+
+  useEffect(() => {
+    if (editId) {
+      setSavedRecordId(Number(editId));
+    }
+  }, [editId]);
 
   useEffect(() => {
     const fetchAllDiksharthi = async () => {
@@ -735,77 +742,52 @@ const DiksharthiDetailsAdd = () => {
     }
   };
 
-  const validate = () => {
-    let newErrors = {};
+ const validate = () => {
+  let newErrors = {};
 
-    if (!formData.sadhu_sadhvi_name) newErrors.sadhu_sadhvi_name = "Required";
-    if (!formData.gender) newErrors.gender = "Required";
-    // if (!formData.pad) newErrors.pad = "Required";
-    if (!formData.samudaay) newErrors.samudaay = "Required";
-    // if (!formData.guruName) newErrors.guruName = "Required";
-    if (!formData.gadipati) newErrors.gadipati = "Required";
-    // if (!formData.isAlive) newErrors.isAlive = "Required";
-    if (!formData.fanIdExists) newErrors.fanIdExists = "Required";
-    if (formData.fanIdExists === "Yes" && !String(formData.fan_id || "").trim()) {
-      newErrors.fan_id = "Select FAN ID";
-    }
-    if (!formData.rbfCriteria) newErrors.rbfCriteria = "Required";
+  if (formData.rbfCriteria === "Yes") {
+    const selectedRelations = Array.isArray(formData?.familyRelations)
+      ? formData.familyRelations
+      : [];
 
-    if (formData.rbfCriteria === "Yes" && !formData.relation) {
-      newErrors.relation = "Required for RBF";
-    }
-    if (formData.rbfCriteria === "Yes") {
-      const selectedRelations = Array.isArray(formData?.familyRelations)
-        ? formData.familyRelations
-        : [];
-      if (!selectedRelations.length) {
-        newErrors.familyRelations = "Select at least one family relation";
+    selectedRelations.forEach((relationKey) => {
+      const details = formData?.familyRelationDetails?.[relationKey] || {};
+
+      // ✅ First Name
+      if (!String(details?.firstName || "").trim()) {
+        newErrors[`family_firstName_${relationKey}`] = "Required";
       }
-      selectedRelations.forEach((relationKey) => {
-        const details = formData?.familyRelationDetails?.[relationKey] || {};
-        if (!String(details?.firstName || "").trim()) {
-          newErrors[`family_firstName_${relationKey}`] = "Required";
-        }
-        if (!String(details?.lastName || "").trim()) {
-          newErrors[`family_lastName_${relationKey}`] = "Required";
-        }
-        if (!String(details?.mobileNumber || "").trim()) {
-          newErrors[`family_mobile_${relationKey}`] = "Required";
-        } else if (!MOBILE_REGEX.test(String(details?.mobileNumber || "").trim())) {
-          newErrors[`family_mobile_${relationKey}`] = "Mobile number must be 10 digits";
-        }
-      });
-    }
-    if (formData.rbfCriteria === "Yes" && !String(formData.permanentAddress || "").trim()) {
-      newErrors.permanentAddress = "Required";
-    }
-    if (formData.rbfCriteria === "Yes" && !String(formData.pinCode || "").trim()) {
-      newErrors.pinCode = "Required";
-    } else if (formData.rbfCriteria === "Yes" && !PINCODE_REGEX.test(String(formData.pinCode || "").trim())) {
-      newErrors.pinCode = "Pin code must be 6 digits";
-    }
-    if (formData.rbfCriteria === "Yes" && !String(formData.district || "").trim()) {
-      newErrors.district = "Required";
-    }
-    if (formData.rbfCriteria === "Yes" && !String(formData.state || "").trim()) {
-      newErrors.state = "Required";
-    }
 
-    if (formData.isAlive === "Yes" && !formData.viharLocation) {
-      newErrors.viharLocation = "Required";
-    }
+      // ✅ Last Name
+      if (!String(details?.lastName || "").trim()) {
+        newErrors[`family_lastName_${relationKey}`] = "Required";
+      }
 
-    if (
-      formData.mediclaim === true &&
-      Number(formData.mediclaimPremiumAmount || 0) >
-      Number(formData.Family_mediclaim_amount || 0)
-    ) {
-      newErrors.mediclaimPremiumAmount = "Premium amount cannot exceed cover amount";
-    }
+      // ✅ Mobile
+      if (!String(details?.mobileNumber || "").trim()) {
+        newErrors[`family_mobile_${relationKey}`] = "Required";
+      } else if (!MOBILE_REGEX.test(details?.mobileNumber)) {
+        newErrors[`family_mobile_${relationKey}`] = "Mobile must be 10 digits";
+      }
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+      // ✅ AADHAR (FIXED)
+      if (!String(details?.aadharNumber || "").trim()) {
+        newErrors[`family_aadhar_${relationKey}`] = "Required";
+      } else if (!/^\d{12}$/.test(details?.aadharNumber)) {
+        newErrors[`family_aadhar_${relationKey}`] = "Aadhar must be 12 digits";
+      }
+
+      // ✅ PAN (optional or required)
+      // if (!String(details?.panNumber || "").trim()) {
+      //   newErrors[`family_pan_${relationKey}`] = "Required";
+      // }
+    });
+  }
+
+  // rest validations same...
+  setErrors(newErrors);
+  return Object.keys(newErrors).length === 0;
+};
 
   const handleSave = async () => {
     if (!validate()) return;
@@ -823,12 +805,14 @@ const DiksharthiDetailsAdd = () => {
       if (photo) data.append("photo", photo);
       if (uploadDoc) data.append("uploadDoc", uploadDoc);
 
-      const response = isEditMode
-        ? await axios.put(`${API}/api/update-diksharthi/${editId}`, data)
+      const targetId = isEditMode ? editId : savedRecordId;
+      const response = targetId
+        ? await axios.put(`${API}/api/update-diksharthi/${targetId}`, data)
         : await axios.post(`${API}/api/create-diksharthi`, data);
 
       const diksharthi = response?.data?.data || editRecord || {};
-
+      const resolvedId = Number(diksharthi?.id || targetId || 0) || null;
+      if (resolvedId) setSavedRecordId(resolvedId);
       setSavedId(diksharthi?.diksharthi_code || diksharthi?.id);
 
       if (isEditMode) {
@@ -853,8 +837,46 @@ const DiksharthiDetailsAdd = () => {
     "Summary",
   ];
 
-  const goToNextStep = () => {
-    setCurrentStep((prev) => Math.min(prev + 1, stepTitles.length));
+  // const goToNextStep = () => {
+  //   setCurrentStep((prev) => Math.min(prev + 1, stepTitles.length));
+  // };
+
+
+  const goToNextStep = async () => {
+    const isValid = validate();
+    if (!isValid) return;
+
+    try {
+      const loggedInUserId = user?.id || user?.user_id || user?.userId || "";
+      if (!loggedInUserId) {
+        alert("Login user id missing. Please login again.");
+        return;
+      }
+      const payload = mapFormDataToApiPayload(formData, loggedInUserId, currentStep);
+      const data = new FormData();
+      Object.entries(payload).forEach(([key, value]) => {
+        data.append(key, value ?? "");
+      });
+      if (photo) data.append("photo", photo);
+      if (uploadDoc) data.append("uploadDoc", uploadDoc);
+
+      const targetId = isEditMode ? editId : savedRecordId;
+      const response = targetId
+        ? await axios.put(`${API}/api/update-diksharthi/${targetId}`, data)
+        : await axios.post(`${API}/api/create-diksharthi`, data);
+
+      const persisted = response?.data?.data || {};
+      const resolvedId = Number(persisted?.id || targetId || 0) || null;
+      if (resolvedId) setSavedRecordId(resolvedId);
+      if (persisted?.diksharthi_code || persisted?.id) {
+        setSavedId(persisted?.diksharthi_code || persisted?.id);
+      }
+
+      setCurrentStep((prev) => Math.min(prev + 1, stepTitles.length));
+    } catch (err) {
+      console.error(err);
+      alert("Step save failed");
+    }
   };
 
   const goToPreviousStep = () => {
@@ -904,12 +926,42 @@ const DiksharthiDetailsAdd = () => {
     });
   };
 
+  // const handleFamilyRelationDetailChange = (relationValue, fieldName, rawValue) => {
+  //   if (formData?.sameRelationsWithFan) return;
+  //   let nextValue = rawValue;
+  //   if (fieldName === "mobileNumber") {
+  //     nextValue = String(rawValue || "").replace(/\D/g, "").slice(0, 10);
+  //   }
+  //   if (fieldName === "aadharNumber") {
+  //     nextValue = String(rawValue || "").replace(/\D/g, "").slice(0, 12);
+  //   }
+
+  //   setFormData((prev) => {
+  //     const current = prev?.familyRelationDetails?.[relationValue] || createEmptyFamilyRelationDetails();
+  //     const updated = { ...current, [fieldName]: nextValue };
+  //     if (fieldName === "dob") {
+  //       updated.age = calculateAge(nextValue);
+  //     }
+  //     return {
+  //       ...prev,
+  //       familyRelationDetails: {
+  //         ...(prev?.familyRelationDetails || {}),
+  //         [relationValue]: updated,
+  //       },
+  //     };
+  //   });
+  // };
+
+
   const handleFamilyRelationDetailChange = (relationValue, fieldName, rawValue) => {
     if (formData?.sameRelationsWithFan) return;
+
     let nextValue = rawValue;
+
     if (fieldName === "mobileNumber") {
       nextValue = String(rawValue || "").replace(/\D/g, "").slice(0, 10);
     }
+
     if (fieldName === "aadharNumber") {
       nextValue = String(rawValue || "").replace(/\D/g, "").slice(0, 12);
     }
@@ -917,9 +969,11 @@ const DiksharthiDetailsAdd = () => {
     setFormData((prev) => {
       const current = prev?.familyRelationDetails?.[relationValue] || createEmptyFamilyRelationDetails();
       const updated = { ...current, [fieldName]: nextValue };
+
       if (fieldName === "dob") {
         updated.age = calculateAge(nextValue);
       }
+
       return {
         ...prev,
         familyRelationDetails: {
@@ -927,6 +981,41 @@ const DiksharthiDetailsAdd = () => {
           [relationValue]: updated,
         },
       };
+    });
+
+    // ✅ INSTANT VALIDATION
+    setErrors((prev) => {
+      const newErrors = { ...prev };
+
+      if (fieldName === "mobileNumber") {
+        if (!nextValue) {
+          newErrors[`family_mobile_${relationValue}`] = "Mobile required";
+        } else if (!/^\d{10}$/.test(nextValue)) {
+          newErrors[`family_mobile_${relationValue}`] = "Must be 10 digits";
+        } else {
+          delete newErrors[`family_mobile_${relationValue}`];
+        }
+      }
+
+      if (fieldName === "aadharNumber") {
+        if (!nextValue) {
+          newErrors[`family_aadhar_${relationValue}`] = "Aadhar required";
+        } else if (!/^\d{12}$/.test(nextValue)) {
+          newErrors[`family_aadhar_${relationValue}`] = "Must be 12 digits";
+        } else {
+          delete newErrors[`family_aadhar_${relationValue}`];
+        }
+      }
+
+      if (fieldName === "panNumber") {
+        if (!nextValue) {
+          newErrors[`family_pan_${relationValue}`] = "PAN required";
+        } else {
+          delete newErrors[`family_pan_${relationValue}`];
+        }
+      }
+
+      return newErrors;
     });
   };
 
@@ -1568,6 +1657,11 @@ const DiksharthiDetailsAdd = () => {
                         onChange={(e) => handleFamilyRelationDetailChange(relationKey, "aadharNumber", e.target.value)}
                         className="w-full p-2 border border-slate-300 rounded-md outline-none"
                       />
+                      {errors[`family_aadhar_${relationKey}`] && (
+                        <p className="text-red-500 text-xs">
+                          {errors[`family_aadhar_${relationKey}`]}
+                        </p>
+                      )}
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-slate-700 mb-1">PAN No</label>
@@ -1577,6 +1671,11 @@ const DiksharthiDetailsAdd = () => {
                         onChange={(e) => handleFamilyRelationDetailChange(relationKey, "panNumber", e.target.value)}
                         className="w-full p-2 border border-slate-300 rounded-md outline-none"
                       />
+                      {errors[`family_pan_${relationKey}`] && (
+                        <p className="text-red-500 text-xs">
+                          {errors[`family_pan_${relationKey}`]}
+                        </p>
+                      )}
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-slate-700 mb-1">DOB</label>
