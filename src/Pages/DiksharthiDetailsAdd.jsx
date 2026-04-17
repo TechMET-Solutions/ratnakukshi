@@ -954,7 +954,7 @@ const DiksharthiDetailsAdd = () => {
           const getRes = await axios.get(`${API}/api/search`, {
             params: {
               fan_id: searchKey,
-              diksharthi_id: searchKey,
+              diksharthi_id: fanIdSearch,
             },
           });
 
