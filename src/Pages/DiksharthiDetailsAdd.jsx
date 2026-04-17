@@ -948,11 +948,13 @@ const DiksharthiDetailsAdd = () => {
       if (persisted?.diksharthi_code || persisted?.id) {
         setSavedId(persisted?.diksharthi_code || persisted?.id);
       }
-      if (fanIdSearch) {
+      const searchKey = String(formData?.fan_id || fanIdSearch || "").trim();
+      if (searchKey) {
         try {
           const getRes = await axios.get(`${API}/api/search`, {
             params: {
-              fan_id: fanIdSearch,
+              fan_id: searchKey,
+              diksharthi_id: searchKey,
             },
           });
 
@@ -998,7 +1000,7 @@ const DiksharthiDetailsAdd = () => {
     // 🚀 NEW: remove relations already present in FAN ID
     if (
       formData.sameRelationsWithFan &&
-      existingRelationsSet.has(item.value)
+      existingFanRelations.has(item.value)
     ) {
       return false;
     }
@@ -1155,11 +1157,17 @@ const DiksharthiDetailsAdd = () => {
   const uniqueFanOptions = Array.from(
     new Map(
       (allDiksharthi || [])
-        .filter((item) => String(item?.fan_id || "").trim())
+        .filter(
+          (item) =>
+            String(item?.fan_id || "").trim() ||
+            String(item?.id || "").trim()
+        )
         .map((item) => [
-          String(item.fan_id).trim(),
+          String(item.id).trim(),
           {
-            fan_id: String(item.fan_id).trim(),
+            id: String(item?.id || "").trim(),
+            diksharthi_code: String(item?.diksharthi_code || "").trim(),
+            fan_id: String(item?.fan_id || "").trim(),
             sadhu_sadhvi_name: item?.sadhu_sadhvi_name || "",
           },
         ])
@@ -1170,18 +1178,23 @@ const DiksharthiDetailsAdd = () => {
   const filteredFanOptions = normalizedFanIdSearch
     ? uniqueFanOptions
       .filter((item) =>
-        `${item?.fan_id || ""} ${item?.sadhu_sadhvi_name || ""}`
+        `${item?.id || ""} ${item?.diksharthi_code || ""} ${item?.fan_id || ""} ${item?.sadhu_sadhvi_name || ""}`
           .toLowerCase()
           .includes(normalizedFanIdSearch)
       )
       .slice(0, 8)
     : [];
 
+  const normalizedSelectedFanValue = String(formData?.fan_id || "").trim();
   const fanSourceRecord =
-    formData?.fan_id && String(formData.fan_id || "").trim()
+    normalizedSelectedFanValue
       ? (allDiksharthi || []).find(
         (item) =>
-          String(item?.fan_id || "").trim() === String(formData.fan_id || "").trim() &&
+          (
+            String(item?.fan_id || "").trim() === normalizedSelectedFanValue ||
+            String(item?.id || "").trim() === normalizedSelectedFanValue ||
+            String(item?.diksharthi_code || "").trim() === normalizedSelectedFanValue
+          ) &&
           String(item?.id || "") !== String(editId || "")
       ) || null
       : null;
@@ -1336,7 +1349,7 @@ const DiksharthiDetailsAdd = () => {
 
               {formData.fanIdExists === "Yes" && (
                 <div className="col-span-1 md:col-span-2">
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Search M.S. Name / F.A.N ID</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Search M.S. Name / F.A.N ID / Diksharthi ID</label>
                   <div className="relative">
                     <Search size={16} className="absolute left-3 top-3 text-slate-400" />
                     <input
@@ -1351,7 +1364,7 @@ const DiksharthiDetailsAdd = () => {
                           sameRelationsWithFan: false,
                         }));
                       }}
-                      placeholder="Type  M.S. Name / F.A.N ID..."
+                      placeholder="Type M.S. Name / F.A.N ID / Diksharthi ID..."
                       className="w-full pl-9 pr-10 py-2 border border-slate-300 rounded-md outline-none"
                     />
                     {fanIdSearch && (
@@ -1373,20 +1386,24 @@ const DiksharthiDetailsAdd = () => {
                     <div className="mt-2 border border-slate-200 rounded-md bg-white max-h-56 overflow-auto">
                       {filteredFanOptions.map((item) => (
                         <button
-                          key={item.fan_id}
+                          key={`${item.id}-${item.fan_id || "no-fan"}`}
                           type="button"
                           onClick={() => {
-                            setFanIdSearch(item.fan_id);
+                            setFanIdSearch(item.id || item.fan_id);
                             setFormData((prev) => ({
                               ...prev,
-                              fan_id: item.fan_id,
+                              fan_id: item.fan_id || item.id,
                               sameRelationsWithFan: false,
                             }));
                           }}
                           className="w-full text-left px-3 py-2 border-b border-slate-100 last:border-b-0 hover:bg-yellow-50"
                         >
-                          <p className="text-sm font-medium text-slate-800">{item.fan_id}</p>
-                          <p className="text-xs text-slate-500">{item.sadhu_sadhvi_name || "-"}</p>
+                          <p className="text-sm font-medium text-slate-800">
+                            Diksharthi ID: {item.id || "-"} {item.fan_id ? `| FAN ID: ${item.fan_id}` : ""}
+                          </p>
+                          <p className="text-xs text-slate-500">
+                            {item.sadhu_sadhvi_name || "-"} {item.diksharthi_code ? `(${item.diksharthi_code})` : ""}
+                          </p>
                         </button>
                       ))}
                     </div>
