@@ -492,7 +492,7 @@ const DiksharthiDetailsAdd = () => {
         if (!response.ok || !result?.data) throw new Error("Fetch failed");
         const mapped = mapDiksharthiToFormData(result?.data);
         setFormData(mapped);
-        setFanIdSearch(mapped?.fan_id || "");
+        setFanIdSearch(mapped?.id || "");
         setCurrentStep(Number(result?.data?.form_step) || 1);
       } catch (error) {
         console.error(error);
