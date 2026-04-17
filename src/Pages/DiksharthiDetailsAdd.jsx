@@ -1546,7 +1546,6 @@ const DiksharthiDetailsAdd = () => {
               </div>
 
               {/* Relation (Conditional) */}
-              {formData.rbfCriteria === "Yes" && (
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Relation to MS <span className="text-red-500">*</span></label>
                   <select
@@ -1564,7 +1563,6 @@ const DiksharthiDetailsAdd = () => {
                   </select>
                   {errors.relation && <p className="text-red-500 text-xs">{errors.relation}</p>}
                 </div>
-              )}
 
               {formData.relation === "Other" && (
                 <div>
@@ -1616,7 +1614,6 @@ const DiksharthiDetailsAdd = () => {
                   
                 )} */}
 
-              {formData.rbfCriteria === "Yes" && (
                 <div className="col-span-1 md:col-span-2 xl:col-span-4">
                   <label className="block text-sm font-medium text-slate-700 mb-2">
                     Family Relations <span className="text-red-500">*</span>
@@ -1646,280 +1643,332 @@ const DiksharthiDetailsAdd = () => {
                     <p className="text-red-500 text-xs mt-1">{errors.familyRelations}</p>
                   )}
                 </div>
-              )}
 
-              {formData.rbfCriteria === "Yes" && (() => {
-                // ✅ Get all relations from both array and details object
-                const allRelations = Array.from(
-                  new Set([
-                    ...(formData?.familyRelations || []),
-                    ...Object.keys(formData?.familyRelationDetails || {}),
-                  ])
-                );
 
-                return allRelations.map((relationKey) => {
-                  const details = formData?.familyRelationDetails?.[relationKey] || {};
-                  console.log(details, "family_member_firstName")
-                  return (
-                    <div
-                      key={relationKey}
-                      className="col-span-1 md:col-span-2 xl:col-span-4 border border-slate-300 rounded-lg p-4"
-                    >
-                      <h3 className="text-sm font-semibold text-slate-800 mb-3">{relationKey} Details</h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium text-slate-700 mb-1">First Name *</label>
-                          <input
-                            type="text"
-                            value={details?.firstName || ""}
-                            onChange={(e) => handleFamilyRelationDetailChange(relationKey, "firstName", e.target.value)}
-                            className="w-full p-2 border border-slate-300 rounded-md outline-none"
-                          />
-                          {errors[`family_firstName_${relationKey}`] && (
-                            <p className="text-red-500 text-xs">{errors[`family_firstName_${relationKey}`]}</p>
-                          )}
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-slate-700 mb-1">Last Name *</label>
-                          <input
-                            type="text"
-                            value={details?.lastName || ""}
-                            onChange={(e) => handleFamilyRelationDetailChange(relationKey, "lastName", e.target.value)}
-                            className="w-full p-2 border border-slate-300 rounded-md outline-none"
-                          />
-                          {errors[`family_lastName_${relationKey}`] && (
-                            <p className="text-red-500 text-xs">{errors[`family_lastName_${relationKey}`]}</p>
-                          )}
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-slate-700 mb-1">Mobile No *</label>
-                          <input
-                            type="text"
-                            inputMode="numeric"
-                            maxLength={10}
-                            value={details?.mobileNumber || ""}
-                            onChange={(e) => handleFamilyRelationDetailChange(relationKey, "mobileNumber", e.target.value)}
-                            className="w-full p-2 border border-slate-300 rounded-md outline-none"
-                          />
-                          {errors[`family_mobile_${relationKey}`] && (
-                            <p className="text-red-500 text-xs">{errors[`family_mobile_${relationKey}`]}</p>
-                          )}
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-slate-700 mb-1">Aadhar No</label>
-                          <input
-                            type="text"
-                            inputMode="numeric"
-                            maxLength={12}
-                            value={details?.aadharNumber || ""}
-                            onChange={(e) => handleFamilyRelationDetailChange(relationKey, "aadharNumber", e.target.value)}
-                            className="w-full p-2 border border-slate-300 rounded-md outline-none"
-                          />
-                          {errors[`family_aadhar_${relationKey}`] && (
-                            <p className="text-red-500 text-xs">
-                              {errors[`family_aadhar_${relationKey}`]}
-                            </p>
-                          )}
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-slate-700 mb-1">PAN No</label>
-                          <input
-                            type="text"
-                            value={details?.panNumber || ""}
-                            onChange={(e) => handleFamilyRelationDetailChange(relationKey, "panNumber", e.target.value)}
-                            className="w-full p-2 border border-slate-300 rounded-md outline-none"
-                          />
-                          {errors[`family_pan_${relationKey}`] && (
-                            <p className="text-red-500 text-xs">
-                              {errors[`family_pan_${relationKey}`]}
-                            </p>
-                          )}
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-slate-700 mb-1">DOB</label>
-                          <input
-                            type="date"
-                            max={getMaxDOB()}
-                            value={details?.dob || ""}
-                            onChange={(e) => handleFamilyRelationDetailChange(relationKey, "dob", e.target.value)}
-                            className="w-full p-2 border border-slate-300 rounded-md outline-none"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-slate-700 mb-1">Age</label>
-                          <input
-                            type="number"
-                            value={details?.age || ""}
-                            onChange={(e) => handleFamilyRelationDetailChange(relationKey, "age", e.target.value)}
-                            className="w-full p-2 border border-slate-300 rounded-md outline-none"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-slate-700 mb-1">Does this person have Ayushman coverage?</label>
-                          <div className="flex gap-4 mt-2">
-                            <label className="flex items-center gap-2 cursor-pointer">
-                              <input
-                                type="radio"
-                                name={`ayushmanCoverage_${relationKey}`}
-                                value="Yes"
-                                checked={details?.ayushmanCoverage === "Yes"}
-                                onChange={(e) => handleFamilyRelationDetailChange(relationKey, "ayushmanCoverage", e.target.value)}
-                              />
-                              Yes
-                            </label>
-                            <label className="flex items-center gap-2 cursor-pointer">
-                              <input
-                                type="radio"
-                                name={`ayushmanCoverage_${relationKey}`}
-                                value="No"
-                                checked={details?.ayushmanCoverage === "No"}
-                                onChange={(e) => handleFamilyRelationDetailChange(relationKey, "ayushmanCoverage", e.target.value)}
-                              />
-                              No
-                            </label>
-                          </div>
-                        </div>
-                        {details?.ayushmanCoverage === "Yes" && (
-                          <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1">Do they have any Mediclaim policy?*</label>
-                            <input
-                              type="number"
-                              value={details?.ayushmanAmount || ""}
-                              onChange={(e) => handleFamilyRelationDetailChange(relationKey, "ayushmanAmount", e.target.value)}
-                              className="w-full p-2 border border-slate-300 rounded-md outline-none"
-                            />
-                          </div>
-                        )}
-                        <div>
-                          <label className="block text-sm font-medium text-slate-700 mb-1">Medical Policy</label>
-                          <div className="flex gap-4 mt-2">
-                            <label className="flex items-center gap-2 cursor-pointer">
-                              <input
-                                type="radio"
-                                name={`medicalPolicy_${relationKey}`}
-                                value="Yes"
-                                checked={details?.medicalPolicy === "Yes"}
-                                onChange={(e) => handleFamilyRelationDetailChange(relationKey, "medicalPolicy", e.target.value)}
-                              />
-                              Yes
-                            </label>
-                            <label className="flex items-center gap-2 cursor-pointer">
-                              <input
-                                type="radio"
-                                name={`medicalPolicy_${relationKey}`}
-                                value="No"
-                                checked={details?.medicalPolicy === "No"}
-                                onChange={(e) => handleFamilyRelationDetailChange(relationKey, "medicalPolicy", e.target.value)}
-                              />
-                              No
-                            </label>
-                          </div>
-                        </div>
-                        {details?.medicalPolicy === "Yes" && (
-                          <>
-                            <div>
-                              <label className="block text-sm font-medium text-slate-700 mb-1">Mediclaim Amount</label>
-                              <input
-                                type="number"
-                                value={details?.mediclaimAmount || ""}
-                                onChange={(e) => handleFamilyRelationDetailChange(relationKey, "mediclaimAmount", e.target.value)}
-                                className="w-full p-2 border border-slate-300 rounded-md outline-none"
-                              />
-                            </div>
-                            <div>
-                              <label className="block text-sm font-medium text-slate-700 mb-1">Yearly Premium Amount</label>
-                              <input
-                                type="number"
-                                value={details?.mediclaimPremiumAmount || ""}
-                                onChange={(e) => handleFamilyRelationDetailChange(relationKey, "mediclaimPremiumAmount", e.target.value)}
-                                className="w-full p-2 border border-slate-300 rounded-md outline-none"
-                              />
-                            </div>
-                            <div>
-                              <label className="block text-sm font-medium text-slate-700 mb-1">Mediclaim Company Name</label>
-                              <input
-                                type="text"
-                                value={details?.mediclaimCompanyName || ""}
-                                onChange={(e) => handleFamilyRelationDetailChange(relationKey, "mediclaimCompanyName", e.target.value)}
-                                className="w-full p-2 border border-slate-300 rounded-md outline-none"
-                              />
-                            </div>
-                            <div>
-                              <label className="block text-sm font-medium text-slate-700 mb-1">Mediclaim Type</label>
-                              <select
-                                value={details?.mediclaimType || ""}
-                                onChange={(e) => handleFamilyRelationDetailChange(relationKey, "mediclaimType", e.target.value)}
-                                className="w-full p-2 border border-slate-300 rounded-md outline-none"
-                              >
-                                <option value="">Select</option>
-                                <option value="single">Single</option>
-                                <option value="joint">Joint</option>
-                              </select>
-                            </div>
-                          </>
-                        )}
-                        <div>
-                          <label className="block text-sm font-medium text-slate-700 mb-1">Need Assistance</label>
-                          <div className="flex gap-4 mt-2">
-                            <label className="flex items-center gap-2 cursor-pointer">
-                              <input
-                                type="radio"
-                                name={`needAssistance_${relationKey}`}
-                                value="Yes"
-                                checked={details?.needAssistance === "Yes"}
-                                onChange={(e) => handleFamilyRelationDetailChange(relationKey, "needAssistance", e.target.value)}
-                              />
-                              Yes
-                            </label>
-                            <label className="flex items-center gap-2 cursor-pointer">
-                              <input
-                                type="radio"
-                                name={`needAssistance_${relationKey}`}
-                                value="No"
-                                checked={details?.needAssistance === "No"}
-                                onChange={(e) => handleFamilyRelationDetailChange(relationKey, "needAssistance", e.target.value)}
-                              />
-                              No
-                            </label>
-                          </div>
-                        </div>
-                        {details?.needAssistance === "Yes" && (
-                          <div className="md:col-span-2 xl:col-span-4">
-                            <label className="block text-sm font-medium text-slate-700 mb-2">Assistances</label>
-                            <div className="flex flex-wrap gap-4">
-                              {assistanceTypes.map((type) => {
-                                const selectedCategories = Array.isArray(details?.assistanceCategories)
-                                  ? details.assistanceCategories
-                                  : [];
-                                const checked = selectedCategories.includes(type);
-                                return (
-                                  <label key={`${relationKey}_${type}`} className="flex items-center gap-2 cursor-pointer">
-                                    <input
-                                      type="checkbox"
-                                      checked={checked}
-                                      onChange={(e) => {
-                                        const nextCategories = e.target.checked
-                                          ? [...selectedCategories, type]
-                                          : selectedCategories.filter((item) => item !== type);
-                                        handleFamilyRelationDetailChange(
-                                          relationKey,
-                                          "assistanceCategories",
-                                          nextCategories
-                                        );
-                                      }}
-                                    />
-                                    {type}
-                                  </label>
-                                );
-                              })}
-                            </div>
-                          </div>
+              {Array.from(
+                new Set([
+                  ...(formData?.familyRelations || []),
+                  ...Object.keys(formData?.familyRelationDetails || {}),
+                ])
+              ).map((relationKey) => {
+                const details = formData?.familyRelationDetails?.[relationKey] || {};
+
+                return (
+                  <div
+                    key={relationKey}
+                    className="col-span-1 md:col-span-2 xl:col-span-4 border border-slate-300 rounded-lg p-4"
+                  >
+                    <h3 className="text-sm font-semibold text-slate-800 mb-3">
+                      {relationKey} Details
+                    </h3>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+
+                      {/* First Name */}
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">
+                          First Name *
+                        </label>
+                        <input
+                          type="text"
+                          value={details?.firstName || ""}
+                          onChange={(e) =>
+                            handleFamilyRelationDetailChange(
+                              relationKey,
+                              "firstName",
+                              e.target.value
+                            )
+                          }
+                          className="w-full p-2 border border-slate-300 rounded-md outline-none"
+                        />
+                        {errors[`family_firstName_${relationKey}`] && (
+                          <p className="text-red-500 text-xs">
+                            {errors[`family_firstName_${relationKey}`]}
+                          </p>
                         )}
                       </div>
+
+                      {/* Last Name */}
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">
+                          Last Name *
+                        </label>
+                        <input
+                          type="text"
+                          value={details?.lastName || ""}
+                          onChange={(e) =>
+                            handleFamilyRelationDetailChange(
+                              relationKey,
+                              "lastName",
+                              e.target.value
+                            )
+                          }
+                          className="w-full p-2 border border-slate-300 rounded-md outline-none"
+                        />
+                        {errors[`family_lastName_${relationKey}`] && (
+                          <p className="text-red-500 text-xs">
+                            {errors[`family_lastName_${relationKey}`]}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Mobile */}
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">
+                          Mobile No *
+                        </label>
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          maxLength={10}
+                          value={details?.mobileNumber || ""}
+                          onChange={(e) =>
+                            handleFamilyRelationDetailChange(
+                              relationKey,
+                              "mobileNumber",
+                              e.target.value
+                            )
+                          }
+                          className="w-full p-2 border border-slate-300 rounded-md outline-none"
+                        />
+                        {errors[`family_mobile_${relationKey}`] && (
+                          <p className="text-red-500 text-xs">
+                            {errors[`family_mobile_${relationKey}`]}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Aadhar */}
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">
+                          Aadhar No
+                        </label>
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          maxLength={12}
+                          value={details?.aadharNumber || ""}
+                          onChange={(e) =>
+                            handleFamilyRelationDetailChange(
+                              relationKey,
+                              "aadharNumber",
+                              e.target.value
+                            )
+                          }
+                          className="w-full p-2 border border-slate-300 rounded-md outline-none"
+                        />
+                        {errors[`family_aadhar_${relationKey}`] && (
+                          <p className="text-red-500 text-xs">
+                            {errors[`family_aadhar_${relationKey}`]}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* PAN */}
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">
+                          PAN No
+                        </label>
+                        <input
+                          type="text"
+                          value={details?.panNumber || ""}
+                          onChange={(e) =>
+                            handleFamilyRelationDetailChange(
+                              relationKey,
+                              "panNumber",
+                              e.target.value
+                            )
+                          }
+                          className="w-full p-2 border border-slate-300 rounded-md outline-none"
+                        />
+                        {errors[`family_pan_${relationKey}`] && (
+                          <p className="text-red-500 text-xs">
+                            {errors[`family_pan_${relationKey}`]}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* DOB */}
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">
+                          DOB
+                        </label>
+                        <input
+                          type="date"
+                          max={getMaxDOB()}
+                          value={details?.dob || ""}
+                          onChange={(e) =>
+                            handleFamilyRelationDetailChange(
+                              relationKey,
+                              "dob",
+                              e.target.value
+                            )
+                          }
+                          className="w-full p-2 border border-slate-300 rounded-md outline-none"
+                        />
+                      </div>
+
+                      {/* Age */}
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">
+                          Age
+                        </label>
+                        <input
+                          type="number"
+                          value={details?.age || ""}
+                          onChange={(e) =>
+                            handleFamilyRelationDetailChange(
+                              relationKey,
+                              "age",
+                              e.target.value
+                            )
+                          }
+                          className="w-full p-2 border border-slate-300 rounded-md outline-none"
+                        />
+                      </div>
+
+                      {/* Ayushman */}
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">
+                          Does this person have Ayushman coverage?
+                        </label>
+                        <div className="flex gap-4 mt-2">
+                          {["Yes", "No"].map((val) => (
+                            <label key={val} className="flex items-center gap-2 cursor-pointer">
+                              <input
+                                type="radio"
+                                name={`ayushmanCoverage_${relationKey}`}
+                                value={val}
+                                checked={details?.ayushmanCoverage === val}
+                                onChange={(e) =>
+                                  handleFamilyRelationDetailChange(
+                                    relationKey,
+                                    "ayushmanCoverage",
+                                    e.target.value
+                                  )
+                                }
+                              />
+                              {val}
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Ayushman Amount */}
+                      {details?.ayushmanCoverage === "Yes" && (
+                        <div>
+                          <label className="block text-sm font-medium text-slate-700 mb-1">
+                            Do they have any Mediclaim policy?*
+                          </label>
+                          <input
+                            type="number"
+                            value={details?.ayushmanAmount || ""}
+                            onChange={(e) =>
+                              handleFamilyRelationDetailChange(
+                                relationKey,
+                                "ayushmanAmount",
+                                e.target.value
+                              )
+                            }
+                            className="w-full p-2 border border-slate-300 rounded-md outline-none"
+                          />
+                        </div>
+                      )}
+
+                      {/* Medical Policy */}
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">
+                          Medical Policy
+                        </label>
+                        <div className="flex gap-4 mt-2">
+                          {["Yes", "No"].map((val) => (
+                            <label key={val} className="flex items-center gap-2 cursor-pointer">
+                              <input
+                                type="radio"
+                                name={`medicalPolicy_${relationKey}`}
+                                value={val}
+                                checked={details?.medicalPolicy === val}
+                                onChange={(e) =>
+                                  handleFamilyRelationDetailChange(
+                                    relationKey,
+                                    "medicalPolicy",
+                                    e.target.value
+                                  )
+                                }
+                              />
+                              {val}
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Mediclaim Details */}
+                      {details?.medicalPolicy === "Yes" && (
+                        <>
+                          <div>
+                            <input
+                              type="number"
+                              placeholder="Mediclaim Amount"
+                              value={details?.mediclaimAmount || ""}
+                              onChange={(e) =>
+                                handleFamilyRelationDetailChange(
+                                  relationKey,
+                                  "mediclaimAmount",
+                                  e.target.value
+                                )
+                              }
+                              className="w-full p-2 border border-slate-300 rounded-md"
+                            />
+                          </div>
+
+                          <div>
+                            <input
+                              type="number"
+                              placeholder="Premium Amount"
+                              value={details?.mediclaimPremiumAmount || ""}
+                              onChange={(e) =>
+                                handleFamilyRelationDetailChange(
+                                  relationKey,
+                                  "mediclaimPremiumAmount",
+                                  e.target.value
+                                )
+                              }
+                              className="w-full p-2 border border-slate-300 rounded-md"
+                            />
+                          </div>
+                        </>
+                      )}
+
+                      {/* Assistance */}
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">
+                          Need Assistance
+                        </label>
+                        <div className="flex gap-4 mt-2">
+                          {["Yes", "No"].map((val) => (
+                            <label key={val} className="flex items-center gap-2 cursor-pointer">
+                              <input
+                                type="radio"
+                                name={`needAssistance_${relationKey}`}
+                                value={val}
+                                checked={details?.needAssistance === val}
+                                onChange={(e) =>
+                                  handleFamilyRelationDetailChange(
+                                    relationKey,
+                                    "needAssistance",
+                                    e.target.value
+                                  )
+                                }
+                              />
+                              {val}
+                            </label>
+                          ))}
+                        </div>
+                      </div>
                     </div>
-                  );
-                });
-              })()}
+                  </div>
+                );
+              })}
 
               {/* {formData.rbfCriteria === "Yes" && (
             <div>
@@ -1940,7 +1989,7 @@ const DiksharthiDetailsAdd = () => {
           {currentStep === 3 && (
             <>
 
-              {formData.rbfCriteria === "Yes" && (
+
                 <>
                   {/* Permanent Address */}
                   <div>
@@ -1998,9 +2047,8 @@ const DiksharthiDetailsAdd = () => {
                     />
                   </div>
                 </>
-              )}
 
-              {formData.rbfCriteria === "Yes" && (
+
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Pin Code <span className="text-red-500">*</span></label>
                   <input
@@ -2015,9 +2063,7 @@ const DiksharthiDetailsAdd = () => {
                   {errors.pinCode && <p className="text-red-500 text-xs">{errors.pinCode}</p>}
                 </div>
 
-              )}
 
-              {formData.rbfCriteria === "Yes" && (
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Village / Post Office</label>
                   <select
@@ -2043,32 +2089,24 @@ const DiksharthiDetailsAdd = () => {
                     ))}
                   </select>
                 </div>
-              )}
 
-              {formData.rbfCriteria === "Yes" && (
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Taluka</label>
                   <input name="taluka" value={formData.taluka} onChange={handleChange} type="text" className="w-full p-2 border border-slate-300 rounded-md outline-none" />
                 </div>
-              )}
 
-              {formData.rbfCriteria === "Yes" && (
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">District / City <span className="text-red-500">*</span></label>
                   <input name="district" value={formData.district} onChange={handleChange} type="text" className="w-full p-2 border border-slate-300 rounded-md outline-none" />
                   {errors.district && <p className="text-red-500 text-xs">{errors.district}</p>}
                 </div>
-              )}
 
-              {formData.rbfCriteria === "Yes" && (
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">State <span className="text-red-500">*</span></label>
                   <input name="state" value={formData.state} onChange={handleChange} type="text" className="w-full p-2 border border-slate-300 rounded-md outline-none" />
                   {errors.state && <p className="text-red-500 text-xs">{errors.state}</p>}
                 </div>
-              )}
 
-              {formData.rbfCriteria === "Yes" && (
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
                     House <span className="text-red-500">*</span>
@@ -2096,9 +2134,7 @@ const DiksharthiDetailsAdd = () => {
                     </label>
                   </div>
                 </div>
-              )}
 
-              {formData.rbfCriteria === "Yes" && (
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Type Of House</label>
                   <input
@@ -2110,9 +2146,8 @@ const DiksharthiDetailsAdd = () => {
                     className="w-full p-2 border border-slate-300 rounded-md outline-none"
                   />
                 </div>
-              )}
 
-              {formData.rbfCriteria === "Yes" && formData.houseDetails === "own" && (
+              {formData.houseDetails === "own" && (
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Maintenance Cost (Monthly)</label>
                   <input
@@ -2125,7 +2160,7 @@ const DiksharthiDetailsAdd = () => {
                 </div>
               )}
 
-              {formData.rbfCriteria === "Yes" && formData.houseDetails === "rented" && (
+              { formData.houseDetails === "rented" && (
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Rent Cost (Monthly)</label>
                   <input
@@ -2138,7 +2173,6 @@ const DiksharthiDetailsAdd = () => {
                 </div>
               )}
 
-              {formData.rbfCriteria === "Yes" && (
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Light Bill Cost</label>
                   <input
@@ -2149,13 +2183,11 @@ const DiksharthiDetailsAdd = () => {
                     className="w-full p-2 border border-slate-300 rounded-md outline-none"
                   />
                 </div>
-              )}
             </>
           )}
 
           {currentStep === 4 && (
             <>
-              {formData.rbfCriteria === "Yes" && (
                 <div className="col-span-1 md:col-span-2 xl:col-span-2 border border-slate-200 rounded-lg p-4 bg-slate-50">
                   <label className="block text-sm font-medium text-slate-700 mb-1">
                     Does the family have any Mediclaim policy?
@@ -2235,9 +2267,7 @@ const DiksharthiDetailsAdd = () => {
                     </div>
                   )}
                 </div>
-              )}
 
-              {formData.rbfCriteria === "Yes" && (
                 <div className="col-span-1 md:col-span-2 xl:col-span-2 border border-slate-200 rounded-lg p-4 bg-slate-50">
                   <label className="block text-sm font-medium text-slate-700 mb-1">
                     Is any Sangh/NGO assistance received?
@@ -2315,7 +2345,6 @@ const DiksharthiDetailsAdd = () => {
                     </div>
                   )}
                 </div>
-              )}
 
               {/* {formData.rbfCriteria === "Yes" && (
             <div>
@@ -2355,19 +2384,17 @@ const DiksharthiDetailsAdd = () => {
 
 
 
-              {formData.assistanceReceived === "Yes" && (
 
-                <div>
+                {/* <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Upload Documents</label>
                   <input
                     type="file"
                     accept=".png, .jpg, .jpeg"
                     onChange={(e) => setUploadDoc(e.target.files[0])}
                     className="w-full p-2 border border-slate-300 rounded-md" />
-                </div>
-              )}
+                </div> */}
 
-              {formData.assistanceReceived === "Yes" && (
+              {/* {formData.assistanceReceived === "Yes" && (
                 <div className="my-6">
                   <label className="block text-sm font-medium text-slate-700 mb-1">Assistance</label>
                   <div className="flex flex-wrap gap-4">
@@ -2397,7 +2424,7 @@ const DiksharthiDetailsAdd = () => {
                     ))}
                   </div>
                 </div>
-              )}
+              )} */}
             </>
           )}
 
