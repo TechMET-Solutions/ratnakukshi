@@ -80,12 +80,12 @@ const Login = () => {
                 <option value="karyakarta">Karyakarta</option>
                 <option value="case-coordinator">Case Coordinator</option>
                 <option value="committee-member">Committee Member</option>
-                <option value="expert-panel">Expert Panel</option>
+                {/* <option value="expert-panel">Expert Panel</option>
                 {expertPanelSubRoles.map((item) => (
                   <option key={item.value} value={item.value}>
                     {item.label}
                   </option>
-                ))}
+                ))} */}
               </select>
             </div>
 

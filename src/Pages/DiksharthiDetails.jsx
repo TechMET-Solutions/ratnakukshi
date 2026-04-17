@@ -965,14 +965,14 @@ const DiksharthiListing = () => {
     }
   };
 
-  const handleOpenDiksharthiPdf = (id) => {
-    if (!id) return;
-    window.open(
-      `${API}/api/diksharthi/pdf/${id}`,
-      "_blank",
-      "noopener,noreferrer"
-    );
-  };
+  // const handleOpenDiksharthiPdf = (id) => {
+  //   if (!id) return;
+  //   window.open(
+  //     `${API}/api/diksharthi/pdf/${id}`,
+  //     "_blank",
+  //     "noopener,noreferrer"
+  //   );
+  // };
 
   const handleFeedbackFormChange = (e) => {
     const { name, value } = e.target;
@@ -1502,9 +1502,10 @@ const DiksharthiListing = () => {
 
                           <button
                             className="rounded-lg bg-red-600 text-sm px-2 py-1 text-white"
-                            onClick={() => handleOpenDiksharthiPdf(diksharthi.id)}
+                            onClick={() => handleDownloadApplicationPdf(diksharthi)}
+                            disabled={downloadingPdfId === diksharthi.id}
                           >
-                            PDF
+                            {downloadingPdfId === diksharthi.id ? "Downloading..." : "PDF"}
                           </button>
 
                          
@@ -1538,13 +1539,13 @@ const DiksharthiListing = () => {
                               >
                                 {downloadingPdfId === diksharthi.id ? "Downloading..." : "Application PDF"}
                               </button>
-                              <button
+                              {/* <button
                                 className="rounded-lg bg-emerald-600 text-sm px-2 py-1 text-white disabled:opacity-60"
                                 onClick={() => handleDownloadApplicationExcel(diksharthi)}
                                 disabled={downloadingApplicationId === diksharthi.id}
                               >
                                 {downloadingApplicationId === diksharthi.id ? "Downloading..." : "Application Excel"}
-                              </button>
+                              </button> */}
                             </div>
                           )}
 
