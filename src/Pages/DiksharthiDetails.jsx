@@ -163,35 +163,55 @@ const DiksharthiListing = () => {
       .includes(searchAdmin.toLowerCase())
   );
 
+  // const fetchFeedbackStatus = async (records) => {
+  //   try {
+  //     if (!Array.isArray(records) || records.length === 0) {
+  //       setFeedbackStatus({});
+  //       return;
+  //     }
+
+  //     const results = await Promise.all(
+  //       records.map(async (item) => {
+
+  //         const res = await fetch(`${API}/api/feedback/view/${item.id}`);
+  //         const data = await res.json();
+
+  //         const hasFeedback =
+  //           Array.isArray(data?.data) && data.data.length > 0;
+
+  //         return [item.id, hasFeedback];
+  //       })
+  //     );
+
+  //     const statusMap = results.reduce((acc, [id, value]) => {
+  //       acc[id] = value;
+  //       return acc;
+  //     }, {});
+
+  //     setFeedbackStatus(statusMap);
+
+  //   } catch (error) {
+  //     console.error("Feedback status fetch failed", error);
+  //   }
+  // };
+
+
   const fetchFeedbackStatus = async (records) => {
     try {
-      if (!Array.isArray(records) || records.length === 0) {
-        setFeedbackStatus({});
-        return;
-      }
+      const ids = records.map((item) => item.id);
 
-      const results = await Promise.all(
-        records.map(async (item) => {
+      const res = await fetch(`${API}/api/feedback/status`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ ids }),
+      });
 
-          const res = await fetch(`${API}/api/feedback/view/${item.id}`);
-          const data = await res.json();
-
-          const hasFeedback =
-            Array.isArray(data?.data) && data.data.length > 0;
-
-          return [item.id, hasFeedback];
-        })
-      );
-
-      const statusMap = results.reduce((acc, [id, value]) => {
-        acc[id] = value;
-        return acc;
-      }, {});
-
-      setFeedbackStatus(statusMap);
-
-    } catch (error) {
-      console.error("Feedback status fetch failed", error);
+      const data = await res.json();
+      setFeedbackStatus(data || {});
+    } catch (err) {
+      console.error(err);
     }
   };
 
