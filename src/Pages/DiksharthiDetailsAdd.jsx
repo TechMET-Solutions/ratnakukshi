@@ -7,6 +7,7 @@ import { API } from "../api/BaseURL";
 import { useAuth } from "../context/AuthContext";
 import { RELATIONS } from "../utils/constants";
 import { getMaxDOB } from "../utils/validation";
+import Family_Details_Staff from "./Family_Details_Staff";
 
 const initialFormData = {
   sadhu_sadhvi_name: "",
@@ -27,8 +28,8 @@ const initialFormData = {
   fanIdExists: "",
   fan_id: "",
   sameRelationsWithFan: false,
-  relation_name: "",   // ✅ add this
-  isMarried: "",       // add this
+  relation_name: "", // ✅ add this
+  isMarried: "", // add this
   familyRelations: [],
   familyRelationDetails: {},
   family_member_firstName: "",
@@ -60,7 +61,9 @@ const initialFormData = {
   assistanceReceived: "",
   assistance: [], // checkbox ke liye array
   // family_relation: [], // checkbox ke liye array
-  summary: "",  // 👈 new field
+  summary: "", // 👈 new field
+  spokenTo: "",
+  spokenTo_Relation:""
 };
 
 // Helper to calculate age from DOB
@@ -75,7 +78,6 @@ const calculateAge = (dob) => {
   }
   return age >= 0 ? age : "";
 };
-
 
 const toInputDate = (value) => {
   if (!value) return "";
@@ -113,7 +115,7 @@ const normalizeRelationValue = (value) => {
   const cleaned = raw.replace(/^[\[\{"'\s]+|[\]\}"'\s]+$/g, "");
   if (!cleaned) return "";
   const matched = RELATIONS.find(
-    (item) => String(item?.value || "").toLowerCase() === cleaned.toLowerCase()
+    (item) => String(item?.value || "").toLowerCase() === cleaned.toLowerCase(),
   );
   return matched?.value || cleaned;
 };
@@ -121,7 +123,7 @@ const normalizeRelationValue = (value) => {
 const parseFamilyRelations = (value) => {
   if (Array.isArray(value)) {
     return Array.from(
-      new Set(value.map(normalizeRelationValue).filter(Boolean))
+      new Set(value.map(normalizeRelationValue).filter(Boolean)),
     );
   }
 
@@ -132,7 +134,7 @@ const parseFamilyRelations = (value) => {
       const parsed = parseMaybeJsonObject(trimmed, null);
       if (Array.isArray(parsed)) {
         return Array.from(
-          new Set(parsed.map(normalizeRelationValue).filter(Boolean))
+          new Set(parsed.map(normalizeRelationValue).filter(Boolean)),
         );
       }
     }
@@ -141,8 +143,8 @@ const parseFamilyRelations = (value) => {
         trimmed
           .split(",")
           .map((item) => normalizeRelationValue(item))
-          .filter(Boolean)
-      )
+          .filter(Boolean),
+      ),
     );
   }
 
@@ -190,57 +192,55 @@ const mapDiksharthiToFormData = (record) => {
 
   const relationDetailsFromFamily = parseMaybeJsonObject(
     record?.family_details?.relationDetails,
-    {}
+    {},
   );
 
   const mergedDetails = {};
-  Object.entries(relationDetailsFromFamily).forEach(
-    ([key, value]) => {
-      const normalizedKey = normalizeRelationValue(key);
-      if (!normalizedKey) return;
-      mergedDetails[normalizedKey] = createEmptyFamilyRelationDetails({
-        firstName: value?.firstName || "",
-        lastName: value?.lastName || "",
-        mobileNumber: value?.mobileNumber || value?.mobile_no || "",
-        aadharNumber: value?.aadharNumber || "",
-        panNumber: value?.panNumber || "",
-        dob: toInputDate(value?.dob || value?.dateOfBirth),
-        age: value?.age || "",
-        ayushmanCoverage:
-          value?.ayushmanCoverage ||
-          (typeof value?.ayushman === "boolean"
-            ? value?.ayushman
-              ? "Yes"
-              : "No"
-            : value?.ayushman) ||
-          "",
-        ayushmanAmount: value?.ayushmanAmount || value?.amount || "",
-        medicalPolicy:
-          value?.medicalPolicy ||
-          (typeof value?.mediclaim === "boolean"
-            ? value?.mediclaim
-              ? "Yes"
-              : "No"
-            : value?.mediclaim) ||
-          "",
-        mediclaimAmount: value?.mediclaimAmount || "",
-        mediclaimPremiumAmount: value?.mediclaimPremiumAmount || "",
-        mediclaimCompanyName: value?.mediclaimCompanyName || "",
-        mediclaimType: value?.mediclaimType || value?.mediclaim_type || "",
-        needAssistance:
-          value?.needAssistance ||
-          (typeof value?.need_assistance === "boolean"
-            ? value?.need_assistance
-              ? "Yes"
-              : "No"
-            : value?.need_assistance) ||
-          "",
-        assistanceCategories: Array.isArray(value?.assistanceCategories)
-          ? value.assistanceCategories
-          : [],
-      });
-    }
-  );
+  Object.entries(relationDetailsFromFamily).forEach(([key, value]) => {
+    const normalizedKey = normalizeRelationValue(key);
+    if (!normalizedKey) return;
+    mergedDetails[normalizedKey] = createEmptyFamilyRelationDetails({
+      firstName: value?.firstName || "",
+      lastName: value?.lastName || "",
+      mobileNumber: value?.mobileNumber || value?.mobile_no || "",
+      aadharNumber: value?.aadharNumber || "",
+      panNumber: value?.panNumber || "",
+      dob: toInputDate(value?.dob || value?.dateOfBirth),
+      age: value?.age || "",
+      ayushmanCoverage:
+        value?.ayushmanCoverage ||
+        (typeof value?.ayushman === "boolean"
+          ? value?.ayushman
+            ? "Yes"
+            : "No"
+          : value?.ayushman) ||
+        "",
+      ayushmanAmount: value?.ayushmanAmount || value?.amount || "",
+      medicalPolicy:
+        value?.medicalPolicy ||
+        (typeof value?.mediclaim === "boolean"
+          ? value?.mediclaim
+            ? "Yes"
+            : "No"
+          : value?.mediclaim) ||
+        "",
+      mediclaimAmount: value?.mediclaimAmount || "",
+      mediclaimPremiumAmount: value?.mediclaimPremiumAmount || "",
+      mediclaimCompanyName: value?.mediclaimCompanyName || "",
+      mediclaimType: value?.mediclaimType || value?.mediclaim_type || "",
+      needAssistance:
+        value?.needAssistance ||
+        (typeof value?.need_assistance === "boolean"
+          ? value?.need_assistance
+            ? "Yes"
+            : "No"
+          : value?.need_assistance) ||
+        "",
+      assistanceCategories: Array.isArray(value?.assistanceCategories)
+        ? value.assistanceCategories
+        : [],
+    });
+  });
 
   const inferredRelation = normalizeRelationValue(record?.relation || "");
   const familyRelations = Array.from(
@@ -248,7 +248,7 @@ const mapDiksharthiToFormData = (record) => {
       ...rawRelations,
       ...Object.keys(mergedDetails),
       ...(inferredRelation ? [inferredRelation] : []),
-    ])
+    ]),
   );
 
   if (inferredRelation && !mergedDetails[inferredRelation]) {
@@ -286,7 +286,8 @@ const mapDiksharthiToFormData = (record) => {
     family_member_lastName: record?.family_member_lastName || "",
     mobileNo: record?.mobileNo || record?.mobile_no || "",
     altMobileNo: record?.altMobileNo || record?.alt_mobile_no || "",
-    permanentAddress: record?.permanentAddress || record?.permanent_address || "",
+    permanentAddress:
+      record?.permanentAddress || record?.permanent_address || "",
     currentAddress: record?.currentAddress || record?.current_address || "",
     village: record?.village || "",
     taluka: record?.taluka || "",
@@ -304,9 +305,10 @@ const mapDiksharthiToFormData = (record) => {
       record?.Family_mediclaim_amount || record?.family_mediclaim_amount || "",
     mediclaimPremiumAmount:
       record?.mediclaimPremiumAmount || record?.mediclaim_premium_amount || "",
-    family_mediclaim_companyName:
-      record?.family_mediclaim_companyName || "",
-    ngoAssistance: toBooleanOrNull(record?.ngoAssistance || record?.ngo_assistance),
+    family_mediclaim_companyName: record?.family_mediclaim_companyName || "",
+    ngoAssistance: toBooleanOrNull(
+      record?.ngoAssistance || record?.ngo_assistance,
+    ),
     sanghName: record?.sanghName || record?.ngo_sangh_name || "",
     ngoAmount: record?.ngoAmount || record?.ngo_amount || "",
     ngoFrequency: record?.ngoFrequency || record?.ngo_frequency || "",
@@ -314,7 +316,8 @@ const mapDiksharthiToFormData = (record) => {
     assistance: record?.assistance,
     deselected_assistance: record?.deselected_assistance,
     pinCode: record?.pinCode || record?.pin_code || "",
-    assistanceReceived: record?.assistanceReceived || record?.assistance_received || "",
+    assistanceReceived:
+      record?.assistanceReceived || record?.assistance_received || "",
     summary: record?.summary || "",
   };
 };
@@ -347,11 +350,13 @@ const mapFormDataToApiPayload = (formData, userId, currentStep = 1) => {
       primaryMember?.details?.firstName || formData.family_member_firstName,
     family_member_lastName:
       primaryMember?.details?.lastName || formData.family_member_lastName,
-    mobile_no:
-      primaryMember?.details?.mobileNumber || formData.mobileNo,
-    family_relation:
-      Array.isArray(formData?.familyRelations) ? formData.familyRelations : [],
-    family_relation_details: JSON.stringify(formData?.familyRelationDetails || {}),
+    mobile_no: primaryMember?.details?.mobileNumber || formData.mobileNo,
+    family_relation: Array.isArray(formData?.familyRelations)
+      ? formData.familyRelations
+      : [],
+    family_relation_details: JSON.stringify(
+      formData?.familyRelationDetails || {},
+    ),
     alt_mobile_no: formData.altMobileNo,
     permanent_address: formData.permanentAddress,
     current_address: formData.currentAddress,
@@ -386,9 +391,7 @@ const MOBILE_REGEX = /^\d{10}$/;
 const PINCODE_REGEX = /^\d{6}$/;
 
 const getFamilyNumber = (record) =>
-  record?.family_details?.family_id ||
-  record?.family_id ||
-  "";
+  record?.family_details?.family_id || record?.family_id || "";
 
 const getFamilyMemberLabel = (record) => {
   const first = String(record?.family_member_firstName || "").trim();
@@ -399,17 +402,26 @@ const getFamilyMemberLabel = (record) => {
 const DiksharthiDetailsAdd = () => {
   const location = useLocation();
   const { user } = useAuth();
-  const editRecord = location?.state?.mode === "edit" ? location?.state?.diksharthiData : null;
+  const editRecord =
+    location?.state?.mode === "edit" ? location?.state?.diksharthiData : null;
   const editId = editRecord?.id || location?.state?.id || null;
   const isEditMode = Boolean(editId);
-
   const [photo, setPhoto] = useState(null);
   const [uploadDoc, setUploadDoc] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [savedId, setSavedId] = useState("");
-  const [savedRecordId, setSavedRecordId] = useState(editId ? Number(editId) : null);
+
+  const [savedMainDiksarthi, setSavedIdsavedMainDiksarthi] = useState(null);
+
+  const [savedRecordId, setSavedRecordId] = useState(
+    editId ? Number(editId) : null,
+  );
+  console.log(savedRecordId, "savedRecordId of the diksarthi");
   const [formData, setFormData] = useState(initialFormData);
-  console.log(formData, "formData")
+  console.log(formData, "formData");
+  console.log(formData.familyRelations, "familyRelations");
+
+  console.log(formData?.familyRelationDetails, "familyRelationDetails");
   const [isEditLoading, setIsEditLoading] = useState(false);
   const navigate = useNavigate();
   const [errors, setErrors] = useState({});
@@ -417,17 +429,32 @@ const DiksharthiDetailsAdd = () => {
   const [isDiksharthiListLoading, setIsDiksharthiListLoading] = useState(false);
   const [diksharthiSearch, setDiksharthiSearch] = useState("");
   const [fanIdSearch, setFanIdSearch] = useState("");
-  console.log(fanIdSearch, "fanIdSearch")
-  const [selectedSourceDiksharthi, setSelectedSourceDiksharthi] = useState(null);
+  console.log(fanIdSearch, "fanIdSearch");
+  const [selectedSourceDiksharthi, setSelectedSourceDiksharthi] =
+    useState(null);
   const [currentStep, setCurrentStep] = useState(1);
 
   const [existingFanRelations, setExistingFanRelations] = useState(new Set());
 
   const [postOffices, setPostOffices] = useState([]);
-  const rbfMandatoryFields = ["permanentAddress", "pinCode", "district", "state"];
+  const rbfMandatoryFields = [
+    "permanentAddress",
+    "pinCode",
+    "district",
+    "state",
+  ];
 
-  const [assistanceTypes] = useState(["Medical", "Education", "Job", "Grocery", "Rent", "Housing", "Vaiyavacch", "LivelihoodExpenses", "Business"]);
-
+  const [assistanceTypes] = useState([
+    "Medical",
+    "Education",
+    "Job",
+    "Grocery",
+    "Rent",
+    "Housing",
+    "Vaiyavacch",
+    "LivelihoodExpenses",
+    "Business",
+  ]);
 
   const validateRbfField = (fieldName, fieldValue, rbfCriteria) => {
     if (rbfCriteria !== "Yes") return "";
@@ -454,7 +481,8 @@ const DiksharthiDetailsAdd = () => {
 
     if (fieldName === "altMobileNo") {
       if (!value) return ""; // optional field hai 👍
-      if (!MOBILE_REGEX.test(value)) return "Alt Mobile number must be 10 digits";
+      if (!MOBILE_REGEX.test(value))
+        return "Alt Mobile number must be 10 digits";
     }
 
     if (fieldName === "pinCode") {
@@ -465,11 +493,11 @@ const DiksharthiDetailsAdd = () => {
     return "";
   };
 
-
-
   const fetchPincodeDetails = async (pincode) => {
     try {
-      const res = await axios.get(`https://api.postalpincode.in/pincode/${pincode}`);
+      const res = await axios.get(
+        `https://api.postalpincode.in/pincode/${pincode}`,
+      );
       const data = res.data;
 
       if (data[0].Status === "Success") {
@@ -517,7 +545,9 @@ const DiksharthiDetailsAdd = () => {
         const result = await response.json().catch(() => ({}));
         const rows = Array.isArray(result?.data) ? result.data : [];
         const currentId = editId ? String(editId) : "";
-        const filteredRows = rows.filter((item) => String(item?.id) !== currentId);
+        const filteredRows = rows.filter(
+          (item) => String(item?.id) !== currentId,
+        );
         setAllDiksharthi(filteredRows);
       } catch (error) {
         console.error(error);
@@ -534,12 +564,14 @@ const DiksharthiDetailsAdd = () => {
 
     setSelectedSourceDiksharthi(selected);
     setDiksharthiSearch(
-      `${selected?.sadhu_sadhvi_name || ""} (${selected?.diksharthi_code || selected?.id || ""})`
+      `${selected?.sadhu_sadhvi_name || ""} (${selected?.diksharthi_code || selected?.id || ""})`,
     );
 
     let sourceFamilyData = {};
     try {
-      const familyResponse = await axios.get(`${API}/api/family-details/${selected?.id}`);
+      const familyResponse = await axios.get(
+        `${API}/api/family-details/${selected?.id}`,
+      );
       sourceFamilyData = familyResponse?.data?.data?.[0] || {};
     } catch (_error) {
       sourceFamilyData = {};
@@ -549,40 +581,42 @@ const DiksharthiDetailsAdd = () => {
       const selectedRelations = parseFamilyRelations(selected?.family_relation);
       const selectedRelationDetails = parseMaybeJsonObject(
         sourceFamilyData?.relationDetails,
-        {}
+        {},
       );
       const relationSeed = normalizeRelationValue(
-        selected?.relation || prev.relation || ""
+        selected?.relation || prev.relation || "",
       );
       const normalizedRelations = Array.from(
         new Set([
           ...selectedRelations,
           ...Object.keys(selectedRelationDetails),
           ...(relationSeed ? [relationSeed] : []),
-        ])
+        ]),
       );
       const normalizedRelationDetails = {};
       normalizedRelations.forEach((relationKey) => {
         const current = selectedRelationDetails?.[relationKey] || {};
-        normalizedRelationDetails[relationKey] = createEmptyFamilyRelationDetails({
-          firstName: current?.firstName || "",
-          lastName: current?.lastName || "",
-          mobileNumber: current?.mobileNumber || "",
-          aadharNumber: current?.aadharNumber || "",
-          panNumber: current?.panNumber || "",
-          dob: toInputDate(current?.dob),
-          age: current?.age || "",
-          ayushmanCoverage: current?.ayushmanCoverage || "",
-          medicalPolicy: current?.medicalPolicy || "",
-          needAssistance: current?.needAssistance || "",
-        });
+        normalizedRelationDetails[relationKey] =
+          createEmptyFamilyRelationDetails({
+            firstName: current?.firstName || "",
+            lastName: current?.lastName || "",
+            mobileNumber: current?.mobileNumber || "",
+            aadharNumber: current?.aadharNumber || "",
+            panNumber: current?.panNumber || "",
+            dob: toInputDate(current?.dob),
+            age: current?.age || "",
+            ayushmanCoverage: current?.ayushmanCoverage || "",
+            medicalPolicy: current?.medicalPolicy || "",
+            needAssistance: current?.needAssistance || "",
+          });
       });
       if (relationSeed && !normalizedRelationDetails[relationSeed]) {
-        normalizedRelationDetails[relationSeed] = createEmptyFamilyRelationDetails({
-          firstName: selected?.family_member_firstName || "",
-          lastName: selected?.family_member_lastName || "",
-          mobileNumber: selected?.mobile_no || "",
-        });
+        normalizedRelationDetails[relationSeed] =
+          createEmptyFamilyRelationDetails({
+            firstName: selected?.family_member_firstName || "",
+            lastName: selected?.family_member_lastName || "",
+            mobileNumber: selected?.mobile_no || "",
+          });
       }
 
       const nextState = {
@@ -593,23 +627,58 @@ const DiksharthiDetailsAdd = () => {
           prev.relation ||
           "",
         relation_name: selected?.relation_name || prev.relation_name || "",
-        isMarried: selected?.is_married || selected?.isMarried || prev.isMarried || "",
-        family_member_firstName: selected?.family_member_firstName || prev.family_member_firstName || "",
-        family_member_lastName: selected?.family_member_lastName || prev.family_member_lastName || "",
-        mobileNo: selected?.mobile_no || selected?.mobileNo || prev.mobileNo || "",
-        altMobileNo: selected?.alt_mobile_no || selected?.altMobileNo || prev.altMobileNo || "",
-        permanentAddress: selected?.permanent_address || selected?.permanentAddress || prev.permanentAddress || "",
-        currentAddress: selected?.current_address || selected?.currentAddress || prev.currentAddress || "",
+        isMarried:
+          selected?.is_married || selected?.isMarried || prev.isMarried || "",
+        family_member_firstName:
+          selected?.family_member_firstName ||
+          prev.family_member_firstName ||
+          "",
+        family_member_lastName:
+          selected?.family_member_lastName || prev.family_member_lastName || "",
+        mobileNo:
+          selected?.mobile_no || selected?.mobileNo || prev.mobileNo || "",
+        altMobileNo:
+          selected?.alt_mobile_no ||
+          selected?.altMobileNo ||
+          prev.altMobileNo ||
+          "",
+        permanentAddress:
+          selected?.permanent_address ||
+          selected?.permanentAddress ||
+          prev.permanentAddress ||
+          "",
+        currentAddress:
+          selected?.current_address ||
+          selected?.currentAddress ||
+          prev.currentAddress ||
+          "",
         village: selected?.village || prev.village || "",
         taluka: selected?.taluka || prev.taluka || "",
         district: selected?.district || prev.district || "",
         state: selected?.state || prev.state || "",
         pinCode: selected?.pin_code || selected?.pinCode || prev.pinCode || "",
-        houseDetails: selected?.house_details || selected?.houseDetails || prev.houseDetails || "",
-        typeOfHouse: selected?.type_of_house || selected?.typeOfHouse || prev.typeOfHouse || "",
-        maintenanceCost: selected?.maintenance_cost || selected?.maintenanceCost || prev.maintenanceCost || "",
-        rentCost: selected?.rent_cost || selected?.rentCost || prev.rentCost || "",
-        lightBillCost: selected?.light_bill_cost || selected?.lightBillCost || prev.lightBillCost || "",
+        houseDetails:
+          selected?.house_details ||
+          selected?.houseDetails ||
+          prev.houseDetails ||
+          "",
+        typeOfHouse:
+          selected?.type_of_house ||
+          selected?.typeOfHouse ||
+          prev.typeOfHouse ||
+          "",
+        maintenanceCost:
+          selected?.maintenance_cost ||
+          selected?.maintenanceCost ||
+          prev.maintenanceCost ||
+          "",
+        rentCost:
+          selected?.rent_cost || selected?.rentCost || prev.rentCost || "",
+        lightBillCost:
+          selected?.light_bill_cost ||
+          selected?.lightBillCost ||
+          prev.lightBillCost ||
+          "",
         mediclaim: toBooleanOrNull(selected?.mediclaim ?? prev.mediclaim),
         family_mediclaim_type:
           selected?.Family_mediclaim_type ||
@@ -630,11 +699,25 @@ const DiksharthiDetailsAdd = () => {
           selected?.family_mediclaim_companyName ||
           prev.family_mediclaim_companyName ||
           "",
-        ngoAssistance: toBooleanOrNull(selected?.ngo_assistance ?? selected?.ngoAssistance ?? prev.ngoAssistance),
-        sanghName: selected?.ngo_sangh_name || selected?.sanghName || prev.sanghName || "",
-        ngoAmount: selected?.ngo_amount || selected?.ngoAmount || prev.ngoAmount || "",
-        ngoFrequency: selected?.ngo_frequency || selected?.ngoFrequency || prev.ngoFrequency || "",
-        ngoRemark: selected?.ngo_remark || selected?.ngoRemark || prev.ngoRemark || "",
+        ngoAssistance: toBooleanOrNull(
+          selected?.ngo_assistance ??
+            selected?.ngoAssistance ??
+            prev.ngoAssistance,
+        ),
+        sanghName:
+          selected?.ngo_sangh_name ||
+          selected?.sanghName ||
+          prev.sanghName ||
+          "",
+        ngoAmount:
+          selected?.ngo_amount || selected?.ngoAmount || prev.ngoAmount || "",
+        ngoFrequency:
+          selected?.ngo_frequency ||
+          selected?.ngoFrequency ||
+          prev.ngoFrequency ||
+          "",
+        ngoRemark:
+          selected?.ngo_remark || selected?.ngoRemark || prev.ngoRemark || "",
         familyRelations: normalizedRelations,
         familyRelationDetails: normalizedRelationDetails,
       };
@@ -661,11 +744,6 @@ const DiksharthiDetailsAdd = () => {
       ].forEach((field) => delete next[field]);
       return next;
     });
-  };
-
-  const clearSelectedSourceDiksharthi = () => {
-    setSelectedSourceDiksharthi(null);
-    setDiksharthiSearch("");
   };
 
   const handleChange = (e) => {
@@ -695,7 +773,8 @@ const DiksharthiDetailsAdd = () => {
       }
 
       if (name === "isAlive") {
-        nextState.viharLocation = sanitizedValue === "Yes" ? prev.viharLocation : "";
+        nextState.viharLocation =
+          sanitizedValue === "Yes" ? prev.viharLocation : "";
         if (sanitizedValue === "Yes") {
           nextState.samadhiDate = "";
           nextState.samadhiPlace = "";
@@ -756,7 +835,8 @@ const DiksharthiDetailsAdd = () => {
       return nextState;
     });
 
-    const nextRbfCriteria = name === "rbfCriteria" ? sanitizedValue : formData.rbfCriteria;
+    const nextRbfCriteria =
+      name === "rbfCriteria" ? sanitizedValue : formData.rbfCriteria;
 
     if (name === "rbfCriteria" && sanitizedValue !== "Yes") {
       setErrors((prev) => {
@@ -779,7 +859,9 @@ const DiksharthiDetailsAdd = () => {
 
     if (rbfMandatoryFields.includes(name) || name === "relation") {
       const errorMessage =
-        name === "relation" && nextRbfCriteria === "Yes" && !String(sanitizedValue || "").trim()
+        name === "relation" &&
+        nextRbfCriteria === "Yes" &&
+        !String(sanitizedValue || "").trim()
           ? "Required for RBF"
           : validateRbfField(name, sanitizedValue, nextRbfCriteria);
 
@@ -817,14 +899,16 @@ const DiksharthiDetailsAdd = () => {
         if (!String(details?.mobileNumber || "").trim()) {
           newErrors[`family_mobile_${relationKey}`] = "Required";
         } else if (!MOBILE_REGEX.test(details?.mobileNumber)) {
-          newErrors[`family_mobile_${relationKey}`] = "Mobile must be 10 digits";
+          newErrors[`family_mobile_${relationKey}`] =
+            "Mobile must be 10 digits";
         }
 
         // ✅ AADHAR (FIXED)
         if (!String(details?.aadharNumber || "").trim()) {
           newErrors[`family_aadhar_${relationKey}`] = "Required";
         } else if (!/^\d{12}$/.test(details?.aadharNumber)) {
-          newErrors[`family_aadhar_${relationKey}`] = "Aadhar must be 12 digits";
+          newErrors[`family_aadhar_${relationKey}`] =
+            "Aadhar must be 12 digits";
         }
       });
     }
@@ -835,6 +919,7 @@ const DiksharthiDetailsAdd = () => {
   };
 
   const handleSave = async () => {
+    debugger;
     if (!validate()) return;
     try {
       const loggedInUserId = user?.id || user?.user_id || user?.userId || "";
@@ -843,7 +928,11 @@ const DiksharthiDetailsAdd = () => {
         return;
       }
       const data = new FormData();
-      const payload = mapFormDataToApiPayload(formData, loggedInUserId, currentStep);
+      const payload = mapFormDataToApiPayload(
+        formData,
+        loggedInUserId,
+        currentStep,
+      );
       Object.entries(payload).forEach(([key, value]) => {
         data.append(key, value ?? "");
       });
@@ -862,10 +951,10 @@ const DiksharthiDetailsAdd = () => {
 
       if (isEditMode) {
         alert("Updated successfully");
-        navigate("/diksharthi-details")
+        navigate("/diksharthi-details");
       } else {
         alert("Added successfully");
-        navigate("/diksharthi-details")
+        navigate("/diksharthi-details");
         // setShowModal(true);
       }
     } catch (error) {
@@ -881,11 +970,6 @@ const DiksharthiDetailsAdd = () => {
     "Mediclaims and NGO",
     "Summary",
   ];
-
-  // const goToNextStep = () => {
-  //   setCurrentStep((prev) => Math.min(prev + 1, stepTitles.length));
-  // };
-
 
   const convertFamilyArrayToObject = (familyArray = []) => {
     const result = {};
@@ -917,9 +1001,8 @@ const DiksharthiDetailsAdd = () => {
     return result;
   };
 
-
   const goToNextStep = async () => {
-    debugger
+    debugger;
     const isValid = validate();
     if (!isValid) return;
 
@@ -929,7 +1012,11 @@ const DiksharthiDetailsAdd = () => {
         alert("Login user id missing. Please login again.");
         return;
       }
-      const payload = mapFormDataToApiPayload(formData, loggedInUserId, currentStep);
+      const payload = mapFormDataToApiPayload(
+        formData,
+        loggedInUserId,
+        currentStep,
+      );
       const data = new FormData();
       Object.entries(payload).forEach(([key, value]) => {
         data.append(key, value ?? "");
@@ -962,7 +1049,7 @@ const DiksharthiDetailsAdd = () => {
 
           if (latestData?.family_details) {
             const relationDetails = convertFamilyArrayToObject(
-              latestData.family_details
+              latestData.family_details,
             );
 
             const relations = Object.keys(relationDetails);
@@ -989,19 +1076,13 @@ const DiksharthiDetailsAdd = () => {
     setCurrentStep((prev) => Math.max(prev - 1, 1));
   };
 
-  
-
-
   const filteredRelations = RELATIONS.filter((item) => {
     // Gender restriction
     if (formData.gender === "Sadhu" && item.value === "Husband") return false;
     if (formData.gender === "Sadhvi" && item.value === "Wife") return false;
 
     // 🚀 NEW: remove relations already present in FAN ID
-    if (
-      formData.sameRelationsWithFan &&
-      existingFanRelations.has(item.value)
-    ) {
+    if (formData.sameRelationsWithFan && existingFanRelations.has(item.value)) {
       return false;
     }
 
@@ -1028,8 +1109,8 @@ const DiksharthiDetailsAdd = () => {
 
       const nextRelation =
         prev?.relation === relationValue && exists
-          ? (nextRelations[0] || "")
-          : (prev?.relation || relationValue);
+          ? nextRelations[0] || ""
+          : prev?.relation || relationValue;
 
       return {
         ...prev,
@@ -1066,22 +1147,31 @@ const DiksharthiDetailsAdd = () => {
   //   });
   // };
 
-
-  const handleFamilyRelationDetailChange = (relationValue, fieldName, rawValue) => {
+  const handleFamilyRelationDetailChange = (
+    relationValue,
+    fieldName,
+    rawValue,
+  ) => {
     if (formData?.sameRelationsWithFan) return;
 
     let nextValue = rawValue;
 
     if (fieldName === "mobileNumber") {
-      nextValue = String(rawValue || "").replace(/\D/g, "").slice(0, 10);
+      nextValue = String(rawValue || "")
+        .replace(/\D/g, "")
+        .slice(0, 10);
     }
 
     if (fieldName === "aadharNumber") {
-      nextValue = String(rawValue || "").replace(/\D/g, "").slice(0, 12);
+      nextValue = String(rawValue || "")
+        .replace(/\D/g, "")
+        .slice(0, 12);
     }
 
     setFormData((prev) => {
-      const current = prev?.familyRelationDetails?.[relationValue] || createEmptyFamilyRelationDetails();
+      const current =
+        prev?.familyRelationDetails?.[relationValue] ||
+        createEmptyFamilyRelationDetails();
       const updated = { ...current, [fieldName]: nextValue };
 
       if (fieldName === "dob") {
@@ -1133,25 +1223,29 @@ const DiksharthiDetailsAdd = () => {
     });
   };
 
-  const normalizedDiksharthiSearch = String(diksharthiSearch || "").trim().toLowerCase();
+  const normalizedDiksharthiSearch = String(diksharthiSearch || "")
+    .trim()
+    .toLowerCase();
   const filteredDiksharthiOptions = normalizedDiksharthiSearch
     ? allDiksharthi
-      .filter((item) => {
-        const familyNumber = String(getFamilyNumber(item) || "").toLowerCase();
-        const searchFields = [
-          item?.sadhu_sadhvi_name,
-          item?.diksharthi_code,
-          item?.mobile_no,
-          item?.family_member_firstName,
-          item?.family_member_lastName,
-          familyNumber,
-        ]
-          .map((value) => String(value || "").toLowerCase())
-          .join(" ");
+        .filter((item) => {
+          const familyNumber = String(
+            getFamilyNumber(item) || "",
+          ).toLowerCase();
+          const searchFields = [
+            item?.sadhu_sadhvi_name,
+            item?.diksharthi_code,
+            item?.mobile_no,
+            item?.family_member_firstName,
+            item?.family_member_lastName,
+            familyNumber,
+          ]
+            .map((value) => String(value || "").toLowerCase())
+            .join(" ");
 
-        return searchFields.includes(normalizedDiksharthiSearch);
-      })
-      .slice(0, 8)
+          return searchFields.includes(normalizedDiksharthiSearch);
+        })
+        .slice(0, 8)
     : [];
 
   const uniqueFanOptions = Array.from(
@@ -1159,8 +1253,7 @@ const DiksharthiDetailsAdd = () => {
       (allDiksharthi || [])
         .filter(
           (item) =>
-            String(item?.fan_id || "").trim() ||
-            String(item?.id || "").trim()
+            String(item?.fan_id || "").trim() || String(item?.id || "").trim(),
         )
         .map((item) => [
           String(item.id).trim(),
@@ -1170,46 +1263,56 @@ const DiksharthiDetailsAdd = () => {
             fan_id: String(item?.fan_id || "").trim(),
             sadhu_sadhvi_name: item?.sadhu_sadhvi_name || "",
           },
-        ])
-    ).values()
+        ]),
+    ).values(),
   );
 
-  const normalizedFanIdSearch = String(fanIdSearch || "").trim().toLowerCase();
+  const normalizedFanIdSearch = String(fanIdSearch || "")
+    .trim()
+    .toLowerCase();
   const filteredFanOptions = normalizedFanIdSearch
     ? uniqueFanOptions
-      .filter((item) =>
-        `${item?.id || ""} ${item?.diksharthi_code || ""} ${item?.fan_id || ""} ${item?.sadhu_sadhvi_name || ""}`
-          .toLowerCase()
-          .includes(normalizedFanIdSearch)
-      )
-      .slice(0, 8)
+        .filter((item) =>
+          `${item?.id || ""} ${item?.diksharthi_code || ""} ${item?.fan_id || ""} ${item?.sadhu_sadhvi_name || ""}`
+            .toLowerCase()
+            .includes(normalizedFanIdSearch),
+        )
+        .slice(0, 8)
+    : [];
+
+  const filteredFanOptions2 = normalizedFanIdSearch
+    ? uniqueFanOptions
+        .filter((item) =>
+          JSON.stringify(item).toLowerCase().includes(normalizedFanIdSearch),
+        )
+        .slice(0, 8)
     : [];
 
   const normalizedSelectedFanValue = String(formData?.fan_id || "").trim();
-  const fanSourceRecord =
-    normalizedSelectedFanValue
-      ? (allDiksharthi || []).find(
+  const fanSourceRecord = normalizedSelectedFanValue
+    ? (allDiksharthi || []).find(
         (item) =>
-          (
-            String(item?.fan_id || "").trim() === normalizedSelectedFanValue ||
+          (String(item?.fan_id || "").trim() === normalizedSelectedFanValue ||
             String(item?.id || "").trim() === normalizedSelectedFanValue ||
-            String(item?.diksharthi_code || "").trim() === normalizedSelectedFanValue
-          ) &&
-          String(item?.id || "") !== String(editId || "")
+            String(item?.diksharthi_code || "").trim() ===
+              normalizedSelectedFanValue) &&
+          String(item?.id || "") !== String(editId || ""),
       ) || null
-      : null;
+    : null;
 
   useEffect(() => {
     if (!formData?.sameRelationsWithFan) return;
     if (!fanSourceRecord) return;
 
     const applyFanRelations = async () => {
-      const sourceRelations = parseFamilyRelations(fanSourceRecord?.family_relation);
+      const sourceRelations = parseFamilyRelations(
+        fanSourceRecord?.family_relation,
+      );
 
       let sourceFamilyData = {};
       try {
         const familyResponse = await axios.get(
-          `${API}/api/family-details/${fanSourceRecord?.id}`
+          `${API}/api/family-details/${fanSourceRecord?.id}`,
         );
         sourceFamilyData = familyResponse?.data?.data?.[0] || {};
       } catch (_error) {
@@ -1218,12 +1321,12 @@ const DiksharthiDetailsAdd = () => {
 
       const sourceRelationDetailsRaw = parseMaybeJsonObject(
         sourceFamilyData?.relationDetails,
-        {}
+        {},
       );
 
       const existingRelationsSet = new Set([
         ...sourceRelations,
-        ...Object.keys(sourceRelationDetailsRaw || {})
+        ...Object.keys(sourceRelationDetailsRaw || {}),
       ]);
 
       // Save it in state (NEW)
@@ -1257,11 +1360,13 @@ const DiksharthiDetailsAdd = () => {
       if (!sourceRelations.length && fanSourceRecord?.relation) {
         const relationKey = normalizeRelationValue(fanSourceRecord.relation);
         if (relationKey) {
-          mergedRelationDetails[relationKey] = createEmptyFamilyRelationDetails({
-            firstName: fanSourceRecord?.family_member_firstName || "",
-            lastName: fanSourceRecord?.family_member_lastName || "",
-            mobileNumber: fanSourceRecord?.mobile_no || "",
-          });
+          mergedRelationDetails[relationKey] = createEmptyFamilyRelationDetails(
+            {
+              firstName: fanSourceRecord?.family_member_firstName || "",
+              lastName: fanSourceRecord?.family_member_lastName || "",
+              mobileNumber: fanSourceRecord?.mobile_no || "",
+            },
+          );
           sourceRelations.push(relationKey);
         }
       }
@@ -1296,10 +1401,11 @@ const DiksharthiDetailsAdd = () => {
                   key={title}
                   type="button"
                   onClick={() => setCurrentStep(stepNumber)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-semibold border ${isActive
-                    ? "bg-[#ECB000] text-white border-[#ECB000]"
-                    : "bg-white text-slate-600 border-slate-300"
-                    }`}
+                  className={`px-3 py-1.5 rounded-full text-xs font-semibold border ${
+                    isActive
+                      ? "bg-[#ECB000] text-white border-[#ECB000]"
+                      : "bg-white text-slate-600 border-slate-300"
+                  }`}
                 >
                   {stepNumber}. {title}
                 </button>
@@ -1308,14 +1414,29 @@ const DiksharthiDetailsAdd = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mt-5">
+        <div
+          className={`${currentStep === 2 ? "" : "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mt-5"}`}
+        >
           {currentStep === 1 && (
             <>
               {/* Name */}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Name of P. Pujya. Sadhu/ Sadhvi Ji <span className="text-red-500">*</span></label>
-                <input name="sadhu_sadhvi_name" value={formData.sadhu_sadhvi_name} onChange={handleChange} type="text" className="w-full p-2 border border-slate-300 rounded-md outline-none" />
-                {errors.sadhu_sadhvi_name && <p className="text-red-500 text-xs">{errors.sadhu_sadhvi_name}</p>}
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Name of P. Pujya. Sadhu/ Sadhvi Ji{" "}
+                  <span className="text-red-500">*</span>
+                </label>
+                <input
+                  name="sadhu_sadhvi_name"
+                  value={formData.sadhu_sadhvi_name}
+                  onChange={handleChange}
+                  type="text"
+                  className="w-full p-2 border border-slate-300 rounded-md outline-none"
+                />
+                {errors.sadhu_sadhvi_name && (
+                  <p className="text-red-500 text-xs">
+                    {errors.sadhu_sadhvi_name}
+                  </p>
+                )}
               </div>
 
               <div>
@@ -1344,14 +1465,21 @@ const DiksharthiDetailsAdd = () => {
                     No
                   </label>
                 </div>
-                {errors.fanIdExists && <p className="text-red-500 text-xs">{errors.fanIdExists}</p>}
+                {errors.fanIdExists && (
+                  <p className="text-red-500 text-xs">{errors.fanIdExists}</p>
+                )}
               </div>
 
               {formData.fanIdExists === "Yes" && (
                 <div className="col-span-1 md:col-span-2">
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Search M.S. Name / F.A.N ID / Diksharthi ID</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Search M.S. Name / F.A.N ID / Diksharthi ID
+                  </label>
                   <div className="relative">
-                    <Search size={16} className="absolute left-3 top-3 text-slate-400" />
+                    <Search
+                      size={16}
+                      className="absolute left-3 top-3 text-slate-400"
+                    />
                     <input
                       type="text"
                       value={fanIdSearch}
@@ -1372,7 +1500,11 @@ const DiksharthiDetailsAdd = () => {
                         type="button"
                         onClick={() => {
                           setFanIdSearch("");
-                          setFormData((prev) => ({ ...prev, fan_id: "", sameRelationsWithFan: false }));
+                          setFormData((prev) => ({
+                            ...prev,
+                            fan_id: "",
+                            sameRelationsWithFan: false,
+                          }));
                         }}
                         className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600"
                       >
@@ -1380,7 +1512,9 @@ const DiksharthiDetailsAdd = () => {
                       </button>
                     )}
                   </div>
-                  {errors.fan_id && <p className="text-red-500 text-xs mt-1">{errors.fan_id}</p>}
+                  {errors.fan_id && (
+                    <p className="text-red-500 text-xs mt-1">{errors.fan_id}</p>
+                  )}
 
                   {filteredFanOptions.length > 0 && (
                     <div className="mt-2 border border-slate-200 rounded-md bg-white max-h-56 overflow-auto">
@@ -1399,10 +1533,14 @@ const DiksharthiDetailsAdd = () => {
                           className="w-full text-left px-3 py-2 border-b border-slate-100 last:border-b-0 hover:bg-yellow-50"
                         >
                           <p className="text-sm font-medium text-slate-800">
-                            Diksharthi ID: {item.id || "-"} {item.fan_id ? `| FAN ID: ${item.fan_id}` : ""}
+                            Diksharthi ID: {item.id || "-"}{" "}
+                            {item.fan_id ? `| FAN ID: ${item.fan_id}` : ""}
                           </p>
                           <p className="text-xs text-slate-500">
-                            {item.sadhu_sadhvi_name || "-"} {item.diksharthi_code ? `(${item.diksharthi_code})` : ""}
+                            {item.sadhu_sadhvi_name || "-"}{" "}
+                            {item.diksharthi_code
+                              ? `(${item.diksharthi_code})`
+                              : ""}
                           </p>
                         </button>
                       ))}
@@ -1413,7 +1551,9 @@ const DiksharthiDetailsAdd = () => {
 
               {formData.fanIdExists === "No" && (
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">FAN ID</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    FAN ID
+                  </label>
                   <input
                     type="text"
                     value="Will be Auto-Generated"
@@ -1425,31 +1565,77 @@ const DiksharthiDetailsAdd = () => {
 
               {/* DOB (Optional) */}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Date of Birth of M.S.</label>
-                <input name="dob" max={getMaxDOB()} value={formData.dob} onChange={handleChange} type="date" className="w-full p-2 border border-slate-300 rounded-md outline-none" />
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Date of Birth of M.S.
+                </label>
+                <input
+                  name="dob"
+                  max={getMaxDOB()}
+                  value={formData.dob}
+                  onChange={handleChange}
+                  type="date"
+                  className="w-full p-2 border border-slate-300 rounded-md outline-none"
+                />
               </div>
 
               {/* Age (Manual Input) */}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Age of M.S.</label>
-                <input name="age" type="number" value={formData.age} onChange={handleChange} className="w-full p-2 border border-slate-300 rounded-md outline-none" />
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Age of M.S.
+                </label>
+                <input
+                  name="age"
+                  type="number"
+                  value={formData.age}
+                  onChange={handleChange}
+                  className="w-full p-2 border border-slate-300 rounded-md outline-none"
+                />
               </div>
 
               {/* Gender */}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Gender <span className="text-red-500">*</span></label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Gender <span className="text-red-500">*</span>
+                </label>
                 <div className="flex gap-4 mt-2">
-                  <label className="flex items-center gap-2 cursor-pointer"><input type="radio" name="gender" value="Sadhu" checked={formData.gender === "Sadhu"} onChange={handleChange} /> Sadhu</label>
-                  <label className="flex items-center gap-2 cursor-pointer"><input type="radio" name="gender" value="Sadhvi" checked={formData.gender === "Sadhvi"} onChange={handleChange} /> Sadhvi</label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="gender"
+                      value="Sadhu"
+                      checked={formData.gender === "Sadhu"}
+                      onChange={handleChange}
+                    />{" "}
+                    Sadhu
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="gender"
+                      value="Sadhvi"
+                      checked={formData.gender === "Sadhvi"}
+                      onChange={handleChange}
+                    />{" "}
+                    Sadhvi
+                  </label>
                 </div>
-                {errors.gender && <p className="text-red-500 text-xs">{errors.gender}</p>}
+                {errors.gender && (
+                  <p className="text-red-500 text-xs">{errors.gender}</p>
+                )}
               </div>
 
               {/* Pad */}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Pad <span className="text-red-500">*</span></label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Pad <span className="text-red-500">*</span>
+                </label>
                 <div className="relative">
-                  <select name="pad" value={formData.pad} onChange={handleChange} className="w-full p-2 border border-slate-300 rounded-md appearance-none">
+                  <select
+                    name="pad"
+                    value={formData.pad}
+                    onChange={handleChange}
+                    className="w-full p-2 border border-slate-300 rounded-md appearance-none"
+                  >
                     <option value="">Select</option>
                     <option>Acharya</option>
                     <option>Upadyay</option>
@@ -1459,30 +1645,66 @@ const DiksharthiDetailsAdd = () => {
                     <option>Sadhviji</option>
                     <option>Other</option>
                   </select>
-                  <ChevronDown size={16} className="absolute right-3 top-3 text-gray-400" />
+                  <ChevronDown
+                    size={16}
+                    className="absolute right-3 top-3 text-gray-400"
+                  />
                 </div>
-                {errors.pad && <p className="text-red-500 text-xs">{errors.pad}</p>}
+                {errors.pad && (
+                  <p className="text-red-500 text-xs">{errors.pad}</p>
+                )}
               </div>
 
               {/* Samudaay */}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Samudaay <span className="text-red-500">*</span></label>
-                <input name="samudaay" value={formData.samudaay} onChange={handleChange} type="text" className="w-full p-2 border border-slate-300 rounded-md outline-none" />
-                {errors.samudaay && <p className="text-red-500 text-xs">{errors.samudaay}</p>}
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Samudaay <span className="text-red-500">*</span>
+                </label>
+                <input
+                  name="samudaay"
+                  value={formData.samudaay}
+                  onChange={handleChange}
+                  type="text"
+                  className="w-full p-2 border border-slate-300 rounded-md outline-none"
+                />
+                {errors.samudaay && (
+                  <p className="text-red-500 text-xs">{errors.samudaay}</p>
+                )}
               </div>
 
               {/* Guru */}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Name of respected Guru / Guruni <span className="text-red-500">*</span></label>
-                <input name="guruName" value={formData.guruName} onChange={handleChange} type="text" className="w-full p-2 border border-slate-300 rounded-md outline-none" />
-                {errors.guruName && <p className="text-red-500 text-xs">{errors.guruName}</p>}
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Name of respected Guru / Guruni{" "}
+                  <span className="text-red-500">*</span>
+                </label>
+                <input
+                  name="guruName"
+                  value={formData.guruName}
+                  onChange={handleChange}
+                  type="text"
+                  className="w-full p-2 border border-slate-300 rounded-md outline-none"
+                />
+                {errors.guruName && (
+                  <p className="text-red-500 text-xs">{errors.guruName}</p>
+                )}
               </div>
 
               {/* Under which Acharya ji */}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Under which Acharya ji <span className="text-red-500">*</span></label>
-                <input name="acharya" value={formData.acharya} onChange={handleChange} type="text" className="w-full p-2 border border-slate-300 rounded-md outline-none" />
-                {errors.acharya && <p className="text-red-500 text-xs">{errors.acharya}</p>}
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Under which Acharya ji <span className="text-red-500">*</span>
+                </label>
+                <input
+                  name="acharya"
+                  value={formData.acharya}
+                  onChange={handleChange}
+                  type="text"
+                  className="w-full p-2 border border-slate-300 rounded-md outline-none"
+                />
+                {errors.acharya && (
+                  <p className="text-red-500 text-xs">{errors.acharya}</p>
+                )}
               </div>
 
               {/* Gaachh */}
@@ -1493,67 +1715,146 @@ const DiksharthiDetailsAdd = () => {
 
               {/* Gadipati */}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Name of Gachadhipati <span className="text-red-500">*</span></label>
-                <input name="gadipati" value={formData.gadipati} onChange={handleChange} type="text" className="w-full p-2 border border-slate-300 rounded-md outline-none" />
-                {errors.gadipati && <p className="text-red-500 text-xs">{errors.gadipati}</p>}
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Name of Gachadhipati <span className="text-red-500">*</span>
+                </label>
+                <input
+                  name="gadipati"
+                  value={formData.gadipati}
+                  onChange={handleChange}
+                  type="text"
+                  className="w-full p-2 border border-slate-300 rounded-md outline-none"
+                />
+                {errors.gadipati && (
+                  <p className="text-red-500 text-xs">{errors.gadipati}</p>
+                )}
               </div>
 
               {/* Alive */}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Is MS currently alive? <span className="text-red-500">*</span></label>
-                <select name="isAlive" value={formData.isAlive} onChange={handleChange} className="w-full p-2 border border-slate-300 rounded-md">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Is MS currently alive? <span className="text-red-500">*</span>
+                </label>
+                <select
+                  name="isAlive"
+                  value={formData.isAlive}
+                  onChange={handleChange}
+                  className="w-full p-2 border border-slate-300 rounded-md"
+                >
                   <option value="">Select</option>
                   <option value="Yes">Vidyamaan</option>
                   <option value="No">Kaaldharma</option>
                 </select>
-                {errors.isAlive && <p className="text-red-500 text-xs">{errors.isAlive}</p>}
+                {errors.isAlive && (
+                  <p className="text-red-500 text-xs">{errors.isAlive}</p>
+                )}
               </div>
 
               {formData.isAlive === "Yes" && (
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Vihar Location <span className="text-red-500">*</span></label>
-                  <input name="viharLocation" value={formData.viharLocation} onChange={handleChange} type="text" className="w-full p-2 border border-slate-300 rounded-md" />
-
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Vihar Location <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    name="viharLocation"
+                    value={formData.viharLocation}
+                    onChange={handleChange}
+                    type="text"
+                    className="w-full p-2 border border-slate-300 rounded-md"
+                  />
                 </div>
               )}
 
               {/* Optional Samadhi Fields */}
               {formData.isAlive === "No" && (
                 <div className="flex-1">
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Samadhi Date (Optional)</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Samadhi Date (Optional)
+                  </label>
                   <input
                     type="date"
                     name="samadhiDate"
                     value={formData.samadhiDate}
                     onChange={handleChange}
-                    max={new Date().toISOString().split("T")[0]}  // ✅ TODAY MAX
+                    max={new Date().toISOString().split("T")[0]} // ✅ TODAY MAX
                     className="w-full p-2 border border-slate-300 rounded-md"
                   />
                 </div>
               )}
               {formData.isAlive === "No" && (
                 <div className="flex-1">
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Samadhi Place (Optional)</label>
-                  <input name="samadhiPlace" value={formData.samadhiPlace} onChange={handleChange} type="text" className="w-full p-2 border border-slate-300 rounded-md" />
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Samadhi Place (Optional)
+                  </label>
+                  <input
+                    name="samadhiPlace"
+                    value={formData.samadhiPlace}
+                    onChange={handleChange}
+                    type="text"
+                    className="w-full p-2 border border-slate-300 rounded-md"
+                  />
                 </div>
               )}
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Photo of P. Pujya. Sadhu/ Sadhvi Ji</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Photo of P. Pujya. Sadhu/ Sadhvi Ji
+                </label>
                 <input
                   type="file"
                   accept=".png, .jpg, .jpeg"
                   onChange={(e) => setPhoto(e.target.files[0])}
-                  className="w-full p-2 border border-slate-300 rounded-md" />
+                  className="w-full p-2 border border-slate-300 rounded-md"
+                />
               </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+  {/* Spoken To Name */}
+  <div>
+    <label className="block text-sm font-medium text-slate-700 mb-1">
+      Spoken To <span className="text-red-500">*</span>
+    </label>
+    <input
+      name="spokenTo"
+      value={formData.spokenTo}
+      onChange={handleChange}
+      type="text"
+      placeholder="Enter name"
+      className="w-full p-2 border border-slate-300 rounded-md outline-none"
+    />
+    {errors.spokenTo && (
+      <p className="text-red-500 text-xs">{errors.spokenTo}</p>
+    )}
+  </div>
+
+  {/* Spoken To Relation */}
+  <div>
+    <label className="block text-sm font-medium text-slate-700 mb-1">
+      Relation <span className="text-red-500">*</span>
+    </label>
+    <input
+      name="spokenTo_Relation"
+      value={formData.spokenTo_Relation}
+      onChange={handleChange}
+      type="text"
+      placeholder="Enter relation (e.g. Father, Brother)"
+      className="w-full p-2 border border-slate-300 rounded-md outline-none"
+    />
+    {errors.spokenTo_Relation && (
+      <p className="text-red-500 text-xs">
+        {errors.spokenTo_Relation}
+      </p>
+    )}
+  </div>
+
+</div>
             </>
           )}
 
           {currentStep === 2 && (
             <>
-
-              {/* RBF Criteria */}
-              <div>
+              {/* <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">RBF Criteria <span className="text-red-500">*</span></label>
                 <div className="flex gap-4 mt-2">
                   <label className="flex items-center gap-2 cursor-pointer"><input type="radio" name="rbfCriteria" value="Yes" checked={formData.rbfCriteria === "Yes"} onChange={handleChange} /> Yes</label>
@@ -1562,7 +1863,7 @@ const DiksharthiDetailsAdd = () => {
                 {errors.rbfCriteria && <p className="text-red-500 text-xs">{errors.rbfCriteria}</p>}
               </div>
 
-              {/* Relation (Conditional) */}
+              
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Relation to MS <span className="text-red-500">*</span></label>
                   <select
@@ -1579,9 +1880,9 @@ const DiksharthiDetailsAdd = () => {
                     ))}
                   </select>
                   {errors.relation && <p className="text-red-500 text-xs">{errors.relation}</p>}
-                </div>
+                </div> */}
 
-              {formData.relation === "Other" && (
+              {/* {formData.relation === "Other" && (
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
                     Relation Name <span className="text-red-500">*</span>
@@ -1623,15 +1924,9 @@ const DiksharthiDetailsAdd = () => {
                     <p className="text-red-500 text-xs">{errors.isMarried}</p>
                   )}
                 </div>
-              )}
+              )} */}
 
-              {/* {formData.rbfCriteria === "Yes" &&
-                formData.fanIdExists === "Yes" &&
-                String(formData.fan_id || "").trim() && (
-                  
-                )} */}
-
-                <div className="col-span-1 md:col-span-2 xl:col-span-4">
+              {/* <div className="col-span-1 md:col-span-2 xl:col-span-4">
                   <label className="block text-sm font-medium text-slate-700 mb-2">
                     Family Relations <span className="text-red-500">*</span>
                   </label>
@@ -1659,10 +1954,9 @@ const DiksharthiDetailsAdd = () => {
                   {errors.familyRelations && (
                     <p className="text-red-500 text-xs mt-1">{errors.familyRelations}</p>
                   )}
-                </div>
+                </div> */}
 
-
-              {Array.from(
+              {/* {Array.from(
                 new Set([
                   ...(formData?.familyRelations || []),
                   ...Object.keys(formData?.familyRelationDetails || {}),
@@ -1681,7 +1975,7 @@ const DiksharthiDetailsAdd = () => {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
 
-                      {/* First Name */}
+                    
                       <div>
                         <label className="block text-sm font-medium text-slate-700 mb-1">
                           First Name *
@@ -1705,7 +1999,7 @@ const DiksharthiDetailsAdd = () => {
                         )}
                       </div>
 
-                      {/* Last Name */}
+                     
                       <div>
                         <label className="block text-sm font-medium text-slate-700 mb-1">
                           Last Name *
@@ -1729,7 +2023,7 @@ const DiksharthiDetailsAdd = () => {
                         )}
                       </div>
 
-                      {/* Mobile */}
+                      
                       <div>
                         <label className="block text-sm font-medium text-slate-700 mb-1">
                           Mobile No *
@@ -1755,7 +2049,7 @@ const DiksharthiDetailsAdd = () => {
                         )}
                       </div>
 
-                      {/* Aadhar */}
+                     
                       <div>
                         <label className="block text-sm font-medium text-slate-700 mb-1">
                           Aadhar No
@@ -1781,7 +2075,7 @@ const DiksharthiDetailsAdd = () => {
                         )}
                       </div>
 
-                      {/* PAN */}
+                     
                       <div>
                         <label className="block text-sm font-medium text-slate-700 mb-1">
                           PAN No
@@ -1805,7 +2099,7 @@ const DiksharthiDetailsAdd = () => {
                         )}
                       </div>
 
-                      {/* DOB */}
+                     
                       <div>
                         <label className="block text-sm font-medium text-slate-700 mb-1">
                           DOB
@@ -1825,7 +2119,7 @@ const DiksharthiDetailsAdd = () => {
                         />
                       </div>
 
-                      {/* Age */}
+                     
                       <div>
                         <label className="block text-sm font-medium text-slate-700 mb-1">
                           Age
@@ -1844,7 +2138,7 @@ const DiksharthiDetailsAdd = () => {
                         />
                       </div>
 
-                      {/* Ayushman */}
+                    
                       <div>
                         <label className="block text-sm font-medium text-slate-700 mb-1">
                           Does this person have Ayushman coverage?
@@ -1871,7 +2165,7 @@ const DiksharthiDetailsAdd = () => {
                         </div>
                       </div>
 
-                      {/* Ayushman Amount */}
+                    
                       {details?.ayushmanCoverage === "Yes" && (
                         <div>
                           <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -1892,7 +2186,7 @@ const DiksharthiDetailsAdd = () => {
                         </div>
                       )}
 
-                      {/* Medical Policy */}
+                     
                       <div>
                         <label className="block text-sm font-medium text-slate-700 mb-1">
                           Medical Policy
@@ -1919,7 +2213,7 @@ const DiksharthiDetailsAdd = () => {
                         </div>
                       </div>
 
-                      {/* Mediclaim Details */}
+                     
                       {details?.medicalPolicy === "Yes" && (
                         <>
                           <div>
@@ -1956,7 +2250,7 @@ const DiksharthiDetailsAdd = () => {
                         </>
                       )}
 
-                      {/* Assistance */}
+                    
                       <div>
                         <label className="block text-sm font-medium text-slate-700 mb-1">
                           Need Assistance
@@ -1985,188 +2279,221 @@ const DiksharthiDetailsAdd = () => {
                     </div>
                   </div>
                 );
-              })}
+              })} */}
 
-              {/* {formData.rbfCriteria === "Yes" && (
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Alternate Mobile Number</label>
-              <input name="altMobileNo"
-                value={formData.altMobileNo}
-                onChange={handleChange}
-                type="text"
-                inputMode="numeric"
-                maxLength={10}
-                className="w-full p-2 border border-slate-300 rounded-md outline-none" />
-              {errors.altMobileNo && <p className="text-red-500 text-xs">{errors.altMobileNo}</p>}
-            </div>
-          )} */}
+              {/* <Family_Details_Staff diksarthiid={fanIdSearch} /> */}
+              {savedRecordId ? (
+                <Family_Details_Staff
+                  diksarthiid={fanIdSearch}
+                  newdiksarthi={savedRecordId}
+                  savedMainDiksarthi={filteredFanOptions2}
+                />
+              ) : (
+                <div>Please save record first</div> // optional
+              )}
             </>
           )}
 
           {currentStep === 3 && (
             <>
-
-
-                <>
-                  {/* Permanent Address */}
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">
-                      Permanent Address <span className="text-red-500">*</span>
-                    </label>
-
-                    <input
-                      name="permanentAddress"
-                      value={formData.permanentAddress}
-                      onChange={handleChange}
-                      type="text"
-                      className="w-full p-2 border border-slate-300 rounded-md outline-none"
-                    />
-
-                    {errors.permanentAddress && (
-                      <p className="text-red-500 text-xs">{errors.permanentAddress}</p>
-                    )}
-                  </div>
-
-                  {/* ✅ Checkbox */}
-                  <div className="flex items-center gap-2 mt-2">
-                    <input
-                      type="checkbox"
-                      name="sameAddress"
-                      checked={formData.sameAddress || false}
-                      onChange={(e) => {
-                        const checked = e.target.checked;
-
-                        setFormData((prev) => ({
-                          ...prev,
-                          sameAddress: checked,
-                          currentAddress: checked ? prev.permanentAddress : ""
-                        }));
-                      }}
-                    />
-                    <label className="text-sm text-slate-700 cursor-pointer">
-                      Same as Permanent Address
-                    </label>
-                  </div>
-
-                  {/* Current Address */}
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">
-                      Current Address
-                    </label>
-
-                    <input
-                      name="currentAddress"
-                      value={formData.currentAddress}
-                      onChange={handleChange}
-                      type="text"
-                      disabled={formData.sameAddress} // ✅ disable when checked
-                      className="w-full p-2 border border-slate-300 rounded-md outline-none bg-gray-100"
-                    />
-                  </div>
-                </>
-
-
+              <>
+                {/* Permanent Address */}
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Pin Code <span className="text-red-500">*</span></label>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Permanent Address <span className="text-red-500">*</span>
+                  </label>
+
                   <input
-                    name="pinCode"
-                    value={formData.pinCode}
+                    name="permanentAddress"
+                    value={formData.permanentAddress}
                     onChange={handleChange}
                     type="text"
-                    inputMode="numeric"
-                    maxLength={6}
                     className="w-full p-2 border border-slate-300 rounded-md outline-none"
                   />
-                  {errors.pinCode && <p className="text-red-500 text-xs">{errors.pinCode}</p>}
+
+                  {errors.permanentAddress && (
+                    <p className="text-red-500 text-xs">
+                      {errors.permanentAddress}
+                    </p>
+                  )}
                 </div>
 
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Village / Post Office</label>
-                  <select
-                    value={formData.village || ""}
+                {/* ✅ Checkbox */}
+                <div className="flex items-center gap-2 mt-2">
+                  <input
+                    type="checkbox"
+                    name="sameAddress"
+                    checked={formData.sameAddress || false}
                     onChange={(e) => {
-                      const selected = JSON.parse(e.target.value);
+                      const checked = e.target.checked;
 
                       setFormData((prev) => ({
                         ...prev,
-                        village: selected.Name,
-                        taluka: selected.Block,
-                        district: selected.District,
-                        state: selected.State,
+                        sameAddress: checked,
+                        currentAddress: checked ? prev.permanentAddress : "",
                       }));
                     }}
-                    className="w-full p-2 border rounded-md"
-                  >
-                    <option value="">Select Village</option>
-                    {postOffices.map((po, index) => (
-                      <option key={index} value={JSON.stringify(po)}>
-                        {po.Name} ({po.Block})
-                      </option>
-                    ))}
-                  </select>
+                  />
+                  <label className="text-sm text-slate-700 cursor-pointer">
+                    Same as Permanent Address
+                  </label>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Taluka</label>
-                  <input name="taluka" value={formData.taluka} onChange={handleChange} type="text" className="w-full p-2 border border-slate-300 rounded-md outline-none" />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">District / City <span className="text-red-500">*</span></label>
-                  <input name="district" value={formData.district} onChange={handleChange} type="text" className="w-full p-2 border border-slate-300 rounded-md outline-none" />
-                  {errors.district && <p className="text-red-500 text-xs">{errors.district}</p>}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">State <span className="text-red-500">*</span></label>
-                  <input name="state" value={formData.state} onChange={handleChange} type="text" className="w-full p-2 border border-slate-300 rounded-md outline-none" />
-                  {errors.state && <p className="text-red-500 text-xs">{errors.state}</p>}
-                </div>
-
+                {/* Current Address */}
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
-                    House <span className="text-red-500">*</span>
+                    Current Address
                   </label>
-                  <div className="flex gap-4 mt-2">
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="houseDetails"
-                        value="own"
-                        checked={formData.houseDetails === "own"}
-                        onChange={handleChange}
-                      />
-                      Own
-                    </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="houseDetails"
-                        value="rented"
-                        checked={formData.houseDetails === "rented"}
-                        onChange={handleChange}
-                      />
-                      Rented
-                    </label>
-                  </div>
-                </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Type Of House</label>
                   <input
-                    name="typeOfHouse"
-                    value={formData.typeOfHouse}
+                    name="currentAddress"
+                    value={formData.currentAddress}
                     onChange={handleChange}
                     type="text"
-                    placeholder="e.g. Apartment, Villa"
-                    className="w-full p-2 border border-slate-300 rounded-md outline-none"
+                    disabled={formData.sameAddress} // ✅ disable when checked
+                    className="w-full p-2 border border-slate-300 rounded-md outline-none bg-gray-100"
                   />
                 </div>
+              </>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Pin Code <span className="text-red-500">*</span>
+                </label>
+                <input
+                  name="pinCode"
+                  value={formData.pinCode}
+                  onChange={handleChange}
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={6}
+                  className="w-full p-2 border border-slate-300 rounded-md outline-none"
+                />
+                {errors.pinCode && (
+                  <p className="text-red-500 text-xs">{errors.pinCode}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Village / Post Office
+                </label>
+                <select
+                  value={formData.village || ""}
+                  onChange={(e) => {
+                    const selected = JSON.parse(e.target.value);
+
+                    setFormData((prev) => ({
+                      ...prev,
+                      village: selected.Name,
+                      taluka: selected.Block,
+                      district: selected.District,
+                      state: selected.State,
+                    }));
+                  }}
+                  className="w-full p-2 border rounded-md"
+                >
+                  <option value="">Select Village</option>
+                  {postOffices.map((po, index) => (
+                    <option key={index} value={JSON.stringify(po)}>
+                      {po.Name} ({po.Block})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Taluka
+                </label>
+                <input
+                  name="taluka"
+                  value={formData.taluka}
+                  onChange={handleChange}
+                  type="text"
+                  className="w-full p-2 border border-slate-300 rounded-md outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  District / City <span className="text-red-500">*</span>
+                </label>
+                <input
+                  name="district"
+                  value={formData.district}
+                  onChange={handleChange}
+                  type="text"
+                  className="w-full p-2 border border-slate-300 rounded-md outline-none"
+                />
+                {errors.district && (
+                  <p className="text-red-500 text-xs">{errors.district}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  State <span className="text-red-500">*</span>
+                </label>
+                <input
+                  name="state"
+                  value={formData.state}
+                  onChange={handleChange}
+                  type="text"
+                  className="w-full p-2 border border-slate-300 rounded-md outline-none"
+                />
+                {errors.state && (
+                  <p className="text-red-500 text-xs">{errors.state}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  House <span className="text-red-500">*</span>
+                </label>
+                <div className="flex gap-4 mt-2">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="houseDetails"
+                      value="own"
+                      checked={formData.houseDetails === "own"}
+                      onChange={handleChange}
+                    />
+                    Own
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="houseDetails"
+                      value="rented"
+                      checked={formData.houseDetails === "rented"}
+                      onChange={handleChange}
+                    />
+                    Rented
+                  </label>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Type Of House
+                </label>
+                <input
+                  name="typeOfHouse"
+                  value={formData.typeOfHouse}
+                  onChange={handleChange}
+                  type="text"
+                  placeholder="e.g. Apartment, Villa"
+                  className="w-full p-2 border border-slate-300 rounded-md outline-none"
+                />
+              </div>
 
               {formData.houseDetails === "own" && (
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Maintenance Cost (Monthly)</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Maintenance Cost (Monthly)
+                  </label>
                   <input
                     name="maintenanceCost"
                     value={formData.maintenanceCost}
@@ -2177,9 +2504,11 @@ const DiksharthiDetailsAdd = () => {
                 </div>
               )}
 
-              { formData.houseDetails === "rented" && (
+              {formData.houseDetails === "rented" && (
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Rent Cost (Monthly)</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Rent Cost (Monthly)
+                  </label>
                   <input
                     name="rentCost"
                     value={formData.rentCost}
@@ -2190,178 +2519,212 @@ const DiksharthiDetailsAdd = () => {
                 </div>
               )}
 
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Light Bill Cost</label>
-                  <input
-                    name="lightBillCost"
-                    value={formData.lightBillCost}
-                    onChange={handleChange}
-                    type="number"
-                    className="w-full p-2 border border-slate-300 rounded-md outline-none"
-                  />
-                </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Light Bill Cost
+                </label>
+                <input
+                  name="lightBillCost"
+                  value={formData.lightBillCost}
+                  onChange={handleChange}
+                  type="number"
+                  className="w-full p-2 border border-slate-300 rounded-md outline-none"
+                />
+              </div>
             </>
           )}
 
           {currentStep === 4 && (
             <>
-                <div className="col-span-1 md:col-span-2 xl:col-span-2 border border-slate-200 rounded-lg p-4 bg-slate-50">
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Does the family have any Mediclaim policy?
+              <div className="col-span-1 md:col-span-2 xl:col-span-2 border border-slate-200 rounded-lg p-4 bg-slate-50">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Does the family have any Mediclaim policy?
+                </label>
+                <div className="flex gap-4 mt-2">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="mediclaim"
+                      checked={formData.mediclaim === true}
+                      onChange={() =>
+                        setFormData((prev) => ({ ...prev, mediclaim: true }))
+                      }
+                    />
+                    Yes
                   </label>
-                  <div className="flex gap-4 mt-2">
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="mediclaim"
-                        checked={formData.mediclaim === true}
-                        onChange={() => setFormData((prev) => ({ ...prev, mediclaim: true }))}
-                      />
-                      Yes
-                    </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="mediclaim"
-                        checked={formData.mediclaim === false}
-                        onChange={() => setFormData((prev) => ({ ...prev, mediclaim: false }))}
-                      />
-                      No
-                    </label>
-                  </div>
-
-                  {formData.mediclaim === true && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                      <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1">Mediclaim Type</label>
-                        <select
-                          name="family_mediclaim_type"
-                          value={formData.family_mediclaim_type || ""}
-                          onChange={handleChange}
-                          className="w-full p-2 border border-slate-300 rounded-md outline-none bg-white"
-                        >
-                          <option value="">Select Type</option>
-                          <option value="single">Single</option>
-                          <option value="joint">Joint</option>
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1">Family Mediclaim Policy Amount</label>
-                        <input
-                          name="Family_mediclaim_amount"
-                          value={formData.Family_mediclaim_amount || ""}
-                          onChange={handleChange}
-                          type="number"
-                          className="w-full p-2 border border-slate-300 rounded-md outline-none bg-white"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1">Mediclaim Premium Amount</label>
-                        <input
-                          name="mediclaimPremiumAmount"
-                          value={formData.mediclaimPremiumAmount || ""}
-                          onChange={handleChange}
-                          type="number"
-                          className="w-full p-2 border border-slate-300 rounded-md outline-none bg-white"
-                        />
-                        {errors.mediclaimPremiumAmount && (
-                          <p className="text-red-500 text-xs">{errors.mediclaimPremiumAmount}</p>
-                        )}
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1">Mediclaim Company Name</label>
-                        <input
-                          name="family_mediclaim_companyName"
-                          value={formData.family_mediclaim_companyName || ""}
-                          onChange={handleChange}
-                          type="text"
-                          className="w-full p-2 border border-slate-300 rounded-md outline-none bg-white"
-                        />
-                      </div>
-                    </div>
-                  )}
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="mediclaim"
+                      checked={formData.mediclaim === false}
+                      onChange={() =>
+                        setFormData((prev) => ({ ...prev, mediclaim: false }))
+                      }
+                    />
+                    No
+                  </label>
                 </div>
 
-                <div className="col-span-1 md:col-span-2 xl:col-span-2 border border-slate-200 rounded-lg p-4 bg-slate-50">
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Is any Sangh/NGO assistance received?
-                  </label>
-                  <div className="flex gap-4 mt-2">
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="ngoAssistance"
-                        checked={formData.ngoAssistance === true}
-                        onChange={() => setFormData((prev) => ({ ...prev, ngoAssistance: true }))}
-                      />
-                      Yes
-                    </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="ngoAssistance"
-                        checked={formData.ngoAssistance === false}
-                        onChange={() => setFormData((prev) => ({ ...prev, ngoAssistance: false }))}
-                      />
-                      No
-                    </label>
-                  </div>
-
-                  {formData.ngoAssistance === true && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                      <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1">Sangh Name</label>
-                        <input
-                          name="sanghName"
-                          value={formData.sanghName || ""}
-                          onChange={handleChange}
-                          type="text"
-                          className="w-full p-2 border border-slate-300 rounded-md outline-none bg-white"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1">Amount</label>
-                        <input
-                          name="ngoAmount"
-                          value={formData.ngoAmount || ""}
-                          onChange={handleChange}
-                          type="number"
-                          className="w-full p-2 border border-slate-300 rounded-md outline-none bg-white"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1">Frequency</label>
-                        <select
-                          name="ngoFrequency"
-                          value={formData.ngoFrequency || ""}
-                          onChange={handleChange}
-                          className="w-full p-2 border border-slate-300 rounded-md outline-none bg-white"
-                        >
-                          <option value="">Select Frequency</option>
-                          <option value="Monthly">Monthly</option>
-                          <option value="Quarterly">Quarterly</option>
-                          <option value="Annually">Annually</option>
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1">Details / Remark</label>
-                        <textarea
-                          name="ngoRemark"
-                          value={formData.ngoRemark || ""}
-                          onChange={handleChange}
-                          rows={2}
-                          className="w-full p-2 border border-slate-300 rounded-md outline-none resize-none bg-white"
-                        />
-                      </div>
+                {formData.mediclaim === true && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">
+                        Mediclaim Type
+                      </label>
+                      <select
+                        name="family_mediclaim_type"
+                        value={formData.family_mediclaim_type || ""}
+                        onChange={handleChange}
+                        className="w-full p-2 border border-slate-300 rounded-md outline-none bg-white"
+                      >
+                        <option value="">Select Type</option>
+                        <option value="single">Single</option>
+                        <option value="joint">Joint</option>
+                      </select>
                     </div>
-                  )}
+
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">
+                        Family Mediclaim Policy Amount
+                      </label>
+                      <input
+                        name="Family_mediclaim_amount"
+                        value={formData.Family_mediclaim_amount || ""}
+                        onChange={handleChange}
+                        type="number"
+                        className="w-full p-2 border border-slate-300 rounded-md outline-none bg-white"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">
+                        Mediclaim Premium Amount
+                      </label>
+                      <input
+                        name="mediclaimPremiumAmount"
+                        value={formData.mediclaimPremiumAmount || ""}
+                        onChange={handleChange}
+                        type="number"
+                        className="w-full p-2 border border-slate-300 rounded-md outline-none bg-white"
+                      />
+                      {errors.mediclaimPremiumAmount && (
+                        <p className="text-red-500 text-xs">
+                          {errors.mediclaimPremiumAmount}
+                        </p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">
+                        Mediclaim Company Name
+                      </label>
+                      <input
+                        name="family_mediclaim_companyName"
+                        value={formData.family_mediclaim_companyName || ""}
+                        onChange={handleChange}
+                        type="text"
+                        className="w-full p-2 border border-slate-300 rounded-md outline-none bg-white"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="col-span-1 md:col-span-2 xl:col-span-2 border border-slate-200 rounded-lg p-4 bg-slate-50">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Is any Sangh/NGO assistance received?
+                </label>
+                <div className="flex gap-4 mt-2">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="ngoAssistance"
+                      checked={formData.ngoAssistance === true}
+                      onChange={() =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          ngoAssistance: true,
+                        }))
+                      }
+                    />
+                    Yes
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="ngoAssistance"
+                      checked={formData.ngoAssistance === false}
+                      onChange={() =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          ngoAssistance: false,
+                        }))
+                      }
+                    />
+                    No
+                  </label>
                 </div>
+
+                {formData.ngoAssistance === true && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">
+                        Sangh Name
+                      </label>
+                      <input
+                        name="sanghName"
+                        value={formData.sanghName || ""}
+                        onChange={handleChange}
+                        type="text"
+                        className="w-full p-2 border border-slate-300 rounded-md outline-none bg-white"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">
+                        Amount
+                      </label>
+                      <input
+                        name="ngoAmount"
+                        value={formData.ngoAmount || ""}
+                        onChange={handleChange}
+                        type="number"
+                        className="w-full p-2 border border-slate-300 rounded-md outline-none bg-white"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">
+                        Frequency
+                      </label>
+                      <select
+                        name="ngoFrequency"
+                        value={formData.ngoFrequency || ""}
+                        onChange={handleChange}
+                        className="w-full p-2 border border-slate-300 rounded-md outline-none bg-white"
+                      >
+                        <option value="">Select Frequency</option>
+                        <option value="Monthly">Monthly</option>
+                        <option value="Quarterly">Quarterly</option>
+                        <option value="Annually">Annually</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">
+                        Details / Remark
+                      </label>
+                      <textarea
+                        name="ngoRemark"
+                        value={formData.ngoRemark || ""}
+                        onChange={handleChange}
+                        rows={2}
+                        className="w-full p-2 border border-slate-300 rounded-md outline-none resize-none bg-white"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
 
               {/* {formData.rbfCriteria === "Yes" && (
             <div>
@@ -2399,10 +2762,7 @@ const DiksharthiDetailsAdd = () => {
             </div>
           )} */}
 
-
-
-
-                {/* <div>
+              {/* <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Upload Documents</label>
                   <input
                     type="file"
@@ -2447,7 +2807,6 @@ const DiksharthiDetailsAdd = () => {
 
           {currentStep === 5 && (
             <>
-
               <div className="col-span-4">
                 <label className="block text-sm font-medium text-slate-700 mb-1">
                   Summary
@@ -2473,15 +2832,18 @@ const DiksharthiDetailsAdd = () => {
 
                     <div className="space-y-2">
                       <p className="text-sm text-red-500">
-                        The Karyakarta has deselected assistance for the following reason(s):
+                        The Karyakarta has deselected assistance for the
+                        following reason(s):
                       </p>
 
                       <ul className="list-disc pl-5 text-sm text-red-500">
                         {formData.deselected_assistance.map((item, index) => (
                           <li key={index} className="leading-relaxed">
-                            <span className="font-semibold">{item.type}</span>{" "}
-                            — {item.reason}{" "}
-                            <span className="text-red-500">({item.relation})</span>
+                            <span className="font-semibold">{item.type}</span> —{" "}
+                            {item.reason}{" "}
+                            <span className="text-red-500">
+                              ({item.relation})
+                            </span>
                           </li>
                         ))}
                       </ul>
@@ -2493,7 +2855,12 @@ const DiksharthiDetailsAdd = () => {
           )}
         </div>
         <div className="p-6 flex justify-between items-center bg-white mt-4">
-          <button onClick={() => navigate(-1)} className="bg-[#fbc02d] text-white px-10 py-2 rounded font-bold uppercase text-sm">Cancel</button>
+          <button
+            onClick={() => navigate(-1)}
+            className="bg-[#fbc02d] text-white px-10 py-2 rounded font-bold uppercase text-sm"
+          >
+            Cancel
+          </button>
           <div className="flex items-center gap-2">
             {currentStep > 1 && (
               <button
@@ -2529,6 +2896,3 @@ const DiksharthiDetailsAdd = () => {
 };
 
 export default DiksharthiDetailsAdd;
-
-
-
