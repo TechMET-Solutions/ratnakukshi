@@ -25,3 +25,19 @@ export const formatIndianDate = (dateString) => {
 
     return `${day}-${month}-${year}`;
 };
+
+export const formatTo12Hour = (timeStr) => {
+    if (!timeStr) return "";
+
+    const [hours, minutes, seconds] = timeStr.split(":").map(Number);
+
+    const date = new Date();
+    date.setHours(hours, minutes, seconds);
+
+    return date.toLocaleTimeString("en-IN", {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: true,
+    });
+};

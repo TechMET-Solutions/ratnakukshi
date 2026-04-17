@@ -5,7 +5,7 @@ import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import { API } from "../api/BaseURL";
 import { useAuth } from "../context/AuthContext";
-import { formatIndianDate } from "../utils/formatIndianDate";
+import { formatIndianDate, formatTo12Hour } from "../utils/formatIndianDate";
 
 const DetailItem = ({ label, value }) => (
   <div className="flex flex-col">
@@ -200,7 +200,7 @@ const DiksharthiListing = () => {
     try {
       const ids = records.map((item) => item.id);
 
-      const res = await fetch(`${API}/api/feedback/status`, {
+      const res = await fetch(`${API}/api/feedback/view`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -306,10 +306,7 @@ const DiksharthiListing = () => {
       diksharthi?.id,
       diksharthi?.diksharthi_code,
       diksharthi?.sadhu_sadhvi_name,
-      diksharthi?.pad,
-      diksharthi?.samudaay,
-      diksharthi?.is_alive,
-      diksharthi?.photo,
+      diksharthi?.fan_id,
     ]
       .map((value) => String(value || "").toLowerCase())
       .some((value) => value.includes(search));
@@ -1306,7 +1303,7 @@ const DiksharthiListing = () => {
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search by ID, name, pad, sect, alive status"
+              placeholder="Search by M.S. ID, M.S. Name, F.A.N ID."
               className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
             />
           </div>
@@ -1467,7 +1464,7 @@ const DiksharthiListing = () => {
                           const lastVisit = diksharthi.visited_history[diksharthi.visited_history.length - 1];
                           return (
                             <div className="mt-1 text-sm">
-                              {formatIndianDate(lastVisit.date)} {lastVisit.time}
+                              {formatIndianDate(lastVisit.date)} {formatTo12Hour(lastVisit.time)}
                             </div>
                           );
                         })()}
@@ -1582,13 +1579,13 @@ const DiksharthiListing = () => {
                               >
                                 {downloadingPdfId === diksharthi.id ? "Downloading..." : "Application PDF"}
                               </button>
-                              <button
+                              {/* <button
                                 className="rounded-lg bg-emerald-600 text-sm px-2 py-1 text-white disabled:opacity-60"
                                 onClick={() => handleDownloadApplicationExcel(diksharthi)}
                                 disabled={downloadingApplicationId === diksharthi.id}
                               >
                                 {downloadingApplicationId === diksharthi.id ? "Downloading..." : "Application Excel"}
-                              </button>
+                              </button> */}
                             </div>
                           )}
 
@@ -1651,13 +1648,13 @@ const DiksharthiListing = () => {
                               >
                                 {downloadingPdfId === diksharthi.id ? "Downloading..." : "Application PDF"}
                               </button>
-                              <button
+                              {/* <button
                                 className="rounded-lg bg-emerald-600 text-sm px-2 py-1 text-white disabled:opacity-60"
                                 onClick={() => handleDownloadApplicationExcel(diksharthi)}
                                 disabled={downloadingApplicationId === diksharthi.id}
                               >
                                 {downloadingApplicationId === diksharthi.id ? "Downloading..." : "Application Excel"}
-                              </button>
+                              </button> */}
                             </div>
                           )}
 
@@ -1690,13 +1687,13 @@ const DiksharthiListing = () => {
                               >
                                 {downloadingPdfId === diksharthi.id ? "Downloading..." : "Application PDF"}
                               </button>
-                              <button
+                              {/* <button
                                 className="rounded-lg bg-emerald-600 text-sm px-2 py-1 text-white disabled:opacity-60"
                                 onClick={() => handleDownloadApplicationExcel(diksharthi)}
                                 disabled={downloadingApplicationId === diksharthi.id}
                               >
                                 {downloadingApplicationId === diksharthi.id ? "Downloading..." : "Application Excel"}
-                              </button>
+                              </button> */}
                             </div>
                           )}
 
