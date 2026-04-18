@@ -47,10 +47,10 @@ const Family_Details_Staff = ({
   diksarthiid,
   newdiksarthi,
   savedMainDiksarthi,
-    setCurrentStep,
-    setCurrentDiksarthiStore,
-    CurrentDiksarthiStore,
-  isEdit
+  setCurrentStep,
+  setCurrentDiksarthiStore,
+  CurrentDiksarthiStore,
+  isEdit,
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -692,17 +692,15 @@ const Family_Details_Staff = ({
     let finalId = null;
 
     if (isEdit && newdiksarthi) {
-    // ✅ HIGHEST PRIORITY (EDIT MODE)
-    finalId = newdiksarthi;
-
-  } else if (CurrentDiksarthiStore && newdiksarthi) {
-    // ✅ AFTER SAVE
-    finalId = newdiksarthi;
-
-  } else {
-    // ✅ DEFAULT
-    finalId = id;
-  }
+      // ✅ HIGHEST PRIORITY (EDIT MODE)
+      finalId = newdiksarthi;
+    } else if (CurrentDiksarthiStore && newdiksarthi) {
+      // ✅ AFTER SAVE
+      finalId = newdiksarthi;
+    } else {
+      // ✅ DEFAULT
+      finalId = id;
+    }
 
     if (!finalId) return; // ❗ only stop if both are missing
 
@@ -806,73 +804,61 @@ const Family_Details_Staff = ({
         alert("Please fix validation errors");
         return;
       }
-      const cleaned = {};
+ 
+const cleaned = {};
 
-      Object.entries(relationDetails || {}).forEach(([relationKey, val]) => {
-        if (!val) return;
+Object.entries(relationDetails || {}).forEach(([relationKey, val]) => {
+  if (!val) return;
 
-        // cleaned[relationKey] = {
-        //   relationKey,
-        //   firstName: String(val.firstName || "").trim(),
-        //   lastName: String(val.lastName || "").trim(),
-        //   mobileNumber: String(val.mobileNumber || "").trim(),
-        //   aadharNumber: String(val.aadharNumber || "").trim(),
-        //   panNumber: String(val.panNumber || "").trim(),
+  cleaned[relationKey] = {
+    relationKey,
 
-        //   family_head: !!val.family_head,
+    // ✅ BASIC
+    firstName: val.firstName?.trim() || "",
+    lastName: val.lastName?.trim() || "",
+    mobileNumber: val.mobileNumber?.trim() || "",
+    aadharNumber: val.aadharNumber?.trim() || "",
+    panNumber: val.panNumber?.trim() || "",
+    family_head: !!val.family_head,
+    guardian: val.guardian || "",
 
-        //   dob: String(val.dob || "").trim(),
-        //   age: String(val.age || "").trim(),
+    // ✅ PERSONAL
+    dob: val.dob || "",
+    age: val.age || "",
 
-        //   ayushman: val.ayushman ?? "",
-        //   mediclaim: val.mediclaim ?? "",
-        //   isMarried: val.isMarried ?? "",
-        //   needAssistance: val.needAssistance ?? "",
+    // ✅ AYUSHMAN
+    ayushmanCoverage: val.ayushmanCoverage || val.ayushman || "",
+    ayushmanAmount:
+      val.ayushmanAmount ||
+      val.ayushman_Amount ||
+      "",
 
-        //   ayushman_Amount: String(val.ayushman_Amount || "").trim(),
-        //   mediclaim_amount: String(val.mediclaim_amount || "").trim(),
-        //   member_mediclaim_premium_amount: String(val.member_mediclaim_premium_amount || "").trim(),
-        //   mediclaim_company_name: String(val.mediclaim_company_name || "").trim(),
-        // };
+    // ✅ MEDICLAIM
+    medicalPolicy: val.medicalPolicy || val.mediclaim || "",
+    mediclaimAmount:
+      val.mediclaimAmount ||
+      val.mediclaim_amount ||
+      "",
+    mediclaimCompanyName:
+      val.mediclaimCompanyName ||
+      val.mediclaim_company_name ||
+      "",
+    mediclaimPremiumAmount:
+      val.mediclaimPremiumAmount ||
+      val.member_mediclaim_premium_amount ||
+      "",
+    mediclaimType:
+      val.mediclaimType ||
+      val.mediclaim_type ||
+      "",
 
-        const cleaned = {};
+    // ✅ ASSISTANCE
+    needAssistance: val.needAssistance || "",
 
-        Object.entries(relationDetails || {}).forEach(([relationKey, val]) => {
-          if (!val) return;
-
-          const getString = (v) => String(v ?? "").trim();
-          const getBool = (v) => (v === true || v === false ? v : null);
-
-          cleaned[relationKey] = {
-            firstName: getString(val.firstName),
-            lastName: getString(val.lastName),
-            mobileNumber: getString(val.mobileNumber),
-            aadharNumber: getString(val.aadharNumber),
-            panNumber: getString(val.panNumber),
-
-            // ✅ FIX: use global headOfFamily
-            family_head: headOfFamily === relationKey,
-
-            dob: getString(val.dob),
-            age: getString(val.age),
-
-            // ✅ FIX: keep booleans clean
-            ayushman: getBool(val.ayushman),
-            mediclaim: getBool(val.mediclaim),
-            isMarried: getBool(val.isMarried),
-            needAssistance: getBool(val.needAssistance),
-
-            ayushman_Amount: getString(val.ayushman_Amount),
-            mediclaim_amount: getString(val.mediclaim_amount),
-            member_mediclaim_premium_amount: getString(val.member_mediclaim_premium_amount),
-            mediclaim_company_name: getString(val.mediclaim_company_name),
-
-            // ✅ MISSING FIELD (important)
-            mediclaim_type: getString(val.mediclaim_type),
-          };
-        });
-      });
-
+    // ✅ EXTRA (optional future safe)
+    assistanceCategories: val.assistanceCategories || [],
+  };
+});
       // ================================
       // 🔥 ASSISTANCE
       // ================================
@@ -1556,19 +1542,19 @@ const Family_Details_Staff = ({
                             <label className="block text-sm font-medium text-slate-700 mb-1">
                               DOB
                             </label>
-                            <input
-                              type="date"
-                              value={relationDetails[rel]?.dob || ""}
-                              max={new Date().toISOString().split("T")[0]}
-                              onChange={(e) =>
-                                handleRelationDetailChange(
-                                  rel,
-                                  "dob",
-                                  e.target.value,
-                                )
-                              }
-                              className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
-                            />
+                           <input
+  type="date"
+  value={
+    relationDetails[rel]?.dob
+      ? relationDetails[rel].dob.split("T")[0]
+      : ""
+  }
+  max={new Date().toISOString().split("T")[0]}
+  onChange={(e) =>
+    handleRelationDetailChange(rel, "dob", e.target.value)
+  }
+  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
+/>
                           </div>
 
                           <div className="w-[120px]">
@@ -1773,12 +1759,12 @@ const Family_Details_Staff = ({
                               <input
                                 type="number"
                                 value={
-                                  relationDetails[rel]?.ayushman_Amount || ""
+                                  relationDetails[rel]?.ayushmanAmount || ""
                                 }
                                 onChange={(e) =>
                                   handleRelationDetailChange(
                                     rel,
-                                    "ayushman_Amount",
+                                    "ayushmanAmount",
                                     e.target.value,
                                   )
                                 }
@@ -1796,12 +1782,12 @@ const Family_Details_Staff = ({
                                 <input
                                   type="number"
                                   value={
-                                    relationDetails[rel]?.mediclaim_amount || ""
+                                    relationDetails[rel]?.mediclaimAmount || ""
                                   }
                                   onChange={(e) =>
                                     handleRelationDetailChange(
                                       rel,
-                                      "mediclaim_amount",
+                                      "mediclaimAmount",
                                       e.target.value,
                                     )
                                   }
@@ -1817,7 +1803,7 @@ const Family_Details_Staff = ({
                                   type="number"
                                   value={
                                     relationDetails[rel]
-                                      ?.member_mediclaim_premium_amount || ""
+                                      ?.mediclaimPremiumAmount || ""
                                   }
                                   onChange={(e) => {
                                     const premium = Number(e.target.value);
@@ -1835,7 +1821,7 @@ const Family_Details_Staff = ({
 
                                     handleRelationDetailChange(
                                       rel,
-                                      "member_mediclaim_premium_amount",
+                                      "mediclaimPremiumAmount",
                                       e.target.value,
                                     );
                                   }}
@@ -1851,12 +1837,12 @@ const Family_Details_Staff = ({
                                   type="text"
                                   value={
                                     relationDetails[rel]
-                                      ?.mediclaim_company_name || ""
+                                      ?.mediclaimCompanyName || ""
                                   }
                                   onChange={(e) =>
                                     handleRelationDetailChange(
                                       rel,
-                                      "mediclaim_company_name",
+                                      "mediclaimCompanyName",
                                       e.target.value,
                                     )
                                   }
@@ -1871,12 +1857,12 @@ const Family_Details_Staff = ({
                                 <select
                                   className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                                   value={
-                                    relationDetails[rel]?.mediclaim_type || ""
+                                    relationDetails[rel]?.mediclaimType || ""
                                   }
                                   onChange={(e) =>
                                     handleRelationDetailChange(
                                       rel,
-                                      "mediclaim_type",
+                                      "mediclaimType",
                                       e.target.value,
                                     )
                                   }
