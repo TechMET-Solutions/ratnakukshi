@@ -58,7 +58,6 @@ const Family_Details_Staff = ({
   const name = location?.state?.sadhu_sadhvi_name;
   const gender = location?.state?.gender;
   const [sameAsMain, setSameAsMain] = useState(true);
-
   const [backupRelationDetails, setBackupRelationDetails] = useState({});
   const [backupExpandedRelations, setBackupExpandedRelations] = useState({});
   console.log("ID:", id);
@@ -802,26 +801,48 @@ const Family_Details_Staff = ({
       try {
         const res = await axios.get(`${API}/api/get-family-members-full/${id}`);
 
+        // ================================
+        // ✅ EXTRACT RESPONSE
+        // ================================
         const familyData = res?.data?.data || {};
+        const assistance = res?.data?.assistanceData || {};
 
-        // SET DIRECTLY
+        // ================================
+        // ✅ SET FAMILY DETAILS
+        // ================================
         setRelationDetails(familyData);
 
+        // ================================
+        // ✅ SET ASSISTANCE DATA (IMPORTANT)
+        // ================================
+        setAssistanceData(assistance);
+
+        // ================================
+        // ✅ SET RELATIONS ARRAY
+        // ================================
         setFormData((prev) => ({
           ...prev,
-          relations: Object.keys(familyData),
+          relations: Object.keys(familyData || {}),
         }));
 
-        // HEAD OF FAMILY
+        // ================================
+        // ✅ HEAD OF FAMILY DETECT
+        // ================================
         const head =
-          Object.keys(familyData).find((key) => familyData[key]?.family_head) ||
-          null;
+          Object.keys(familyData || {}).find(
+            (key) => familyData[key]?.family_head,
+          ) || null;
 
         setHeadOfFamily(head);
 
-        console.log("FINAL FAMILY:", familyData);
+        // ================================
+        // ✅ DEBUG LOGS
+        // ================================
+        console.log("✅ FAMILY =>", familyData);
+        console.log("🔥 ASSISTANCE =>", assistance);
+        console.log("👤 HEAD =>", head);
       } catch (err) {
-        console.error(err);
+        console.error("❌ ERROR FETCHING FAMILY:", err);
       }
     };
 
@@ -924,18 +945,18 @@ const Family_Details_Staff = ({
   //         formDataToSend,
   //       );
 
-  //       const payload = {
-  //         diksharthi_id: newdiksarthi,
-  //         formData,
-  //         relationDetails: uploadedRelationDetails,
-  //         deselectedAssistance: deselectedAssistance,
-  //         additionalRelations,
-  //         expandedRelations,
-  //         headOfFamily,
-  //         selectedAssistance: selectedAssistance,
-  //         assistanceData: uploadedAssistanceData,
-  //         assistance_data: uploadedAssistanceData,
-  //       };
+  // const payload = {
+  //   diksharthi_id: newdiksarthi,
+  //   formData,
+  //   relationDetails: uploadedRelationDetails,
+  //   deselectedAssistance: deselectedAssistance,
+  //   additionalRelations,
+  //   expandedRelations,
+  //   headOfFamily,
+  //   selectedAssistance: selectedAssistance,
+  //   assistanceData: uploadedAssistanceData,
+  //   assistance_data: uploadedAssistanceData,
+  // };
 
   //       const url = `${API}/api/save-family-assistance`;
 
@@ -995,95 +1016,95 @@ const Family_Details_Staff = ({
   //     }
   //   };
   const handleSave = async () => {
-if (loading) return;
-setLoading(true);
+    if (loading) return;
+    setLoading(true);
 
-try {
-const errors = {};
+    try {
+      const errors = {};
+      Object.entries(relationDetails || {}).forEach(([rel, details]) => {
+        const mobile = details?.mobileNumber?.trim();
 
-Object.entries(relationDetails || {}).forEach(([rel, details]) => {
-  const mobile = details?.mobileNumber?.trim();
+        if (!mobile) {
+          errors[`mobile_${rel}`] = "Mobile number required";
+        } else if (!/^[1-9]\d{9}$/.test(mobile)) {
+          errors[`mobile_${rel}`] = "Invalid mobile number";
+        }
+      });
 
-  if (!mobile) {
-    errors[`mobile_${rel}`] = "Mobile number required";
-  } else if (!/^[1-9]\d{9}$/.test(mobile)) {
-    errors[`mobile_${rel}`] = "Invalid mobile number";
-  }
-});
+      if (Object.keys(errors).length > 0) {
+        setValidationErrors(errors);
+        alert("Please fix validation errors");
+        return;
+      }
+      const cleaned = {};
 
-if (Object.keys(errors).length > 0) {
-  setValidationErrors(errors);
-  alert("Please fix validation errors");
-  return;
-}
+      Object.entries(relationDetails || {}).forEach(([relationKey, val]) => {
+        if (!val) return;
 
-// ================================
-// 🔥 CLEAN + STRUCTURE PAYLOAD
-// ================================
-const cleaned = {};
+        cleaned[relationKey] = {
+          relationKey,
+          firstName: val.firstName?.trim() || "",
+          lastName: val.lastName?.trim() || "",
+          mobileNumber: val.mobileNumber?.trim() || "",
+          aadharNumber: val.aadharNumber?.trim() || "",
+          panNumber: val.panNumber?.trim() || "",
 
-Object.entries(relationDetails || {}).forEach(([relationKey, val]) => {
-  if (!val) return;
+          family_head: !!val.family_head,
+        };
+      });
 
-  cleaned[relationKey] = {
-    relationKey: relationKey, // ✅ relation key for backend
+      // ================================
+      // 🔥 ASSISTANCE
+      // ================================
+      const formattedAssistance = assistanceData || {};
 
-    firstName: val.firstName?.trim() || "",
-    lastName: val.lastName?.trim() || "",
-    mobileNumber: val.mobileNumber?.trim() || "",
-    aadharNumber: val.aadharNumber?.trim() || "",
-    panNumber: val.panNumber?.trim() || "",
-    dob: val.dob || "",
-    age: val.age || "",
-    family_head: !!val.family_head,
+      const assistanceTypesSet = new Set();
+
+      Object.values(formattedAssistance).forEach((relObj) => {
+        Object.keys(relObj || {}).forEach((type) => {
+          assistanceTypesSet.add(type);
+        });
+      });
+
+      const selectedAssistance = Array.from(assistanceTypesSet);
+      const fd = new FormData();
+
+      fd.append("diksharthi_id", newdiksarthi); // optional but ok
+
+      fd.append("form_step", 2);
+
+      const relationArray = Object.keys(cleaned);
+
+      fd.append("family_relation", relationArray.join(","));
+      fd.append("family_relation_details", JSON.stringify(cleaned));
+      fd.append("same_relations_with_fan", "No");
+
+      fd.append("assistance", selectedAssistance.join(","));
+      fd.append("assistance_data", JSON.stringify(formattedAssistance));
+
+      console.log("🚀 UPDATE PAYLOAD READY");
+      const res = await axios.put(
+        `${API}/api/update-diksharthi/${newdiksarthi}`, // ✅ ID HERE
+        fd,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        },
+      );
+
+      console.log("✅ UPDATE RESPONSE =>", res.data);
+
+      if (res?.data?.success) {
+        alert("Updated successfully ✅");
+      } else {
+        alert(res?.data?.message || "Update failed");
+      }
+    } catch (err) {
+      console.error("❌ ERROR =>", err);
+      alert("Something went wrong");
+    } finally {
+      setLoading(false);
+    }
   };
-});
-
-console.log("✅ CLEANED PAYLOAD =>", cleaned);
-
-// ================================
-// 🔥 FORMDATA BUILD
-// ================================
-const fd = new FormData();
-
-fd.append("diksharthi_id", newdiksarthi);
-fd.append("user_id", 6);
-fd.append("form_step", 2);
-
-const relationArray = Object.keys(cleaned);
-
-fd.append("family_relation", relationArray.join(","));
-fd.append("family_relation_details", JSON.stringify(cleaned));
-fd.append("same_relations_with_fan", "No");
-
-console.log("🚀 FORM DATA READY");
-
-// ================================
-// 🔥 API CALL
-// ================================
-const res = await axios.post(
-  `${API}/api/create-diksharthi`,
-  fd,
-  {
-    headers: { "Content-Type": "multipart/form-data" },
-  }
-);
-
-console.log("✅ RESPONSE =>", res.data);
-
-if (res?.data?.success) {
-  alert("Saved successfully ✅");
-} else {
-  alert(res?.data?.message || "Save failed");
-}
-
-} catch (err) {
-console.error("❌ ERROR =>", err);
-alert("Something went wrong");
-} finally {
-setLoading(false);
-}
-};
 
   const handleMedicalChange = (relation, field, value) => {
     if (isAssistanceFieldLocked(relation, "Medical", field)) return;
@@ -2068,122 +2089,7 @@ setLoading(false);
                               Assistances<span className="text-red-500">*</span>
                             </p>
                             <div className="flex flex-wrap gap-4">
-                              {/* {assistanceTypes.map((type) => (
-                                <label
-                                  key={type}
-                                  className="flex items-center gap-2 text-slate-700 cursor-pointer"
-                                >
-                                  <input
-                                    type="checkbox"
-                                    checked={
-                                      relationDetails[
-                                        rel
-                                      ]?.assistanceCategories?.includes(type) ||
-                                      false
-                                    }
-                                    onChange={() =>
-                                      handleAssistanceCategory(rel, type)
-                                    }
-                                    className="w-4 h-4 border-slate-400 rounded"
-                                  />
-                                  <span>{type}</span>
-                                </label>
-                              ))} */}
-
-                              {/* {assistanceTypes.map((type) => {
-                                const selectedCategories = (
-                                  relationDetails[rel]?.assistanceCategories || []
-                                ).map((item) => item.toLowerCase());
-
-                                const defaultAssist = (selectedAssistance || []).map((item) =>
-                                  item.toLowerCase()
-                                );
-
-                                // ✅ FIX: normalize case
-                                const isSameRelation =
-                                  rel?.toLowerCase() === selectedRelation?.toLowerCase();
-
-                                const isChecked =
-                                  selectedCategories.includes(type.toLowerCase()) || // saved data
-                                  (isSameRelation && defaultAssist.includes(type.toLowerCase())); // default only for selected
-
-                                return (
-                                  <label
-                                    key={type}
-                                    className="flex items-center gap-2 text-slate-700 cursor-pointer"
-                                  >
-                                    <input
-                                      type="checkbox"
-                                      checked={isChecked}
-                                      onChange={() => handleAssistanceCategory(rel, type)}
-                                      className="w-4 h-4 border-slate-400 rounded"
-                                    />
-                                    <span>{type}</span>
-                                  </label>
-                                );
-                              })} */}
-
-                              {/* {assistanceTypes.map((type) => {
-                                const lowerType = type.toLowerCase();
-
-                                const selectedCategories =
-                                  relationDetails[rel]?.assistanceCategories || [];
-
-                                const normalizedSelected = selectedCategories.map((i) =>
-                                  i.toLowerCase()
-                                );
-
-                                const defaultAssist = (defaultAssistance || []).map((i) =>
-                                  i.toLowerCase()
-                                );
-
-                                const extraAssist = (selectedAssistance || []).map((i) =>
-                                  i.toLowerCase()
-                                );
-
-                                const isSameRelation =
-                                  rel?.toLowerCase() === selectedRelation?.toLowerCase();
-
-                                // ✅ FINAL CHECK (IMPORTANT FIX)
-                                const isChecked =
-                                  normalizedSelected.includes(lowerType) ||
-                                  (isSameRelation &&
-                                    (defaultAssist.includes(lowerType) ||
-                                      extraAssist.includes(lowerType)) &&
-                                    !deselectedAssistance?.some(
-                                      (d) =>
-                                        d.relation === rel &&
-                                        d.type.toLowerCase() === lowerType
-                                    ));
-
-                                const handleCheckboxChange = (checked) => {
-                                  const isDefault = defaultAssist.includes(lowerType);
-
-                                  if (!checked && isSameRelation && isDefault) {
-                                    // 🚨 open modal
-                                    setDeselectData({ rel, type, reason: "" });
-                                  } else {
-                                    handleAssistanceCategory(rel, type, checked === true ? false : true);
-                                  }
-                                };
-
-                                return (
-                                  <label
-                                    key={type}
-                                    className="flex items-center gap-2 text-slate-700 cursor-pointer"
-                                  >
-                                    <input
-                                      type="checkbox"
-                                      checked={isChecked}
-                                      onChange={(e) =>
-                                        handleCheckboxChange(e.target.checked)
-                                      }
-                                      className="w-4 h-4 border-slate-400 rounded"
-                                    />
-                                    <span>{type}</span>
-                                  </label>
-                                );
-                              })} */}
+                             
 
                               {assistanceTypes.map((type) => {
                                 const lowerType = type.toLowerCase();
@@ -2349,9 +2255,7 @@ setLoading(false);
                               </div>
                             )}
                             {
-                              //   relationDetails[
-                              //   rel
-                              // ]?.assistanceCategories?.includes("Medical") &&
+                             
                               (relationDetails[
                                 rel
                               ]?.assistanceCategories?.includes("Medical") ||
