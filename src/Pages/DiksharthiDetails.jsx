@@ -1346,9 +1346,9 @@ const DiksharthiListing = () => {
               <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">
                 M.S. Name
               </th>
-              <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">
+              {/* <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">
                 RBF Criteria
-              </th>
+              </th> */}
               <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">
                 RBF Relation
               </th>
@@ -1436,7 +1436,7 @@ const DiksharthiListing = () => {
                     <td className="px-6 py-3">{diksharthi.sadhu_sadhvi_name}</td>
 
 
-                    <td className="px-6 py-3">{diksharthi.rbf_criteria}</td>
+                    {/* <td className="px-6 py-3">{diksharthi.rbf_criteria}</td> */}
 
                     <td className="px-6 py-3">{diksharthi.relation || "-"}</td>
                     <td className="px-6 py-3">{diksharthi.family_member_firstName || "-"} {diksharthi.family_member_lastName || "-"}</td>

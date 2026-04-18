@@ -2264,7 +2264,7 @@ console.log(filteredFanOptions2,"filteredFanOptions2")
 />
 
     <span className="text-sm font-medium text-slate-700">
-                        Address And House Details same as { filteredFanOptions2[0].sadhu_sadhvi_name}
+                        Address And House Details same as { filteredFanOptions2[0]?.sadhu_sadhvi_name}
       {savedMainDiksarthi?.[0]?.sadhu_sadhvi_name && (
         <span className="text-blue-600 font-semibold ml-1">
           ({savedMainDiksarthi[0].sadhu_sadhvi_name})
@@ -2532,7 +2532,7 @@ console.log(filteredFanOptions2,"filteredFanOptions2")
 />
 
     <span className="text-sm font-medium text-slate-700 flex">
-     <p>Mediclaims and NGO Same as </p> {filteredFanOptions2[0].sadhu_sadhvi_name}
+     <p>Mediclaims and NGO Same as </p> {filteredFanOptions2[0]?.sadhu_sadhvi_name}
       {/* {savedMainDiksarthi?.[0]?.sadhu_sadhvi_name && (
         <span className="text-blue-600 font-semibold ml-1">
           ({savedMainDiksarthi[0].sadhu_sadhvi_name})

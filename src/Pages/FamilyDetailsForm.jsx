@@ -997,6 +997,70 @@ const FamilyDetailsForm = () => {
     fetchFamilyDetailsById();
   }, [id]);
 
+
+  const fetchFamilyMembers = async () => {
+  try {
+    const res = await axios.get(
+      `${API}/api/get-family-members-full/${id}`
+    );
+
+    const apiData = res?.data?.data || {};
+
+    const formattedData = {};
+
+    Object.keys(apiData).forEach((relation) => {
+      const member = apiData[relation];
+
+      formattedData[relation] = {
+        relationName: relation,
+        firstName: member.firstName || "",
+        lastName: member.lastName || "",
+        dob: member.dob || "",
+        age: member.age || "",
+        aadharNumber: member.aadharNumber || "",
+        mobileNumber: member.mobileNumber || "",
+        panNumber: member.panNumber || "",
+
+        mediclaim: member.mediclaimType ? true : false,
+        mediclaim_amount: member.mediclaimAmount || "",
+        mediclaim_company_name: member.mediclaimCompanyName || "",
+        member_mediclaim_premium_amount: member.mediclaimPremiumAmount || "",
+
+        ayushman: member.ayushmanCoverage ? true : false,
+        ayushman_Amount: member.ayushmanAmount || "",
+
+        needAssistance:
+          member.needAssistance === "yes" ? true : false,
+
+        assistanceCategories: member.assistanceCategories || [],
+        family_head: member.family_head || false,
+      };
+    });
+
+    setRelationDetails(formattedData);
+
+    setFormData((prev) => ({
+      ...prev,
+      relations: Object.keys(formattedData),
+    }));
+
+    const head = Object.keys(formattedData).find(
+      (rel) => formattedData[rel].family_head
+    );
+
+    setHeadOfFamily(head || null);
+
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+useEffect(() => {
+  if (id) {
+    fetchFamilyMembers();
+  }
+}, [id]);
+
   const resetForm = () => {
     setFormData(INITIAL_FORM_DATA);
     setInitialLockSnapshot({
