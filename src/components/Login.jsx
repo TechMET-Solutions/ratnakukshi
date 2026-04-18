@@ -13,6 +13,9 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
+
+  const [subRole, setSubRole] = useState("");
+
   const expertPanelSubRoles = [
     { value: "expert-panel-medical", label: "Expert Panel - Medical" },
     { value: "expert-panel-job", label: "Expert Panel - Job" },
@@ -33,7 +36,11 @@ const Login = () => {
     setIsSubmitting(true);
 
     try {
-      await login({ email: email.trim(), password, role: role.trim() });
+      await login({
+        email: email.trim(),
+        password,
+        role: role === "expert-panel" ? subRole : role,
+      });
       navigate("/");
     } catch (err) {
       setError(err.message || "Invalid credentials");
@@ -68,7 +75,7 @@ const Login = () => {
 
           <form onSubmit={handleSubmit} className="w-full space-y-4">
             <div>
-              <select
+              {/* <select
                 value={role}
                 onChange={(e) => setRole(e.target.value)}
                 className="w-full py-2.5 px-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
@@ -80,13 +87,51 @@ const Login = () => {
                 <option value="karyakarta">Karyakarta</option>
                 <option value="case-coordinator">Case Coordinator</option>
                 <option value="committee-member">Committee Member</option>
-                {/* <option value="expert-panel">Expert Panel</option>
+                <option value="expert-panel">Expert Panel</option>
                 {expertPanelSubRoles.map((item) => (
                   <option key={item.value} value={item.value}>
                     {item.label}
                   </option>
-                ))} */}
-              </select>
+                ))}
+              </select> */}
+
+              
+                <select
+                  value={role}
+                  onChange={(e) => {
+                    setRole(e.target.value);
+                    setSubRole(""); // reset subrole
+                  }}
+                  className="w-full py-2.5 px-3 border border-gray-300 rounded-lg"
+                >
+                  <option value="admin">Admin</option>
+                  <option value="staff">Staff</option>
+                  <option value="account">Account Panel</option>
+                  <option value="operations-manager">Operations Manager</option>
+                  <option value="karyakarta">Karyakarta</option>
+                  <option value="case-coordinator">Case Coordinator</option>
+                  <option value="committee-member">Committee Member</option>
+                  <option value="expert-panel">Expert Panel</option>
+                </select>
+              
+
+              {/* ✅ Second dropdown only for expert panel */}
+              {role === "expert-panel" && (
+                <div className="mt-2">
+                  <select
+                    value={subRole}
+                    onChange={(e) => setSubRole(e.target.value)}
+                    className="w-full py-2.5 px-3 border border-gray-300 rounded-lg"
+                  >
+                    <option value="">Select Expert Panel Type</option>
+                    {expertPanelSubRoles.map((item) => (
+                      <option key={item.value} value={item.value}>
+                        {item.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
             </div>
 
             <div className="relative">
@@ -97,7 +142,7 @@ const Login = () => {
                 type="text"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="Karyakarta Email ID"
+                placeholder="Email ID"
                 required
                 className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
               />

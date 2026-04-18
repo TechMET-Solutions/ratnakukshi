@@ -436,6 +436,9 @@ const DiksharthiDetailsAdd = () => {
 const [sameAsMain, setSameAsMain] = useState(true);
 const [sameAsMainForNgo, setSameAsMainForNgo] = useState(true);
 
+  
+  const [isFanSelected, setIsFanSelected] = useState(false);
+
  
   
   const handleSameAsMainChange = (checked) => {
@@ -1436,6 +1439,7 @@ console.log(filteredFanOptions2,"filteredFanOptions2")
                       onChange={(e) => {
                         const value = e.target.value;
                         setFanIdSearch(value);
+                        setIsFanSelected(false);
                         setFormData((prev) => ({
                           ...prev,
                           fan_id: value.trim(),
@@ -1466,7 +1470,7 @@ console.log(filteredFanOptions2,"filteredFanOptions2")
                     <p className="text-red-500 text-xs mt-1">{errors.fan_id}</p>
                   )}
 
-                  {filteredFanOptions.length > 0 && (
+                  {!isFanSelected && filteredFanOptions.length > 0 && (
                     <div className="mt-2 border border-slate-200 rounded-md bg-white max-h-56 overflow-auto">
                       {filteredFanOptions.map((item) => (
                         <button
@@ -1474,6 +1478,7 @@ console.log(filteredFanOptions2,"filteredFanOptions2")
                           type="button"
                           onClick={() => {
                             setFanIdSearch(item.id || item.fan_id);
+                            setIsFanSelected(true);
                             setFormData((prev) => ({
                               ...prev,
                               fan_id: item.fan_id || item.id,
