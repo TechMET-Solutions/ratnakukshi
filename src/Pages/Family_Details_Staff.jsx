@@ -57,10 +57,10 @@ const Family_Details_Staff = ({
   const code = location?.state?.diksharthi_code;
   const name = location?.state?.sadhu_sadhvi_name;
   const gender = location?.state?.gender;
-const [sameAsMain, setSameAsMain] = useState(true);
+  const [sameAsMain, setSameAsMain] = useState(true);
 
-const [backupRelationDetails, setBackupRelationDetails] = useState({});
-const [backupExpandedRelations, setBackupExpandedRelations] = useState({});
+  const [backupRelationDetails, setBackupRelationDetails] = useState({});
+  const [backupExpandedRelations, setBackupExpandedRelations] = useState({});
   console.log("ID:", id);
   console.log("Code:", code);
   console.log("Name:", name);
@@ -79,42 +79,42 @@ const [backupExpandedRelations, setBackupExpandedRelations] = useState({});
     .trim()
     .toLowerCase();
   const isKaryakarta = role === "karyakarta";
-const handleSameAsMainChange = (checked) => {
-  setSameAsMain(checked);
+  const handleSameAsMainChange = (checked) => {
+    setSameAsMain(checked);
 
-  if (!checked) {
-    // ❌ UNCHECK → backup + clear everything
-    setBackupRelationDetails(relationDetails);
-    setBackupExpandedRelations(expandedRelations);
+    if (!checked) {
+      // ❌ UNCHECK → backup + clear everything
+      setBackupRelationDetails(relationDetails);
+      setBackupExpandedRelations(expandedRelations);
 
-    setRelationDetails({});
-    setExpandedRelations({});
+      setRelationDetails({});
+      setExpandedRelations({});
 
-    setFormData((prev) => ({
-      ...prev,
-      relations: [],
-    }));
-  } else {
-    // ✅ CHECK → restore backup OR main data
-    const restoredDetails =
-      Object.keys(backupRelationDetails).length > 0
-        ? backupRelationDetails
-        : savedMainDiksarthi?.[0]?.relationDetails || {};
+      setFormData((prev) => ({
+        ...prev,
+        relations: [],
+      }));
+    } else {
+      // ✅ CHECK → restore backup OR main data
+      const restoredDetails =
+        Object.keys(backupRelationDetails).length > 0
+          ? backupRelationDetails
+          : savedMainDiksarthi?.[0]?.relationDetails || {};
 
-    const restoredExpanded =
-      Object.keys(backupExpandedRelations).length > 0
-        ? backupExpandedRelations
-        : {};
+      const restoredExpanded =
+        Object.keys(backupExpandedRelations).length > 0
+          ? backupExpandedRelations
+          : {};
 
-    setRelationDetails(restoredDetails);
-    setExpandedRelations(restoredExpanded);
+      setRelationDetails(restoredDetails);
+      setExpandedRelations(restoredExpanded);
 
-    setFormData((prev) => ({
-      ...prev,
-      relations: Object.keys(restoredDetails),
-    }));
-  }
-};
+      setFormData((prev) => ({
+        ...prev,
+        relations: Object.keys(restoredDetails),
+      }));
+    }
+  };
   const hasPrefilledValue = (value) => {
     if (value === null || value === undefined) return false;
     if (typeof value === "string") return value.trim() !== "";
@@ -795,42 +795,38 @@ const handleSameAsMainChange = (checked) => {
   console.log(assistanceData, "assistanceData");
 
   const [validationErrors, setValidationErrors] = useState({});
- useEffect(() => {
-  if (!id) return;
+  useEffect(() => {
+    if (!id) return;
 
-  const fetchFamily = async () => {
-    try {
-      const res = await axios.get(
-        `${API}/api/get-family-members-full/${id}`
-      );
+    const fetchFamily = async () => {
+      try {
+        const res = await axios.get(`${API}/api/get-family-members-full/${id}`);
 
-      const familyData = res?.data?.data || {};
+        const familyData = res?.data?.data || {};
 
-      // SET DIRECTLY
-      setRelationDetails(familyData);
+        // SET DIRECTLY
+        setRelationDetails(familyData);
 
-      setFormData((prev) => ({
-        ...prev,
-        relations: Object.keys(familyData),
-      }));
+        setFormData((prev) => ({
+          ...prev,
+          relations: Object.keys(familyData),
+        }));
 
-      // HEAD OF FAMILY
-      const head =
-        Object.keys(familyData).find(
-          (key) => familyData[key]?.family_head
-        ) || null;
+        // HEAD OF FAMILY
+        const head =
+          Object.keys(familyData).find((key) => familyData[key]?.family_head) ||
+          null;
 
-      setHeadOfFamily(head);
+        setHeadOfFamily(head);
 
-      console.log("FINAL FAMILY:", familyData);
+        console.log("FINAL FAMILY:", familyData);
+      } catch (err) {
+        console.error(err);
+      }
+    };
 
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  fetchFamily();
-}, [id]);
+    fetchFamily();
+  }, [id]);
 
   const resetForm = () => {
     setFormData(INITIAL_FORM_DATA);
@@ -857,243 +853,238 @@ const handleSameAsMainChange = (checked) => {
       }),
     );
 
-//   const handleSave = async () => {
-//     debugger;
-//     if (loading) return;
-//     setLoading(true);
-//     try {
-//       // 🔴 VALIDATION LOGIC FOR AADHAR AND PAN
-//       const errors = {};
+  //   const handleSave = async () => {
+  //     debugger;
+  //     if (loading) return;
+  //     setLoading(true);
+  //     try {
+  //       // 🔴 VALIDATION LOGIC FOR AADHAR AND PAN
+  //       const errors = {};
 
-//       Object.entries(relationDetails).forEach(([rel, details]) => {
-       
+  //       Object.entries(relationDetails).forEach(([rel, details]) => {
 
-//         // Validate Mobile Number
-//         if (!details?.mobileNumber) {
-//           errors[`mobile_${rel}`] = "Mobile number is required";
-//         } else if (!/^[1-9]\d{9}$/.test(details.mobileNumber)) {
-//           errors[`mobile_${rel}`] = "Mobile number must be 10 digits ";
-//         }
+  //         // Validate Mobile Number
+  //         if (!details?.mobileNumber) {
+  //           errors[`mobile_${rel}`] = "Mobile number is required";
+  //         } else if (!/^[1-9]\d{9}$/.test(details.mobileNumber)) {
+  //           errors[`mobile_${rel}`] = "Mobile number must be 10 digits ";
+  //         }
 
-       
-//       });
+  //       });
 
-//       // Validate Mediclaim Premium vs Cover Amount
-//       if (formData.mediclaimPremiumAmount) {
-//         const premiumAmount = Number(formData.mediclaimPremiumAmount) || 0;
-//         const coverAmount = Number(formData.Family_mediclaim_amount) || 0;
+  //       // Validate Mediclaim Premium vs Cover Amount
+  //       if (formData.mediclaimPremiumAmount) {
+  //         const premiumAmount = Number(formData.mediclaimPremiumAmount) || 0;
+  //         const coverAmount = Number(formData.Family_mediclaim_amount) || 0;
 
-//         if (premiumAmount > coverAmount) {
-//           errors["mediclaim_premium"] =
-//             `Mediclaim premium (₹${premiumAmount}) cannot exceed cover amount (₹${coverAmount})`;
-//         }
-//       }
+  //         if (premiumAmount > coverAmount) {
+  //           errors["mediclaim_premium"] =
+  //             `Mediclaim premium (₹${premiumAmount}) cannot exceed cover amount (₹${coverAmount})`;
+  //         }
+  //       }
 
-//       // Validate EMI Amount vs Loan Amount for Housing Assistance
-//       Object.entries(assistanceData).forEach(([rel, assistances]) => {
-//         if (
-//           assistances?.Housing?.loanAmount &&
-//           assistances?.Housing?.emiAmountMonthly
-//         ) {
-//           const loanAmount = Number(assistances.Housing.loanAmount) || 0;
-//           const emiAmount = Number(assistances.Housing.emiAmountMonthly) || 0;
+  //       // Validate EMI Amount vs Loan Amount for Housing Assistance
+  //       Object.entries(assistanceData).forEach(([rel, assistances]) => {
+  //         if (
+  //           assistances?.Housing?.loanAmount &&
+  //           assistances?.Housing?.emiAmountMonthly
+  //         ) {
+  //           const loanAmount = Number(assistances.Housing.loanAmount) || 0;
+  //           const emiAmount = Number(assistances.Housing.emiAmountMonthly) || 0;
 
-//           if (emiAmount > loanAmount) {
-//             errors[`housing_emi_${rel}`] =
-//               `EMI amount (₹${emiAmount}) cannot exceed loan amount (₹${loanAmount})`;
-//           }
-//         }
-//       });
+  //           if (emiAmount > loanAmount) {
+  //             errors[`housing_emi_${rel}`] =
+  //               `EMI amount (₹${emiAmount}) cannot exceed loan amount (₹${loanAmount})`;
+  //           }
+  //         }
+  //       });
 
-//       // Check if there are validation errors
-//       if (Object.keys(errors).length > 0) {
-//         setValidationErrors(errors);
-//         alert("Please fix the validation errors highlighted in the form");
-//         return;
-//       }
+  //       // Check if there are validation errors
+  //       if (Object.keys(errors).length > 0) {
+  //         setValidationErrors(errors);
+  //         alert("Please fix the validation errors highlighted in the form");
+  //         return;
+  //       }
 
-//       // Clear validation errors if everything is valid
-//       setValidationErrors({});
+  //       // Clear validation errors if everything is valid
+  //       setValidationErrors({});
 
-//       const formDataToSend = new FormData();
-//       const normalizedAssistanceData =
-//         normalizeAssistanceDataForPayload(assistanceData);
-//       const sanitizedRelationDetails = sanitizeRelationDetailsForPayload(
-//         buildRelationDetailsPayload(relationDetails, headOfFamily),
-//       );
-//       const uploadedRelationDetails = buildRelationDetailsPayloadWithUploads(
-//         sanitizedRelationDetails,
-//         formDataToSend,
-//       );
-//       const uploadedAssistanceData = buildAssistanceDataPayloadWithUploads(
-//         normalizedAssistanceData,
-//         formDataToSend,
-//       );
+  //       const formDataToSend = new FormData();
+  //       const normalizedAssistanceData =
+  //         normalizeAssistanceDataForPayload(assistanceData);
+  //       const sanitizedRelationDetails = sanitizeRelationDetailsForPayload(
+  //         buildRelationDetailsPayload(relationDetails, headOfFamily),
+  //       );
+  //       const uploadedRelationDetails = buildRelationDetailsPayloadWithUploads(
+  //         sanitizedRelationDetails,
+  //         formDataToSend,
+  //       );
+  //       const uploadedAssistanceData = buildAssistanceDataPayloadWithUploads(
+  //         normalizedAssistanceData,
+  //         formDataToSend,
+  //       );
 
-//       const payload = {
-//         diksharthi_id: newdiksarthi,
-//         formData,
-//         relationDetails: uploadedRelationDetails,
-//         deselectedAssistance: deselectedAssistance,
-//         additionalRelations,
-//         expandedRelations,
-//         headOfFamily,
-//         selectedAssistance: selectedAssistance,
-//         assistanceData: uploadedAssistanceData,
-//         assistance_data: uploadedAssistanceData,
-//       };
+  //       const payload = {
+  //         diksharthi_id: newdiksarthi,
+  //         formData,
+  //         relationDetails: uploadedRelationDetails,
+  //         deselectedAssistance: deselectedAssistance,
+  //         additionalRelations,
+  //         expandedRelations,
+  //         headOfFamily,
+  //         selectedAssistance: selectedAssistance,
+  //         assistanceData: uploadedAssistanceData,
+  //         assistance_data: uploadedAssistanceData,
+  //       };
 
-//       const url = `${API}/api/save-family-assistance`;
+  //       const url = `${API}/api/save-family-assistance`;
 
-//       const method = "post";
+  //       const method = "post";
 
-//       formDataToSend.append("payload", JSON.stringify(payload));
-//       formDataToSend.append("diksharthi_id", newdiksarthi);
-//       formDataToSend.append("formData", JSON.stringify(formData));
-//       formDataToSend.append(
-//         "relationDetails",
-//         JSON.stringify(uploadedRelationDetails),
-//       );
-//       formDataToSend.append(
-//         "additionalRelations",
-//         JSON.stringify(additionalRelations),
-//       );
-//       formDataToSend.append(
-//         "expandedRelations",
-//         JSON.stringify(expandedRelations),
-//       );
-//       formDataToSend.append("headOfFamily", headOfFamily);
-//       formDataToSend.append(
-//         "assistanceData",
-//         JSON.stringify(uploadedAssistanceData),
-//       );
-//       formDataToSend.append(
-//         "assistance_data",
-//         JSON.stringify(uploadedAssistanceData),
-//       );
+  //       formDataToSend.append("payload", JSON.stringify(payload));
+  //       formDataToSend.append("diksharthi_id", newdiksarthi);
+  //       formDataToSend.append("formData", JSON.stringify(formData));
+  //       formDataToSend.append(
+  //         "relationDetails",
+  //         JSON.stringify(uploadedRelationDetails),
+  //       );
+  //       formDataToSend.append(
+  //         "additionalRelations",
+  //         JSON.stringify(additionalRelations),
+  //       );
+  //       formDataToSend.append(
+  //         "expandedRelations",
+  //         JSON.stringify(expandedRelations),
+  //       );
+  //       formDataToSend.append("headOfFamily", headOfFamily);
+  //       formDataToSend.append(
+  //         "assistanceData",
+  //         JSON.stringify(uploadedAssistanceData),
+  //       );
+  //       formDataToSend.append(
+  //         "assistance_data",
+  //         JSON.stringify(uploadedAssistanceData),
+  //       );
 
-//       const response = await axios({
-//         method,
-//         url,
-//         data: formDataToSend,
-//         headers: {
-//           "Content-Type": "multipart/form-data",
-//         },
-//       });
+  //       const response = await axios({
+  //         method,
+  //         url,
+  //         data: formDataToSend,
+  //         headers: {
+  //           "Content-Type": "multipart/form-data",
+  //         },
+  //       });
 
-//       console.log(response.data);
+  //       console.log(response.data);
 
-//       if (response.data.success) {
-//         alert(
-//           familyRecordId
-//             ? "Family details updated successfully ✅"
-//             : "Family details saved successfully ✅",
-//         );
-//       }
-//       //   navigate("/diksharthi-details");
-//     } catch (err) {
-//       console.error(err);
-//       alert(
-//         "Something went wrong while saving family details. Please try again.",
-//       );
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-const handleSave = async () => {
-  if (loading) return;
-  setLoading(true);
+  //       if (response.data.success) {
+  //         alert(
+  //           familyRecordId
+  //             ? "Family details updated successfully ✅"
+  //             : "Family details saved successfully ✅",
+  //         );
+  //       }
+  //       //   navigate("/diksharthi-details");
+  //     } catch (err) {
+  //       console.error(err);
+  //       alert(
+  //         "Something went wrong while saving family details. Please try again.",
+  //       );
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
+  const handleSave = async () => {
+if (loading) return;
+setLoading(true);
 
-  try {
-    const errors = {};
+try {
+const errors = {};
 
-    // ✅ VALIDATION
-    Object.entries(relationDetails).forEach(([rel, details]) => {
-      if (!details?.mobileNumber) {
-        errors[`mobile_${rel}`] = "Mobile number required";
-      } else if (!/^[1-9]\d{9}$/.test(details.mobileNumber)) {
-        errors[`mobile_${rel}`] = "Invalid mobile";
-      }
-    });
+Object.entries(relationDetails || {}).forEach(([rel, details]) => {
+  const mobile = details?.mobileNumber?.trim();
 
-    if (Object.keys(errors).length > 0) {
-      setValidationErrors(errors);
-      alert("Fix validation errors");
-      return;
-    }
-
-    // =========================================
-    // 🔥 CLEAN RELATION DATA (IMPORTANT FIX)
-    // =========================================
-    const cleaned = {};
-
-    Object.entries(relationDetails).forEach(([key, val]) => {
-      if (!val) return;
-
-      cleaned[key] = {
-        relationName: key, // 🔥 MUST ADD
-        firstName: val.firstName || "",
-        lastName: val.lastName || "",
-        mobileNumber: val.mobileNumber || "",
-        aadharNumber: val.aadharNumber || "",
-        panNumber: val.panNumber || "",
-        dob: val.dob || "",
-        age: val.age || "",
-        family_head: val.family_head || false,
-      };
-    });
-
-    console.log("FINAL PAYLOAD 👉", cleaned);
-
-    // =========================================
-    // 🔥 FORMDATA
-    // =========================================
-    const fd = new FormData();
-
-    fd.append("diksharthi_id", newdiksarthi);
-    fd.append("user_id", 6);
-    fd.append("form_step", 2);
-
-    // 🔥 RELATION STRING (IMPORTANT)
-    fd.append(
-      "family_relation",
-      Object.keys(cleaned).join(",")
-    );
-
-    // 🔥 JSON DETAILS (IMPORTANT)
-    fd.append(
-      "family_relation_details",
-      JSON.stringify(cleaned)
-    );
-
-    fd.append("same_relations_with_fan", "No");
-
-    // =========================================
-    // 🔥 API CALL
-    // =========================================
-    const res = await axios.post(
-      `${API}/api/create-diksharthi`,
-      fd,
-      {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      }
-    );
-
-    console.log("RESPONSE 👉", res.data);
-
-    if (res.data.success) {
-      alert("Saved successfully ✅");
-    }
-
-  } catch (err) {
-    console.error(err);
-    alert("Something went wrong");
-  } finally {
-    setLoading(false);
+  if (!mobile) {
+    errors[`mobile_${rel}`] = "Mobile number required";
+  } else if (!/^[1-9]\d{9}$/.test(mobile)) {
+    errors[`mobile_${rel}`] = "Invalid mobile number";
   }
+});
+
+if (Object.keys(errors).length > 0) {
+  setValidationErrors(errors);
+  alert("Please fix validation errors");
+  return;
+}
+
+// ================================
+// 🔥 CLEAN + STRUCTURE PAYLOAD
+// ================================
+const cleaned = {};
+
+Object.entries(relationDetails || {}).forEach(([relationKey, val]) => {
+  if (!val) return;
+
+  cleaned[relationKey] = {
+    relationKey: relationKey, // ✅ relation key for backend
+
+    firstName: val.firstName?.trim() || "",
+    lastName: val.lastName?.trim() || "",
+    mobileNumber: val.mobileNumber?.trim() || "",
+    aadharNumber: val.aadharNumber?.trim() || "",
+    panNumber: val.panNumber?.trim() || "",
+    dob: val.dob || "",
+    age: val.age || "",
+    family_head: !!val.family_head,
+  };
+});
+
+console.log("✅ CLEANED PAYLOAD =>", cleaned);
+
+// ================================
+// 🔥 FORMDATA BUILD
+// ================================
+const fd = new FormData();
+
+fd.append("diksharthi_id", newdiksarthi);
+fd.append("user_id", 6);
+fd.append("form_step", 2);
+
+const relationArray = Object.keys(cleaned);
+
+fd.append("family_relation", relationArray.join(","));
+fd.append("family_relation_details", JSON.stringify(cleaned));
+fd.append("same_relations_with_fan", "No");
+
+console.log("🚀 FORM DATA READY");
+
+// ================================
+// 🔥 API CALL
+// ================================
+const res = await axios.post(
+  `${API}/api/create-diksharthi`,
+  fd,
+  {
+    headers: { "Content-Type": "multipart/form-data" },
+  }
+);
+
+console.log("✅ RESPONSE =>", res.data);
+
+if (res?.data?.success) {
+  alert("Saved successfully ✅");
+} else {
+  alert(res?.data?.message || "Save failed");
+}
+
+} catch (err) {
+console.error("❌ ERROR =>", err);
+alert("Something went wrong");
+} finally {
+setLoading(false);
+}
 };
+
   const handleMedicalChange = (relation, field, value) => {
     if (isAssistanceFieldLocked(relation, "Medical", field)) return;
 
@@ -1373,27 +1364,26 @@ const handleSave = async () => {
           </div>
 
           {/* Right Side (Checkbox) */}
-        {diksarthiid && (
-  <label className="flex items-center gap-2 cursor-pointer">
-    <input
-      type="checkbox"
-      className="w-4 h-4"
-      checked={sameAsMain}
-      onChange={(e) => handleSameAsMainChange(e.target.checked)}
-    />
+          {diksarthiid && (
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                className="w-4 h-4"
+                checked={sameAsMain}
+                onChange={(e) => handleSameAsMainChange(e.target.checked)}
+              />
 
-    <span className="text-sm font-medium text-slate-700">
-      All Relation same as
-      {savedMainDiksarthi?.[0]?.sadhu_sadhvi_name && (
-        <span className="text-blue-600 font-semibold ml-1">
-          ({savedMainDiksarthi[0].sadhu_sadhvi_name})
-        </span>
-      )}
-    </span>
-  </label>
-)}
+              <span className="text-sm font-medium text-slate-700">
+                All Relation same as
+                {savedMainDiksarthi?.[0]?.sadhu_sadhvi_name && (
+                  <span className="text-blue-600 font-semibold ml-1">
+                    ({savedMainDiksarthi[0].sadhu_sadhvi_name})
+                  </span>
+                )}
+              </span>
+            </label>
+          )}
         </div>
-      
 
         <form className="space-y-2">
           <div>
