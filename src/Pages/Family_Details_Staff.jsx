@@ -49,7 +49,8 @@ const Family_Details_Staff = ({
   savedMainDiksarthi,
     setCurrentStep,
     setCurrentDiksarthiStore,
-  CurrentDiksarthiStore
+    CurrentDiksarthiStore,
+  isEdit
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -690,13 +691,18 @@ const Family_Details_Staff = ({
     debugger;
     let finalId = null;
 
-    if (CurrentDiksarthiStore && newdiksarthi) {
-      // 🔥 PRIORITY: use newdiksarthi when flag is true
-      finalId = newdiksarthi;
-    } else {
-      // default behavior
-      finalId = id;
-    }
+    if (isEdit && newdiksarthi) {
+    // ✅ HIGHEST PRIORITY (EDIT MODE)
+    finalId = newdiksarthi;
+
+  } else if (CurrentDiksarthiStore && newdiksarthi) {
+    // ✅ AFTER SAVE
+    finalId = newdiksarthi;
+
+  } else {
+    // ✅ DEFAULT
+    finalId = id;
+  }
 
     if (!finalId) return; // ❗ only stop if both are missing
 

@@ -2343,6 +2343,7 @@ console.log(filteredFanOptions2,"filteredFanOptions2")
                   setCurrentStep={setCurrentStep}
                   setCurrentDiksarthiStore={setCurrentDiksarthiStore}
                   CurrentDiksarthiStore={CurrentDiksarthiStore}
+                  isEdit={isEditMode}
                 />
               ) : (
                 <div>Please save record first</div> // optional
