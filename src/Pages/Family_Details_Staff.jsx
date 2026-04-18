@@ -811,15 +811,66 @@ const Family_Details_Staff = ({
       Object.entries(relationDetails || {}).forEach(([relationKey, val]) => {
         if (!val) return;
 
-        cleaned[relationKey] = {
-          relationKey,
-          firstName: val.firstName?.trim() || "",
-          lastName: val.lastName?.trim() || "",
-          mobileNumber: val.mobileNumber?.trim() || "",
-          aadharNumber: val.aadharNumber?.trim() || "",
-          panNumber: val.panNumber?.trim() || "",
-          family_head: !!val.family_head,
-        };
+        // cleaned[relationKey] = {
+        //   relationKey,
+        //   firstName: String(val.firstName || "").trim(),
+        //   lastName: String(val.lastName || "").trim(),
+        //   mobileNumber: String(val.mobileNumber || "").trim(),
+        //   aadharNumber: String(val.aadharNumber || "").trim(),
+        //   panNumber: String(val.panNumber || "").trim(),
+
+        //   family_head: !!val.family_head,
+
+        //   dob: String(val.dob || "").trim(),
+        //   age: String(val.age || "").trim(),
+
+        //   ayushman: val.ayushman ?? "",
+        //   mediclaim: val.mediclaim ?? "",
+        //   isMarried: val.isMarried ?? "",
+        //   needAssistance: val.needAssistance ?? "",
+
+        //   ayushman_Amount: String(val.ayushman_Amount || "").trim(),
+        //   mediclaim_amount: String(val.mediclaim_amount || "").trim(),
+        //   member_mediclaim_premium_amount: String(val.member_mediclaim_premium_amount || "").trim(),
+        //   mediclaim_company_name: String(val.mediclaim_company_name || "").trim(),
+        // };
+
+        const cleaned = {};
+
+        Object.entries(relationDetails || {}).forEach(([relationKey, val]) => {
+          if (!val) return;
+
+          const getString = (v) => String(v ?? "").trim();
+          const getBool = (v) => (v === true || v === false ? v : null);
+
+          cleaned[relationKey] = {
+            firstName: getString(val.firstName),
+            lastName: getString(val.lastName),
+            mobileNumber: getString(val.mobileNumber),
+            aadharNumber: getString(val.aadharNumber),
+            panNumber: getString(val.panNumber),
+
+            // ✅ FIX: use global headOfFamily
+            family_head: headOfFamily === relationKey,
+
+            dob: getString(val.dob),
+            age: getString(val.age),
+
+            // ✅ FIX: keep booleans clean
+            ayushman: getBool(val.ayushman),
+            mediclaim: getBool(val.mediclaim),
+            isMarried: getBool(val.isMarried),
+            needAssistance: getBool(val.needAssistance),
+
+            ayushman_Amount: getString(val.ayushman_Amount),
+            mediclaim_amount: getString(val.mediclaim_amount),
+            member_mediclaim_premium_amount: getString(val.member_mediclaim_premium_amount),
+            mediclaim_company_name: getString(val.mediclaim_company_name),
+
+            // ✅ MISSING FIELD (important)
+            mediclaim_type: getString(val.mediclaim_type),
+          };
+        });
       });
 
       // ================================
