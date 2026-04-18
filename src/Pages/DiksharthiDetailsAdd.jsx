@@ -417,6 +417,10 @@ const DiksharthiDetailsAdd = () => {
   console.log(formData, "formData");
   console.log(formData.familyRelations, "familyRelations");
 
+  const [CurrentDiksarthiStore, setCurrentDiksarthiStore] = useState(false);
+
+
+
   console.log(formData?.familyRelationDetails, "familyRelationDetails");
   const [isEditLoading, setIsEditLoading] = useState(false);
   const navigate = useNavigate();
@@ -2337,6 +2341,8 @@ console.log(filteredFanOptions2,"filteredFanOptions2")
                   newdiksarthi={savedRecordId}
                   savedMainDiksarthi={filteredFanOptions2}
                   setCurrentStep={setCurrentStep}
+                  setCurrentDiksarthiStore={setCurrentDiksarthiStore}
+                  CurrentDiksarthiStore={CurrentDiksarthiStore}
                 />
               ) : (
                 <div>Please save record first</div> // optional
