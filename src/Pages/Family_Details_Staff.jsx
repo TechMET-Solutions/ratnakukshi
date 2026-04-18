@@ -256,6 +256,7 @@ const Family_Details_Staff = ({
 
   console.log(additionalRelations, "additionalRelations");
   const [headOfFamily, setHeadOfFamily] = useState(null);
+  console.log(headOfFamily,"headOfFamily")
   const [familyRecordId, setFamilyRecordId] = useState(null);
   console.log(headOfFamily, "headOfFamily");
   const handleCheckbox = (relation) => {
@@ -460,36 +461,6 @@ const Family_Details_Staff = ({
     return age < 0 ? "" : age;
   };
 
-  const normalizeYesNoToBoolean = (value) => {
-    if (value === true || value === false) return value;
-    if (value === null || value === undefined || value === "") return null;
-    const normalized = String(value).trim().toLowerCase();
-    if (["yes", "y", "true", "1"].includes(normalized)) return true;
-    if (["no", "n", "false", "0"].includes(normalized)) return false;
-    return null;
-  };
-
-  const normalizeBooleanWithFallback = (primaryValue, fallbackValue) => {
-    const normalizedPrimary = normalizeYesNoToBoolean(primaryValue);
-    if (normalizedPrimary !== null) return normalizedPrimary;
-    return normalizeYesNoToBoolean(fallbackValue);
-  };
-
-  const normalizeRelationLabel = (value) => {
-    const raw = String(value || "").trim();
-    if (!raw) return "";
-    return raw.charAt(0).toUpperCase() + raw.slice(1).toLowerCase();
-  };
-
-  const validateAadharUnique = () => {
-    const aadharList = Object.values(relationDetails)
-      .map((r) => r?.aadharNumber)
-      .filter(Boolean);
-
-    const uniqueSet = new Set(aadharList);
-
-    return aadharList.length === uniqueSet.size;
-  };
 
   const handleProfileUpload = (relation, event) => {
     if (isRelationFieldLocked(relation, "photo")) return;
@@ -758,30 +729,8 @@ const Family_Details_Staff = ({
     fetchFamily();
   }, [id, newdiksarthi]);
 
-  const resetForm = () => {
-    setFormData(INITIAL_FORM_DATA);
-    setInitialLockSnapshot({
-      formData: INITIAL_FORM_DATA,
-      relationDetails: {},
-      assistanceData: {},
-      headOfFamily: null,
-    });
+  
 
-    setRelationDetails({});
-    setExpandedRelations({});
-    setAdditionalRelations({});
-    setHeadOfFamily(null);
-  };
-
-  const sanitizeRelationDetailsForPayload = (details) =>
-    Object.fromEntries(
-      Object.entries(details || {}).map(([relationKey, relationValue]) => {
-        const nextRelationValue = { ...(relationValue || {}) };
-        delete nextRelationValue.photoPreview;
-
-        return [relationKey, nextRelationValue];
-      }),
-    );
 
   const handleSave = async () => {
     if (loading) return;
@@ -821,7 +770,7 @@ Object.entries(relationDetails || {}).forEach(([relationKey, val]) => {
     panNumber: val.panNumber?.trim() || "",
     family_head: !!val.family_head,
     guardian: val.guardian || "",
-
+   family_head: headOfFamily === relationKey,
     // ✅ PERSONAL
     dob: val.dob || "",
     age: val.age || "",
