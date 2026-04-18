@@ -1,7 +1,7 @@
 import axios from "axios";
 import JoditEditor from "jodit-react";
 import { ChevronDown, FileText, Search, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { API } from "../api/BaseURL";
 import { useAuth } from "../context/AuthContext";
@@ -319,6 +319,8 @@ const mapDiksharthiToFormData = (record) => {
     assistanceReceived:
       record?.assistanceReceived || record?.assistance_received || "",
     summary: record?.summary || "",
+    spokenTo: record?.spoken_to || "",
+    spokenTo_Relation: record.spoken_to_relation||""
   };
 };
 
@@ -384,6 +386,8 @@ const mapFormDataToApiPayload = (formData, userId, currentStep = 1) => {
     assistance_received: formData.assistanceReceived,
     summary: formData.summary,
     form_step: currentStep,
+    spokenTo: formData.spokenTo,
+    spokenTo_Relation: formData.spokenTo_Relation,
   };
 };
 
@@ -392,12 +396,6 @@ const PINCODE_REGEX = /^\d{6}$/;
 
 const getFamilyNumber = (record) =>
   record?.family_details?.family_id || record?.family_id || "";
-
-const getFamilyMemberLabel = (record) => {
-  const first = String(record?.family_member_firstName || "").trim();
-  const last = String(record?.family_member_lastName || "").trim();
-  return `${first} ${last}`.trim() || "-";
-};
 
 const DiksharthiDetailsAdd = () => {
   const location = useLocation();
@@ -410,9 +408,7 @@ const DiksharthiDetailsAdd = () => {
   const [uploadDoc, setUploadDoc] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [savedId, setSavedId] = useState("");
-
   const [savedMainDiksarthi, setSavedIdsavedMainDiksarthi] = useState(null);
-
   const [savedRecordId, setSavedRecordId] = useState(
     editId ? Number(editId) : null,
   );
@@ -436,6 +432,120 @@ const DiksharthiDetailsAdd = () => {
 
   const [existingFanRelations, setExistingFanRelations] = useState(new Set());
 
+
+const [sameAsMain, setSameAsMain] = useState(true);
+const [sameAsMainForNgo, setSameAsMainForNgo] = useState(true);
+
+ 
+  
+  const handleSameAsMainChange = (checked) => {
+  setSameAsMain(checked);
+
+  if (checked && filteredFanOptions2?.length > 0) {
+    const data = filteredFanOptions2[0];
+
+    setFormData((prev) => ({
+      ...prev,
+
+      // Address
+      permanentAddress: data.permanent_address || "",
+      currentAddress: data.current_address || "",
+
+      // Location
+      village: data.village || "",
+      taluka: data.taluka || "",
+      district: data.district || "",
+      state: data.state || "",
+      pinCode: data.pin_code || "",
+
+      // House
+      houseDetails: data.house_details || "",
+      typeOfHouse: data.type_of_house || "",
+      maintenanceCost: data.maintenance_cost || "",
+      rentCost: data.rent_cost || "",
+      lightBillCost: data.light_bill_cost || "",
+
+      // Extra (if needed)
+      mediclaim: data.mediclaim || "",
+      familyMediclaimAmount: data.family_mediclaim_amount || "",
+    }));
+  } else {
+    // ❌ RESET ALL FIELDS
+    setFormData((prev) => ({
+      ...prev,
+
+      permanentAddress: "",
+      currentAddress: "",
+      village: "",
+      taluka: "",
+      district: "",
+      state: "",
+      pinCode: "",
+
+      houseDetails: "",
+      typeOfHouse: "",
+      maintenanceCost: "",
+      rentCost: "",
+      lightBillCost: "",
+    }));
+  }
+};
+
+const handleSameAsMainForNgoChange = (checked) => {
+  setSameAsMainForNgo(checked);
+
+  if (checked && filteredFanOptions2?.length > 0) {
+    const data = filteredFanOptions2[0];
+
+    setFormData((prev) => ({
+      ...prev,
+
+      // ✅ MEDICLAIM
+      mediclaim:
+        data.mediclaim === "Yes"
+          ? true
+          : data.mediclaim === "No"
+          ? false
+          : null,
+
+      family_mediclaim_type: data.Family_mediclaim_type || "",
+      Family_mediclaim_amount: data.family_mediclaim_amount || "",
+      mediclaimPremiumAmount: data.mediclaim_premium_amount || "",
+      family_mediclaim_companyName:
+        data.family_mediclaim_companyName || "",
+
+      // ✅ NGO
+      ngoAssistance:
+        data.ngo_assistance === "Yes"
+          ? true
+          : data.ngo_assistance === "No"
+          ? false
+          : null,
+
+      sanghName: data.ngo_sangh_name || "",
+      ngoAmount: data.ngo_amount || "",
+      ngoRemark: data.ngo_remark || "",
+      ngoFrequency: data.ngo_frequency || "",
+    }));
+  } else {
+    // ❌ RESET
+    setFormData((prev) => ({
+      ...prev,
+
+      mediclaim: null,
+      family_mediclaim_type: "",
+      Family_mediclaim_amount: "",
+      mediclaimPremiumAmount: "",
+      family_mediclaim_companyName: "",
+
+      ngoAssistance: null,
+      sanghName: "",
+      ngoAmount: "",
+      ngoRemark: "",
+      ngoFrequency: "",
+    }));
+  }
+};
   const [postOffices, setPostOffices] = useState([]);
   const rbfMandatoryFields = [
     "permanentAddress",
@@ -511,8 +621,10 @@ const DiksharthiDetailsAdd = () => {
   };
 
   useEffect(() => {
+    debugger
     if (!isEditMode) return;
     const fetchDiksharthiById = async () => {
+      debugger
       try {
         setIsEditLoading(true);
         const response = await fetch(`${API}/api/diksharthi/${editId}`);
@@ -558,193 +670,6 @@ const DiksharthiDetailsAdd = () => {
 
     fetchAllDiksharthi();
   }, [editId]);
-
-  const handleSelectSourceDiksharthi = async (selected) => {
-    if (!selected) return;
-
-    setSelectedSourceDiksharthi(selected);
-    setDiksharthiSearch(
-      `${selected?.sadhu_sadhvi_name || ""} (${selected?.diksharthi_code || selected?.id || ""})`,
-    );
-
-    let sourceFamilyData = {};
-    try {
-      const familyResponse = await axios.get(
-        `${API}/api/family-details/${selected?.id}`,
-      );
-      sourceFamilyData = familyResponse?.data?.data?.[0] || {};
-    } catch (_error) {
-      sourceFamilyData = {};
-    }
-
-    setFormData((prev) => {
-      const selectedRelations = parseFamilyRelations(selected?.family_relation);
-      const selectedRelationDetails = parseMaybeJsonObject(
-        sourceFamilyData?.relationDetails,
-        {},
-      );
-      const relationSeed = normalizeRelationValue(
-        selected?.relation || prev.relation || "",
-      );
-      const normalizedRelations = Array.from(
-        new Set([
-          ...selectedRelations,
-          ...Object.keys(selectedRelationDetails),
-          ...(relationSeed ? [relationSeed] : []),
-        ]),
-      );
-      const normalizedRelationDetails = {};
-      normalizedRelations.forEach((relationKey) => {
-        const current = selectedRelationDetails?.[relationKey] || {};
-        normalizedRelationDetails[relationKey] =
-          createEmptyFamilyRelationDetails({
-            firstName: current?.firstName || "",
-            lastName: current?.lastName || "",
-            mobileNumber: current?.mobileNumber || "",
-            aadharNumber: current?.aadharNumber || "",
-            panNumber: current?.panNumber || "",
-            dob: toInputDate(current?.dob),
-            age: current?.age || "",
-            ayushmanCoverage: current?.ayushmanCoverage || "",
-            medicalPolicy: current?.medicalPolicy || "",
-            needAssistance: current?.needAssistance || "",
-          });
-      });
-      if (relationSeed && !normalizedRelationDetails[relationSeed]) {
-        normalizedRelationDetails[relationSeed] =
-          createEmptyFamilyRelationDetails({
-            firstName: selected?.family_member_firstName || "",
-            lastName: selected?.family_member_lastName || "",
-            mobileNumber: selected?.mobile_no || "",
-          });
-      }
-
-      const nextState = {
-        ...prev,
-        rbfCriteria: "Yes",
-        relation:
-          normalizeRelationValue(selected?.relation || "") ||
-          prev.relation ||
-          "",
-        relation_name: selected?.relation_name || prev.relation_name || "",
-        isMarried:
-          selected?.is_married || selected?.isMarried || prev.isMarried || "",
-        family_member_firstName:
-          selected?.family_member_firstName ||
-          prev.family_member_firstName ||
-          "",
-        family_member_lastName:
-          selected?.family_member_lastName || prev.family_member_lastName || "",
-        mobileNo:
-          selected?.mobile_no || selected?.mobileNo || prev.mobileNo || "",
-        altMobileNo:
-          selected?.alt_mobile_no ||
-          selected?.altMobileNo ||
-          prev.altMobileNo ||
-          "",
-        permanentAddress:
-          selected?.permanent_address ||
-          selected?.permanentAddress ||
-          prev.permanentAddress ||
-          "",
-        currentAddress:
-          selected?.current_address ||
-          selected?.currentAddress ||
-          prev.currentAddress ||
-          "",
-        village: selected?.village || prev.village || "",
-        taluka: selected?.taluka || prev.taluka || "",
-        district: selected?.district || prev.district || "",
-        state: selected?.state || prev.state || "",
-        pinCode: selected?.pin_code || selected?.pinCode || prev.pinCode || "",
-        houseDetails:
-          selected?.house_details ||
-          selected?.houseDetails ||
-          prev.houseDetails ||
-          "",
-        typeOfHouse:
-          selected?.type_of_house ||
-          selected?.typeOfHouse ||
-          prev.typeOfHouse ||
-          "",
-        maintenanceCost:
-          selected?.maintenance_cost ||
-          selected?.maintenanceCost ||
-          prev.maintenanceCost ||
-          "",
-        rentCost:
-          selected?.rent_cost || selected?.rentCost || prev.rentCost || "",
-        lightBillCost:
-          selected?.light_bill_cost ||
-          selected?.lightBillCost ||
-          prev.lightBillCost ||
-          "",
-        mediclaim: toBooleanOrNull(selected?.mediclaim ?? prev.mediclaim),
-        family_mediclaim_type:
-          selected?.Family_mediclaim_type ||
-          selected?.family_mediclaim_type ||
-          prev.family_mediclaim_type ||
-          "",
-        Family_mediclaim_amount:
-          selected?.family_mediclaim_amount ||
-          selected?.Family_mediclaim_amount ||
-          prev.Family_mediclaim_amount ||
-          "",
-        mediclaimPremiumAmount:
-          selected?.mediclaim_premium_amount ||
-          selected?.mediclaimPremiumAmount ||
-          prev.mediclaimPremiumAmount ||
-          "",
-        family_mediclaim_companyName:
-          selected?.family_mediclaim_companyName ||
-          prev.family_mediclaim_companyName ||
-          "",
-        ngoAssistance: toBooleanOrNull(
-          selected?.ngo_assistance ??
-            selected?.ngoAssistance ??
-            prev.ngoAssistance,
-        ),
-        sanghName:
-          selected?.ngo_sangh_name ||
-          selected?.sanghName ||
-          prev.sanghName ||
-          "",
-        ngoAmount:
-          selected?.ngo_amount || selected?.ngoAmount || prev.ngoAmount || "",
-        ngoFrequency:
-          selected?.ngo_frequency ||
-          selected?.ngoFrequency ||
-          prev.ngoFrequency ||
-          "",
-        ngoRemark:
-          selected?.ngo_remark || selected?.ngoRemark || prev.ngoRemark || "",
-        familyRelations: normalizedRelations,
-        familyRelationDetails: normalizedRelationDetails,
-      };
-
-      if (String(nextState.pinCode || "").length === 6) {
-        fetchPincodeDetails(nextState.pinCode);
-      }
-
-      return nextState;
-    });
-
-    setErrors((prev) => {
-      const next = { ...prev };
-      [
-        "relation",
-        "family_member_firstName",
-        "family_member_lastName",
-        "mobileNo",
-        "altMobileNo",
-        "permanentAddress",
-        "pinCode",
-        "district",
-        "state",
-      ].forEach((field) => delete next[field]);
-      return next;
-    });
-  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -873,7 +798,6 @@ const DiksharthiDetailsAdd = () => {
       });
     }
   };
-
   const validate = () => {
     let newErrors = {};
 
@@ -1146,7 +1070,8 @@ const DiksharthiDetailsAdd = () => {
   //     };
   //   });
   // };
-
+const hasAutoFilledStep3 = useRef(false);
+const hasAutoFilledStep4 = useRef(false);
   const handleFamilyRelationDetailChange = (
     relationValue,
     fieldName,
@@ -1248,24 +1173,25 @@ const DiksharthiDetailsAdd = () => {
         .slice(0, 8)
     : [];
 
-  const uniqueFanOptions = Array.from(
-    new Map(
-      (allDiksharthi || [])
-        .filter(
-          (item) =>
-            String(item?.fan_id || "").trim() || String(item?.id || "").trim(),
-        )
-        .map((item) => [
-          String(item.id).trim(),
-          {
-            id: String(item?.id || "").trim(),
-            diksharthi_code: String(item?.diksharthi_code || "").trim(),
-            fan_id: String(item?.fan_id || "").trim(),
-            sadhu_sadhvi_name: item?.sadhu_sadhvi_name || "",
-          },
-        ]),
-    ).values(),
-  );
+ const uniqueFanOptions = Array.from(
+  new Map(
+    (allDiksharthi || [])
+      .filter(
+        (item) =>
+          String(item?.fan_id || "").trim() ||
+          String(item?.id || "").trim()
+      )
+      .map((item) => [
+        String(item.id).trim(),
+        {
+          ...item, // ✅ keeps FULL data
+          id: String(item?.id || "").trim(),
+          diksharthi_code: String(item?.diksharthi_code || "").trim(),
+          fan_id: String(item?.fan_id || "").trim(),
+        },
+      ])
+  ).values()
+);
 
   const normalizedFanIdSearch = String(fanIdSearch || "")
     .trim()
@@ -1281,13 +1207,37 @@ const DiksharthiDetailsAdd = () => {
     : [];
 
   const filteredFanOptions2 = normalizedFanIdSearch
-    ? uniqueFanOptions
-        .filter((item) =>
-          JSON.stringify(item).toLowerCase().includes(normalizedFanIdSearch),
-        )
-        .slice(0, 8)
-    : [];
+  ? uniqueFanOptions.filter(
+      (item) =>
+        String(item.id).toLowerCase() === normalizedFanIdSearch ||
+        String(item.fan_id).toLowerCase() === normalizedFanIdSearch
+    )
+  : [];
+useEffect(() => {
+  if (
+    currentStep === 3 &&
+    sameAsMain &&
+    filteredFanOptions2?.length > 0 &&
+    !hasAutoFilledStep3.current
+  ) {
+    handleSameAsMainChange(true);
+    hasAutoFilledStep3.current = true;
+  }
+}, [currentStep, filteredFanOptions2]);
 
+  useEffect(() => {
+  if (
+    currentStep === 4 &&
+    sameAsMainForNgo &&
+    filteredFanOptions2?.length > 0 &&
+    !hasAutoFilledStep4.current
+  ) {
+    handleSameAsMainForNgoChange(true);
+    hasAutoFilledStep4.current = true;
+  }
+}, [currentStep, filteredFanOptions2]);
+
+console.log(filteredFanOptions2,"filteredFanOptions2")
   const normalizedSelectedFanValue = String(formData?.fan_id || "").trim();
   const fanSourceRecord = normalizedSelectedFanValue
     ? (allDiksharthi || []).find(
@@ -2299,6 +2249,36 @@ const DiksharthiDetailsAdd = () => {
               <>
                 {/* Permanent Address */}
                 <div>
+                   {filteredFanOptions2 && (
+  <label className="flex items-center gap-2 cursor-pointer">
+   <input
+  type="checkbox"
+  className="w-4 h-4"
+  checked={sameAsMain}
+  onChange={(e) => handleSameAsMainChange(e.target.checked)}
+/>
+
+    <span className="text-sm font-medium text-slate-700">
+                        Address And House Details same as { filteredFanOptions2[0].sadhu_sadhvi_name}
+      {savedMainDiksarthi?.[0]?.sadhu_sadhvi_name && (
+        <span className="text-blue-600 font-semibold ml-1">
+          ({savedMainDiksarthi[0].sadhu_sadhvi_name})
+        </span>
+      )}
+    </span>
+  </label>
+)}
+</div>
+                <div>
+
+                </div>
+                <div>
+
+                </div>
+                <div>
+
+                </div>
+                <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
                     Permanent Address <span className="text-red-500">*</span>
                   </label>
@@ -2536,6 +2516,37 @@ const DiksharthiDetailsAdd = () => {
 
           {currentStep === 4 && (
             <>
+              <div>
+                   {filteredFanOptions2 && (
+  <label className="flex items-center gap-2 cursor-pointer">
+  <input
+  type="checkbox"
+  className="w-4 h-4"
+  checked={sameAsMainForNgo}
+  onChange={(e) => handleSameAsMainForNgoChange(e.target.checked)}
+/>
+
+    <span className="text-sm font-medium text-slate-700 flex">
+     <p>Mediclaims and NGO Same as </p> {filteredFanOptions2[0].sadhu_sadhvi_name}
+      {/* {savedMainDiksarthi?.[0]?.sadhu_sadhvi_name && (
+        <span className="text-blue-600 font-semibold ml-1">
+          ({savedMainDiksarthi[0].sadhu_sadhvi_name})
+        </span>
+      )} */}
+    </span>
+  </label>
+)}
+</div>
+                <div>
+
+                </div>
+                <div>
+
+                </div>
+                <div>
+
+                </div>
+            
               <div className="col-span-1 md:col-span-2 xl:col-span-2 border border-slate-200 rounded-lg p-4 bg-slate-50">
                 <label className="block text-sm font-medium text-slate-700 mb-1">
                   Does the family have any Mediclaim policy?
