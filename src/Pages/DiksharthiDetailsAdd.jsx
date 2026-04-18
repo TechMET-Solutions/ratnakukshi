@@ -928,77 +928,171 @@ const handleSameAsMainForNgoChange = (checked) => {
     return result;
   };
 
-  const goToNextStep = async () => {
-    debugger;
-    const isValid = validate();
-    if (!isValid) return;
+  // const goToNextStep = async () => {
+  //   debugger;
+  //   const isValid = validate();
+  //   if (!isValid) return;
 
-    try {
-      const loggedInUserId = user?.id || user?.user_id || user?.userId || "";
-      if (!loggedInUserId) {
-        alert("Login user id missing. Please login again.");
-        return;
-      }
-      const payload = mapFormDataToApiPayload(
-        formData,
-        loggedInUserId,
-        currentStep,
-      );
-      const data = new FormData();
-      Object.entries(payload).forEach(([key, value]) => {
-        data.append(key, value ?? "");
-      });
-      if (photo) data.append("photo", photo);
-      if (uploadDoc) data.append("uploadDoc", uploadDoc);
+  //   try {
+  //     const loggedInUserId = user?.id || user?.user_id || user?.userId || "";
+  //     if (!loggedInUserId) {
+  //       alert("Login user id missing. Please login again.");
+  //       return;
+  //     }
+  //     const payload = mapFormDataToApiPayload(
+  //       formData,
+  //       loggedInUserId,
+  //       currentStep,
+  //     );
+  //     const data = new FormData();
+  //     Object.entries(payload).forEach(([key, value]) => {
+  //       data.append(key, value ?? "");
+  //     });
+  //     if (photo) data.append("photo", photo);
+  //     if (uploadDoc) data.append("uploadDoc", uploadDoc);
 
-      const targetId = isEditMode ? editId : savedRecordId;
-      const response = targetId
-        ? await axios.put(`${API}/api/update-diksharthi/${targetId}`, data)
-        : await axios.post(`${API}/api/create-diksharthi`, data);
+  //     const targetId = isEditMode ? editId : savedRecordId;
+  //     const response = targetId
+  //       ? await axios.put(`${API}/api/update-diksharthi/${targetId}`, data)
+  //       : await axios.post(`${API}/api/create-diksharthi`, data);
 
-      const persisted = response?.data?.data || {};
-      const resolvedId = Number(persisted?.id || targetId || 0) || null;
-      if (resolvedId) setSavedRecordId(resolvedId);
-      if (persisted?.diksharthi_code || persisted?.id) {
-        setSavedId(persisted?.diksharthi_code || persisted?.id);
-      }
-      const searchKey = String(formData?.fan_id || fanIdSearch || "").trim();
-      if (searchKey) {
-        try {
-          const getRes = await axios.get(`${API}/api/search`, {
-            params: {
-              fan_id: searchKey,
-              diksharthi_id: fanIdSearch,
-            },
-          });
+  //     const persisted = response?.data?.data || {};
+  //     const resolvedId = Number(persisted?.id || targetId || 0) || null;
+  //     if (resolvedId) setSavedRecordId(resolvedId);
+  //     if (persisted?.diksharthi_code || persisted?.id) {
+  //       setSavedId(persisted?.diksharthi_code || persisted?.id);
+  //     }
+  //     const searchKey = String(formData?.fan_id || fanIdSearch || "").trim();
+  //     if (searchKey) {
+  //       try {
+  //         const getRes = await axios.get(`${API}/api/search`, {
+  //           params: {
+  //             fan_id: searchKey,
+  //             diksharthi_id: fanIdSearch,
+  //           },
+  //         });
 
-          const latestData = getRes?.data?.data?.[0];
+  //         const latestData = getRes?.data?.data?.[0];
 
-          if (latestData?.family_details) {
-            const relationDetails = convertFamilyArrayToObject(
-              latestData.family_details,
-            );
+  //         if (latestData?.family_details) {
+  //           const relationDetails = convertFamilyArrayToObject(
+  //             latestData.family_details,
+  //           );
 
-            const relations = Object.keys(relationDetails);
+  //           const relations = Object.keys(relationDetails);
 
-            setFormData((prev) => ({
-              ...prev,
-              familyRelations: relations,
-              familyRelationDetails: relationDetails,
-              relation: relations[0] || prev.relation,
-            }));
-          }
-        } catch (err) {
-          console.error("GET API failed", err);
-        }
-      }
-      setCurrentStep((prev) => Math.min(prev + 1, stepTitles.length));
-    } catch (err) {
-      console.error(err);
-      alert("Step save failed");
+  //           setFormData((prev) => ({
+  //             ...prev,
+  //             familyRelations: relations,
+  //             familyRelationDetails: relationDetails,
+  //             relation: relations[0] || prev.relation,
+  //           }));
+  //         }
+  //       } catch (err) {
+  //         console.error("GET API failed", err);
+  //       }
+  //     }
+  //     setCurrentStep((prev) => Math.min(prev + 1, stepTitles.length));
+  //   } catch (err) {
+  //     console.error(err);
+  //     alert("Step save failed");
+  //   }
+  // };
+const goToNextStep = async () => {
+  debugger;
+
+  const isValid = validate();
+  if (!isValid) return;
+
+  // ================================
+  // ✅ SKIP API FOR STEP 2
+  // ================================
+  if (currentStep === 2) {
+    setCurrentStep((prev) => Math.min(prev + 1, stepTitles.length));
+    return;
+  }
+
+  try {
+    const loggedInUserId =
+      user?.id || user?.user_id || user?.userId || "";
+
+    if (!loggedInUserId) {
+      alert("Login user id missing. Please login again.");
+      return;
     }
-  };
 
+    const payload = mapFormDataToApiPayload(
+      formData,
+      loggedInUserId,
+      currentStep
+    );
+
+    const data = new FormData();
+    Object.entries(payload).forEach(([key, value]) => {
+      data.append(key, value ?? "");
+    });
+
+    if (photo) data.append("photo", photo);
+    if (uploadDoc) data.append("uploadDoc", uploadDoc);
+
+    const targetId = isEditMode ? editId : savedRecordId;
+
+    const response = targetId
+      ? await axios.put(`${API}/api/update-diksharthi/${targetId}`, data)
+      : await axios.post(`${API}/api/create-diksharthi`, data);
+
+    const persisted = response?.data?.data || {};
+    const resolvedId =
+      Number(persisted?.id || targetId || 0) || null;
+
+    if (resolvedId) setSavedRecordId(resolvedId);
+
+    if (persisted?.diksharthi_code || persisted?.id) {
+      setSavedId(persisted?.diksharthi_code || persisted?.id);
+    }
+
+    const searchKey = String(formData?.fan_id || fanIdSearch || "").trim();
+
+    if (searchKey) {
+      try {
+        const getRes = await axios.get(`${API}/api/search`, {
+          params: {
+            fan_id: searchKey,
+            diksharthi_id: fanIdSearch,
+          },
+        });
+
+        const latestData = getRes?.data?.data?.[0];
+
+        if (latestData?.family_details) {
+          const relationDetails = convertFamilyArrayToObject(
+            latestData.family_details
+          );
+
+          const relations = Object.keys(relationDetails);
+
+          setFormData((prev) => ({
+            ...prev,
+            familyRelations: relations,
+            familyRelationDetails: relationDetails,
+            relation: relations[0] || prev.relation,
+          }));
+        }
+      } catch (err) {
+        console.error("GET API failed", err);
+      }
+    }
+
+    // ================================
+    // ✅ MOVE TO NEXT STEP
+    // ================================
+    setCurrentStep((prev) => Math.min(prev + 1, stepTitles.length));
+
+  } catch (err) {
+    console.error(err);
+    alert("Step save failed");
+  }
+};
   const goToPreviousStep = () => {
     setCurrentStep((prev) => Math.max(prev - 1, 1));
   };
@@ -2242,6 +2336,7 @@ console.log(filteredFanOptions2,"filteredFanOptions2")
                   diksarthiid={fanIdSearch}
                   newdiksarthi={savedRecordId}
                   savedMainDiksarthi={filteredFanOptions2}
+                  setCurrentStep={setCurrentStep}
                 />
               ) : (
                 <div>Please save record first</div> // optional
@@ -2533,11 +2628,7 @@ console.log(filteredFanOptions2,"filteredFanOptions2")
 
     <span className="text-sm font-medium text-slate-700 flex">
      <p>Mediclaims and NGO Same as </p> {filteredFanOptions2[0]?.sadhu_sadhvi_name}
-      {/* {savedMainDiksarthi?.[0]?.sadhu_sadhvi_name && (
-        <span className="text-blue-600 font-semibold ml-1">
-          ({savedMainDiksarthi[0].sadhu_sadhvi_name})
-        </span>
-      )} */}
+     
     </span>
   </label>
 )}

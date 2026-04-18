@@ -47,6 +47,7 @@ const Family_Details_Staff = ({
   diksarthiid,
   newdiksarthi,
   savedMainDiksarthi,
+  setCurrentStep
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -251,98 +252,6 @@ const Family_Details_Staff = ({
   const [headOfFamily, setHeadOfFamily] = useState(null);
   const [familyRecordId, setFamilyRecordId] = useState(null);
   console.log(headOfFamily, "headOfFamily");
-
-  const normalizeAssistanceDataForPayload = (data) => {
-    const result = {};
-
-    Object.entries(data || {}).forEach(([relation, types]) => {
-      result[relation] = {};
-
-      Object.entries(types || {}).forEach(([type, values]) => {
-        const cleanValues = { ...values };
-
-        // ❌ remove unwanted UI fields
-        delete cleanValues.status;
-
-        // ✅ handle nested arrays safely
-        if (type === "Medical" && Array.isArray(cleanValues.diseases)) {
-          cleanValues.diseases = cleanValues.diseases.map((d) => ({
-            diseaseName: d.diseaseName || "",
-            frequency: d.frequency || "",
-            sessions: d.sessions || "",
-            costPerSession: d.costPerSession || "",
-            totalEstimatedCost: d.totalEstimatedCost || "",
-          }));
-        }
-
-        result[relation][type] = cleanValues;
-      });
-    });
-
-    return result;
-  };
-
-  const buildRelationDetailsPayload = (data, headOfFamily) => {
-    return Object.fromEntries(
-      Object.entries(data || {}).map(([key, value]) => [
-        key,
-        {
-          ...value,
-          family_head: key === headOfFamily,
-        },
-      ]),
-    );
-  };
-
-  const buildAssistanceDataPayloadWithUploads = (data, formData) => {
-    const result = {};
-
-    Object.entries(data || {}).forEach(([rel, types]) => {
-      result[rel] = {};
-
-      Object.entries(types || {}).forEach(([type, values]) => {
-        const newValues = { ...values };
-
-        // Example: handle documents
-        if (Array.isArray(values?.medicalDocuments)) {
-          newValues.medicalDocuments = values.medicalDocuments.map(
-            (doc, index) => {
-              if (doc.files instanceof File) {
-                const key = `doc_${rel}_${type}_${index}`;
-                formData.append(key, doc.files);
-                return { ...doc, files: key };
-              }
-              return doc;
-            },
-          );
-        }
-
-        result[rel][type] = newValues;
-      });
-    });
-
-    return result;
-  };
-
-  const buildRelationDetailsPayloadWithUploads = (data, formData) => {
-    const result = {};
-
-    Object.entries(data || {}).forEach(([relation, details]) => {
-      const newDetails = { ...details };
-
-      // Handle photo file upload
-      if (details?.photo instanceof File) {
-        const key = `photo_${relation}`;
-        formData.append(key, details.photo);
-        newDetails.photo = key;
-      }
-
-      result[relation] = newDetails;
-    });
-
-    return result;
-  };
-
   const handleCheckbox = (relation) => {
     if (
       isKaryakarta &&
@@ -543,28 +452,6 @@ const Family_Details_Staff = ({
     }
 
     return age < 0 ? "" : age;
-  };
-
-  const normalizeDateForInput = (value) => {
-    if (!value) return "";
-    const rawValue = String(value).trim();
-    if (!rawValue) return "";
-
-    const yyyyMmDd = rawValue.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-    if (yyyyMmDd) return rawValue;
-
-    const ddMmYyyy = rawValue.match(/^(\d{2})-(\d{2})-(\d{4})$/);
-    if (ddMmYyyy) {
-      return `${ddMmYyyy[3]}-${ddMmYyyy[2]}-${ddMmYyyy[1]}`;
-    }
-
-    const parsed = new Date(rawValue);
-    if (Number.isNaN(parsed.getTime())) return "";
-
-    const year = parsed.getUTCFullYear();
-    const month = String(parsed.getUTCMonth() + 1).padStart(2, "0");
-    const day = String(parsed.getUTCDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
   };
 
   const normalizeYesNoToBoolean = (value) => {
@@ -794,60 +681,64 @@ const Family_Details_Staff = ({
   console.log(assistanceData, "assistanceData");
 
   const [validationErrors, setValidationErrors] = useState({});
-  useEffect(() => {
-    if (!id) return;
+ useEffect(() => {
+  const finalId = id || newdiksarthi;
 
-    const fetchFamily = async () => {
-      try {
-        const res = await axios.get(`${API}/api/get-family-members-full/${id}`);
+  if (!finalId) return; // ❗ only stop if both are missing
 
-        // ================================
-        // ✅ EXTRACT RESPONSE
-        // ================================
-        const familyData = res?.data?.data || {};
-        const assistance = res?.data?.assistanceData || {};
+  const fetchFamily = async () => {
+    try {
+      const res = await axios.get(
+        `${API}/api/get-family-members-full/${finalId}`
+      );
 
-        // ================================
-        // ✅ SET FAMILY DETAILS
-        // ================================
-        setRelationDetails(familyData);
+      // ================================
+      // ✅ EXTRACT RESPONSE
+      // ================================
+      const familyData = res?.data?.data || {};
+      const assistance = res?.data?.assistanceData || {};
 
-        // ================================
-        // ✅ SET ASSISTANCE DATA (IMPORTANT)
-        // ================================
-        setAssistanceData(assistance);
+      // ================================
+      // ✅ SET FAMILY DETAILS
+      // ================================
+      setRelationDetails(familyData);
 
-        // ================================
-        // ✅ SET RELATIONS ARRAY
-        // ================================
-        setFormData((prev) => ({
-          ...prev,
-          relations: Object.keys(familyData || {}),
-        }));
+      // ================================
+      // ✅ SET ASSISTANCE DATA
+      // ================================
+      setAssistanceData(assistance);
 
-        // ================================
-        // ✅ HEAD OF FAMILY DETECT
-        // ================================
-        const head =
-          Object.keys(familyData || {}).find(
-            (key) => familyData[key]?.family_head,
-          ) || null;
+      // ================================
+      // ✅ SET RELATIONS ARRAY
+      // ================================
+      setFormData((prev) => ({
+        ...prev,
+        relations: Object.keys(familyData || {}),
+      }));
 
-        setHeadOfFamily(head);
+      // ================================
+      // ✅ HEAD OF FAMILY DETECT
+      // ================================
+      const head =
+        Object.keys(familyData || {}).find(
+          (key) => familyData[key]?.family_head
+        ) || null;
 
-        // ================================
-        // ✅ DEBUG LOGS
-        // ================================
-        console.log("✅ FAMILY =>", familyData);
-        console.log("🔥 ASSISTANCE =>", assistance);
-        console.log("👤 HEAD =>", head);
-      } catch (err) {
-        console.error("❌ ERROR FETCHING FAMILY:", err);
-      }
-    };
+      setHeadOfFamily(head);
 
-    fetchFamily();
-  }, [id]);
+      // ================================
+      // ✅ DEBUG LOGS
+      // ================================
+      console.log("✅ FAMILY =>", familyData);
+      console.log("🔥 ASSISTANCE =>", assistance);
+      console.log("👤 HEAD =>", head);
+    } catch (err) {
+      console.error("❌ ERROR FETCHING FAMILY:", err);
+    }
+  };
+
+  fetchFamily();
+}, [id, newdiksarthi]);
 
   const resetForm = () => {
     setFormData(INITIAL_FORM_DATA);
@@ -874,147 +765,6 @@ const Family_Details_Staff = ({
       }),
     );
 
-  //   const handleSave = async () => {
-  //     debugger;
-  //     if (loading) return;
-  //     setLoading(true);
-  //     try {
-  //       // 🔴 VALIDATION LOGIC FOR AADHAR AND PAN
-  //       const errors = {};
-
-  //       Object.entries(relationDetails).forEach(([rel, details]) => {
-
-  //         // Validate Mobile Number
-  //         if (!details?.mobileNumber) {
-  //           errors[`mobile_${rel}`] = "Mobile number is required";
-  //         } else if (!/^[1-9]\d{9}$/.test(details.mobileNumber)) {
-  //           errors[`mobile_${rel}`] = "Mobile number must be 10 digits ";
-  //         }
-
-  //       });
-
-  //       // Validate Mediclaim Premium vs Cover Amount
-  //       if (formData.mediclaimPremiumAmount) {
-  //         const premiumAmount = Number(formData.mediclaimPremiumAmount) || 0;
-  //         const coverAmount = Number(formData.Family_mediclaim_amount) || 0;
-
-  //         if (premiumAmount > coverAmount) {
-  //           errors["mediclaim_premium"] =
-  //             `Mediclaim premium (₹${premiumAmount}) cannot exceed cover amount (₹${coverAmount})`;
-  //         }
-  //       }
-
-  //       // Validate EMI Amount vs Loan Amount for Housing Assistance
-  //       Object.entries(assistanceData).forEach(([rel, assistances]) => {
-  //         if (
-  //           assistances?.Housing?.loanAmount &&
-  //           assistances?.Housing?.emiAmountMonthly
-  //         ) {
-  //           const loanAmount = Number(assistances.Housing.loanAmount) || 0;
-  //           const emiAmount = Number(assistances.Housing.emiAmountMonthly) || 0;
-
-  //           if (emiAmount > loanAmount) {
-  //             errors[`housing_emi_${rel}`] =
-  //               `EMI amount (₹${emiAmount}) cannot exceed loan amount (₹${loanAmount})`;
-  //           }
-  //         }
-  //       });
-
-  //       // Check if there are validation errors
-  //       if (Object.keys(errors).length > 0) {
-  //         setValidationErrors(errors);
-  //         alert("Please fix the validation errors highlighted in the form");
-  //         return;
-  //       }
-
-  //       // Clear validation errors if everything is valid
-  //       setValidationErrors({});
-
-  //       const formDataToSend = new FormData();
-  //       const normalizedAssistanceData =
-  //         normalizeAssistanceDataForPayload(assistanceData);
-  //       const sanitizedRelationDetails = sanitizeRelationDetailsForPayload(
-  //         buildRelationDetailsPayload(relationDetails, headOfFamily),
-  //       );
-  //       const uploadedRelationDetails = buildRelationDetailsPayloadWithUploads(
-  //         sanitizedRelationDetails,
-  //         formDataToSend,
-  //       );
-  //       const uploadedAssistanceData = buildAssistanceDataPayloadWithUploads(
-  //         normalizedAssistanceData,
-  //         formDataToSend,
-  //       );
-
-  // const payload = {
-  //   diksharthi_id: newdiksarthi,
-  //   formData,
-  //   relationDetails: uploadedRelationDetails,
-  //   deselectedAssistance: deselectedAssistance,
-  //   additionalRelations,
-  //   expandedRelations,
-  //   headOfFamily,
-  //   selectedAssistance: selectedAssistance,
-  //   assistanceData: uploadedAssistanceData,
-  //   assistance_data: uploadedAssistanceData,
-  // };
-
-  //       const url = `${API}/api/save-family-assistance`;
-
-  //       const method = "post";
-
-  //       formDataToSend.append("payload", JSON.stringify(payload));
-  //       formDataToSend.append("diksharthi_id", newdiksarthi);
-  //       formDataToSend.append("formData", JSON.stringify(formData));
-  //       formDataToSend.append(
-  //         "relationDetails",
-  //         JSON.stringify(uploadedRelationDetails),
-  //       );
-  //       formDataToSend.append(
-  //         "additionalRelations",
-  //         JSON.stringify(additionalRelations),
-  //       );
-  //       formDataToSend.append(
-  //         "expandedRelations",
-  //         JSON.stringify(expandedRelations),
-  //       );
-  //       formDataToSend.append("headOfFamily", headOfFamily);
-  //       formDataToSend.append(
-  //         "assistanceData",
-  //         JSON.stringify(uploadedAssistanceData),
-  //       );
-  //       formDataToSend.append(
-  //         "assistance_data",
-  //         JSON.stringify(uploadedAssistanceData),
-  //       );
-
-  //       const response = await axios({
-  //         method,
-  //         url,
-  //         data: formDataToSend,
-  //         headers: {
-  //           "Content-Type": "multipart/form-data",
-  //         },
-  //       });
-
-  //       console.log(response.data);
-
-  //       if (response.data.success) {
-  //         alert(
-  //           familyRecordId
-  //             ? "Family details updated successfully ✅"
-  //             : "Family details saved successfully ✅",
-  //         );
-  //       }
-  //       //   navigate("/diksharthi-details");
-  //     } catch (err) {
-  //       console.error(err);
-  //       alert(
-  //         "Something went wrong while saving family details. Please try again.",
-  //       );
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
   const handleSave = async () => {
     if (loading) return;
     setLoading(true);
@@ -1048,7 +798,6 @@ const Family_Details_Staff = ({
           mobileNumber: val.mobileNumber?.trim() || "",
           aadharNumber: val.aadharNumber?.trim() || "",
           panNumber: val.panNumber?.trim() || "",
-
           family_head: !!val.family_head,
         };
       });
@@ -1092,7 +841,7 @@ const Family_Details_Staff = ({
       );
 
       console.log("✅ UPDATE RESPONSE =>", res.data);
-
+setCurrentStep(3)
       if (res?.data?.success) {
         alert("Updated successfully ✅");
       } else {
@@ -1604,13 +1353,7 @@ const Family_Details_Staff = ({
                             <input
                               type="text"
                               value={relationDetails[rel]?.firstName || ""}
-                              // onChange={(e) =>
-                              //   handleRelationDetailChange(
-                              //     rel,
-                              //     "firstName",
-                              //     e.target.value,
-                              //   )
-                              // }
+                             
                               onChange={(e) => {
                                 const value = e.target.value;
 
@@ -1632,13 +1375,7 @@ const Family_Details_Staff = ({
                             <input
                               type="text"
                               value={relationDetails[rel]?.lastName || ""}
-                              // onChange={(e) =>
-                              //   handleRelationDetailChange(
-                              //     rel,
-                              //     "lastName",
-                              //     e.target.value,
-                              //   )
-                              // }
+                             
                               onChange={(e) => {
                                 const value = e.target.value;
 
