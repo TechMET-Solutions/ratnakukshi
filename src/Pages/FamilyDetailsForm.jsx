@@ -111,7 +111,7 @@ const FamilyDetailsForm = () => {
       : "";
 
   const updateFormField = (fieldName, value, extra = {}) => {
-    if (isFormFieldLocked(fieldName)) return;
+    // if (isFormFieldLocked(fieldName)) return;
     setFormData((prev) => ({
       ...prev,
       [fieldName]: value,
@@ -379,7 +379,7 @@ const FamilyDetailsForm = () => {
   };
 
   const handleRelationDetailChange = (relation, field, value) => {
-    if (isRelationFieldLocked(relation, field)) return;
+    // if (isRelationFieldLocked(relation, field)) return;
 
     setRelationDetails((prev) => {
       const nextRelationDetails = {
@@ -561,7 +561,7 @@ const FamilyDetailsForm = () => {
 
 
   const handleProfileUpload = (relation, event) => {
-    if (isRelationFieldLocked(relation, "photo")) return;
+    // if (isRelationFieldLocked(relation, "photo")) return;
 
     const file = event.target.files?.[0];
 
@@ -593,7 +593,7 @@ const FamilyDetailsForm = () => {
     isRemove = false,
     reason = ""
   ) => {
-    if (isRelationFieldLocked(relation, "assistanceCategories")) return;
+    // if (isRelationFieldLocked(relation, "assistanceCategories")) return;
 
     const lowerCategory = category.toLowerCase();
 
@@ -1274,7 +1274,7 @@ useEffect(() => {
   };
 
   const handleMedicalChange = (relation, field, value) => {
-    if (isAssistanceFieldLocked(relation, "Medical", field)) return;
+    // if (isAssistanceFieldLocked(relation, "Medical", field)) return;
 
     setAssistanceData((prev) => {
       const nextMedical = {
@@ -1313,7 +1313,7 @@ useEffect(() => {
   };
 
   const handleDiseaseChange = (relation, index, field, value) => {
-    if (isAssistanceFieldLocked(relation, "Medical", "diseases")) return;
+    // if (isAssistanceFieldLocked(relation, "Medical", "diseases")) return;
 
     setAssistanceData((prev) => {
       if (field === "removeDisease") {
@@ -1377,7 +1377,7 @@ useEffect(() => {
   };
 
   const handleAddDisease = (relation) => {
-    if (isAssistanceFieldLocked(relation, "Medical", "diseases")) return;
+    // if (isAssistanceFieldLocked(relation, "Medical", "diseases")) return;
 
     setAssistanceData((prev) => ({
       ...prev,
@@ -1400,7 +1400,7 @@ useEffect(() => {
   };
 
   const handleEducationChange = (relation, field, value) => {
-    if (isAssistanceFieldLocked(relation, "Education", field)) return;
+    // if (isAssistanceFieldLocked(relation, "Education", field)) return;
 
     setAssistanceData((prev) => ({
       ...prev,
@@ -1416,7 +1416,7 @@ useEffect(() => {
   };
 
   const handleJobChange = (relation, field, value) => {
-    if (isAssistanceFieldLocked(relation, "Job", field)) return;
+    // if (isAssistanceFieldLocked(relation, "Job", field)) return;
 
     setAssistanceData((prev) => ({
       ...prev,
@@ -1432,7 +1432,7 @@ useEffect(() => {
   };
 
   const handleFoodChange = (relation, field, value) => {
-    if (isAssistanceFieldLocked(relation, "Food", field)) return;
+    // if (isAssistanceFieldLocked(relation, "Food", field)) return;
 
     setAssistanceData((prev) => ({
       ...prev,
@@ -1463,7 +1463,7 @@ useEffect(() => {
   // };
 
   const handleRentChange = (relation, field, value) => {
-    if (field !== "remarks" && isAssistanceFieldLocked(relation, "Rent", field)) return;
+    // if (field !== "remarks" && isAssistanceFieldLocked(relation, "Rent", field)) return;
 
     setAssistanceData((prev) => ({
       ...prev,
@@ -1479,7 +1479,7 @@ useEffect(() => {
   };
 
   const handleHousingChange = (relation, field, value) => {
-    if (isAssistanceFieldLocked(relation, "Housing", field)) return;
+    // if (isAssistanceFieldLocked(relation, "Housing", field)) return;
 
     setAssistanceData((prev) => ({
       ...prev,
@@ -1495,7 +1495,7 @@ useEffect(() => {
   };
 
   const handleVaiyavacchChange = (relation, field, value) => {
-    if (isAssistanceFieldLocked(relation, "Vaiyavacch", field)) return;
+    // if (isAssistanceFieldLocked(relation, "Vaiyavacch", field)) return;
 
     setAssistanceData((prev) => ({
       ...prev,
@@ -1510,7 +1510,7 @@ useEffect(() => {
     }));
   };
   const handleEmergencyChange = (relation, field, value) => {
-    if (isAssistanceFieldLocked(relation, "LivelihoodExpenses", field)) return;
+    // if (isAssistanceFieldLocked(relation, "LivelihoodExpenses", field)) return;
 
     setAssistanceData((prev) => ({
       ...prev,
@@ -1526,7 +1526,7 @@ useEffect(() => {
   };
 
   const handleBusinessChange = (relation, field, value) => {
-    if (isAssistanceFieldLocked(relation, "Business", field)) return;
+    // if (isAssistanceFieldLocked(relation, "Business", field)) return;
 
     setAssistanceData((prev) => ({
       ...prev,
@@ -1729,7 +1729,7 @@ useEffect(() => {
                     onChange={(e) =>
                       updateFormField("houseDetails", e.target.value, { rentCost: "" })
                     }
-                    disabled={isFormFieldLocked("houseDetails")}
+                    // disabled={isFormFieldLocked("houseDetails")}
                     className="w-4 h-4 text-blue-600"
                   />
                   Own
@@ -1745,7 +1745,7 @@ useEffect(() => {
                         maintenanceCost: "",
                       })
                     }
-                    disabled={isFormFieldLocked("houseDetails")}
+                    // disabled={isFormFieldLocked("houseDetails")}
                     className="w-4 h-4 text-blue-600"
                   />
                   Rented
@@ -1763,7 +1763,7 @@ useEffect(() => {
                 placeholder="e.g. Apartment, Villa"
                 value={formData.typeOfHouse}
                 onChange={(e) => updateFormField("typeOfHouse", e.target.value)}
-                readOnly={isFormFieldLocked("typeOfHouse")}
+                // readOnly={isFormFieldLocked("typeOfHouse")}
                 className={`w-full p-2 border border-slate-300 rounded-md outline-none ${lockInputClass(
                   isFormFieldLocked("typeOfHouse")
                 )}`}
@@ -1783,7 +1783,7 @@ useEffect(() => {
                     onChange={(e) =>
                       updateFormField("maintenanceCost", e.target.value)
                     }
-                    readOnly={isFormFieldLocked("maintenanceCost")}
+                    // readOnly={isFormFieldLocked("maintenanceCost")}
                     className={`w-full p-2 border border-slate-300 rounded-md outline-none ${lockInputClass(
                       isFormFieldLocked("maintenanceCost")
                     )}`}
@@ -1798,7 +1798,7 @@ useEffect(() => {
                     type="number"
                     value={formData.rentCost}
                     onChange={(e) => updateFormField("rentCost", e.target.value)}
-                    readOnly={isFormFieldLocked("rentCost")}
+                    // readOnly={isFormFieldLocked("rentCost")}
                     className={`w-full p-2 border border-slate-300 rounded-md outline-none ${lockInputClass(
                       isFormFieldLocked("rentCost")
                     )}`}
@@ -1821,7 +1821,7 @@ useEffect(() => {
                 onChange={(e) =>
                   updateFormField("lightBillCost", e.target.value)
                 }
-                readOnly={isFormFieldLocked("lightBillCost")}
+                // readOnly={isFormFieldLocked("lightBillCost")}
                 className={`w-full p-2 border border-slate-300 rounded-md outline-none ${lockInputClass(
                   isFormFieldLocked("lightBillCost")
                 )}`}
@@ -5394,7 +5394,7 @@ useEffect(() => {
                     name="mediclaim"
                     checked={formData.mediclaim === true}
                     onChange={() => updateFormField("mediclaim", true)}
-                    disabled={isFormFieldLocked("mediclaim")}
+                    // disabled={isFormFieldLocked("mediclaim")}
                   />{" "}
                   Yes
                 </label>
@@ -5404,7 +5404,7 @@ useEffect(() => {
                     name="mediclaim"
                     checked={formData.mediclaim === false}
                     onChange={() => updateFormField("mediclaim", false)}
-                    disabled={isFormFieldLocked("mediclaim")}
+                    // disabled={isFormFieldLocked("mediclaim")}
                   />{" "}
                   No
                 </label>
@@ -5424,7 +5424,7 @@ useEffect(() => {
                     name="ngo"
                     checked={formData.ngoAssistance === true}
                     onChange={() => updateFormField("ngoAssistance", true)}
-                    disabled={isFormFieldLocked("ngoAssistance")}
+                    // disabled={isFormFieldLocked("ngoAssistance")}
                   />{" "}
                   Yes
                 </label>
@@ -5434,7 +5434,7 @@ useEffect(() => {
                     name="ngo"
                     checked={formData.ngoAssistance === false}
                     onChange={() => updateFormField("ngoAssistance", false)}
-                    disabled={isFormFieldLocked("ngoAssistance")}
+                    // disabled={isFormFieldLocked("ngoAssistance")}
                   />{" "}
                   No
                 </label>
@@ -5461,7 +5461,7 @@ useEffect(() => {
                     onChange={(e) =>
                       updateFormField("family_mediclaim_type", e.target.value)
                     }
-                    disabled={isFormFieldLocked("family_mediclaim_type")}
+                    // disabled={isFormFieldLocked("family_mediclaim_type")}
                   >
                     <option value="">Select Type</option>
                     <option value="single">Single</option>
@@ -5479,7 +5479,7 @@ useEffect(() => {
                     onChange={(e) =>
                       updateFormField("Family_mediclaim_amount", e.target.value)
                     }
-                    readOnly={isFormFieldLocked("Family_mediclaim_amount")}
+                    // readOnly={isFormFieldLocked("Family_mediclaim_amount")}
                     className={`w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none ${lockInputClass(
                       isFormFieldLocked("Family_mediclaim_amount")
                     )}`}
@@ -5493,7 +5493,7 @@ useEffect(() => {
                     type="number"
                     value={formData.mediclaimPremiumAmount || ""}
                     onChange={(e) => {
-                      if (isFormFieldLocked("mediclaimPremiumAmount")) return;
+                      // if (isFormFieldLocked("mediclaimPremiumAmount")) return;
                       let premiumAmount = Number(e.target.value);
                       const coverAmount = Number(formData.Family_mediclaim_amount) || 0;
 
@@ -5505,12 +5505,12 @@ useEffect(() => {
 
                       updateFormField("mediclaimPremiumAmount", premiumAmount);
                     }}
-                    readOnly={isFormFieldLocked("mediclaimPremiumAmount")}
+                    // readOnly={isFormFieldLocked("mediclaimPremiumAmount")}
                     className={`w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-100 outline-none ${Number(formData.mediclaimPremiumAmount || 0) >= Number(formData.Family_mediclaim_amount || 0) &&
                       formData.Family_mediclaim_amount
                       ? "border-red-500 focus:ring-red-100"
                       : "border-slate-300"
-                      } ${lockInputClass(isFormFieldLocked("mediclaimPremiumAmount"))}`}
+                      } `}
                   />
                   {Number(formData.mediclaimPremiumAmount || 0) > Number(formData.Family_mediclaim_amount || 0) && formData.Family_mediclaim_amount && (
                     <p className="text-red-500 text-xs mt-1">
@@ -5528,10 +5528,8 @@ useEffect(() => {
                     onChange={(e) =>
                       updateFormField("family_mediclaim_companyName", e.target.value)
                     }
-                    readOnly={isFormFieldLocked("family_mediclaim_companyName")}
-                    className={`w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none ${lockInputClass(
-                      isFormFieldLocked("family_mediclaim_companyName")
-                    )}`}
+                    // readOnly={isFormFieldLocked("family_mediclaim_companyName")}
+                    className={`w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none `}
                   />
                 </div>
               </div>
@@ -5547,10 +5545,8 @@ useEffect(() => {
                     type="text"
                     value={formData.sanghName || ""}
                     onChange={(e) => updateFormField("sanghName", e.target.value)}
-                    readOnly={isFormFieldLocked("sanghName")}
-                    className={`w-full p-2 border border-slate-300 rounded-md outline-none ${lockInputClass(
-                      isFormFieldLocked("sanghName")
-                    )}`}
+                    // readOnly={isFormFieldLocked("sanghName")}
+                    className={`w-full p-2 border border-slate-300 rounded-md outline-none `}
                   />
                 </div>
 
@@ -5562,10 +5558,8 @@ useEffect(() => {
                     type="number"
                     value={formData.ngoAmount || ""}
                     onChange={(e) => updateFormField("ngoAmount", e.target.value)}
-                    readOnly={isFormFieldLocked("ngoAmount")}
-                    className={`w-full p-2 border border-slate-300 rounded-md outline-none ${lockInputClass(
-                      isFormFieldLocked("ngoAmount")
-                    )}`}
+                    // readOnly={isFormFieldLocked("ngoAmount")}
+                    className={`w-full p-2 border border-slate-300 rounded-md outline-none $`}
                   />
                 </div>
 
@@ -5575,12 +5569,10 @@ useEffect(() => {
                   </label>
 
                   <select
-                    className={`w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none ${lockInputClass(
-                      isFormFieldLocked("ngoFrequency")
-                    )}`}
+                    className={`w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none`}
                     value={formData.ngoFrequency || ""}
                     onChange={(e) => updateFormField("ngoFrequency", e.target.value)}
-                    disabled={isFormFieldLocked("ngoFrequency")}
+                    // disabled={isFormFieldLocked("ngoFrequency")}
                   >
                     <option value="">Select Frequency</option>
                     <option value="Monthly">Monthly</option>
@@ -5596,10 +5588,8 @@ useEffect(() => {
                   <textarea
                     value={formData.ngoRemark || ""}
                     onChange={(e) => updateFormField("ngoRemark", e.target.value)}
-                    readOnly={isFormFieldLocked("ngoRemark")}
-                    className={`w-full p-2 border border-slate-300 rounded-md outline-none resize-none ${lockInputClass(
-                      isFormFieldLocked("ngoRemark")
-                    )}`}
+                    // readOnly={isFormFieldLocked("ngoRemark")}
+                    className={`w-full p-2 border border-slate-300 rounded-md outline-none resize-none `}
                     rows={2}
                   />
                 </div>
