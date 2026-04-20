@@ -405,9 +405,16 @@ const FamilyDetailsForm = () => {
         setValidationErrors((prevErrors) => {
           const nextErrors = { ...prevErrors };
 
-          if (!trimmedValue) {
-            nextErrors[`mobile_${relation}`] = "Mobile number is required";
-          } else if (!/^[1-9]\d{9}$/.test(trimmedValue)) {
+          // if (!trimmedValue) {
+          //   nextErrors[`mobile_${relation}`] = "Mobile number is required";
+          // } else if (!/^[1-9]\d{9}$/.test(trimmedValue)) {
+          //   nextErrors[`mobile_${relation}`] =
+          //     "Mobile number must be 10 digits";
+          // } else {
+          //   delete nextErrors[`mobile_${relation}`];
+          // }
+
+          if (trimmedValue && !/^[1-9]\d{9}$/.test(trimmedValue)) {
             nextErrors[`mobile_${relation}`] =
               "Mobile number must be 10 digits";
           } else {

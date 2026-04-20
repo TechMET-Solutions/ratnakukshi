@@ -104,7 +104,7 @@ const Sidebar = () => {
 
 
         )}
-        {(isAdmin || isKaryakarta || isExpertPanel || isCommitteeMember) && (
+        {(isAdmin || isCaseCoordinator || isKaryakarta || isExpertPanel || isCommitteeMember) && (
 
           <>
             <NavItem isCollapsed={isCollapsed} to="/assistance" icon={<HeartHandshake size={22} />} label="Assistance" />
