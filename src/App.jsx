@@ -25,6 +25,7 @@ import CreditPage from "./pages/CreditPage";
 import DebitAccountPage from "./pages/DebitAccountPage";
 import AccontAssistncePage from "./pages/AccontAssistncePage";
 import FamilyBasicInfo from "./pages/FamilyBasicInfo";
+import StaffDashboard from "./pages/dashboard/StaffDashboard";
 
 const Layout = ({ children }) => {
   return (
@@ -56,7 +57,7 @@ function App() {
           element={
             <ProtectedRoute>
               <Layout>
-                <DashboardPlaceholder />
+                <StaffDashboard />
               </Layout>
             </ProtectedRoute>
           }
@@ -292,9 +293,5 @@ function App() {
     </BrowserRouter>
   );
 }
-
-const DashboardPlaceholder = () => (
-  <div className="p-8">Dashboard Content</div>
-);
 
 export default App;
