@@ -842,17 +842,6 @@ const FamilyDetailsForm = () => {
         const relationFromApiRaw = familyData?.relation || diksharthiData?.relation || null;
         const formattedRelation = normalizeRelationLabel(relationFromApiRaw) || null;
 
-        // ================= FINAL RELATIONS ARRAY =================
-        const finalRelations = Array.from(
-          new Set(
-            [
-              ...apiRelations,
-              ...diksharthiRelations,
-              formattedRelation,
-            ].filter(Boolean)
-          )
-        );
-
         // ================= RELATION DETAILS =================
         const relationDetailsRaw = familyData?.relationDetails ?? {};
         const normalizedRelationDetails = {};
@@ -938,6 +927,19 @@ const FamilyDetailsForm = () => {
           };
         }
 
+        // ================= FINAL RELATIONS ARRAY =================
+        const relationKeysFromDetails = Object.keys(normalizedRelationDetails || {});
+        const finalRelations = Array.from(
+          new Set(
+            [
+              ...apiRelations,
+              ...diksharthiRelations,
+              formattedRelation,
+              ...relationKeysFromDetails,
+            ].filter(Boolean)
+          )
+        );
+
         // ================= HEAD OF FAMILY =================
         const apiHead =
           Object.entries(normalizedRelationDetails).find(([_, val]) => val?.family_head)?.[0] ||
@@ -955,10 +957,10 @@ const FamilyDetailsForm = () => {
         });
 
         // ================= EXPAND RELATIONS =================
-        const expanded = {};
-        if (formattedRelation) {
-          expanded[formattedRelation] = true;
-        }
+        const expanded = finalRelations.reduce((acc, relationKey) => {
+          acc[relationKey] = true;
+          return acc;
+        }, {});
 
         // ================= SET STATE =================
         setFormData((prev) => ({
@@ -972,7 +974,7 @@ const FamilyDetailsForm = () => {
         setAssistanceData(normalizedAssistanceData);
         setselectedAssistance(selectedAssistance);
         setdefaultAssisatce(selectedAssistance)
-        setSelectedRelation(formattedRelation); // default selected
+        setSelectedRelation(formattedRelation || apiHead || finalRelations[0] || null); // default selected
         setExpandedRelations(expanded);
         setFamilyRecordId(familyData?.id ?? null);
         setInitialLockSnapshot({
@@ -1039,9 +1041,11 @@ const FamilyDetailsForm = () => {
 
     setRelationDetails(formattedData);
 
+    const relationKeys = Object.keys(formattedData);
+
     setFormData((prev) => ({
       ...prev,
-      relations: Object.keys(formattedData),
+      relations: relationKeys,
     }));
 
     const head = Object.keys(formattedData).find(
@@ -1049,6 +1053,12 @@ const FamilyDetailsForm = () => {
     );
 
     setHeadOfFamily(head || null);
+    setExpandedRelations(
+      relationKeys.reduce((acc, relationKey) => {
+        acc[relationKey] = true;
+        return acc;
+      }, {})
+    );
 
   } catch (err) {
     console.error(err);
