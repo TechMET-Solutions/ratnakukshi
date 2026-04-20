@@ -768,7 +768,7 @@ Object.entries(relationDetails || {}).forEach(([relationKey, val]) => {
     mobileNumber: val.mobileNumber?.trim() || "",
     aadharNumber: val.aadharNumber?.trim() || "",
     panNumber: val.panNumber?.trim() || "",
-    family_head: !!val.family_head,
+    // family_head: !!val.family_head,
     guardian: val.guardian || "",
    family_head: headOfFamily === relationKey,
     // ✅ PERSONAL
@@ -4830,7 +4830,7 @@ Object.entries(relationDetails || {}).forEach(([relationKey, val]) => {
                         )}
                       </div>
                       {/* Photo Upload Preview - Right Side */}
-                      <div className="flex justify-center items-start mt-10 w-[15%] mb-4">
+                      {/* <div className="flex justify-center items-start mt-10 w-[15%] mb-4">
                         <div className="relative flex-shrink-0 group">
                           <img
                             src={
@@ -4864,7 +4864,7 @@ Object.entries(relationDetails || {}).forEach(([relationKey, val]) => {
                             onChange={(e) => handleProfileUpload(rel, e)}
                           />
                         </div>
-                      </div>
+                      </div> */}
                     </div>
                   )}
                 </div>

@@ -1155,8 +1155,8 @@ const DiksharthiListing = () => {
         // ================= BASIC =================
         Date: formatIndianDate(item.created_at),
         ID: item.id,
-        User_ID: item.user_id,
-        Karyakarta_ID: item.karykarata_id,
+        // User_ID: item.user_id,
+        // Karyakarta_ID: item.karykarata_id,
         Name: item.sadhu_sadhvi_name,
         Gender: item.gender,
         Age: item.age,
@@ -1167,7 +1167,7 @@ const DiksharthiListing = () => {
         Samudaay: item.samudaay,
         Guru_Name: item.guru_name,
         Acharya: item.acharya,
-        Gaachh: item.gaachh,
+        // Gaachh: item.gaachh,
         Gadipati: item.gadipati,
 
         // ================= STATUS =================
