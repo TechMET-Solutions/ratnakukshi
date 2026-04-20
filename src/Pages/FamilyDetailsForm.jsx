@@ -77,11 +77,30 @@ const FamilyDetailsForm = () => {
     isKaryakarta &&
     hasPrefilledValue(initialLockSnapshot?.relationDetails?.[relation]?.[fieldName]);
 
-  const isAssistanceFieldLocked = (relation, type, fieldName) =>
-    isKaryakarta &&
-    hasPrefilledValue(
-      initialLockSnapshot?.assistanceData?.[relation]?.[type]?.[fieldName]
+  // const isAssistanceFieldLocked = (relation, type, fieldName) =>
+  //   isKaryakarta &&
+  //   hasPrefilledValue(
+  //     initialLockSnapshot?.assistanceData?.[relation]?.[type]?.[fieldName]
+  //   );
+
+  const isAssistanceFieldLocked = (relation, type, fieldName) => {
+    // ❌ DO NOT LOCK THESE FIELDS
+    const alwaysEditableFields = [
+      "remarks",
+      "queryReason",
+      "queryImage",
+      "status"
+    ];
+
+    if (alwaysEditableFields.includes(fieldName)) return false;
+
+    return (
+      isKaryakarta &&
+      hasPrefilledValue(
+        initialLockSnapshot?.assistanceData?.[relation]?.[type]?.[fieldName]
+      )
     );
+  };
 
   const isHeadOfFamilyLocked =
     isKaryakarta && hasPrefilledValue(initialLockSnapshot?.headOfFamily);
@@ -1427,8 +1446,24 @@ useEffect(() => {
       },
     }));
   };
+  // const handleRentChange = (relation, field, value) => {
+  //   if (isAssistanceFieldLocked(relation, "Rent", field)) return;
+
+  //   setAssistanceData((prev) => ({
+  //     ...prev,
+  //     [relation]: {
+  //       ...prev[relation],
+  //       Rent: {
+  //         ...prev[relation]?.Rent,
+  //         [field]: value,
+  //         status: "Pending",
+  //       },
+  //     },
+  //   }));
+  // };
+
   const handleRentChange = (relation, field, value) => {
-    if (isAssistanceFieldLocked(relation, "Rent", field)) return;
+    if (field !== "remarks" && isAssistanceFieldLocked(relation, "Rent", field)) return;
 
     setAssistanceData((prev) => ({
       ...prev,
