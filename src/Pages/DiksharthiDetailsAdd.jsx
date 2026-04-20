@@ -353,12 +353,12 @@ const mapFormDataToApiPayload = (formData, userId, currentStep = 1) => {
     family_member_lastName:
       primaryMember?.details?.lastName || formData.family_member_lastName,
     mobile_no: primaryMember?.details?.mobileNumber || formData.mobileNo,
-    family_relation: Array.isArray(formData?.familyRelations)
-      ? formData.familyRelations
-      : [],
-    family_relation_details: JSON.stringify(
-      formData?.familyRelationDetails || {},
-    ),
+    // family_relation: Array.isArray(formData?.familyRelations)
+    //   ? formData.familyRelations
+    //   : [],
+    // family_relation_details: JSON.stringify(
+    //   formData?.familyRelationDetails || {},
+    // ),
     alt_mobile_no: formData.altMobileNo,
     permanent_address: formData.permanentAddress,
     current_address: formData.currentAddress,
