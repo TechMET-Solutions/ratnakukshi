@@ -483,7 +483,7 @@ const AssistancePage = () => {
                   <td className="p-4 text-slate-600">{asDisplayText(row.sadhu_sadhvi_name)}</td>
                   <td className="p-4 text-slate-600">
                     {asDisplayText(
-                      `${row?.family_member_firstName || ""} ${row?.family_member_lastName || ""}`.trim()
+                      `${row?.first_name || ""} ${row?.last_name || ""}`.trim()
                     )}
                   </td>
                   <td className="p-4 text-slate-600">{asDisplayText(row.relation_key)}</td>
