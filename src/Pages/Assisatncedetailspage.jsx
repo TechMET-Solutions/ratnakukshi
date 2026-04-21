@@ -32,7 +32,8 @@ const AssistanceDetails = () => {
 
   const memberData = location?.state?.memberData || {};
   const relation = location?.state?.relation || "";
-  const familyId = location?.state?.familyId || "";
+  const familyMemberId = location?.state?.familyMemberId || location?.state?.familyId || "";
+  const familyId = familyMemberId;
   const sadhuName = location?.state?.sadhuName || "";
   const selectedSadhu = location?.state?.selectedSadhu || "";
   const existingAssistance = location?.state?.assistanceData || {};
@@ -399,7 +400,8 @@ const AssistanceDetails = () => {
     debugger;
     try {
       const payload = {
-        familyId,
+        familyMemberId,
+        familyId: familyMemberId,
         relation,
         assistanceData: assistanceData?.[relation] || {},
       };

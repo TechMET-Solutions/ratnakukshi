@@ -73,7 +73,7 @@ const BankDetailsModal = ({ isOpen, onClose, selectedItem, onSaved }) => {
 
             const payload = {
                 diksharthi_id: selectedItem?.diksharthi_id || null,
-                family_id: selectedItem?.family_id || null,
+                family_id: selectedItem?.family_member_id || selectedItem?.family_id || null,
                 account_type: formData.account_type,
                 bank_name: String(formData.bank_name || "").trim(),
                 account_holder_name: String(formData.account_holder_name || "").trim(),
