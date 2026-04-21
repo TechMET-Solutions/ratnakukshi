@@ -1445,7 +1445,7 @@ console.log(filteredFanOptions2,"filteredFanOptions2")
                         setIsFanSelected(false);
                         setFormData((prev) => ({
                           ...prev,
-                          fan_id: value.trim(),
+                          fan_id: "",
                           sameRelationsWithFan: false,
                         }));
                       }}
@@ -1480,11 +1480,11 @@ console.log(filteredFanOptions2,"filteredFanOptions2")
                           key={`${item.id}-${item.fan_id || "no-fan"}`}
                           type="button"
                           onClick={() => {
-                            setFanIdSearch(item.id || item.fan_id);
+                            setFanIdSearch(item.fan_id || item.id || "");
                             setIsFanSelected(true);
                             setFormData((prev) => ({
                               ...prev,
-                              fan_id: item.fan_id || item.id,
+                              fan_id: item.fan_id || "",
                               sameRelationsWithFan: false,
                             }));
                           }}

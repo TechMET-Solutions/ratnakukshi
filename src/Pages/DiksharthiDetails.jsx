@@ -1337,9 +1337,9 @@ const DiksharthiListing = () => {
               <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">
                 Date
               </th>
-              <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">
+              {/* <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">
               F.A.N ID
-              </th>
+              </th> */}
               <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">
                 M.S. ID
               </th>
@@ -1429,7 +1429,7 @@ const DiksharthiListing = () => {
                     <td className="px-6 py-3">{formatIndianDate(diksharthi.created_at)}</td>
 
 
-                    <td className="px-6 py-3">{diksharthi.fan_id}</td>
+                    {/* <td className="px-6 py-3">{diksharthi.fan_id}</td> */}
                     <td className="px-6 py-3">{diksharthi.id}</td>
 
 
