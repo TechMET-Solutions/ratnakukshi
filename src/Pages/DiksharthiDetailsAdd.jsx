@@ -628,10 +628,10 @@ const handleSameAsMainForNgoChange = (checked) => {
   };
 
   useEffect(() => {
-    debugger
+    // debugger
     if (!isEditMode) return;
     const fetchDiksharthiById = async () => {
-      debugger
+      // debugger
       try {
         setIsEditLoading(true);
         const response = await fetch(`${API}/api/diksharthi/${editId}`);
@@ -850,7 +850,7 @@ const handleSameAsMainForNgoChange = (checked) => {
   };
 
   const handleSave = async () => {
-    debugger;
+    // debugger;
     if (!validate()) return;
     try {
       const loggedInUserId = user?.id || user?.user_id || user?.userId || "";
@@ -932,77 +932,7 @@ const handleSameAsMainForNgoChange = (checked) => {
     return result;
   };
 
-  // const goToNextStep = async () => {
-  //   debugger;
-  //   const isValid = validate();
-  //   if (!isValid) return;
-
-  //   try {
-  //     const loggedInUserId = user?.id || user?.user_id || user?.userId || "";
-  //     if (!loggedInUserId) {
-  //       alert("Login user id missing. Please login again.");
-  //       return;
-  //     }
-  //     const payload = mapFormDataToApiPayload(
-  //       formData,
-  //       loggedInUserId,
-  //       currentStep,
-  //     );
-  //     const data = new FormData();
-  //     Object.entries(payload).forEach(([key, value]) => {
-  //       data.append(key, value ?? "");
-  //     });
-  //     if (photo) data.append("photo", photo);
-  //     if (uploadDoc) data.append("uploadDoc", uploadDoc);
-
-  //     const targetId = isEditMode ? editId : savedRecordId;
-  //     const response = targetId
-  //       ? await axios.put(`${API}/api/update-diksharthi/${targetId}`, data)
-  //       : await axios.post(`${API}/api/create-diksharthi`, data);
-
-  //     const persisted = response?.data?.data || {};
-  //     const resolvedId = Number(persisted?.id || targetId || 0) || null;
-  //     if (resolvedId) setSavedRecordId(resolvedId);
-  //     if (persisted?.diksharthi_code || persisted?.id) {
-  //       setSavedId(persisted?.diksharthi_code || persisted?.id);
-  //     }
-  //     const searchKey = String(formData?.fan_id || fanIdSearch || "").trim();
-  //     if (searchKey) {
-  //       try {
-  //         const getRes = await axios.get(`${API}/api/search`, {
-  //           params: {
-  //             fan_id: searchKey,
-  //             diksharthi_id: fanIdSearch,
-  //           },
-  //         });
-
-  //         const latestData = getRes?.data?.data?.[0];
-
-  //         if (latestData?.family_details) {
-  //           const relationDetails = convertFamilyArrayToObject(
-  //             latestData.family_details,
-  //           );
-
-  //           const relations = Object.keys(relationDetails);
-
-  //           setFormData((prev) => ({
-  //             ...prev,
-  //             familyRelations: relations,
-  //             familyRelationDetails: relationDetails,
-  //             relation: relations[0] || prev.relation,
-  //           }));
-  //         }
-  //       } catch (err) {
-  //         console.error("GET API failed", err);
-  //       }
-  //     }
-  //     setCurrentStep((prev) => Math.min(prev + 1, stepTitles.length));
-  //   } catch (err) {
-  //     console.error(err);
-  //     alert("Step save failed");
-  //   }
-  // };
-const goToNextStep = async () => {
+  const goToNextStep = async () => {
   debugger;
 
   const isValid = validate();
@@ -1146,32 +1076,7 @@ const goToNextStep = async () => {
     });
   };
 
-  // const handleFamilyRelationDetailChange = (relationValue, fieldName, rawValue) => {
-  //   if (formData?.sameRelationsWithFan) return;
-  //   let nextValue = rawValue;
-  //   if (fieldName === "mobileNumber") {
-  //     nextValue = String(rawValue || "").replace(/\D/g, "").slice(0, 10);
-  //   }
-  //   if (fieldName === "aadharNumber") {
-  //     nextValue = String(rawValue || "").replace(/\D/g, "").slice(0, 12);
-  //   }
-
-  //   setFormData((prev) => {
-  //     const current = prev?.familyRelationDetails?.[relationValue] || createEmptyFamilyRelationDetails();
-  //     const updated = { ...current, [fieldName]: nextValue };
-  //     if (fieldName === "dob") {
-  //       updated.age = calculateAge(nextValue);
-  //     }
-  //     return {
-  //       ...prev,
-  //       familyRelationDetails: {
-  //         ...(prev?.familyRelationDetails || {}),
-  //         [relationValue]: updated,
-  //       },
-  //     };
-  //   });
-  // };
-const hasAutoFilledStep3 = useRef(false);
+ const hasAutoFilledStep3 = useRef(false);
 const hasAutoFilledStep4 = useRef(false);
   const handleFamilyRelationDetailChange = (
     relationValue,

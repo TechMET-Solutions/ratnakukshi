@@ -486,9 +486,9 @@ const AssistancePage = () => {
                       `${row?.family_member_firstName || ""} ${row?.family_member_lastName || ""}`.trim()
                     )}
                   </td>
-                  <td className="p-4 text-slate-600">{asDisplayText(row.relation)}</td>
+                  <td className="p-4 text-slate-600">{asDisplayText(row.relation_key)}</td>
                   <td className="p-4 text-slate-600">{asDisplayText(row.assistance_type)}</td>
-                  <td className="p-4 text-slate-600">{asDisplayText(row.case_id)}</td>
+                  <td className="p-4 text-slate-600">{asDisplayText(row.fan_id)}</td>
                   <td className={`p-4 font-semibold ${getStatusToneClass(row.status)}`}>
                     {capitalizeFirst(asDisplayText(row.status))}
                   </td>
