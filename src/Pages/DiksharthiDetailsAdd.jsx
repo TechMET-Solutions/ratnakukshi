@@ -1602,7 +1602,7 @@ console.log(filteredFanOptions2,"filteredFanOptions2")
                 </div>
               )}
 
-              {formData.fanIdExists === "No" && (
+              {/* {formData.fanIdExists === "No" && (
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
                     FAN ID
@@ -1614,7 +1614,7 @@ console.log(filteredFanOptions2,"filteredFanOptions2")
                     className="w-full p-2 border border-slate-300 rounded-md outline-none bg-gray-100 text-gray-600"
                   />
                 </div>
-              )}
+              )} */}
 
               {/* DOB (Optional) */}
               <div>

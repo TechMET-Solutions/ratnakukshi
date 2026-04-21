@@ -866,20 +866,17 @@ const AssistancePage = () => {
               </div>
               <div className="px-8">
                 <div className="space-y-4">
-                  {/* <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center text-blue-500 mx-auto">
-                    <FileText size={32} />
-                  </div> */}
 
                   <div className="text-center">
                     <h4 className="font-semibold text-lg text-slate-700">
                       {asDisplayText(
-                        activeRow?.member_name || activeRow?.member,
-                        "Request",
+                        `${activeRow?.family_member_firstName || ""} ${activeRow?.family_member_lastName || ""}`.trim(),
+                        "Request"
                       )}
                     </h4>
-                    <p className="text-slate-500 text-sm">
+                    {/* <p className="text-slate-500 text-sm">
                       Case ID: #{activeRow?.id || "-"}
-                    </p>
+                    </p> */}
                   </div>
 
                   <p className="text-sm text-slate-600 text-center">
@@ -889,7 +886,7 @@ const AssistancePage = () => {
                   {actionType === "queries" && (
                     <div className="space-y-3 text-left">
                       <label className="block text-sm font-medium text-slate-700 mb-1">
-                        Reasons | Remark
+                        Remark
                       </label>
                       <JoditEditor
                         value={queriesReason}
@@ -954,10 +951,10 @@ const AssistancePage = () => {
               </div>
               <div className="space-y-4 px-6 py-5">
                 <div>
-                  <p className="text-sm text-slate-500">Member</p>
+                  <p className="text-sm text-slate-500">Member Name</p>
                   <p className="font-semibold text-slate-700">
                     {asDisplayText(
-                      viewQueryRow?.member_name || viewQueryRow?.member,
+                      `${viewQueryRow?.family_member_firstName || ""} ${viewQueryRow?.family_member_lastName || ""}`.trim()
                     )}
                   </p>
                 </div>
