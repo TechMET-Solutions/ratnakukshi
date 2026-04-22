@@ -1,4 +1,4 @@
-import { Plus, Search, SquaresExclude, X } from "lucide-react";
+import { Eye, Plus, Search, SquaresExclude, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import * as XLSX from "xlsx";
@@ -163,44 +163,130 @@ const DiksharthiListing = () => {
       .includes(searchAdmin.toLowerCase())
   );
 
-  // const fetchFeedbackStatus = async (records) => {
+  // ======================= STATES =======================
+  const [omFeedbackModalData, setOmFeedbackModalData] = useState(null);
+  const [omFeedback, setOmFeedback] = useState("");
+  const [isSubmittingOmFeedback, setIsSubmittingOmFeedback] = useState(false);
+
+  const [viewOMFeedbackModal, setViewOMFeedbackModal] = useState(null);
+  const [omFeedbackList, setOmFeedbackList] = useState([]);
+  const [isLoadingOMFeedback, setIsLoadingOMFeedback] = useState(false);
+
+  // ======================= OPEN MODAL =======================
+  const openOMFeedbackModal = (diksharthi) => {
+    setOmFeedbackModalData(diksharthi);
+    setOmFeedback("");
+  };
+
+
+  // ======================= API SUBMIT =======================
+  const handleSubmitOMFeedback = async () => {
+    if (!omFeedbackModalData?.id) return;
+
+    if (!omFeedback.trim()) {
+      alert("Please enter feedback");
+      return;
+    }
+
+    try {
+      setIsSubmittingOmFeedback(true);
+
+      const payload = {
+        diksharthi_id: omFeedbackModalData.id,
+        feedback: omFeedback.trim(),
+        submitted_by: loggedInUserId,
+      };
+
+      const response = await fetch(
+        `${API}/api/feedback/createfeedback`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || "Failed to submit feedback");
+      }
+
+      // ✅ after feedback send to coordinator
+      await handleSendToCaseCO(omFeedbackModalData.id);
+
+      alert("Feedback submitted successfully");
+
+      setOmFeedbackModalData(null);
+      setOmFeedback("");
+
+    } catch (error) {
+      console.error(error);
+      alert(error.message || "Failed to submit feedback");
+    } finally {
+      setIsSubmittingOmFeedback(false);
+    }
+  };
+
+  // const openViewOMFeedbackModal = async (diksharthi) => {
   //   try {
-  //     if (!Array.isArray(records) || records.length === 0) {
-  //       setFeedbackStatus({});
-  //       return;
-  //     }
+  //     setIsLoadingOMFeedback(true);
+  //     setViewOMFeedbackModal(diksharthi);
 
-  //     const results = await Promise.all(
-  //       records.map(async (item) => {
-
-  //         const res = await fetch(`${API}/api/feedback/view/${item.id}`);
-  //         const data = await res.json();
-
-  //         const hasFeedback =
-  //           Array.isArray(data?.data) && data.data.length > 0;
-
-  //         return [item.id, hasFeedback];
-  //       })
+  //     const response = await fetch(
+  //       `${API}/api/feedback//all-feedback/${diksharthi.id}`
   //     );
 
-  //     const statusMap = results.reduce((acc, [id, value]) => {
-  //       acc[id] = value;
-  //       return acc;
-  //     }, {});
+  //     const result = await response.json();
 
-  //     setFeedbackStatus(statusMap);
+  //     setOmFeedbackList(result.data || []);
 
   //   } catch (error) {
-  //     console.error("Feedback status fetch failed", error);
+  //     console.error(error);
+  //     alert("Failed to load feedback");
+  //   } finally {
+  //     setIsLoadingOMFeedback(false);
   //   }
   // };
 
+  // ======================= OPEN VIEW MODAL =======================
+  const openViewOMFeedbackModal = async (diksharthi) => {
+    try {
+      setIsLoadingOMFeedback(true);
+      setViewOMFeedbackModal(diksharthi);
+
+      const response = await fetch(
+        `${API}/api/feedback/all-feedback/${diksharthi.id}`
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || "Failed to load feedback");
+      }
+
+      // ✅ API returns object, not array
+      setOmFeedbackList({
+        diksharthi_feedback: result?.data?.diksharthi_feedback || [],
+        operation_manager_feedback:
+          result?.data?.operation_manager_feedback || [],
+      });
+
+    } catch (error) {
+      console.error(error);
+      alert("Failed to load feedback");
+    } finally {
+      setIsLoadingOMFeedback(false);
+    }
+  };
 
   const fetchFeedbackStatus = async (records) => {
     try {
       const ids = records.map((item) => item.id);
 
-      const res = await fetch(`${API}/api/feedback/view`, {
+      const res = await fetch(`${API}/api/feedback/view/${item.id}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -233,11 +319,15 @@ const DiksharthiListing = () => {
         );
 
       } else if (role === "operations-manager") {
-        // Operations manager sees all records sent by staff
-        filteredRecords = allRecords.filter(
-          (item) => String(item?.status).toLowerCase() === "send"
-        );
+        // Operations manager sees only records
+        // sent by staff AND not pending
+        filteredRecords = allRecords.filter((item) => {
+          const status = String(item?.status || "")
+            .trim()
+            .toLowerCase();
 
+          return status === "send" || status === "manager" || status === "coordinator";
+        });
       } else if (role === "karyakarta") {
         // Karyakarta sees only assigned records
         filteredRecords = allRecords.filter(
@@ -282,6 +372,67 @@ const DiksharthiListing = () => {
           status: "send",
         }),
       });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || "Failed to update diksharthi status");
+      }
+
+      await fetchDiksharthiList();
+    } catch (error) {
+      console.error(error);
+      alert("Failed to send to Operations Manager");
+    } finally {
+      setSendingId(null);
+    }
+  };
+
+  const handleSendToOM = async (id) => {
+    debugger
+    try {
+      setSendingId(id);
+      const res = await fetch(`${API}/api/update-diksharthi-status/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          status: "manager",
+        }),
+      });
+
+      // coordinator
+
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || "Failed to update diksharthi status");
+      }
+
+      await fetchDiksharthiList();
+    } catch (error) {
+      console.error(error);
+      alert("Failed to send to Operations Manager");
+    } finally {
+      setSendingId(null);
+    }
+  };
+  const handleSendToCaseCO = async (id) => {
+    debugger
+    try {
+      setSendingId(id);
+      const res = await fetch(`${API}/api/update-diksharthi-status/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          status: "coordinator",
+        }),
+      });
+
+      // coordinator
 
       const data = await res.json();
 
@@ -539,35 +690,58 @@ const DiksharthiListing = () => {
     }
   };
 
+
   const handleVisitStatusChange = async (diksharthi, nextStatus) => {
     if (!diksharthi?.id || !nextStatus) return;
 
     try {
       setUpdatingVisitStatusId(diksharthi.id);
+
       const currentSchedule = getCurrentSchedule(diksharthi);
-      const localVisitDateTime = getLocalVisitDateTime();
-      const shouldStoreVisitDateTime = String(nextStatus).trim().toLowerCase() === "yes";
+
+      // ✅ Indian Date & Time
+      const now = new Date();
+
+      const indianDate = now.toLocaleDateString("en-CA", {
+        timeZone: "Asia/Kolkata",
+      }); // YYYY-MM-DD
+
+      const indianTime = now.toLocaleTimeString("en-GB", {
+        timeZone: "Asia/Kolkata",
+        hour12: false,
+      }); // HH:mm:ss
+
+      const shouldStoreVisitDateTime =
+        String(nextStatus).trim().toLowerCase() === "yes";
+
       const payload = {
         is_visited: nextStatus,
+
         ...(shouldStoreVisitDateTime
           ? {
-              visit_date: currentSchedule?.date || localVisitDateTime.date,
-              visit_time: currentSchedule?.time || localVisitDateTime.time,
-            }
+            visit_date: currentSchedule?.date || indianDate,
+            visit_time: currentSchedule?.time || indianTime,
+          }
           : {}),
       };
 
-      const response = await fetch(`${API}/api/visit-status/${diksharthi.id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
+      const response = await fetch(
+        `${API}/api/visit-status/${diksharthi.id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        }
+      );
 
       const result = await response.json().catch(() => ({}));
+
       if (!response.ok) {
-        throw new Error(result?.message || "Failed to update visit status");
+        throw new Error(
+          result?.message || "Failed to update visit status"
+        );
       }
 
       await fetchDiksharthiList();
@@ -578,6 +752,46 @@ const DiksharthiListing = () => {
       setUpdatingVisitStatusId(null);
     }
   };
+
+  // const handleVisitStatusChange = async (diksharthi, nextStatus) => {
+  //   if (!diksharthi?.id || !nextStatus) return;
+
+  //   try {
+  //     setUpdatingVisitStatusId(diksharthi.id);
+  //     const currentSchedule = getCurrentSchedule(diksharthi);
+  //     const localVisitDateTime = getLocalVisitDateTime();
+  //     const shouldStoreVisitDateTime = String(nextStatus).trim().toLowerCase() === "yes";
+  //     const payload = {
+  //       is_visited: nextStatus,
+  //       ...(shouldStoreVisitDateTime
+  //         ? {
+  //             visit_date: currentSchedule?.date || localVisitDateTime.date,
+  //             visit_time: currentSchedule?.time || localVisitDateTime.time,
+  //           }
+  //         : {}),
+  //     };
+
+  //     const response = await fetch(`${API}/api/visit-status/${diksharthi.id}`, {
+  //       method: "PUT",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //       },
+  //       body: JSON.stringify(payload),
+  //     });
+
+  //     const result = await response.json().catch(() => ({}));
+  //     if (!response.ok) {
+  //       throw new Error(result?.message || "Failed to update visit status");
+  //     }
+
+  //     await fetchDiksharthiList();
+  //   } catch (error) {
+  //     console.error(error);
+  //     alert(error?.message || "Failed to update visit status");
+  //   } finally {
+  //     setUpdatingVisitStatusId(null);
+  //   }
+  // };
 
   const openViewScheduleModal = async (diksharthi) => {
     setIsViewScheduleLoading(true);
@@ -755,11 +969,23 @@ const DiksharthiListing = () => {
   // };
 
   // Feedback handlers
+  // const openFeedbackModal = (diksharthi) => {
+  //   if (feedbackStatus[diksharthi?.id]) {
+  //     openViewFeedbackModal(diksharthi);
+  //     return;
+  //   }
+  //   setFeedbackModalData(diksharthi);
+  //   setFeedbackForm(emptyFeedbackForm);
+  // };
+
   const openFeedbackModal = (diksharthi) => {
-    if (feedbackStatus[diksharthi?.id]) {
-      openViewFeedbackModal(diksharthi);
-      return;
-    }
+    // ❌ remove this check
+    // if (feedbackStatus[diksharthi?.id]) {
+    //   openViewFeedbackModal(diksharthi);
+    //   return;
+    // }
+
+    // ✅ always open add feedback
     setFeedbackModalData(diksharthi);
     setFeedbackForm(emptyFeedbackForm);
   };
@@ -987,44 +1213,94 @@ const DiksharthiListing = () => {
     setFeedbackForm((prev) => ({ ...prev, [name]: value }));
   };
 
+  // const handleSubmitFeedback = async () => {
+  //   if (!feedbackModalData?.id) return;
+  //   if (!feedbackForm.feedback.trim()) {
+  //     alert("Please enter feedback");
+  //     return;
+  //   }
+  //   try {
+  //     setIsSubmittingFeedback(true);
+  //     const payload = {
+  //       diksharthi_id: feedbackModalData.id,
+  //       diksharthi_code: feedbackModalData.diksharthi_code || "",
+  //       diksharthi_name: feedbackModalData.sadhu_sadhvi_name || "",
+  //       feedback: feedbackForm.feedback.trim(),
+  //       submitted_by: loggedInUserId,
+  //     };
+  //     const response = await fetch(`${API}/api/feedback/create`, {
+  //       method: "POST",
+  //       headers: { "Content-Type": "application/json" },
+  //       body: JSON.stringify(payload),
+  //     });
+  //     const result = await response.json().catch(() => ({}));
+  //     if (!response.ok) {
+  //       throw new Error(result?.message || "Failed to submit feedback");
+  //     }
+  //     alert(result?.message || "Feedback submitted successfully");
+  //     setFeedbackStatus((prev) => ({
+  //       ...prev,
+  //       [feedbackModalData.id]: true,
+  //     }));
+  //     setFeedbackModalData(null);
+  //     setFeedbackForm(emptyFeedbackForm);
+  //   } catch (error) {
+  //     console.error(error);
+  //     alert(error?.message || "Failed to submit feedback");
+  //   } finally {
+  //     setIsSubmittingFeedback(false);
+  //   }
+  // };
+
+
   const handleSubmitFeedback = async () => {
     if (!feedbackModalData?.id) return;
+
     if (!feedbackForm.feedback.trim()) {
       alert("Please enter feedback");
       return;
     }
+
     try {
       setIsSubmittingFeedback(true);
+
       const payload = {
         diksharthi_id: feedbackModalData.id,
-        diksharthi_code: feedbackModalData.diksharthi_code || "",
         diksharthi_name: feedbackModalData.sadhu_sadhvi_name || "",
         feedback: feedbackForm.feedback.trim(),
         submitted_by: loggedInUserId,
+
+        // ✅ NEW FIELD
+        status: feedbackModalData.current_visit_status || "",
       };
+
       const response = await fetch(`${API}/api/feedback/create`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify(payload),
       });
-      const result = await response.json().catch(() => ({}));
+
+      const result = await response.json();
+
       if (!response.ok) {
-        throw new Error(result?.message || "Failed to submit feedback");
+        throw new Error(result.message || "Failed to submit feedback");
       }
-      alert(result?.message || "Feedback submitted successfully");
-      setFeedbackStatus((prev) => ({
-        ...prev,
-        [feedbackModalData.id]: true,
-      }));
+
+      alert("Feedback submitted successfully");
+
       setFeedbackModalData(null);
       setFeedbackForm(emptyFeedbackForm);
+
     } catch (error) {
       console.error(error);
-      alert(error?.message || "Failed to submit feedback");
+      alert(error.message || "Failed to submit feedback");
     } finally {
       setIsSubmittingFeedback(false);
     }
   };
+
 
   const openViewFeedbackModal = async (diksharthi) => {
     if (!diksharthi?.id) return;
@@ -1388,15 +1664,16 @@ const DiksharthiListing = () => {
                   Status
                 </th>
               )}
-              <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">
-                Actions
-              </th>
+
               {role === "karyakarta" && (
 
                 <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">
                   is Visted ?
                 </th>
               )}
+              <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">
+                Actions
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -1449,8 +1726,8 @@ const DiksharthiListing = () => {
 
                     {/* <td className="px-6 py-3">{diksharthi.rbf_criteria}</td> */}
 
-                    <td className="px-6 py-3">{diksharthi.spoken_to || "-"}</td>
                     <td className="px-6 py-3">{diksharthi.spoken_to_relation || "-"}</td>
+                    <td className="px-6 py-3">{diksharthi.spoken_to || "-"}</td>
 
 
                     {role === "operations-manager" && (
@@ -1465,10 +1742,10 @@ const DiksharthiListing = () => {
                       </td>
                     )}
 
-                    {role === "operations-manager" && (
+                    {/* {role === "operations-manager" && (
                       <td className="px-6 py-3">
                         <div>
-                          {diksharthi.current_visit_status || "No"}
+                          {diksharthi.current_visit_status || "-"}
                         </div>
 
                         {diksharthi.visited_history?.length > 0 && (() => {
@@ -1479,6 +1756,83 @@ const DiksharthiListing = () => {
                             </div>
                           );
                         })()}
+                      </td> 
+                    )}*/}
+
+                    {role === "operations-manager" && (
+                    <td className="px-6 py-3">
+                      <div className="flex items-center gap-2">
+                        <span>{diksharthi.current_visit_status || "-"}</span>
+
+                        {/* 👁️ Show only if value exists */}
+                        {/* {diksharthi.current_visit_status && (
+                          <button
+                            onClick={() => openViewFeedbackModal(diksharthi)}
+                            className="text-blue-500 hover:text-blue-700"
+                            title="View Visit Details"
+                          >
+                            <Eye size={16} />
+                          </button>
+                        )} */}
+                        </div>
+                        
+
+                      {diksharthi.visited_history?.length > 0 && (() => {
+                        const lastVisit =
+                          diksharthi.visited_history[
+                          diksharthi.visited_history.length - 1
+                          ];
+
+                        return (
+                          <div className="mt-1 text-sm text-gray-500">
+                            {formatIndianDate(lastVisit.date)}{" "}
+                            {formatTo12Hour(lastVisit.time)}
+                          </div>
+                        );
+                      })()}
+                      </td>
+
+                     
+                      
+                    )}
+
+                    {role === "karyakarta" && (
+                      <td className="px-6 py-3">
+                        <div className="flex items-center gap-2">
+                          <select
+                            className="rounded-lg border border-gray-300 text-sm px-2 py-1"
+                            value={diksharthi?.current_visit_status || ""}
+                            disabled={updatingVisitStatusId === diksharthi.id}
+                            // onChange={(e) => {
+                            //   const value = e.target.value;
+
+                            //   // ✅ update visit status
+                            //   handleVisitStatusChange(diksharthi, value);
+
+                            //   // ✅ if YES → open feedback modal
+                            //   if (value === "Yes" || value === "No") {
+                            //     openFeedbackModal(diksharthi);
+                            //   }
+                            // }}
+
+                            onChange={(e) => {
+                              const value = e.target.value;
+
+                              handleVisitStatusChange(diksharthi, value);
+
+                              if (value === "Yes" || value === "No") {
+                                openFeedbackModal({
+                                  ...diksharthi,
+                                  current_visit_status: value
+                                });
+                              }
+                            }}
+                          >
+                            <option value="">Is Visited?</option>
+                            <option value="Yes">Yes</option>
+                            <option value="No">No</option>
+                          </select>
+                        </div>
                       </td>
                     )}
                     {role === "admin" && (
@@ -1557,25 +1911,66 @@ const DiksharthiListing = () => {
                             </div>
                           )}
 
-                          {isAdminUnassigned(diksharthi) && (
-                            <button
-                              className="rounded-lg bg-purple-600 text-sm px-2 py-1 text-white"
-                              onClick={() => openAssignAdminModal(diksharthi)}
-                            >
-                              Assign Karyakarta
-                            </button>
-                          )}
+                          {/* ✅ Only show when status = send */}
+                          {getDiksharthiStatus(diksharthi) === "send" &&
+                            isAdminUnassigned(diksharthi) && (
+                              <button
+                                className="rounded-lg bg-purple-600 text-sm px-2 py-1 text-white"
+                                onClick={() => openAssignAdminModal(diksharthi)}
+                              >
+                                Assign Karyakarta
+                              </button>
+                            )}
+                          
+                          {/* {getDiksharthiStatus(diksharthi) !== "send" &&
+                            getDiksharthiStatus(diksharthi) !== "manager" && (
+                              <button
+                                className="rounded-lg bg-indigo-600 text-sm px-2 py-1 text-white"
+                                onClick={() => openOMFeedbackModal(diksharthi)}
+                              >
+                              Send to Case Coordinator
+                              </button>
+                            )} */}
+                          
+                          {/* ✅ Send to Case Coordinator only when NOT coordinator */}
+                          {getDiksharthiStatus(diksharthi) !== "coordinator" &&
+                            getDiksharthiStatus(diksharthi) !== "send" && (
+                              <button
+                                className="rounded-lg bg-indigo-600 text-sm px-2 py-1 text-white"
+                                onClick={() => openOMFeedbackModal(diksharthi)}
+                              >
+                                Send to Case Coordinator
+                              </button>
+                            )}
+                          
+                          {/* <button
+                            className="rounded-lg bg-orange-500 text-sm px-2 py-1 text-white"
+                            onClick={() => openViewOMFeedbackModal(diksharthi)}
+                          >
+                            View Feedback
+                          </button> */}
+
+                          {/* ✅ Hide View Feedback when Assign Karyakarta button visible */}
+                          {!(getDiksharthiStatus(diksharthi) === "send" &&
+                            isAdminUnassigned(diksharthi)) && (
+                              <button
+                                className="rounded-lg bg-orange-500 text-sm px-2 py-1 text-white"
+                                onClick={() => openViewOMFeedbackModal(diksharthi)}
+                              >
+                                View Feedback
+                              </button>
+                            )}
 
                          
 
-                          {feedbackStatus[diksharthi.id] && (
+                          {/* {feedbackStatus[diksharthi.id] && (
                             <button
                               className="rounded-lg bg-orange-500 text-sm px-2 py-1 text-white"
                               onClick={() => openViewFeedbackModal(diksharthi)}
                             >
                               View Feedback
                             </button>
-                          )}
+                          )} */}
                         </>
                       )}
 
@@ -1627,24 +2022,32 @@ const DiksharthiListing = () => {
                             </button>
                           )}
 
+                          {getDiksharthiStatus(diksharthi) !== "manager" && (
+                          <button
+                            className="rounded-lg bg-indigo-600 text-sm px-2 py-1 text-white"
+                            onClick={() => handleSendToOM(diksharthi.id)}
+                            disabled={sendingId === diksharthi.id}
+                          >
+                            {sendingId === diksharthi.id
+                              ? "Sending..."
+                              : "Send to Operation Manage"}
+                          </button>
+                          )}
                        
-                          {!feedbackStatus[diksharthi.id] && (
-                            <button
-                              className="rounded-lg bg-orange-500 text-sm px-2 py-1 text-white"
-                              onClick={() => openFeedbackModal(diksharthi)}
-                            >
-                              Add Feedback
-                            </button>
-                          )}
-
-                          {feedbackStatus[diksharthi.id] && (
-                            <button
-                              className="rounded-lg bg-orange-500 text-sm px-2 py-1 text-white"
-                              onClick={() => openViewFeedbackModal(diksharthi)}
-                            >
-                              View Feedback
-                            </button>
-                          )}
+                          {/* ✅ Show only when Is Visited = Yes / No */}
+                          {(String(diksharthi?.current_visit_status || "")
+                            .trim()
+                            .toLowerCase() === "yes" ||
+                            String(diksharthi?.current_visit_status || "")
+                              .trim()
+                              .toLowerCase() === "no") && (
+                              <button
+                                className="rounded-lg bg-orange-500 text-sm px-2 py-1 text-white"
+                              onClick={() => openViewOMFeedbackModal(diksharthi)}
+                              >
+                                View Feedback
+                              </button>
+                            )}
                         </>
                       )}
 
@@ -1713,22 +2116,7 @@ const DiksharthiListing = () => {
                       )}
 
                     </td>
-                    {role === "karyakarta" && (
-                      <td className="px-6 py-3">
-                          <div className="flex items-center gap-2">
-                            <select
-                              className="rounded-lg border border-gray-300 text-sm px-2 py-1"
-                              value={diksharthi?.current_visit_status || ""}
-                              disabled={updatingVisitStatusId === diksharthi.id}
-                              onChange={(e) => handleVisitStatusChange(diksharthi, e.target.value)}
-                            >
-                              <option value="">Is Visited?</option>
-                              <option value="Yes">Yes</option>
-                              <option value="No">No</option>
-                            </select>
-                          </div>
-                      </td>
-                    )}
+                   
                   </tr>
                 );
               })
@@ -2015,10 +2403,10 @@ const DiksharthiListing = () => {
               {/* Data Display Section */}
               <p><span className="font-semibold">M.S. ID:</span> {assignModalData?.id || "-"}</p>
               <p><span className="font-semibold">M.S. Name:</span> {assignModalData?.sadhu_sadhvi_name || "-"}</p>
-              <p>
+              {/* <p>
                 <span className="font-semibold">Family Member:</span>{" "}
                 {assignModalData?.family_member_firstName} {assignModalData?.family_member_lastName}
-              </p>
+              </p> */}
 
               {/* Search & Selection Section */}
               <div className="mt-4">
@@ -2435,11 +2823,11 @@ const DiksharthiListing = () => {
                 <span className="font-semibold">M.S. Name:</span>{" "}
                 {feedbackModalData?.sadhu_sadhvi_name || "-"}
               </p>
-              <p>
+              {/* <p>
                 <span className="font-semibold">Family Member Name :</span>{" "}
                 {`${feedbackModalData?.family_member_firstName || ""} ${feedbackModalData?.family_member_lastName || ""
                   }`.trim() || "-"}
-              </p>
+              </p> */}
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
                   Feedback
@@ -2478,71 +2866,352 @@ const DiksharthiListing = () => {
         </div>
       )}
 
+{/* 
       {(role === "operations-manager" || role === "karyakarta") && viewFeedbackModalData && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 px-4">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col overflow-hidden">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-              <h3 className="text-lg font-semibold text-gray-800">View Feedback</h3>
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 px-4">
+
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xl max-h-[90vh] flex flex-col overflow-hidden">
+
+            <div className="flex items-center justify-between px-6 py-4 border-b bg-gradient-to-r from-blue-50 to-blue-100">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-800">Feedback</h3>
+                <p className="text-lg text-gray-900 font-bold">
+                  M.S. : {viewFeedbackModalData.diksharthi?.id || "-"}  {viewFeedbackModalData.diksharthi?.sadhu_sadhvi_name || "-"}
+                </p>
+              </div>
+
               <button
-                type="button"
-                className="p-1 rounded hover:bg-gray-100"
                 onClick={() => setViewFeedbackModalData(null)}
+                className="p-2 rounded-full hover:bg-gray-200 transition"
               >
-                <X size={18} className="text-gray-600" />
+                <X size={18} />
               </button>
             </div>
-            <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3 text-sm">
-              <p>
-                <span className="font-semibold">M.S. ID :</span>{" "}
-                {viewFeedbackModalData.diksharthi?.id || "-"}
-              </p>
-              <p>
-                <span className="font-semibold">M.S. Name :</span>{" "}
-                {viewFeedbackModalData.diksharthi?.sadhu_sadhvi_name || "-"}
-              </p>
-              <p>
-                <span className="font-semibold">Family Member Name :</span>{" "}
-                {`${viewFeedbackModalData.diksharthi?.family_member_firstName || ""} ${viewFeedbackModalData.diksharthi?.family_member_lastName || ""
-                  }`.trim() || "-"}
-              </p>
-              {isFeedbackLoading ? (
-                <p className="text-gray-500 animate-pulse">Loading feedback...</p>
-              ) : viewFeedbackModalData.feedbacks.length === 0 ? (
-                <p className="text-gray-500 py-4 text-center">No feedback available for this diksharthi.</p>
-              ) : (
-                <div className="space-y-3">
-                  {viewFeedbackModalData.feedbacks.map((item, index) => (
-                    <div
-                      key={item.id || item.feedback_id || index}
-                      className="border border-gray-200 rounded-lg p-4 bg-gray-50 space-y-2"
-                    >
-                      <p className="text-gray-800">{item.feedback || item.feedback_text || "-"}</p>
-                      {(item.submitted_by_name || item.karyakarta_name) && (
-                        <p className="text-xs text-gray-500">
-                          By: {item.submitted_by_name || item.karyakarta_name}
-                        </p>
-                      )}
-                      {item.created_at && (
-                        <p className="text-xs text-gray-400">{formatIndianDate(item.created_at)}</p>
-                      )}
 
+            <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+
+              {isFeedbackLoading ? (
+                <p className="text-center text-gray-500 animate-pulse">
+                  Loading feedback...
+                </p>
+              ) : viewFeedbackModalData.feedbacks.length === 0 ? (
+                <p className="text-center text-gray-400">
+                  No feedback available
+                </p>
+              ) : (
+                viewFeedbackModalData.feedbacks.map((item, index) => (
+                  <div
+                    key={item.id || index}
+                    className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition"
+                  >
+                    <p className="text-gray-800 text-sm leading-relaxed">
+                      {item.feedback || "-"}
+                    </p>
+
+                    <div className="mt-3 flex justify-between items-center text-xs text-gray-500">
+
+                      <span>
+                        🕒 {formatIndianDate(item.created_at)}{" "}
+                        {item.feedback_time
+                          ? `• ${item.feedback_time}`
+                          : ""}
+                      </span>
                     </div>
-                  ))}
-                </div>
+                  </div>
+                ))
               )}
             </div>
-            <div className="px-5 py-4 border-t border-gray-100 flex justify-end">
+
+          </div>
+        </div>
+      )} */}
+
+
+      {(role === "operations-manager" || role === "karyakarta") && viewFeedbackModalData && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 px-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[85vh] flex flex-col overflow-hidden">
+
+            {/* HEADER */}
+            <div className="flex items-center justify-between px-6 py-5 border-b bg-gradient-to-r from-slate-50 to-blue-50">
+              <div>
+                <h3 className="text-sm uppercase tracking-wider font-bold text-blue-600">Feedback History</h3>
+                <p className="text-xl text-gray-900 font-extrabold mt-1">
+                  {viewFeedbackModalData.diksharthi?.sadhu_sadhvi_name || "-"}
+                  <span className="ml-2 text-sm font-medium text-gray-500">(ID: {viewFeedbackModalData.diksharthi?.id || "-"})</span>
+                </p>
+              </div>
+
               <button
-                type="button"
-                className="rounded-lg bg-gray-200 text-sm px-4 py-2 text-gray-800"
                 onClick={() => setViewFeedbackModalData(null)}
+                className="p-2 rounded-full hover:bg-white hover:shadow-md transition-all text-gray-400 hover:text-red-500"
               >
-                Close
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* BODY - TABLE LAYOUT */}
+            <div className="flex-1 overflow-y-auto">
+              {isFeedbackLoading ? (
+                <div className="p-20 text-center">
+                  <div className="animate-spin inline-block w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mb-4"></div>
+                  <p className="text-gray-500">Loading feedback records...</p>
+                </div>
+              ) : viewFeedbackModalData.feedbacks.length === 0 ? (
+                <div className="p-20 text-center text-gray-400">
+                  <p className="text-lg italic">No feedback entries found for this record.</p>
+                </div>
+              ) : (
+                    <table className="w-full px-16 text-left ">
+                  <thead className="sticky top-0 bg-white shadow-sm z-10">
+                    <tr className="bg-gray-50 border-b border-gray-100">
+                      <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
+                      <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Feedback</th>
+                      <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">Date & Time</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50">
+                    {viewFeedbackModalData.feedbacks.map((item, index) => (
+                      <tr key={item.id || index} className="hover:bg-blue-50/30 transition-colors">
+                        {/* STATUS COLUMN */}
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`px-3 py-1 rounded-full text-[11px] font-bold uppercase ${item.status === 'Pending'
+                              ? 'bg-amber-100 text-amber-700'
+                              : item.status === 'No'
+                                ? 'bg-rose-100 text-rose-700'
+                                : 'bg-emerald-100 text-emerald-700'
+                            }`}>
+                            {item.status || "N/A"}
+                          </span>
+                        </td>
+
+                        {/* FEEDBACK COLUMN */}
+                        <td className="px-6 py-4">
+                          <p className="text-sm text-gray-700 max-w-md line-clamp-2 hover:line-clamp-none transition-all cursor-default">
+                            {item.feedback || "-"}
+                          </p>
+                        </td>
+
+                        {/* DATE & TIME COLUMN */}
+                        <td className="px-6 py-4 text-right whitespace-nowrap">
+                          <div className="text-sm font-medium text-gray-900">
+                            {formatIndianDate(item.created_at)}
+                          </div>
+                          <div className="text-xs text-gray-400 font-mono italic">
+                            {item.feedback_time || "-"}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+
+          </div>
+        </div>
+      )}
+
+
+      {omFeedbackModalData && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6">
+
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold">
+                Send to Case Coordinator
+              </h2>
+
+              <button
+                onClick={() => setOmFeedbackModalData(null)}
+                className="text-gray-500 hover:text-black"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <p className="text-sm text-gray-600 mb-3">
+              M.S. ID: {omFeedbackModalData.id} - {omFeedbackModalData.sadhu_sadhvi_name}
+            </p>
+
+            <textarea
+              rows="5"
+              value={omFeedback}
+              onChange={(e) => setOmFeedback(e.target.value)}
+              placeholder="Enter feedback..."
+              className="w-full border rounded-lg p-3 text-sm resize-none"
+            />
+
+            <div className="flex justify-end gap-2 mt-4">
+              <button
+                onClick={() => setOmFeedbackModalData(null)}
+                className="px-4 py-2 rounded-lg border"
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={handleSubmitOMFeedback}
+                disabled={isSubmittingOmFeedback}
+                className="px-4 py-2 rounded-lg bg-indigo-600 text-white"
+              >
+                {isSubmittingOmFeedback ? "Sending..." : "Send"}
               </button>
             </div>
           </div>
         </div>
       )}
+
+      {viewOMFeedbackModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+
+            {/* Header */}
+            <div className="flex justify-between items-center px-6 py-4 border-b">
+              <div>
+                <h2 className="text-lg font-semibold">
+                  Feedback History
+                </h2>
+
+                <p className="text-sm text-gray-500">
+                  M.S. ID: {viewOMFeedbackModal.id}
+                </p>
+              </div>
+
+              <button
+                onClick={() => setViewOMFeedbackModal(null)}
+                className="text-gray-500 hover:text-black"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="p-6 overflow-auto flex-1 space-y-8">
+
+              {isLoadingOMFeedback ? (
+                <p className="text-center text-gray-500">
+                  Loading...
+                </p>
+              ) : (
+                <>
+                  {/* ================= Karyakarta   FEEDBACK TABLE ================= */}
+                  <div>
+                    <h3 className="font-semibold text-blue-700 mb-3">
+                      Karyakarta  Feedback
+                    </h3>
+
+                    {omFeedbackList?.diksharthi_feedback?.length === 0 ? (
+                      <p className="text-sm text-gray-400">
+                        No feedback found
+                      </p>
+                    ) : (
+                      <div className="overflow-x-auto border rounded-xl">
+                        <table className="min-w-full text-sm">
+                          <thead className="bg-blue-50 text-left">
+                            <tr>
+                              <th className="px-4 py-3 border-b">Sr No</th>
+                              <th className="px-4 py-3 border-b">Status</th>
+                              <th className="px-4 py-3 border-b">Feedback</th>
+                              <th className="px-4 py-3 border-b">Date</th>
+                              <th className="px-4 py-3 border-b">Time</th>
+                            </tr>
+                          </thead>
+
+                          <tbody>
+                            {omFeedbackList.diksharthi_feedback.map(
+                              (item, index) => (
+                                <tr
+                                  key={index}
+                                  className="hover:bg-gray-50"
+                                >
+                                  <td className="px-4 py-3 border-b">
+                                    {index + 1}
+                                  </td>
+
+                                 
+
+                                  <td className="px-4 py-3 border-b">
+                                    <span
+                                      className={`px-2 py-1 rounded text-xs font-medium ${item.status === "Yes"
+                                          ? "bg-green-100 text-green-700"
+                                          : "bg-red-100 text-red-700"
+                                        }`}
+                                    >
+                                      {item.status || "-"}
+                                    </span>
+                                  </td>
+                                  <td className="px-4 py-3 border-b">
+
+                                    <p className="text-sm text-gray-700 max-w-md line-clamp-2 hover:line-clamp-none transition-all cursor-default">
+                                      {item.feedback || "-"}
+                                    </p>
+                                  </td>
+
+                                  <td className="px-4 py-3 border-b">
+                                    {formatIndianDate(item.feedback_date?.slice(0, 10))}
+                                  </td>
+
+                                  <td className="px-4 py-3 border-b">
+                                    {item.feedback_time}
+                                  </td>
+                                </tr>
+                              )
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* ================= OM FEEDBACK ================= */}
+                  {omFeedbackList?.operation_manager_feedback?.length > 0 && (
+                    <div>
+                      <h3 className="font-semibold text-green-700 mb-3">
+                        Operation Manager Feedback
+                      </h3>
+
+                      <div className="space-y-3">
+                        {omFeedbackList.operation_manager_feedback.map(
+                          (item, index) => (
+                            <div
+                              key={index}
+                              className="border rounded-xl p-4 bg-green-50"
+                            >
+                              <p className="text-sm text-gray-800">
+                                {item.feedback}
+                              </p>
+
+                              <div className="mt-2 text-xs text-gray-500 flex justify-between">
+
+                                <span>
+                                  {formatIndianDate(item.feedback_date?.slice(0, 10))}{" "}
+                                  {item.feedback_time}
+                                </span>
+                              </div>
+                            </div>
+                          )
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="border-t px-6 py-3 flex justify-end">
+              <button
+                onClick={() => setViewOMFeedbackModal(null)}
+                className="px-4 py-2 bg-gray-800 text-white rounded-lg"
+              >
+                Close
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+
 
       {familyDetailsModalData && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 px-4">

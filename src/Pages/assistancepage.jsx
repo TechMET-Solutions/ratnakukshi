@@ -462,6 +462,7 @@ const AssistancePage = () => {
         <table className="w-full h-9xl text-left border-collapse bg-white">
           <thead>
             <tr className="bg-[#fdf2d7]">
+              <th className="p-4 font-semibold text-slate-700 border-b">M.S. ID</th>
               <th className="p-4 font-semibold text-slate-700 border-b">M.S. Name</th>
               <th className="p-4 font-semibold text-slate-700 border-b">Family Member</th>
               <th className="p-4 font-semibold text-slate-700 border-b">Relation</th>
@@ -481,6 +482,7 @@ const AssistancePage = () => {
 
               return (
                 <tr key={rowActionKey} className="hover:bg-slate-50 transition-colors">
+                  <td className="p-4 text-slate-600">{asDisplayText(row.id)}</td>
                   <td className="p-4 text-slate-600">{asDisplayText(row.sadhu_sadhvi_name)}</td>
                   <td className="p-4 text-slate-600">
                     {asDisplayText(
