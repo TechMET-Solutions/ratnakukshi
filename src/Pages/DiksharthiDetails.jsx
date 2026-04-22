@@ -423,6 +423,17 @@ const DiksharthiListing = () => {
     return karyakarta; // ✅ RETURN
   };
 
+  const familyDetails = (() => {
+    try {
+      if (!viewModalData?.family_relation_details_json) return {};
+      return typeof viewModalData.family_relation_details_json === "string"
+        ? JSON.parse(viewModalData.family_relation_details_json)
+        : viewModalData.family_relation_details_json;
+    } catch (e) {
+      return {};
+    }
+  })();
+
   // const fetchAdminUsers = async () => {
   //   debugger
   //   try {
@@ -1350,10 +1361,10 @@ const DiksharthiListing = () => {
                 RBF Criteria
               </th> */}
               <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">
-                RBF Relation
+                Spoken To Relation
               </th>
               <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">
-                RBF Family Member Name
+                Spoken To Name
               </th>
              
 
@@ -1438,8 +1449,8 @@ const DiksharthiListing = () => {
 
                     {/* <td className="px-6 py-3">{diksharthi.rbf_criteria}</td> */}
 
-                    <td className="px-6 py-3">{diksharthi.relation || "-"}</td>
-                    <td className="px-6 py-3">{diksharthi.family_member_firstName || "-"} {diksharthi.family_member_lastName || "-"}</td>
+                    <td className="px-6 py-3">{diksharthi.spoken_to || "-"}</td>
+                    <td className="px-6 py-3">{diksharthi.spoken_to_relation || "-"}</td>
 
 
                     {role === "operations-manager" && (
@@ -1754,7 +1765,7 @@ const DiksharthiListing = () => {
       {(role === "operations-manager" || role === "staff") &&
         (viewModalData || isViewLoading) && (
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 px-4">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden">
 
               {/* Header */}
               <div className="flex items-center justify-between px-6 py-4 border-b">
@@ -1803,6 +1814,13 @@ const DiksharthiListing = () => {
                         </Section>
                       )}
 
+                    {/*  */}
+                    <Section title="Spoken To">
+                      <Grid>
+                        <DetailItem label="Name" value={viewModalData?.spoken_to || "N/A"} />
+                        <DetailItem label="Relation " value={viewModalData?.spoken_to_relation || "N/A"} />
+                      </Grid>
+                    </Section>
                     {/* ADDRESS */}
                     <Section title="Address Details">
                       <Grid>
@@ -1844,11 +1862,6 @@ const DiksharthiListing = () => {
                             <DetailItem label="Gachadhipati" value={viewModalData?.gadipati} />
                           </Grid>
                         </Section>
-
-
-
-
-
                       </div>
 
                       {/* RIGHT IMAGE */}
@@ -1909,6 +1922,64 @@ const DiksharthiListing = () => {
                           </Grid>
                         </Section>
                       )}
+                    
+                    {Object.keys(familyDetails).length > 0 && (
+                      <Section title="Family Details">
+                        <div className="overflow-x-auto">
+                          <table className="min-w-full border border-gray-200 text-sm">
+                            <thead className="bg-gray-100 text-gray-700">
+                              <tr>
+                                <th className="p-2 border">Sr No</th>
+                                <th className="p-2 border">Full Name</th>
+                                <th className="p-2 border">Relation</th>
+                                <th className="p-2 border">Mobile</th>
+                                <th className="p-2 border">Aadhar</th>
+                                <th className="p-2 border">PAN</th>
+                                <th className="p-2 border">Mediclaim</th>
+                                <th className="p-2 border">Ayushman</th>
+                                <th className="p-2 border">Need Assistance</th>
+                              </tr>
+                            </thead>
+
+                            <tbody>
+                              {Object.entries(familyDetails).map(([relation, member], index) => (
+                                <tr key={relation} className="text-center">
+                                  <td className="p-2 border">{index + 1}</td>
+
+                                  <td className="p-2 border">
+                                    {`${member.firstName || ""} ${member.lastName || ""}`.trim() || "N/A"}
+                                  </td>
+
+                                  <td className="p-2 border">{relation}</td>
+
+                                  <td className="p-2 border">{member.mobileNumber || "N/A"}</td>
+
+                                  <td className="p-2 border">{member.aadharNumber || "N/A"}</td>
+
+                                  <td className="p-2 border">{member.panNumber || "N/A"}</td>
+
+                                  <td className="p-2 border">
+                                    {member.medicalPolicy === "Yes"
+                                      ? `Yes `
+                                      : "No"}
+                                  </td>
+
+                                  <td className="p-2 border">
+                                    {member.ayushmanCoverage === "Yes"
+                                      ? `Yes`
+                                      : "No"}
+                                  </td>
+
+                                  <td className="p-2 border">
+                                    {member.needAssistance || "No"}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </Section>
+                    )}
 
                     {/* SUMMARY */}
                     {viewModalData?.summary && (

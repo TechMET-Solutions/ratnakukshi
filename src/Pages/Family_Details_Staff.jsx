@@ -1037,7 +1037,7 @@ const Family_Details_Staff = ({
       setCurrentStep(3);
 
       if (res?.data?.success) {
-        alert("Updated successfully ✅");
+        alert("Family Details Added successfully ✅");
       } else {
         alert(res?.data?.message || "Update failed");
       }

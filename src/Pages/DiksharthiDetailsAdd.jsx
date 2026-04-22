@@ -63,7 +63,7 @@ const initialFormData = {
   // family_relation: [], // checkbox ke liye array
   summary: "", // 👈 new field
   spokenTo: "",
-  spokenTo_Relation:""
+  spokenTo_Relation: ""
 };
 
 // Helper to calculate age from DOB
@@ -320,7 +320,7 @@ const mapDiksharthiToFormData = (record) => {
       record?.assistanceReceived || record?.assistance_received || "",
     summary: record?.summary || "",
     spokenTo: record?.spoken_to || "",
-    spokenTo_Relation: record.spoken_to_relation||""
+    spokenTo_Relation: record.spoken_to_relation || ""
   };
 };
 
@@ -437,122 +437,122 @@ const DiksharthiDetailsAdd = () => {
   const [existingFanRelations, setExistingFanRelations] = useState(new Set());
 
 
-const [sameAsMain, setSameAsMain] = useState(true);
-const [sameAsMainForNgo, setSameAsMainForNgo] = useState(true);
+  const [sameAsMain, setSameAsMain] = useState(true);
+  const [sameAsMainForNgo, setSameAsMainForNgo] = useState(true);
 
-  
+
   const [isFanSelected, setIsFanSelected] = useState(false);
 
- 
-  
+
+
   const handleSameAsMainChange = (checked) => {
-  setSameAsMain(checked);
+    setSameAsMain(checked);
 
-  if (checked && filteredFanOptions2?.length > 0) {
-    const data = filteredFanOptions2[0];
+    if (checked && filteredFanOptions2?.length > 0) {
+      const data = filteredFanOptions2[0];
 
-    setFormData((prev) => ({
-      ...prev,
+      setFormData((prev) => ({
+        ...prev,
 
-      // Address
-      permanentAddress: data.permanent_address || "",
-      currentAddress: data.current_address || "",
+        // Address
+        permanentAddress: data.permanent_address || "",
+        currentAddress: data.current_address || "",
 
-      // Location
-      village: data.village || "",
-      taluka: data.taluka || "",
-      district: data.district || "",
-      state: data.state || "",
-      pinCode: data.pin_code || "",
+        // Location
+        village: data.village || "",
+        taluka: data.taluka || "",
+        district: data.district || "",
+        state: data.state || "",
+        pinCode: data.pin_code || "",
 
-      // House
-      houseDetails: data.house_details || "",
-      typeOfHouse: data.type_of_house || "",
-      maintenanceCost: data.maintenance_cost || "",
-      rentCost: data.rent_cost || "",
-      lightBillCost: data.light_bill_cost || "",
+        // House
+        houseDetails: data.house_details || "",
+        typeOfHouse: data.type_of_house || "",
+        maintenanceCost: data.maintenance_cost || "",
+        rentCost: data.rent_cost || "",
+        lightBillCost: data.light_bill_cost || "",
 
-      // Extra (if needed)
-      mediclaim: data.mediclaim || "",
-      familyMediclaimAmount: data.family_mediclaim_amount || "",
-    }));
-  } else {
-    // ❌ RESET ALL FIELDS
-    setFormData((prev) => ({
-      ...prev,
+        // Extra (if needed)
+        mediclaim: data.mediclaim || "",
+        familyMediclaimAmount: data.family_mediclaim_amount || "",
+      }));
+    } else {
+      // ❌ RESET ALL FIELDS
+      setFormData((prev) => ({
+        ...prev,
 
-      permanentAddress: "",
-      currentAddress: "",
-      village: "",
-      taluka: "",
-      district: "",
-      state: "",
-      pinCode: "",
+        permanentAddress: "",
+        currentAddress: "",
+        village: "",
+        taluka: "",
+        district: "",
+        state: "",
+        pinCode: "",
 
-      houseDetails: "",
-      typeOfHouse: "",
-      maintenanceCost: "",
-      rentCost: "",
-      lightBillCost: "",
-    }));
-  }
-};
+        houseDetails: "",
+        typeOfHouse: "",
+        maintenanceCost: "",
+        rentCost: "",
+        lightBillCost: "",
+      }));
+    }
+  };
 
-const handleSameAsMainForNgoChange = (checked) => {
-  setSameAsMainForNgo(checked);
+  const handleSameAsMainForNgoChange = (checked) => {
+    setSameAsMainForNgo(checked);
 
-  if (checked && filteredFanOptions2?.length > 0) {
-    const data = filteredFanOptions2[0];
+    if (checked && filteredFanOptions2?.length > 0) {
+      const data = filteredFanOptions2[0];
 
-    setFormData((prev) => ({
-      ...prev,
+      setFormData((prev) => ({
+        ...prev,
 
-      // ✅ MEDICLAIM
-      mediclaim:
-        data.mediclaim === "Yes"
-          ? true
-          : data.mediclaim === "No"
-          ? false
-          : null,
+        // ✅ MEDICLAIM
+        mediclaim:
+          data.mediclaim === "Yes"
+            ? true
+            : data.mediclaim === "No"
+              ? false
+              : null,
 
-      family_mediclaim_type: data.Family_mediclaim_type || "",
-      Family_mediclaim_amount: data.family_mediclaim_amount || "",
-      mediclaimPremiumAmount: data.mediclaim_premium_amount || "",
-      family_mediclaim_companyName:
-        data.family_mediclaim_companyName || "",
+        family_mediclaim_type: data.Family_mediclaim_type || "",
+        Family_mediclaim_amount: data.family_mediclaim_amount || "",
+        mediclaimPremiumAmount: data.mediclaim_premium_amount || "",
+        family_mediclaim_companyName:
+          data.family_mediclaim_companyName || "",
 
-      // ✅ NGO
-      ngoAssistance:
-        data.ngo_assistance === "Yes"
-          ? true
-          : data.ngo_assistance === "No"
-          ? false
-          : null,
+        // ✅ NGO
+        ngoAssistance:
+          data.ngo_assistance === "Yes"
+            ? true
+            : data.ngo_assistance === "No"
+              ? false
+              : null,
 
-      sanghName: data.ngo_sangh_name || "",
-      ngoAmount: data.ngo_amount || "",
-      ngoRemark: data.ngo_remark || "",
-      ngoFrequency: data.ngo_frequency || "",
-    }));
-  } else {
-    // ❌ RESET
-    setFormData((prev) => ({
-      ...prev,
+        sanghName: data.ngo_sangh_name || "",
+        ngoAmount: data.ngo_amount || "",
+        ngoRemark: data.ngo_remark || "",
+        ngoFrequency: data.ngo_frequency || "",
+      }));
+    } else {
+      // ❌ RESET
+      setFormData((prev) => ({
+        ...prev,
 
-      mediclaim: null,
-      family_mediclaim_type: "",
-      Family_mediclaim_amount: "",
-      mediclaimPremiumAmount: "",
-      family_mediclaim_companyName: "",
+        mediclaim: null,
+        family_mediclaim_type: "",
+        Family_mediclaim_amount: "",
+        mediclaimPremiumAmount: "",
+        family_mediclaim_companyName: "",
 
-      ngoAssistance: null,
-      sanghName: "",
-      ngoAmount: "",
-      ngoRemark: "",
-      ngoFrequency: "",
-    }));
-  }
-};
+        ngoAssistance: null,
+        sanghName: "",
+        ngoAmount: "",
+        ngoRemark: "",
+        ngoFrequency: "",
+      }));
+    }
+  };
   const [postOffices, setPostOffices] = useState([]);
   const rbfMandatoryFields = [
     "permanentAddress",
@@ -792,8 +792,8 @@ const handleSameAsMainForNgoChange = (checked) => {
     if (rbfMandatoryFields.includes(name) || name === "relation") {
       const errorMessage =
         name === "relation" &&
-        nextRbfCriteria === "Yes" &&
-        !String(sanitizedValue || "").trim()
+          nextRbfCriteria === "Yes" &&
+          !String(sanitizedValue || "").trim()
           ? "Required for RBF"
           : validateRbfField(name, sanitizedValue, nextRbfCriteria);
 
@@ -933,100 +933,100 @@ const handleSameAsMainForNgoChange = (checked) => {
   };
 
   const goToNextStep = async () => {
-  debugger;
+    debugger;
 
-  const isValid = validate();
-  if (!isValid) return;
+    const isValid = validate();
+    if (!isValid) return;
 
-  // ================================
-  // ✅ SKIP API FOR STEP 2
-  // ================================
-  if (currentStep === 2) {
-    setCurrentStep((prev) => Math.min(prev + 1, stepTitles.length));
-    return;
-  }
-
-  try {
-    const loggedInUserId =
-      user?.id || user?.user_id || user?.userId || "";
-
-    if (!loggedInUserId) {
-      alert("Login user id missing. Please login again.");
+    // ================================
+    // ✅ SKIP API FOR STEP 2
+    // ================================
+    if (currentStep === 2) {
+      setCurrentStep((prev) => Math.min(prev + 1, stepTitles.length));
       return;
     }
 
-    const payload = mapFormDataToApiPayload(
-      formData,
-      loggedInUserId,
-      currentStep
-    );
+    try {
+      const loggedInUserId =
+        user?.id || user?.user_id || user?.userId || "";
 
-    const data = new FormData();
-    Object.entries(payload).forEach(([key, value]) => {
-      data.append(key, value ?? "");
-    });
-
-    if (photo) data.append("photo", photo);
-    if (uploadDoc) data.append("uploadDoc", uploadDoc);
-
-    const targetId = isEditMode ? editId : savedRecordId;
-
-    const response = targetId
-      ? await axios.put(`${API}/api/update-diksharthi/${targetId}`, data)
-      : await axios.post(`${API}/api/create-diksharthi`, data);
-
-    const persisted = response?.data?.data || {};
-    const resolvedId =
-      Number(persisted?.id || targetId || 0) || null;
-
-    if (resolvedId) setSavedRecordId(resolvedId);
-
-    if (persisted?.diksharthi_code || persisted?.id) {
-      setSavedId(persisted?.diksharthi_code || persisted?.id);
-    }
-
-    const searchKey = String(formData?.fan_id || fanIdSearch || "").trim();
-
-    if (searchKey) {
-      try {
-        const getRes = await axios.get(`${API}/api/search`, {
-          params: {
-            fan_id: searchKey,
-            diksharthi_id: fanIdSearch,
-          },
-        });
-
-        const latestData = getRes?.data?.data?.[0];
-
-        if (latestData?.family_details) {
-          const relationDetails = convertFamilyArrayToObject(
-            latestData.family_details
-          );
-
-          const relations = Object.keys(relationDetails);
-
-          setFormData((prev) => ({
-            ...prev,
-            familyRelations: relations,
-            familyRelationDetails: relationDetails,
-            relation: relations[0] || prev.relation,
-          }));
-        }
-      } catch (err) {
-        console.error("GET API failed", err);
+      if (!loggedInUserId) {
+        alert("Login user id missing. Please login again.");
+        return;
       }
+
+      const payload = mapFormDataToApiPayload(
+        formData,
+        loggedInUserId,
+        currentStep
+      );
+
+      const data = new FormData();
+      Object.entries(payload).forEach(([key, value]) => {
+        data.append(key, value ?? "");
+      });
+
+      if (photo) data.append("photo", photo);
+      if (uploadDoc) data.append("uploadDoc", uploadDoc);
+
+      const targetId = isEditMode ? editId : savedRecordId;
+
+      const response = targetId
+        ? await axios.put(`${API}/api/update-diksharthi/${targetId}`, data)
+        : await axios.post(`${API}/api/create-diksharthi`, data);
+
+      const persisted = response?.data?.data || {};
+      const resolvedId =
+        Number(persisted?.id || targetId || 0) || null;
+
+      if (resolvedId) setSavedRecordId(resolvedId);
+
+      if (persisted?.diksharthi_code || persisted?.id) {
+        setSavedId(persisted?.diksharthi_code || persisted?.id);
+      }
+
+      const searchKey = String(formData?.fan_id || fanIdSearch || "").trim();
+
+      if (searchKey) {
+        try {
+          const getRes = await axios.get(`${API}/api/search`, {
+            params: {
+              fan_id: searchKey,
+              diksharthi_id: fanIdSearch,
+            },
+          });
+
+          const latestData = getRes?.data?.data?.[0];
+
+          if (latestData?.family_details) {
+            const relationDetails = convertFamilyArrayToObject(
+              latestData.family_details
+            );
+
+            const relations = Object.keys(relationDetails);
+
+            setFormData((prev) => ({
+              ...prev,
+              familyRelations: relations,
+              familyRelationDetails: relationDetails,
+              relation: relations[0] || prev.relation,
+            }));
+          }
+        } catch (err) {
+          console.error("GET API failed", err);
+        }
+      }
+
+      // ================================
+      // ✅ MOVE TO NEXT STEP
+      // ================================
+      setCurrentStep((prev) => Math.min(prev + 1, stepTitles.length));
+
+    } catch (err) {
+      console.error(err);
+      alert("Failed to Saved");
     }
-
-    // ================================
-    // ✅ MOVE TO NEXT STEP
-    // ================================
-    setCurrentStep((prev) => Math.min(prev + 1, stepTitles.length));
-
-  } catch (err) {
-    console.error(err);
-    alert("Step save failed");
-  }
-};
+  };
   const goToPreviousStep = () => {
     setCurrentStep((prev) => Math.max(prev - 1, 1));
   };
@@ -1076,8 +1076,8 @@ const handleSameAsMainForNgoChange = (checked) => {
     });
   };
 
- const hasAutoFilledStep3 = useRef(false);
-const hasAutoFilledStep4 = useRef(false);
+  const hasAutoFilledStep3 = useRef(false);
+  const hasAutoFilledStep4 = useRef(false);
   const handleFamilyRelationDetailChange = (
     relationValue,
     fieldName,
@@ -1159,101 +1159,101 @@ const hasAutoFilledStep4 = useRef(false);
     .toLowerCase();
   const filteredDiksharthiOptions = normalizedDiksharthiSearch
     ? allDiksharthi
-        .filter((item) => {
-          const familyNumber = String(
-            getFamilyNumber(item) || "",
-          ).toLowerCase();
-          const searchFields = [
-            item?.sadhu_sadhvi_name,
-            item?.diksharthi_code,
-            item?.mobile_no,
-            item?.family_member_firstName,
-            item?.family_member_lastName,
-            familyNumber,
-          ]
-            .map((value) => String(value || "").toLowerCase())
-            .join(" ");
+      .filter((item) => {
+        const familyNumber = String(
+          getFamilyNumber(item) || "",
+        ).toLowerCase();
+        const searchFields = [
+          item?.sadhu_sadhvi_name,
+          item?.diksharthi_code,
+          item?.mobile_no,
+          item?.family_member_firstName,
+          item?.family_member_lastName,
+          familyNumber,
+        ]
+          .map((value) => String(value || "").toLowerCase())
+          .join(" ");
 
-          return searchFields.includes(normalizedDiksharthiSearch);
-        })
-        .slice(0, 8)
+        return searchFields.includes(normalizedDiksharthiSearch);
+      })
+      .slice(0, 8)
     : [];
 
- const uniqueFanOptions = Array.from(
-  new Map(
-    (allDiksharthi || [])
-      .filter(
-        (item) =>
-          String(item?.fan_id || "").trim() ||
-          String(item?.id || "").trim()
-      )
-      .map((item) => [
-        String(item.id).trim(),
-        {
-          ...item, // ✅ keeps FULL data
-          id: String(item?.id || "").trim(),
-          diksharthi_code: String(item?.diksharthi_code || "").trim(),
-          fan_id: String(item?.fan_id || "").trim(),
-        },
-      ])
-  ).values()
-);
+  const uniqueFanOptions = Array.from(
+    new Map(
+      (allDiksharthi || [])
+        .filter(
+          (item) =>
+            String(item?.fan_id || "").trim() ||
+            String(item?.id || "").trim()
+        )
+        .map((item) => [
+          String(item.id).trim(),
+          {
+            ...item, // ✅ keeps FULL data
+            id: String(item?.id || "").trim(),
+            diksharthi_code: String(item?.diksharthi_code || "").trim(),
+            fan_id: String(item?.fan_id || "").trim(),
+          },
+        ])
+    ).values()
+  );
 
   const normalizedFanIdSearch = String(fanIdSearch || "")
     .trim()
     .toLowerCase();
   const filteredFanOptions = normalizedFanIdSearch
     ? uniqueFanOptions
-        .filter((item) =>
-          `${item?.id || ""} ${item?.diksharthi_code || ""} ${item?.fan_id || ""} ${item?.sadhu_sadhvi_name || ""}`
-            .toLowerCase()
-            .includes(normalizedFanIdSearch),
-        )
-        .slice(0, 8)
+      .filter((item) =>
+        `${item?.id || ""} ${item?.diksharthi_code || ""} ${item?.fan_id || ""} ${item?.sadhu_sadhvi_name || ""}`
+          .toLowerCase()
+          .includes(normalizedFanIdSearch),
+      )
+      .slice(0, 8)
     : [];
 
   const filteredFanOptions2 = normalizedFanIdSearch
-  ? uniqueFanOptions.filter(
+    ? uniqueFanOptions.filter(
       (item) =>
         String(item.id).toLowerCase() === normalizedFanIdSearch ||
         String(item.fan_id).toLowerCase() === normalizedFanIdSearch
     )
-  : [];
-useEffect(() => {
-  if (
-    currentStep === 3 &&
-    sameAsMain &&
-    filteredFanOptions2?.length > 0 &&
-    !hasAutoFilledStep3.current
-  ) {
-    handleSameAsMainChange(true);
-    hasAutoFilledStep3.current = true;
-  }
-}, [currentStep, filteredFanOptions2]);
+    : [];
+  useEffect(() => {
+    if (
+      currentStep === 3 &&
+      sameAsMain &&
+      filteredFanOptions2?.length > 0 &&
+      !hasAutoFilledStep3.current
+    ) {
+      handleSameAsMainChange(true);
+      hasAutoFilledStep3.current = true;
+    }
+  }, [currentStep, filteredFanOptions2]);
 
   useEffect(() => {
-  if (
-    currentStep === 4 &&
-    sameAsMainForNgo &&
-    filteredFanOptions2?.length > 0 &&
-    !hasAutoFilledStep4.current
-  ) {
-    handleSameAsMainForNgoChange(true);
-    hasAutoFilledStep4.current = true;
-  }
-}, [currentStep, filteredFanOptions2]);
+    if (
+      currentStep === 4 &&
+      sameAsMainForNgo &&
+      filteredFanOptions2?.length > 0 &&
+      !hasAutoFilledStep4.current
+    ) {
+      handleSameAsMainForNgoChange(true);
+      hasAutoFilledStep4.current = true;
+    }
+  }, [currentStep, filteredFanOptions2]);
 
-console.log(filteredFanOptions2,"filteredFanOptions2")
+  console.log(filteredFanOptions2, "filteredFanOptions2")
   const normalizedSelectedFanValue = String(formData?.fan_id || "").trim();
   const fanSourceRecord = normalizedSelectedFanValue
     ? (allDiksharthi || []).find(
-        (item) =>
-          (String(item?.fan_id || "").trim() === normalizedSelectedFanValue ||
-            String(item?.id || "").trim() === normalizedSelectedFanValue ||
-            String(item?.diksharthi_code || "").trim() ===
-              normalizedSelectedFanValue) &&
-          String(item?.id || "") !== String(editId || ""),
-      ) || null
+      (item) =>
+        (String(item?.fan_id || "").trim() === normalizedSelectedFanValue ||
+          String(item?.id || "").trim() === normalizedSelectedFanValue ||
+          String(item?.diksharthi_code || "").trim() ===
+          normalizedSelectedFanValue) &&
+        String(item?.id || "") !== String(editId || ""),
+    ) || null
     : null;
 
   useEffect(() => {
@@ -1357,11 +1357,10 @@ console.log(filteredFanOptions2,"filteredFanOptions2")
                   key={title}
                   type="button"
                   onClick={() => setCurrentStep(stepNumber)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-semibold border ${
-                    isActive
+                  className={`px-3 py-1.5 rounded-full text-xs font-semibold border ${isActive
                       ? "bg-[#ECB000] text-white border-[#ECB000]"
                       : "bg-white text-slate-600 border-slate-300"
-                  }`}
+                    }`}
                 >
                   {stepNumber}. {title}
                 </button>
@@ -1766,47 +1765,47 @@ console.log(filteredFanOptions2,"filteredFanOptions2")
                 />
               </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-4"> */}
 
-  {/* Spoken To Name */}
-  <div>
-    <label className="block text-sm font-medium text-slate-700 mb-1">
-      Spoken To <span className="text-red-500">*</span>
-    </label>
-    <input
-      name="spokenTo"
-      value={formData.spokenTo}
-      onChange={handleChange}
-      type="text"
-      placeholder="Enter name"
-      className="w-full p-2 border border-slate-300 rounded-md outline-none"
-    />
-    {errors.spokenTo && (
-      <p className="text-red-500 text-xs">{errors.spokenTo}</p>
-    )}
-  </div>
+                {/* Spoken To Name */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Spoken To <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    name="spokenTo"
+                    value={formData.spokenTo}
+                    onChange={handleChange}
+                    type="text"
+                    placeholder="Enter name"
+                    className="w-full p-2 border border-slate-300 rounded-md outline-none"
+                  />
+                  {errors.spokenTo && (
+                    <p className="text-red-500 text-xs">{errors.spokenTo}</p>
+                  )}
+                </div>
 
-  {/* Spoken To Relation */}
-  <div>
-    <label className="block text-sm font-medium text-slate-700 mb-1">
-      Relation <span className="text-red-500">*</span>
-    </label>
-    <input
-      name="spokenTo_Relation"
-      value={formData.spokenTo_Relation}
-      onChange={handleChange}
-      type="text"
-      placeholder="Enter relation (e.g. Father, Brother)"
-      className="w-full p-2 border border-slate-300 rounded-md outline-none"
-    />
-    {errors.spokenTo_Relation && (
-      <p className="text-red-500 text-xs">
-        {errors.spokenTo_Relation}
-      </p>
-    )}
-  </div>
+                {/* Spoken To Relation */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Relation <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    name="spokenTo_Relation"
+                    value={formData.spokenTo_Relation}
+                    onChange={handleChange}
+                    type="text"
+                    placeholder="Enter relation (e.g. Father, Brother)"
+                    className="w-full p-2 border border-slate-300 rounded-md outline-none"
+                  />
+                  {errors.spokenTo_Relation && (
+                    <p className="text-red-500 text-xs">
+                      {errors.spokenTo_Relation}
+                    </p>
+                  )}
+                </div>
 
-</div>
+              {/* </div> */}
             </>
           )}
 
@@ -2261,26 +2260,26 @@ console.log(filteredFanOptions2,"filteredFanOptions2")
               <>
                 {/* Permanent Address */}
                 <div>
-                   {filteredFanOptions2 && (
-  <label className="flex items-center gap-2 cursor-pointer">
-   <input
-  type="checkbox"
-  className="w-4 h-4"
-  checked={sameAsMain}
-  onChange={(e) => handleSameAsMainChange(e.target.checked)}
-/>
+                  {filteredFanOptions2 && (
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        className="w-4 h-4"
+                        checked={sameAsMain}
+                        onChange={(e) => handleSameAsMainChange(e.target.checked)}
+                      />
 
-    <span className="text-sm font-medium text-slate-700">
-                        Address And House Details same as { filteredFanOptions2[0]?.sadhu_sadhvi_name}
-      {savedMainDiksarthi?.[0]?.sadhu_sadhvi_name && (
-        <span className="text-blue-600 font-semibold ml-1">
-          ({savedMainDiksarthi[0].sadhu_sadhvi_name})
-        </span>
-      )}
-    </span>
-  </label>
-)}
-</div>
+                      <span className="text-sm font-medium text-slate-700">
+                        Address And House Details same as {filteredFanOptions2[0]?.sadhu_sadhvi_name}
+                        {savedMainDiksarthi?.[0]?.sadhu_sadhvi_name && (
+                          <span className="text-blue-600 font-semibold ml-1">
+                            ({savedMainDiksarthi[0].sadhu_sadhvi_name})
+                          </span>
+                        )}
+                      </span>
+                    </label>
+                  )}
+                </div>
                 <div>
 
                 </div>
@@ -2371,12 +2370,25 @@ console.log(filteredFanOptions2,"filteredFanOptions2")
                   Village / Post Office
                 </label>
                 <select
-                  value={formData.village || ""}
+                  // value={formData.village || ""}
+                  // onChange={(e) => {
+                  //   const selected = JSON.parse(e.target.value);
+
+                  //   setFormData((prev) => ({
+                  //     ...prev,
+                  //     village: selected.Name,
+                  //     taluka: selected.Block,
+                  //     district: selected.District,
+                  //     state: selected.State,
+                  //   }));
+                  // }}
+                  value={formData.villageObj ? JSON.stringify(formData.villageObj) : ""}
                   onChange={(e) => {
                     const selected = JSON.parse(e.target.value);
 
                     setFormData((prev) => ({
                       ...prev,
+                      villageObj: selected, // 👈 store full object
                       village: selected.Name,
                       taluka: selected.Block,
                       district: selected.District,
@@ -2529,32 +2541,32 @@ console.log(filteredFanOptions2,"filteredFanOptions2")
           {currentStep === 4 && (
             <>
               <div>
-                   {filteredFanOptions2 && (
-  <label className="flex items-center gap-2 cursor-pointer">
-  <input
-  type="checkbox"
-  className="w-4 h-4"
-  checked={sameAsMainForNgo}
-  onChange={(e) => handleSameAsMainForNgoChange(e.target.checked)}
-/>
+                {filteredFanOptions2 && (
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      className="w-4 h-4"
+                      checked={sameAsMainForNgo}
+                      onChange={(e) => handleSameAsMainForNgoChange(e.target.checked)}
+                    />
 
-    <span className="text-sm font-medium text-slate-700 flex">
-     <p>Mediclaims and NGO Same as </p> {filteredFanOptions2[0]?.sadhu_sadhvi_name}
-     
-    </span>
-  </label>
-)}
-</div>
-                <div>
+                    <span className="text-sm font-medium text-slate-700 flex">
+                      <p>Mediclaims and NGO Same as </p> {filteredFanOptions2[0]?.sadhu_sadhvi_name}
 
-                </div>
-                <div>
+                    </span>
+                  </label>
+                )}
+              </div>
+              <div>
 
-                </div>
-                <div>
+              </div>
+              <div>
 
-                </div>
-            
+              </div>
+              <div>
+
+              </div>
+
               <div className="col-span-1 md:col-span-2 xl:col-span-2 border border-slate-200 rounded-lg p-4 bg-slate-50">
                 <label className="block text-sm font-medium text-slate-700 mb-1">
                   Does the family have any Mediclaim policy?
