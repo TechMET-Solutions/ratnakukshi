@@ -483,12 +483,8 @@ const AssistancePage = () => {
               return (
                 <tr key={rowActionKey} className="hover:bg-slate-50 transition-colors">
                   <td className="p-4 text-slate-600">{asDisplayText(row.id)}</td>
-                  <td className="p-4 text-slate-600">{asDisplayText(row.sadhu_sadhvi_name)}</td>
-                  <td className="p-4 text-slate-600">
-                    {asDisplayText(
-                      `${row?.first_name || ""} ${row?.last_name || ""}`.trim()
-                    )}
-                  </td>
+                  <td className="p-4 text-slate-600">{asDisplayText(row.diksharthi_name)}</td>
+                  <td className="p-4 text-slate-600">{asDisplayText(row.family_member_name)}</td>
                   <td className="p-4 text-slate-600">{asDisplayText(row.relation_key)}</td>
                   <td className="p-4 text-slate-600">{asDisplayText(row.assistance_type)}</td>
                   <td className="p-4 text-slate-600">{asDisplayText(row.fan_id)}</td>

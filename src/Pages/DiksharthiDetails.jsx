@@ -7,6 +7,14 @@ import { API } from "../api/BaseURL";
 import { useAuth } from "../context/AuthContext";
 import { formatIndianDate, formatTo12Hour } from "../utils/formatIndianDate";
 
+
+// ======================= SMALL BUTTON LOADER =======================
+const ButtonLoader = () => (
+  <span className="inline-flex items-center justify-center">
+    <span className="h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin"></span>
+  </span>
+);
+
 const DetailItem = ({ label, value }) => (
   <div className="flex flex-col">
     <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-tight">{label}</span>
@@ -876,7 +884,7 @@ const DiksharthiListing = () => {
   };
 
   // const handleAssignAdmin = async () => {
-    
+
   //   if (!assignModalData?.id || !selectedAdminId) {
   //     alert("Please select a Karyakarta");
   //     return;
@@ -1642,7 +1650,7 @@ const DiksharthiListing = () => {
               <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">
                 Spoken To Name
               </th>
-             
+
 
               {role === "operations-manager" && (
                 <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">
@@ -1760,12 +1768,12 @@ const DiksharthiListing = () => {
                     )}*/}
 
                     {role === "operations-manager" && (
-                    <td className="px-6 py-3">
-                      <div className="flex items-center gap-2">
-                        <span>{diksharthi.current_visit_status || "-"}</span>
+                      <td className="px-6 py-3">
+                        <div className="flex items-center gap-2">
+                          <span>{diksharthi.current_visit_status || "-"}</span>
 
-                        {/* 👁️ Show only if value exists */}
-                        {/* {diksharthi.current_visit_status && (
+                          {/* 👁️ Show only if value exists */}
+                          {/* {diksharthi.current_visit_status && (
                           <button
                             onClick={() => openViewFeedbackModal(diksharthi)}
                             className="text-blue-500 hover:text-blue-700"
@@ -1775,25 +1783,25 @@ const DiksharthiListing = () => {
                           </button>
                         )} */}
                         </div>
-                        
 
-                      {diksharthi.visited_history?.length > 0 && (() => {
-                        const lastVisit =
-                          diksharthi.visited_history[
-                          diksharthi.visited_history.length - 1
-                          ];
 
-                        return (
-                          <div className="mt-1 text-sm text-gray-500">
-                            {formatIndianDate(lastVisit.date)}{" "}
-                            {formatTo12Hour(lastVisit.time)}
-                          </div>
-                        );
-                      })()}
+                        {diksharthi.visited_history?.length > 0 && (() => {
+                          const lastVisit =
+                            diksharthi.visited_history[
+                            diksharthi.visited_history.length - 1
+                            ];
+
+                          return (
+                            <div className="mt-1 text-sm text-gray-500">
+                              {formatIndianDate(lastVisit.date)}{" "}
+                              {formatTo12Hour(lastVisit.time)}
+                            </div>
+                          );
+                        })()}
                       </td>
 
-                     
-                      
+
+
                     )}
 
                     {role === "karyakarta" && (
@@ -1870,14 +1878,14 @@ const DiksharthiListing = () => {
                             {downloadingPdfId === diksharthi.id ? "Downloading..." : "PDF"}
                           </button>
 
-                         
 
-                          {getDiksharthiStatus(diksharthi) !== "send" && (
+
+                          {getDiksharthiStatus(diksharthi) == "pending" && (
                             <button
                               className="rounded-lg bg-blue-600 text-sm px-2 py-1 text-white"
                               onClick={() => handleSendToOpManager(diksharthi.id)}
                             >
-                              Send to Operations Manager
+                              Send to Operation Manager
                             </button>
                           )}
                         </>
@@ -1899,7 +1907,9 @@ const DiksharthiListing = () => {
                                 onClick={() => handleDownloadApplicationPdf(diksharthi)}
                                 disabled={downloadingPdfId === diksharthi.id}
                               >
-                                {downloadingPdfId === diksharthi.id ? "Downloading..." : "Application PDF"}
+                                {downloadingPdfId === diksharthi.id ? (
+                                  <ButtonLoader />
+                                ) :( "Application PDF")}
                               </button>
                               {/* <button
                                 className="rounded-lg bg-emerald-600 text-sm px-2 py-1 text-white disabled:opacity-60"
@@ -1921,7 +1931,7 @@ const DiksharthiListing = () => {
                                 Assign Karyakarta
                               </button>
                             )}
-                          
+
                           {/* {getDiksharthiStatus(diksharthi) !== "send" &&
                             getDiksharthiStatus(diksharthi) !== "manager" && (
                               <button
@@ -1931,10 +1941,10 @@ const DiksharthiListing = () => {
                               Send to Case Coordinator
                               </button>
                             )} */}
-                          
+
                           {/* ✅ Send to Case Coordinator only when NOT coordinator */}
-                          {getDiksharthiStatus(diksharthi) !== "coordinator" &&
-                            getDiksharthiStatus(diksharthi) !== "send" && (
+                          {
+                            getDiksharthiStatus(diksharthi) == "manager" && (
                               <button
                                 className="rounded-lg bg-indigo-600 text-sm px-2 py-1 text-white"
                                 onClick={() => openOMFeedbackModal(diksharthi)}
@@ -1942,13 +1952,6 @@ const DiksharthiListing = () => {
                                 Send to Case Coordinator
                               </button>
                             )}
-                          
-                          {/* <button
-                            className="rounded-lg bg-orange-500 text-sm px-2 py-1 text-white"
-                            onClick={() => openViewOMFeedbackModal(diksharthi)}
-                          >
-                            View Feedback
-                          </button> */}
 
                           {/* ✅ Hide View Feedback when Assign Karyakarta button visible */}
                           {!(getDiksharthiStatus(diksharthi) === "send" &&
@@ -1961,7 +1964,7 @@ const DiksharthiListing = () => {
                               </button>
                             )}
 
-                         
+
 
                           {/* {feedbackStatus[diksharthi.id] && (
                             <button
@@ -1983,7 +1986,9 @@ const DiksharthiListing = () => {
                                 onClick={() => handleDownloadApplicationPdf(diksharthi)}
                                 disabled={downloadingPdfId === diksharthi.id}
                               >
-                                {downloadingPdfId === diksharthi.id ? "Downloading..." : "Application PDF"}
+                                {downloadingPdfId === diksharthi.id ? (
+                                  <ButtonLoader />
+                                ) : ("Application PDF")}
                               </button>
                               {/* <button
                                 className="rounded-lg bg-emerald-600 text-sm px-2 py-1 text-white disabled:opacity-60"
@@ -2022,18 +2027,18 @@ const DiksharthiListing = () => {
                             </button>
                           )}
 
-                          {getDiksharthiStatus(diksharthi) !== "manager" && (
-                          <button
-                            className="rounded-lg bg-indigo-600 text-sm px-2 py-1 text-white"
-                            onClick={() => handleSendToOM(diksharthi.id)}
-                            disabled={sendingId === diksharthi.id}
-                          >
-                            {sendingId === diksharthi.id
-                              ? "Sending..."
-                              : "Send to Operation Manage"}
-                          </button>
+                          {getDiksharthiStatus(diksharthi) === "send" && (
+                            <button
+                              className="rounded-lg bg-indigo-600 text-sm px-2 py-1 text-white"
+                              onClick={() => handleSendToOM(diksharthi.id)}
+                              disabled={sendingId === diksharthi.id}
+                            >
+                              {sendingId === diksharthi.id
+                                ? "Sending..."
+                                : "Send to Operations Manager"}
+                            </button>
                           )}
-                       
+
                           {/* ✅ Show only when Is Visited = Yes / No */}
                           {(String(diksharthi?.current_visit_status || "")
                             .trim()
@@ -2043,7 +2048,7 @@ const DiksharthiListing = () => {
                               .toLowerCase() === "no") && (
                               <button
                                 className="rounded-lg bg-orange-500 text-sm px-2 py-1 text-white"
-                              onClick={() => openViewOMFeedbackModal(diksharthi)}
+                                onClick={() => openViewOMFeedbackModal(diksharthi)}
                               >
                                 View Feedback
                               </button>
@@ -2111,12 +2116,21 @@ const DiksharthiListing = () => {
                             </div>
                           )}
 
-                          
+                          {/* ✅ Hide View Feedback when Assign Karyakarta button visible */}
+                          {!(getDiksharthiStatus(diksharthi) === "send" &&
+                            isAdminUnassigned(diksharthi)) && (
+                              <button
+                                className="rounded-lg bg-orange-500 text-sm px-2 py-1 text-white"
+                                onClick={() => openViewOMFeedbackModal(diksharthi)}
+                              >
+                                View Feedback
+                              </button>
+                            )}
                         </>
                       )}
 
                     </td>
-                   
+
                   </tr>
                 );
               })
@@ -2157,7 +2171,7 @@ const DiksharthiListing = () => {
 
               {/* Header */}
               <div className="flex items-center justify-between px-6 py-4 border-b">
-              <h3 className="text-xl font-bold text-gray-800">M.S. Name : 
+                <h3 className="text-xl font-bold text-gray-800">M.S. Name :
                   {viewModalData?.sadhu_sadhvi_name || "N/A"} -  {viewModalData?.id || "-"}
                 </h3>
                 <button
@@ -2185,7 +2199,7 @@ const DiksharthiListing = () => {
 
                     {(viewModalData?.rbf_criteria === "Yes" ||
                       viewModalData?.rbfCriteria === "Yes") && (
-                      <Section title="Ratnakukshi Family Basic Info">
+                        <Section title="Ratnakukshi Family Basic Info">
                           <Grid>
                             <DetailItem label="Relation" value={viewModalData?.relation} />
                             <DetailItem
@@ -2310,7 +2324,7 @@ const DiksharthiListing = () => {
                           </Grid>
                         </Section>
                       )}
-                    
+
                     {Object.keys(familyDetails).length > 0 && (
                       <Section title="Family Details">
                         <div className="overflow-x-auto">
@@ -2430,8 +2444,8 @@ const DiksharthiListing = () => {
                           key={admin.id}
                           onClick={() => setSelectedAdminId(admin.id)}
                           className={`p-2 cursor-pointer hover:bg-gray-100 ${String(selectedAdminId) === String(admin.id)
-                              ? "bg-purple-100"
-                              : ""
+                            ? "bg-purple-100"
+                            : ""
                             }`}
                         >
                           {admin.name || admin.email || `Admin #${admin.id}`}
@@ -2866,7 +2880,7 @@ const DiksharthiListing = () => {
         </div>
       )}
 
-{/* 
+      {/* 
       {(role === "operations-manager" || role === "karyakarta") && viewFeedbackModalData && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 px-4">
 
@@ -2961,7 +2975,7 @@ const DiksharthiListing = () => {
                   <p className="text-lg italic">No feedback entries found for this record.</p>
                 </div>
               ) : (
-                    <table className="w-full px-16 text-left ">
+                <table className="w-full px-16 text-left ">
                   <thead className="sticky top-0 bg-white shadow-sm z-10">
                     <tr className="bg-gray-50 border-b border-gray-100">
                       <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
@@ -2975,10 +2989,10 @@ const DiksharthiListing = () => {
                         {/* STATUS COLUMN */}
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className={`px-3 py-1 rounded-full text-[11px] font-bold uppercase ${item.status === 'Pending'
-                              ? 'bg-amber-100 text-amber-700'
-                              : item.status === 'No'
-                                ? 'bg-rose-100 text-rose-700'
-                                : 'bg-emerald-100 text-emerald-700'
+                            ? 'bg-amber-100 text-amber-700'
+                            : item.status === 'No'
+                              ? 'bg-rose-100 text-rose-700'
+                              : 'bg-emerald-100 text-emerald-700'
                             }`}>
                             {item.status || "N/A"}
                           </span>
@@ -3128,13 +3142,13 @@ const DiksharthiListing = () => {
                                     {index + 1}
                                   </td>
 
-                                 
+
 
                                   <td className="px-4 py-3 border-b">
                                     <span
                                       className={`px-2 py-1 rounded text-xs font-medium ${item.status === "Yes"
-                                          ? "bg-green-100 text-green-700"
-                                          : "bg-red-100 text-red-700"
+                                        ? "bg-green-100 text-green-700"
+                                        : "bg-red-100 text-red-700"
                                         }`}
                                     >
                                       {item.status || "-"}
@@ -3241,8 +3255,8 @@ const DiksharthiListing = () => {
                     </h4>
 
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                      
-                        <DetailItem label="Permanent Address" value={familyDetailsModalData.details.permanent_address} />
+
+                      <DetailItem label="Permanent Address" value={familyDetailsModalData.details.permanent_address} />
                       <DetailItem label="Current Address" value={familyDetailsModalData.details.current_address} />
                       <DetailItem label="Village" value={familyDetailsModalData.details.village} />
                       <DetailItem label="Taluka" value={familyDetailsModalData.details.taluka} />

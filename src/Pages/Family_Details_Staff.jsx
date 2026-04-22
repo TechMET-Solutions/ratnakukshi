@@ -898,9 +898,14 @@ const Family_Details_Staff = ({
       Object.entries(relationDetails || {}).forEach(([rel, details]) => {
         const mobile = details?.mobileNumber?.trim();
 
-        if (!mobile) {
-          errors[`mobile_${rel}`] = "Mobile number required";
-        } else if (!/^[1-9]\d{9}$/.test(mobile)) {
+      //   if (!mobile) {
+      //     errors[`mobile_${rel}`] = "Mobile number required";
+      //   } else if (!/^[1-9]\d{9}$/.test(mobile)) {
+      //     errors[`mobile_${rel}`] = "Invalid mobile number";
+        //   }
+        
+        
+        if (mobile && !/^[1-9]\d{9}$/.test(mobile)) {
           errors[`mobile_${rel}`] = "Invalid mobile number";
         }
       });

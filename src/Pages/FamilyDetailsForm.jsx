@@ -1138,12 +1138,21 @@ useEffect(() => {
           }
         }
 
+        // // Validate Mobile Number
+        // if (!details?.mobileNumber) {
+        //   errors[`mobile_${rel}`] = "Mobile number is required";
+        // } else if (!/^[1-9]\d{9}$/.test(details.mobileNumber)) {
+        //   errors[`mobile_${rel}`] =
+        //     "Mobile number must be 10 digits ";
+        // }
+
         // Validate Mobile Number
-        if (!details?.mobileNumber) {
-          errors[`mobile_${rel}`] = "Mobile number is required";
-        } else if (!/^[1-9]\d{9}$/.test(details.mobileNumber)) {
+        if (
+          details?.mobileNumber &&
+          !/^[1-9]\d{9}$/.test(details.mobileNumber)
+        ) {
           errors[`mobile_${rel}`] =
-            "Mobile number must be 10 digits ";
+            "Mobile number must be 10 digits";
         }
 
         // Validate PAN Number
