@@ -324,55 +324,95 @@ const AssistancePage = () => {
     setActiveRow(null);
   };
 
+  // const handleStatusAction = async () => {
+  //   if (!activeRow || !actionType) return;
+  //   if (actionType === "queries" && !String(queriesReason || "").trim()) {
+  //     setActionError("Please provide query reason before submitting.");
+  //     return;
+  //   }
+
+  //   const actionTypeMap = {
+  //     "send-to-committee-member": "committee-member",
+  //     "send-to-expert-panel": "expert-panel",
+  //     approve: "approve",
+  //     rejected: "rejected",
+  //     queries: "queries",
+  //   };
+
+  //   const finalActionType = actionTypeMap[actionType] || actionType;
+
+  //   try {
+  //     setIsActionLoading(true);
+
+  //     const formData = new FormData();
+  //     formData.append("id", activeRow?.id ?? "");
+  //     formData.append("assistance_id", activeRow?.id ?? "");
+  //     formData.append("diksharthi_id", activeRow?.diksharthi_id ?? "");
+  //     formData.append("relation", activeRow?.relation ?? "");
+  //     formData.append("assistance_type", activeRow?.assistance_type ?? "");
+  //     formData.append("actorRole", role.replaceAll("-", " "));
+
+  //     if (actionType === "queries") {
+  //       formData.append("query_reason", queriesReason || "");
+  //       if (queryFile) formData.append("query_image", queryFile);
+  //     }
+
+  //     await axios.put(
+  //       `${API}/api/assistance/status/${finalActionType}`,
+  //       formData
+  //     );
+
+  //     await fetchFamilyAccounting();
+  //     handleCloseActionModal();
+  //   } catch (error) {
+  //     console.log(error?.response?.data); // 🔥 debug
+  //     setActionError(
+  //       error?.response?.data?.message || "Failed to update assistance status."
+  //     );
+  //   } finally {
+  //     setIsActionLoading(false);
+  //   }
+  // };
+
+
   const handleStatusAction = async () => {
     if (!activeRow || !actionType) return;
-    if (actionType === "queries" && !String(queriesReason || "").trim()) {
-      setActionError("Please provide query reason before submitting.");
-      return;
-    }
-
-    const actionTypeMap = {
-      "send-to-committee-member": "committee-member",
-      "send-to-expert-panel": "expert-panel",
-      approve: "approve",
-      rejected: "rejected",
-      queries: "queries",
-    };
-
-    const finalActionType = actionTypeMap[actionType] || actionType;
 
     try {
       setIsActionLoading(true);
 
-      const formData = new FormData();
-      formData.append("id", activeRow?.id ?? "");
-      formData.append("assistance_id", activeRow?.id ?? "");
-      formData.append("diksharthi_id", activeRow?.diksharthi_id ?? "");
-      formData.append("relation", activeRow?.relation ?? "");
-      formData.append("assistance_type", activeRow?.assistance_type ?? "");
-      formData.append("actorRole", role.replaceAll("-", " "));
+      const actionTypeMap = {
+        "send-to-committee-member": "committee-member",
+        "send-to-expert-panel": "expert-panel",
+        approve: "approve",
+        rejected: "rejected",
+        queries: "queries",
+      };
 
-      if (actionType === "queries") {
-        formData.append("query_reason", queriesReason || "");
-        if (queryFile) formData.append("query_image", queryFile);
-      }
+      const finalActionType = actionTypeMap[actionType] || actionType;
+
+      const payload = {
+        feedback: queriesReason,     // editor text
+        loginId: user?.id           // logged user id
+      };
 
       await axios.put(
-        `${API}/api/assistance/status/${finalActionType}`,
-        formData
+        `${API}/api/assistance/status/${finalActionType}/${activeRow.id}`,
+        payload
       );
 
       await fetchFamilyAccounting();
       handleCloseActionModal();
+
     } catch (error) {
-      console.log(error?.response?.data); // 🔥 debug
       setActionError(
-        error?.response?.data?.message || "Failed to update assistance status."
+        error?.response?.data?.message || "Failed to update status"
       );
     } finally {
       setIsActionLoading(false);
     }
   };
+
 
   const getFilteredData = () => {
     const normalizedRole = role.toLowerCase();
@@ -851,7 +891,7 @@ const AssistancePage = () => {
 
         {isModalOpen && (
           <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md animate-in fade-in zoom-in duration-200">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl animate-in fade-in zoom-in duration-200">
               <div className="flex items-center justify-between px-6 py-4">
                 <h3 className="text-xl font-bold text-slate-800">
                   {actionTitleMap[actionType] || "Confirm Action"}
@@ -869,23 +909,20 @@ const AssistancePage = () => {
                   <div className="text-center">
                     <h4 className="font-semibold text-lg text-slate-700">
                       {asDisplayText(
-                        `${activeRow?.family_member_firstName || ""} ${activeRow?.family_member_lastName || ""}`.trim(),
+                        `${activeRow?.family_member_name || ""} `,
                         "Request"
                       )}
                     </h4>
-                    {/* <p className="text-slate-500 text-sm">
-                      Case ID: #{activeRow?.id || "-"}
-                    </p> */}
                   </div>
 
                   <p className="text-sm text-slate-600 text-center">
                     {actionDescMap[actionType]}
                   </p>
 
-                  {actionType === "queries" && (
+                  
                     <div className="space-y-3 text-left">
                       <label className="block text-sm font-medium text-slate-700 mb-1">
-                        Remark
+                        Feedback
                       </label>
                       <JoditEditor
                         value={queriesReason}
@@ -893,7 +930,7 @@ const AssistancePage = () => {
                         onBlur={(newValue) => setQueriesReason(newValue)}
                         onChange={() => { }}
                       />
-                      <div>
+                      {/* <div>
                         <label className="mb-1 block text-sm font-medium text-slate-700">
                           Upload File
                         </label>
@@ -905,9 +942,9 @@ const AssistancePage = () => {
                         <p className="mt-1 text-xs text-slate-500">
                           {queryFile?.name || "No file chosen"}
                         </p>
-                      </div>
+                      </div> */}
                     </div>
-                  )}
+                  
 
                   {actionError && (
                     <p className="text-sm text-red-600 text-center">{actionError}</p>
