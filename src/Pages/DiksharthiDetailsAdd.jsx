@@ -736,11 +736,9 @@ const DiksharthiDetailsAdd = () => {
         nextState.state = "";
         nextState.assistanceReceived = "";
         nextState.assistance = [];
+        nextState.relation_name = ""; 
       }
 
-      if (name === "relation" && value !== "other") {
-        nextState.relation_name = "";
-      }
 
       if (name === "relation" && value !== "sister" && value !== "daughter") {
         nextState.isMarried = "";
@@ -932,17 +930,128 @@ const DiksharthiDetailsAdd = () => {
     return result;
   };
 
+  // const goToNextStep = async () => {
+  //   debugger;
+
+  //   const isValid = validate();
+  //   if (!isValid) return;
+
+  //   // ================================
+  //   // ✅ SKIP API FOR STEP 2
+  //   // ================================
+  //   if (currentStep === 2) {
+  //     setCurrentStep((prev) => Math.min(prev + 1, stepTitles.length));
+  //     return;
+  //   }
+
+  //   try {
+  //     const loggedInUserId =
+  //       user?.id || user?.user_id || user?.userId || "";
+
+  //     if (!loggedInUserId) {
+  //       alert("Login user id missing. Please login again.");
+  //       return;
+  //     }
+
+  //     const payload = mapFormDataToApiPayload(
+  //       formData,
+  //       loggedInUserId,
+  //       currentStep
+  //     );
+
+  //     const data = new FormData();
+  //     Object.entries(payload).forEach(([key, value]) => {
+  //       data.append(key, value ?? "");
+  //     });
+
+  //     if (photo) data.append("photo", photo);
+  //     if (uploadDoc) data.append("uploadDoc", uploadDoc);
+
+  //     const targetId = isEditMode ? editId : savedRecordId;
+
+  //     const response = targetId
+  //       ? await axios.put(`${API}/api/update-diksharthi/${targetId}`, data)
+  //       : await axios.post(`${API}/api/create-diksharthi`, data);
+
+  //     const persisted = response?.data?.data || {};
+  //     const resolvedId =
+  //       Number(persisted?.id || targetId || 0) || null;
+
+  //     if (resolvedId) setSavedRecordId(resolvedId);
+
+  //     if (persisted?.diksharthi_code || persisted?.id) {
+  //       setSavedId(persisted?.diksharthi_code || persisted?.id);
+  //     }
+
+  //     const searchKey = String(formData?.fan_id || fanIdSearch || "").trim();
+
+  //     if (searchKey) {
+  //       try {
+  //         const getRes = await axios.get(`${API}/api/search`, {
+  //           params: {
+  //             fan_id: searchKey,
+  //             diksharthi_id: fanIdSearch,
+  //           },
+  //         });
+
+  //         const latestData = getRes?.data?.data?.[0];
+
+  //         if (latestData?.family_details) {
+  //           const relationDetails = convertFamilyArrayToObject(
+  //             latestData.family_details
+  //           );
+
+  //           const relations = Object.keys(relationDetails);
+
+  //           setFormData((prev) => ({
+  //             ...prev,
+  //             familyRelations: relations,
+  //             familyRelationDetails: relationDetails,
+  //             relation: relations[0] || prev.relation,
+  //           }));
+  //         }
+  //       } catch (err) {
+  //         console.error("GET API failed", err);
+  //       }
+  //     }
+
+  //     // ================================
+  //     // ✅ MOVE TO NEXT STEP
+  //     // ================================
+  //     setCurrentStep((prev) => Math.min(prev + 1, stepTitles.length));
+
+  //   } catch (err) {
+  //     console.error(err);
+  //     alert("Failed to Saved");
+  //   }
+  // };
+
+
   const goToNextStep = async () => {
     debugger;
 
     const isValid = validate();
     if (!isValid) return;
 
-    // ================================
-    // ✅ SKIP API FOR STEP 2
-    // ================================
-    if (currentStep === 2) {
-      setCurrentStep((prev) => Math.min(prev + 1, stepTitles.length));
+    // ==========================================
+    // ✅ If RBF = NO → Direct Step 1 to Step 5
+    // ==========================================
+    if (
+      formData.rbfCriteria === "No" &&
+      currentStep === 1
+    ) {
+      setCurrentStep(5);
+      return;
+    }
+
+    // ==========================================
+    // ✅ Disable Step 2 API Skip
+    // ==========================================
+    if (
+      formData.rbfCriteria === "Yes" &&
+      currentStep === 2
+    ) {
+      setCurrentStep(3);
       return;
     }
 
@@ -962,6 +1071,7 @@ const DiksharthiDetailsAdd = () => {
       );
 
       const data = new FormData();
+
       Object.entries(payload).forEach(([key, value]) => {
         data.append(key, value ?? "");
       });
@@ -969,66 +1079,144 @@ const DiksharthiDetailsAdd = () => {
       if (photo) data.append("photo", photo);
       if (uploadDoc) data.append("uploadDoc", uploadDoc);
 
-      const targetId = isEditMode ? editId : savedRecordId;
+      const targetId = isEditMode
+        ? editId
+        : savedRecordId;
 
       const response = targetId
-        ? await axios.put(`${API}/api/update-diksharthi/${targetId}`, data)
-        : await axios.post(`${API}/api/create-diksharthi`, data);
+        ? await axios.put(
+          `${API}/api/update-diksharthi/${targetId}`,
+          data
+        )
+        : await axios.post(
+          `${API}/api/create-diksharthi`,
+          data
+        );
 
-      const persisted = response?.data?.data || {};
+      const persisted =
+        response?.data?.data || {};
+
       const resolvedId =
-        Number(persisted?.id || targetId || 0) || null;
+        Number(
+          persisted?.id ||
+          targetId ||
+          0
+        ) || null;
 
-      if (resolvedId) setSavedRecordId(resolvedId);
-
-      if (persisted?.diksharthi_code || persisted?.id) {
-        setSavedId(persisted?.diksharthi_code || persisted?.id);
+      if (resolvedId) {
+        setSavedRecordId(resolvedId);
       }
 
-      const searchKey = String(formData?.fan_id || fanIdSearch || "").trim();
+      if (
+        persisted?.diksharthi_code ||
+        persisted?.id
+      ) {
+        setSavedId(
+          persisted?.diksharthi_code ||
+          persisted?.id
+        );
+      }
+
+      // ==========================================
+      // ✅ FAN ID Data Fetch
+      // ==========================================
+      const searchKey = String(
+        formData?.fan_id ||
+        fanIdSearch ||
+        ""
+      ).trim();
 
       if (searchKey) {
         try {
-          const getRes = await axios.get(`${API}/api/search`, {
-            params: {
-              fan_id: searchKey,
-              diksharthi_id: fanIdSearch,
-            },
-          });
+          const getRes = await axios.get(
+            `${API}/api/search`,
+            {
+              params: {
+                fan_id: searchKey,
+                diksharthi_id: fanIdSearch,
+              },
+            }
+          );
 
-          const latestData = getRes?.data?.data?.[0];
+          const latestData =
+            getRes?.data?.data?.[0];
 
           if (latestData?.family_details) {
-            const relationDetails = convertFamilyArrayToObject(
-              latestData.family_details
-            );
+            const relationDetails =
+              convertFamilyArrayToObject(
+                latestData.family_details
+              );
 
-            const relations = Object.keys(relationDetails);
+            const relations =
+              Object.keys(
+                relationDetails
+              );
 
             setFormData((prev) => ({
               ...prev,
-              familyRelations: relations,
-              familyRelationDetails: relationDetails,
-              relation: relations[0] || prev.relation,
+              familyRelations:
+                relations,
+              familyRelationDetails:
+                relationDetails,
+              relation:
+                relations[0] ||
+                prev.relation,
             }));
           }
         } catch (err) {
-          console.error("GET API failed", err);
+          console.error(
+            "GET API failed",
+            err
+          );
         }
       }
 
-      // ================================
-      // ✅ MOVE TO NEXT STEP
-      // ================================
-      setCurrentStep((prev) => Math.min(prev + 1, stepTitles.length));
-
+      // ==========================================
+      // ✅ Move Step Logic
+      // ==========================================
+      if (
+        formData.rbfCriteria === "No"
+      ) {
+        setCurrentStep(5);
+      } else {
+        setCurrentStep((prev) =>
+          Math.min(
+            prev + 1,
+            stepTitles.length
+          )
+        );
+      }
     } catch (err) {
       console.error(err);
-      alert("Failed to Saved");
+      alert("Failed to Save");
     }
   };
+
+
+
+  // const goToPreviousStep = () => {
+  //   setCurrentStep((prev) => Math.max(prev - 1, 1));
+  // };
+
   const goToPreviousStep = () => {
-    setCurrentStep((prev) => Math.max(prev - 1, 1));
+    // ==================================
+    // ✅ If RBF = NO and Step 5
+    // Direct back to Step 1
+    // ==================================
+    if (
+      formData.rbfCriteria === "No" &&
+      currentStep === 5
+    ) {
+      setCurrentStep(1);
+      return;
+    }
+
+    // ==================================
+    // ✅ If RBF = YES normal flow
+    // ==================================
+    setCurrentStep((prev) =>
+      Math.max(prev - 1, 1)
+    );
   };
 
   const filteredRelations = RELATIONS.filter((item) => {
@@ -1348,7 +1536,7 @@ const DiksharthiDetailsAdd = () => {
           <h2 className="text-xl font-bold"> Ratnakukshi Family Basic Info</h2>
         </div>
         <div className="mb-6">
-          <div className="flex flex-wrap gap-2">
+          {/* <div className="flex flex-wrap gap-2">
             {stepTitles.map((title, index) => {
               const stepNumber = index + 1;
               const isActive = currentStep === stepNumber;
@@ -1366,6 +1554,44 @@ const DiksharthiDetailsAdd = () => {
                 </button>
               );
             })}
+          </div> */}
+
+          <div className="mb-6">
+            <div className="flex flex-wrap gap-2">
+              {stepTitles.map((title, index) => {
+                const stepNumber = index + 1;
+                const isActive = currentStep === stepNumber;
+
+                // ✅ If RBF = No then disable step 2,3,4
+                const isDisabled =
+                  formData.rbfCriteria === "No" &&
+                  [2, 3, 4].includes(stepNumber);
+
+                return (
+                  <button
+                    key={title}
+                    type="button"
+                    disabled={isDisabled}
+                    onClick={() => {
+                      if (!isDisabled) {
+                        setCurrentStep(stepNumber);
+                      }
+                    }}
+                    className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition
+
+          ${isDisabled
+                        ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
+                        : isActive
+                          ? "bg-[#ECB000] text-white border-[#ECB000]"
+                          : "bg-white text-slate-600 border-slate-300 hover:bg-gray-50"
+                      }
+          `}
+                  >
+                    {stepNumber}. {title}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
 
@@ -1765,8 +1991,6 @@ const DiksharthiDetailsAdd = () => {
                 />
               </div>
 
-              {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-4"> */}
-
                 {/* Spoken To Name */}
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -1803,9 +2027,37 @@ const DiksharthiDetailsAdd = () => {
                       {errors.spokenTo_Relation}
                     </p>
                   )}
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">RBF Criteria <span className="text-red-500">*</span></label>
+                <div className="flex gap-4 mt-2">
+                  <label className="flex items-center gap-2 cursor-pointer"><input type="radio" name="rbfCriteria" value="Yes" checked={formData.rbfCriteria === "Yes"} onChange={handleChange} /> Yes</label>
+                  <label className="flex items-center gap-2 cursor-pointer"><input type="radio" name="rbfCriteria" value="No" checked={formData.rbfCriteria === "No"} onChange={handleChange} /> No</label>
                 </div>
+                {errors.rbfCriteria && <p className="text-red-500 text-xs">{errors.rbfCriteria}</p>}
+              </div>
 
-              {/* </div> */}
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Relation Name <span className="text-red-500">*</span>
+                </label>
+
+                <input
+                  type="text"
+                  name="relation_name"
+                  value={formData.relation_name || ""}
+                  onChange={handleChange}
+                  placeholder="Enter relation name"
+                  className="w-full p-2 border border-slate-300 rounded-md outline-none"
+                />
+
+                {errors.relation_name && (
+                  <p className="text-red-500 text-xs">{errors.relation_name}</p>
+                )}
+              </div>
+
             </>
           )}
 
