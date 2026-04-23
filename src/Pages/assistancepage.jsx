@@ -29,6 +29,22 @@ const asDisplayText = (value, fallback = "-") => {
   return fallback;
 };
 
+const parseFeedbackHistory = (value) => {
+  if (!value) return [];
+  if (Array.isArray(value)) return value;
+  if (typeof value === "object") return [value];
+
+  try {
+    const parsed = JSON.parse(value);
+    if (Array.isArray(parsed)) return parsed;
+    if (parsed && typeof parsed === "object") return [parsed];
+  } catch (error) {
+    return [];
+  }
+
+  return [];
+};
+
 const normalizeWorkflowValue = (value) =>
   String(value || "")
     .trim()
@@ -478,11 +494,16 @@ const AssistancePage = () => {
       "Are you sure you want to send this request to the expert panel?",
   };
 
-  const getQueryText = (row) =>
-    asDisplayText(
-      row?.queriesReason || row?.query_reason || row?.remark || row?.remarks,
+  const getFeedbackHistory = (row) => parseFeedbackHistory(row?.feedback);
+
+  const getQueryText = (row) => {
+    const feedbackHistory = getFeedbackHistory(row);
+    const latestFeedback = feedbackHistory[feedbackHistory.length - 1];
+    return asDisplayText(
+      latestFeedback?.feedback || row?.queriesReason || row?.query_reason || row?.remark || row?.remarks,
       "",
     );
+  };
 
   const getRowActionKey = (row, index) =>
     [
@@ -514,7 +535,7 @@ const AssistancePage = () => {
           </thead>
           <tbody className="divide-y divide-slate-100">
             {getFilteredData().map((row, index) => {
-              const hasQuery = Boolean(getQueryText(row));
+              const hasQuery = getFeedbackHistory(row).length > 0 || Boolean(getQueryText(row));
               const rowActionKey = getRowActionKey(row, index);
               const isOpen = openDropdownId === rowActionKey;
               const allowedActions = getAllowedActions({ role, status: row.status });
@@ -562,7 +583,7 @@ const AssistancePage = () => {
                                 onClick={() => { setViewQueryRow(row); setOpenDropdownId(null); }}
                                 className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
                               >
-                                <FileText size={16} className="text-blue-600" /> View Query
+                                <FileText size={16} className="text-blue-600" /> View Feedback
                               </button>
                             )}
 
@@ -972,11 +993,15 @@ const AssistancePage = () => {
           </div>
         )}
 
-        {viewQueryRow && (
+        {viewQueryRow && (() => {
+          const feedbackHistory = getFeedbackHistory(viewQueryRow);
+          const legacyFeedback = getQueryText(viewQueryRow);
+
+          return (
           <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
             <div className="w-full max-w-2xl rounded-2xl bg-white shadow-2xl">
               <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
-                <h3 className="text-xl font-bold text-slate-800">View Query</h3>
+                <h3 className="text-xl font-bold text-slate-800">View Feedback</h3>
                 <button
                   type="button"
                   onClick={() => setViewQueryRow(null)}
@@ -990,18 +1015,42 @@ const AssistancePage = () => {
                   <p className="text-sm text-slate-500">Member Name</p>
                   <p className="font-semibold text-slate-700">
                     {asDisplayText(
+                      viewQueryRow?.family_member_name ||
                       `${viewQueryRow?.family_member_firstName || ""} ${viewQueryRow?.family_member_lastName || ""}`.trim()
                     )}
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-slate-500">Remark</p>
-                  <div
-                    className="min-h-32 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700"
-                    dangerouslySetInnerHTML={{
-                      __html: getQueryText(viewQueryRow) || "<p>-</p>",
-                    }}
-                  />
+                  <p className="text-sm text-slate-500">Feedback History</p>
+                  <div className="max-h-96 space-y-3 overflow-y-auto rounded-xl border border-slate-200 bg-slate-50 p-4">
+                    {feedbackHistory.length > 0 ? (
+                      feedbackHistory.map((item, index) => (
+                        <div key={`${item?.date || "date"}-${item?.time || "time"}-${index}`} className="rounded-lg border border-slate-200 bg-white p-3">
+                          <div className="mb-2 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
+                            <span className="font-semibold text-slate-700">
+                              {capitalizeFirst(asDisplayText(item?.status, "Status"))}
+                            </span>
+                            <span>
+                              {asDisplayText(item?.date, "")} {asDisplayText(item?.time, "")}
+                            </span>
+                          </div>
+                          <div
+                            className="text-sm text-slate-700"
+                            dangerouslySetInnerHTML={{
+                              __html: item?.feedback || "<p>-</p>",
+                            }}
+                          />
+                        </div>
+                      ))
+                    ) : (
+                      <div
+                        className="text-sm text-slate-700"
+                        dangerouslySetInnerHTML={{
+                          __html: legacyFeedback || "<p>-</p>",
+                        }}
+                      />
+                    )}
+                  </div>
                 </div>
               </div>
               <div className="flex justify-end border-t border-slate-100 px-6 py-4">
@@ -1015,7 +1064,8 @@ const AssistancePage = () => {
               </div>
             </div>
           </div>
-        )}
+          );
+        })()}
       </main>
     </div>
   );
