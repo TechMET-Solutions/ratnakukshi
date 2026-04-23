@@ -512,6 +512,7 @@ const AssistancePage = () => {
       row?.relation,
       row?.assistance_type,
       row?.case_id,
+      row?.sl_id,
       index,
     ]
       .map((value) => String(value ?? ""))
@@ -524,6 +525,7 @@ const AssistancePage = () => {
           <thead>
             <tr className="bg-[#fdf2d7]">
               <th className="p-4 font-semibold text-slate-700 border-b">M.S. ID</th>
+              <th className="p-4 font-semibold text-slate-700 border-b">S.L. ID</th>
               <th className="p-4 font-semibold text-slate-700 border-b">M.S. Name</th>
               <th className="p-4 font-semibold text-slate-700 border-b">Family Member</th>
               <th className="p-4 font-semibold text-slate-700 border-b">Relation</th>
@@ -544,6 +546,7 @@ const AssistancePage = () => {
               return (
                 <tr key={rowActionKey} className="hover:bg-slate-50 transition-colors">
                   <td className="p-4 text-slate-600">{asDisplayText(row.id)}</td>
+                  <td className="p-4 text-slate-600">{asDisplayText(row.sl_id)}</td>
                   <td className="p-4 text-slate-600">{asDisplayText(row.diksharthi_name)}</td>
                   <td className="p-4 text-slate-600">{asDisplayText(row.family_member_name)}</td>
                   <td className="p-4 text-slate-600">{asDisplayText(row.relation_key)}</td>
