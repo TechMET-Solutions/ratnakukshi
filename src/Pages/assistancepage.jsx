@@ -8,12 +8,14 @@ import {
   User,
   X,
   XCircle,
-  EllipsisVertical
+  EllipsisVertical,
+  Clock
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { API } from "../api/BaseURL";
 import { useAuth } from "../context/AuthContext";
+import { queryEditorConfig } from "../utils/joditconfig";
 
 const asArray = (value) => {
   if (Array.isArray(value)) return value;
@@ -165,33 +167,6 @@ const AssistancePage = () => {
     role === "expert-panel" || role.startsWith("expert-panel-");
   const isCommitteeMember = role === "committee-member";
   const canAccessAssistance = isKaryakarta || isCaseCoordinator || isExpertPanel || isCommitteeMember;
-  const queryEditorConfig = {
-    readonly: false,
-    minHeight: 220,
-    toolbarAdaptive: false,
-    askBeforePasteHTML: false,
-    askBeforePasteFromWord: false,
-    buttons: [
-      "bold",
-      "italic",
-      "underline",
-      "|",
-      "ul",
-      "ol",
-      "|",
-      "font",
-      "fontsize",
-      "paragraph",
-      "|",
-      "align",
-      "|",
-      "link",
-      "table",
-      "|",
-      "undo",
-      "redo",
-    ],
-  };
 
   const fetchFamilyAccounting = async () => {
     try {
@@ -1003,72 +978,93 @@ const AssistancePage = () => {
           const legacyFeedback = getQueryText(viewQueryRow);
 
           return (
-          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
-            <div className="w-full max-w-2xl rounded-2xl bg-white shadow-2xl">
-              <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
-                <h3 className="text-xl font-bold text-slate-800">View Feedback</h3>
-                <button
-                  type="button"
-                  onClick={() => setViewQueryRow(null)}
-                  className="rounded-full p-1 hover:bg-slate-100"
-                >
-                  <X size={24} className="text-slate-500" />
-                </button>
-              </div>
-              <div className="space-y-4 px-6 py-5">
-                <div>
-                  <p className="text-sm text-slate-500">Member Name</p>
-                  <p className="font-semibold text-slate-700">
-                    {asDisplayText(
-                      viewQueryRow?.family_member_name ||
-                      `${viewQueryRow?.family_member_firstName || ""} ${viewQueryRow?.family_member_lastName || ""}`.trim()
-                    )}
-                  </p>
+            <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 px-4">
+              <div className="w-full max-w-2xl rounded-2xl bg-white shadow-2xl flex flex-col overflow-hidden">
+
+                {/* MODAL HEADER */}
+                <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4 bg-slate-50/50">
+                  <div>
+                    <h3 className="text-xl font-bold text-slate-800">Feedback Details</h3>
+                    <p className="text-xs text-slate-500 mt-1">
+                      Member: <span className="font-semibold text-blue-600">
+                        {asDisplayText(
+                          viewQueryRow?.family_member_name ||
+                          `${viewQueryRow?.family_member_firstName || ""} ${viewQueryRow?.family_member_lastName || ""}`.trim()
+                        )}
+                      </span>
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setViewQueryRow(null)}
+                    className="rounded-full p-2 hover:bg-slate-200 transition-colors text-slate-400 hover:text-slate-600"
+                  >
+                    <X size={20} />
+                  </button>
                 </div>
-                <div>
-                  <p className="text-sm text-slate-500">Feedback History</p>
-                  <div className="max-h-96 space-y-3 overflow-y-auto rounded-xl border border-slate-200 bg-slate-50 p-4">
+
+                {/* MODAL BODY */}
+                <div className="flex-1 overflow-y-auto p-6 space-y-6 max-h-[70vh]">
+
+                  {/* SECTION 1: FEEDBACK HISTORY (Structured) */}
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 pb-1 border-b border-slate-100">
+                      <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                      <h4 className="text-sm font-bold text-slate-700 uppercase tracking-wider">Feedback History</h4>
+                    </div>
+
                     {feedbackHistory.length > 0 ? (
-                      feedbackHistory.map((item, index) => (
-                        <div key={`${item?.date || "date"}-${item?.time || "time"}-${index}`} className="rounded-lg border border-slate-200 bg-white p-3">
-                          <div className="mb-2 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
-                            <span className="font-semibold text-slate-700">
-                              {capitalizeFirst(asDisplayText(item?.status, "Status"))}
-                            </span>
-                            <span>
-                              {asDisplayText(item?.date, "")} {asDisplayText(item?.time, "")}
-                            </span>
+                      <div className="space-y-3">
+                        {feedbackHistory.map((item, index) => (
+                          <div key={`${item?.date || "date"}-${item?.time || "time"}-${index}`} className="rounded-xl border border-slate-100 bg-white p-4 shadow-sm">
+                            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                              <span
+                                className={`px-2.5 py-0.5 rounded-md text-[11px] font-bold uppercase ${item?.status?.toLowerCase() === "pending"
+                                    ? "bg-amber-100 text-amber-700"
+                                    : "bg-blue-100 text-blue-700"
+                                  }`}
+                              >
+                                {item?.status?.toLowerCase() === "committee-member"
+                                  ? "Case Co-ordinator Summary"
+                                  : item?.status?.toLowerCase() === "approve"
+                                    ? "Approve"
+                                    : capitalizeFirst(asDisplayText(item?.status, "Status"))}
+                              </span>
+                              <span className="text-[11px] text-slate-400 font-medium flex items-center gap-1">
+                                <Clock size={12} />
+                                {asDisplayText(item?.date, "")} {asDisplayText(item?.time, "")}
+                              </span>
+                            </div>
+                            <div
+                              className="text-sm text-slate-600 leading-relaxed pl-1 border-l-2 border-slate-100"
+                              dangerouslySetInnerHTML={{
+                                __html: item?.feedback || "<p className='italic text-slate-400'>No comments provided.</p>",
+                              }}
+                            />
                           </div>
-                          <div
-                            className="text-sm text-slate-700"
-                            dangerouslySetInnerHTML={{
-                              __html: item?.feedback || "<p>-</p>",
-                            }}
-                          />
-                        </div>
-                      ))
+                        ))}
+                      </div>
                     ) : (
-                      <div
-                        className="text-sm text-slate-700"
-                        dangerouslySetInnerHTML={{
-                          __html: legacyFeedback || "<p>-</p>",
-                        }}
-                      />
+                      <div className="text-center py-4 rounded-xl border border-dashed border-slate-200">
+                        <p className="text-sm text-slate-400 italic">No structured history records found.</p>
+                      </div>
                     )}
                   </div>
                 </div>
-              </div>
-              <div className="flex justify-end border-t border-slate-100 px-6 py-4">
-                <button
-                  type="button"
-                  onClick={() => setViewQueryRow(null)}
-                  className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white"
-                >
-                  Close
-                </button>
+
+                {/* MODAL FOOTER */}
+                <div className="flex justify-end border-t border-slate-100 px-6 py-4 bg-slate-50/30">
+                  <button
+                    type="button"
+                    onClick={() => setViewQueryRow(null)}
+                    className="rounded-xl bg-white border border-slate-200 hover:bg-slate-50 px-6 py-2 text-sm font-bold text-slate-700 shadow-sm transition-all"
+                  >
+                    Close
+                  </button>
+                </div>
+
               </div>
             </div>
-          </div>
           );
         })()}
       </main>

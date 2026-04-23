@@ -1,14 +1,3 @@
-// import React from 'react'
-
-// const Family_Details_Staff = () => {
-//   return (
-//     <div>
-
-//     </div>
-//   )
-// }
-
-// export default Family_Details_Staff
 import axios from "axios";
 import { ChevronDown, ChevronUp, Plus } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -129,6 +118,31 @@ const Family_Details_Staff = ({
     if (Array.isArray(value)) return value.length > 0;
     if (typeof value === "object") return Object.keys(value).length > 0;
     return false;
+  };
+
+
+  const toBool = (value) => {
+    if (
+      value === true ||
+      value === 1 ||
+      value === "1" ||
+      String(value).toLowerCase() === "true" ||
+      String(value).toLowerCase() === "yes"
+    ) {
+      return true;
+    }
+
+    if (
+      value === false ||
+      value === 0 ||
+      value === "0" ||
+      String(value).toLowerCase() === "false" ||
+      String(value).toLowerCase() === "no"
+    ) {
+      return false;
+    }
+
+    return null;
   };
 
   const isFormFieldLocked = (fieldName) =>
@@ -1755,9 +1769,10 @@ const Family_Details_Staff = ({
                                   name={`ayushman-${rel}`}
                                   value="true"
                                   checked={
-                                    String(relationDetails?.[rel]?.ayushman) ===
-                                    "true"
-                                  }
+                                    toBool(
+                                      relationDetails?.[rel]?.ayushman ??
+                                      relationDetails?.[rel]?.ayushmanCoverage
+                                    ) === true}
                                   onChange={() =>
                                     handleRelationDetailChange(
                                       rel,
@@ -1774,10 +1789,17 @@ const Family_Details_Staff = ({
                                   type="radio"
                                   name={`ayushman-${rel}`}
                                   value="false"
+                                  
+                                  // checked={
+                                  //   toBool(
+                                  //     relationDetails?.[rel]?.ayushmanCoverage
+                                  //   ) === false
+                                  // }
                                   checked={
-                                    String(relationDetails?.[rel]?.ayushman) ===
-                                    "false"
-                                  }
+                                    toBool(
+                                      relationDetails?.[rel]?.ayushman ??
+                                      relationDetails?.[rel]?.ayushmanCoverage
+                                    ) === false}
                                   onChange={() =>
                                     handleRelationDetailChange(
                                       rel,
@@ -1802,9 +1824,13 @@ const Family_Details_Staff = ({
                                 <input
                                   type="radio"
                                   name={`mediclaim-${rel}`}
+                                  
+
                                   checked={
-                                    relationDetails[rel]?.mediclaim === true
-                                  }
+                                    toBool(
+                                      relationDetails?.[rel]?.mediclaim ??
+                                      relationDetails?.[rel]?.medicalPolicy
+                                    ) === true}
                                   onChange={() =>
                                     handleRelationDetailChange(
                                       rel,
@@ -1819,9 +1845,15 @@ const Family_Details_Staff = ({
                                 <input
                                   type="radio"
                                   name={`mediclaim-${rel}`}
+                                  // checked={
+                                  //   relationDetails[rel]?.mediclaim === false
+                                  // }
+                                  // checked={toBool(relationDetails[rel]?.medicalPolicy) === false}
                                   checked={
-                                    relationDetails[rel]?.mediclaim === false
-                                  }
+                                    toBool(
+                                      relationDetails?.[rel]?.mediclaim ??
+                                      relationDetails?.[rel]?.medicalPolicy
+                                    ) === false}
                                   onChange={() =>
                                     handleRelationDetailChange(
                                       rel,
@@ -1849,10 +1881,11 @@ const Family_Details_Staff = ({
                                   <input
                                     type="radio"
                                     name={`needAssistance-${rel}`}
-                                    checked={
-                                      relationDetails[rel]?.needAssistance ===
-                                      true
-                                    }
+                                    // checked={
+                                    //   relationDetails[rel]?.needAssistance ===
+                                    //   true
+                                    // }
+                                    checked={toBool(relationDetails[rel]?.needAssistance) === true}
                                     onChange={() => {
                                       const aadhar =
                                         relationDetails?.[rel]?.aadharNumber;
@@ -1877,10 +1910,11 @@ const Family_Details_Staff = ({
                                   <input
                                     type="radio"
                                     name={`needAssistance-${rel}`}
-                                    checked={
-                                      relationDetails[rel]?.needAssistance ===
-                                      false
-                                    }
+                                    // checked={
+                                    //   relationDetails[rel]?.needAssistance ===
+                                    //   false
+                                    // }
+                                    checked={toBool(relationDetails[rel]?.needAssistance) === false}
                                     onChange={() =>
                                       handleRelationDetailChange(
                                         rel,
@@ -1897,7 +1931,11 @@ const Family_Details_Staff = ({
                         </div>
                         {/* Amount - Conditional Render */}
                         <div className="flex gap-5">
-                          {relationDetails[rel]?.ayushman === true && (
+                          {toBool(
+                            relationDetails?.[rel]?.ayushman ??
+                            relationDetails?.[rel]?.ayushmanCoverage ??
+                            relationDetails?.[rel]?.ayushman_coverage
+                          ) === true && (
                             <div className="w-[200px] mt-4">
                               <label className="block text-sm font-medium text-slate-700 mb-1">
                                 Ayushman Amount
@@ -1919,7 +1957,11 @@ const Family_Details_Staff = ({
                               />
                             </div>
                           )}
-                          {relationDetails[rel]?.mediclaim === true && (
+                            { 
+                              toBool(
+                                relationDetails?.[rel]?.mediclaim ??
+                                relationDetails?.[rel]?.medicalPolicy
+                          ) === true && (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                               <div className="w-[200px]">
                                 <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -2024,7 +2066,7 @@ const Family_Details_Staff = ({
                         </div>
 
                         {/* Show Assistance Categories when Need Assistance is Yes */}
-                        {relationDetails[rel]?.needAssistance === true && (
+                        {toBool(relationDetails[rel]?.needAssistance) === true && (
                           <div className="w-full mt-6">
                             <p className="text-sm font-medium text-slate-700 mb-3">
                               Assistances<span className="text-red-500">*</span>
@@ -2196,6 +2238,7 @@ const Family_Details_Staff = ({
                             {(relationDetails[
                               rel
                             ]?.assistanceCategories?.includes("Medical") ||
+                              Object.keys(assistanceData?.[rel] || {}).includes("Medical") ||
                               (selectedRelation === rel &&
                                 selectedAssistance?.includes("Medical"))) && (
                               <div className="mt-6 p-6 border rounded-lg bg-white shadow-sm font-sans">
@@ -2912,6 +2955,7 @@ const Family_Details_Staff = ({
                               (relationDetails[
                                 rel
                               ]?.assistanceCategories?.includes("Education") ||
+                                Object.keys(assistanceData?.[rel] || {}).includes("Education") ||
                                 (selectedRelation === rel &&
                                   selectedAssistance?.includes(
                                     "Education",
@@ -3047,9 +3091,8 @@ const Family_Details_Staff = ({
                               //   selectedAssistance?.includes("Job")
                               // ) &&
 
-                              (relationDetails[
-                                rel
-                              ]?.assistanceCategories?.includes("Job") ||
+                              (relationDetails[rel]?.assistanceCategories?.includes("Job") ||
+                                Object.keys(assistanceData?.[rel] || {}).includes("Job") ||
                                 (selectedRelation === rel &&
                                   selectedAssistance?.includes("Job"))) && (
                                 <div className="mt-6 p-6 border rounded-lg bg-white shadow-sm font-sans">
@@ -3378,18 +3421,12 @@ const Family_Details_Staff = ({
                             }
 
                             {
-                              // relationDetails[
-                              // rel
-                              // ]?.assistanceCategories?.includes("Food") &&
-
-                              // (
-                              //   relationDetails[rel]?.assistanceCategories?.includes("Food") ||
-                              //   selectedAssistance?.includes("Food")
-                              // ) &&
+                             
 
                               (relationDetails[
                                 rel
                               ]?.assistanceCategories?.includes("Grocery") ||
+                                Object.keys(assistanceData?.[rel] || {}).includes("Grocery") ||
                                 (selectedRelation === rel &&
                                   selectedAssistance?.includes("Grocery"))) && (
                                 <div className="mt-6 p-6 border rounded-lg bg-white shadow-sm font-sans">
@@ -3598,6 +3635,7 @@ const Family_Details_Staff = ({
                               (relationDetails[
                                 rel
                               ]?.assistanceCategories?.includes("Rent") ||
+                                Object.keys(assistanceData?.[rel] || {}).includes("Rent") ||
                                 (selectedRelation === rel &&
                                   selectedAssistance?.includes("Rent"))) && (
                                 <div className="mt-6 p-6 border rounded-lg bg-white shadow-sm font-sans">
@@ -3916,6 +3954,7 @@ const Family_Details_Staff = ({
                               (relationDetails[
                                 rel
                               ]?.assistanceCategories?.includes("Housing") ||
+                                Object.keys(assistanceData?.[rel] || {}).includes("Housing") ||
                                 (selectedRelation === rel &&
                                   selectedAssistance?.includes("Housing"))) && (
                                 <div className="mt-6 p-6 border rounded-lg bg-white shadow-sm font-sans text-[#4A4A4A]">
@@ -4475,6 +4514,7 @@ const Family_Details_Staff = ({
                               (relationDetails[
                                 rel
                               ]?.assistanceCategories?.includes("Vaiyavacch") ||
+                                Object.keys(assistanceData?.[rel] || {}).includes("Vaiyavacch") ||
                                 (selectedRelation === rel &&
                                   selectedAssistance?.includes(
                                     "Vaiyavacch",
@@ -4559,6 +4599,7 @@ const Family_Details_Staff = ({
                               ]?.assistanceCategories?.includes(
                                 "LivelihoodExpenses",
                               ) ||
+                                Object.keys(assistanceData?.[rel] || {}).includes("LivelihoodExpenses") ||
                                 (selectedRelation === rel &&
                                   selectedAssistance?.includes(
                                     "LivelihoodExpenses",
@@ -4685,9 +4726,17 @@ const Family_Details_Staff = ({
                               )
                             }
 
-                            {relationDetails[
-                              rel
-                            ]?.assistanceCategories?.includes("Business") && (
+                            {
+                            (relationDetails[
+                                rel
+                              ]?.assistanceCategories?.includes(
+                                "Business",
+                              ) ||
+                                Object.keys(assistanceData?.[rel] || {}).includes("Business") ||
+                                (selectedRelation === rel &&
+                                  selectedAssistance?.includes(
+                                    "Business",
+                                  ))) && (
                               <div className="p-6 border rounded-lg bg-white shadow-sm mt-6 font-sans">
                                 <h3 className="text-xl font-semibold mb-6 text-gray-800">
                                   Business support Assistance

@@ -260,11 +260,14 @@ const collectDocumentFiles = (assistanceData) => {
 };
 
 const RequestDetails = () => {
-  const location = useLocation();
   const navigate = useNavigate();
-  const row = location.state || {};
 
-  const [assistanceData, setAssistanceData] = useState(parseAssistanceData(row?.assistance_data));
+  const location = useLocation();
+
+  const [row, setRow] = useState(location.state || {});
+  const [assistanceData, setAssistanceData] = useState({});
+
+  // const [assistanceData, setAssistanceData] = useState(parseAssistanceData(row?.id));
   const [allRows, setAllRows] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -273,50 +276,37 @@ const RequestDetails = () => {
     [row?.assistance_type, row?.type],
   );
 
-  useEffect(() => {
-    const initialData = parseAssistanceData(row?.assistance_data);
-    setAssistanceData(initialData);
-
-    if (!row?.diksharthi_id) return;
-
-    const fetchData = async () => {
+ const fetchRequestDetails = async (id) => {
+    try {
       setLoading(true);
-      try {
-        const res = await axios.get(`${API}/api/assistance/all-assistance/${row.diksharthi_id}`);
 
-        const fetchedRows = Array.isArray(res?.data?.data) ? res.data.data : [];
-        setAllRows(fetchedRows);
+      const res = await axios.get(`${API}/api/assistance/all-assistance/${id}`);
 
-        if (Object.keys(initialData).length === 0) {
-          const matchedRow = fetchedRows.find((item) => {
-            const sameRelation =
-              String(item?.relation_key || item?.relation || "").trim().toLowerCase() ===
-              String(row?.relation_key || row?.relation || "").trim().toLowerCase();
-            const sameType = toCanonicalType(item?.assistance_type) === normalizedType;
-            return sameRelation && sameType;
-          });
+      if (res.data?.success) {
+        const apiData = res.data.data;
 
-          setAssistanceData(parseAssistanceData(matchedRow?.assistance_data));
-        }
-      } catch (error) {
-        console.error("Request details fetch failed:", error);
-        setAllRows([]);
-        if (Object.keys(initialData).length === 0) {
-          setAssistanceData({});
-        }
-      } finally {
-        setLoading(false);
+        setRow(apiData);
+        setAssistanceData(
+          typeof apiData.assistance_data === "string"
+            ? JSON.parse(apiData.assistance_data)
+            : apiData.assistance_data || {}
+        );
+
+        setFeedbackList(apiData.feedback || []);
       }
-    };
 
-    fetchData();
-  }, [
-    normalizedType,
-    row?.assistance_data,
-    row?.diksharthi_id,
-    row?.relation,
-    row?.relation_key,
-  ]);
+    } catch (error) {
+      console.error("Details Fetch Error:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (row?.id) {
+      fetchRequestDetails(row.id);
+    }
+  }, [row?.id]);
 
   const labelStyle = "text-gray-500 font-semibold text-sm";
   const valueStyle = "text-gray-800 font-bold text-sm";
@@ -340,7 +330,6 @@ const RequestDetails = () => {
     row?.member_name ||
     "-";
 
-  const remarks = row?.query_reason || row?.remarks || row?.remark || "-";
 
   const previousAssistanceRows = useMemo(() => {
     const currentId = Number(row?.id);
@@ -377,18 +366,18 @@ const RequestDetails = () => {
       <div className="bg-white border border-gray-200 rounded-lg shadow-sm mb-6 overflow-hidden">
         <div className="flex justify-between px-4 py-2 border-b border-gray-100 bg-gray-50/50">
           <span className="text-sm text-gray-600">
-            Family Head : <span className="font-bold">{row?.sadhu_sadhvi_name || "-"}</span>
+            Family Head : <span className="font-bold">{row?.family_head_name || "-"}</span>
           </span>
         </div>
         <div className="p-6 flex gap-8">
           <img
-            src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?fit=crop&w=150&h=150"
+            src={row?.photo ? row.photo : "/user.png"}
             alt="Profile"
             className="w-24 h-24 rounded-lg object-cover border border-gray-200"
           />
           <div className="grid grid-cols-2 flex-grow gap-y-4">
             <div>
-              <h2 className="text-xl font-bold text-gray-800">{memberName}</h2>
+              <h2 className="text-xl font-bold text-gray-800">{row.family_member_name}</h2>
               <p className="text-sm text-gray-500">
                 M.S. ID : <span className="font-semibold text-gray-700">{row?.diksharthi_id || "-"}</span>
               </p>
@@ -501,8 +490,106 @@ const RequestDetails = () => {
       )}
 
       <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
-        <h3 className="text-red-500 font-bold mb-2">Remark</h3>
-        <p className="text-sm text-gray-600 leading-relaxed">{remarks}</p>
+        <h3 className="text-red-500 font-bold mb-4">Remarks & Feedback</h3>
+
+        {/* Summary First */}
+        <div className="mb-6 border-b pb-4">
+          <h4 className="font-semibold text-gray-700 mb-2">Summary</h4>
+          <div
+            className="text-sm text-gray-700"
+            dangerouslySetInnerHTML={{
+              __html: row?.summary || "-"
+            }}
+          />
+        </div>
+
+        {/* Diksharthi Feedback */}
+        <div className="mb-6 border-b pb-4">
+          <h4 className="font-semibold text-blue-600 mb-3">
+            Diksharthi Feedback
+          </h4>
+
+          {row?.diksharthi_feedback?.length > 0 ? (
+            row.diksharthi_feedback.map((item, index) => (
+              <div
+                key={index}
+                className="mb-3 p-3 bg-blue-50 rounded-md border"
+              >
+                <p className="text-xs text-gray-500 mb-1">
+                  {item.feedback_date?.slice(0, 10)} | {item.feedback_time}
+                </p>
+
+                <div
+                  className="text-sm text-gray-700"
+                  dangerouslySetInnerHTML={{
+                    __html: item.feedback || "-"
+                  }}
+                />
+              </div>
+            ))
+          ) : (
+            <p className="text-sm text-gray-400">No Feedback Found</p>
+          )}
+        </div>
+
+        {/* Operation Manager Feedback */}
+        <div className="mb-6 border-b pb-4">
+          <h4 className="font-semibold text-green-600 mb-3">
+            Operation Manager Feedback
+          </h4>
+
+          {row?.operation_manager_feedback?.length > 0 ? (
+            row.operation_manager_feedback.map((item, index) => (
+              <div
+                key={index}
+                className="mb-3 p-3 bg-green-50 rounded-md border"
+              >
+                <p className="text-xs text-gray-500 mb-1">
+                  {item.feedback_date?.slice(0, 10)} | {item.feedback_time}
+                </p>
+
+                <div className="text-sm text-gray-700">
+                  {item.feedback || "-"}
+                </div>
+              </div>
+            ))
+          ) : (
+            <p className="text-sm text-gray-400">No Feedback Found</p>
+          )}
+        </div>
+
+        {/* Final Feedback */}
+        <div>
+          <h4 className="font-semibold text-red-500 mb-3">
+            Latest Internal Feedback
+          </h4>
+
+          {row?.feedback?.length > 0 ? (
+            row.feedback.map((item, index) => (
+              <div
+                key={index}
+                className="mb-3 p-3 bg-red-50 rounded-md border"
+              >
+                <p className="text-xs text-gray-500 mb-1">
+                  {item.date} | {item.time}
+                </p>
+
+                <p className="text-xs font-semibold text-gray-600 mb-2 uppercase">
+                  {item.status}
+                </p>
+
+                <div
+                  className="text-sm text-gray-700"
+                  dangerouslySetInnerHTML={{
+                    __html: item.feedback || "-"
+                  }}
+                />
+              </div>
+            ))
+          ) : (
+            <p className="text-sm text-gray-400">No Feedback Found</p>
+          )}
+        </div>
       </div>
     </div>
   );
