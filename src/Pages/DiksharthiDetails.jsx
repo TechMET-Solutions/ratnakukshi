@@ -2417,10 +2417,10 @@ const DiksharthiListing = () => {
               {/* Data Display Section */}
               <p><span className="font-semibold">M.S. ID:</span> {assignModalData?.id || "-"}</p>
               <p><span className="font-semibold">M.S. Name:</span> {assignModalData?.sadhu_sadhvi_name || "-"}</p>
-              {/* <p>
-                <span className="font-semibold">Family Member:</span>{" "}
-                {assignModalData?.family_member_firstName} {assignModalData?.family_member_lastName}
-              </p> */}
+              <p>
+                <span className="font-semibold">City:</span>{" "}
+                {assignModalData?.district}, {assignModalData?.state}
+              </p>
 
               {/* Search & Selection Section */}
               <div className="mt-4">

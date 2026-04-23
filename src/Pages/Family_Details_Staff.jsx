@@ -1700,10 +1700,18 @@ const Family_Details_Staff = ({
                             <label className="block text-sm font-medium text-slate-700 mb-1">
                               Age
                             </label>
+                            {/* <input
+                              type="text"
+                              value={relationDetails[rel]?.age ?? ""}
+                              className="w-full p-2 border border-slate-300 rounded-md bg-gray-50 text-slate-600"
+                            /> */}
+
                             <input
                               type="text"
                               value={relationDetails[rel]?.age ?? ""}
-                              readOnly
+                              onChange={(e) =>
+                                handleRelationDetailChange(rel, "age", e.target.value)
+                              }
                               className="w-full p-2 border border-slate-300 rounded-md bg-gray-50 text-slate-600"
                             />
                           </div>

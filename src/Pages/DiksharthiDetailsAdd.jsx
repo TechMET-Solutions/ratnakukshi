@@ -2369,20 +2369,13 @@ const DiksharthiDetailsAdd = () => {
                 <label className="block text-sm font-medium text-slate-700 mb-1">
                   Village / Post Office
                 </label>
-                <select
-                  // value={formData.village || ""}
-                  // onChange={(e) => {
-                  //   const selected = JSON.parse(e.target.value);
-
-                  //   setFormData((prev) => ({
-                  //     ...prev,
-                  //     village: selected.Name,
-                  //     taluka: selected.Block,
-                  //     district: selected.District,
-                  //     state: selected.State,
-                  //   }));
-                  // }}
-                  value={formData.villageObj ? JSON.stringify(formData.villageObj) : ""}
+                {/* <select
+                  // value={formData.villageObj ? JSON.stringify(formData.villageObj) : ""}
+                  value={
+                    formData.villageObj
+                      ? JSON.stringify(formData.villageObj)
+                      : formData.village || ""
+                  }
                   onChange={(e) => {
                     const selected = JSON.parse(e.target.value);
 
@@ -2398,6 +2391,49 @@ const DiksharthiDetailsAdd = () => {
                   className="w-full p-2 border rounded-md"
                 >
                   <option value="">Select Village</option>
+                  {postOffices.map((po, index) => (
+                    <option key={index} value={JSON.stringify(po)}>
+                      {po.Name} ({po.Block})
+                    </option>
+                  ))}
+                </select> */}
+
+                <select
+                  value={
+                    formData.villageObj
+                      ? JSON.stringify(formData.villageObj)
+                      : formData.village || ""
+                  }
+                  onChange={(e) => {
+                    if (!e.target.value) return;
+
+                    // If plain text old edit value
+                    if (!e.target.value.startsWith("{")) {
+                      return;
+                    }
+
+                    const selected = JSON.parse(e.target.value);
+
+                    setFormData((prev) => ({
+                      ...prev,
+                      villageObj: selected,
+                      village: selected.Name,
+                      taluka: selected.Block,
+                      district: selected.District,
+                      state: selected.State,
+                    }));
+                  }}
+                  className="w-full p-2 border rounded-md"
+                >
+                  <option value="">Select Village</option>
+
+                  {/* edit old value show */}
+                  {formData.village && !formData.villageObj && (
+                    <option value={formData.village}>
+                      {formData.village}
+                    </option>
+                  )}
+
                   {postOffices.map((po, index) => (
                     <option key={index} value={JSON.stringify(po)}>
                       {po.Name} ({po.Block})
