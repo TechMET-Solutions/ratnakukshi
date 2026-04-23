@@ -438,17 +438,17 @@ const AssistancePage = () => {
       const status = normalizeWorkflowValue(row.status);
       const rowType = normalizeWorkflowValue(row.assistance_type);
 
-      if (normalizedRole === "karyakarta") {
-        return status === "pending" || status === "queries";
-      }
+      // if (normalizedRole === "karyakarta") {
+      //   return status === "pending" || status === "queries";
+      // }
 
-      if (normalizedRole === "case-coordinator") {
-        return true; // sab dikhana hai
-      }
+      // if (normalizedRole === "case-coordinator") {
+      //   return true; // sab dikhana hai
+      // }
 
-      if (normalizedRole === "committee-member") {
-        return status === "committee member";
-      }
+      // if (normalizedRole === "committee-member") {
+      //   return status === "committee member";
+      // }
 
       if (
         normalizedRole === "expert-panel" ||
@@ -464,7 +464,9 @@ const AssistancePage = () => {
         return rowType === expertPanelType;
       }
 
-      return false;
+      // return false;
+
+      return true;
     });
   };
 
