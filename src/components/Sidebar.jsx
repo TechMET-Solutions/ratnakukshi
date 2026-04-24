@@ -14,7 +14,8 @@ import {
   HeartHandshake,
   FileBadge,
   Globe,
-  ShieldCheck
+  ShieldCheck,
+  ReceiptText
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -117,9 +118,8 @@ const Sidebar = () => {
         )}
         {isAccount && (
           <>
-            <NavItem isCollapsed={isCollapsed} to="/account-assistnce" icon={<Home size={22} />} label="Assistance" />
-            <NavItem isCollapsed={isCollapsed} to="/credit-account" icon={<Home size={22} />} label="Credit Account" />
-            <NavItem isCollapsed={isCollapsed} to="/debit-account" icon={<Home size={22} />} label="Debit Account" />
+            <NavItem isCollapsed={isCollapsed} to="/account-assistnce" icon={<HeartHandshake size={22} />} label="Assistance" />
+            <NavItem isCollapsed={isCollapsed} to="/account-transactions" icon={<ReceiptText size={22} />} label="Account Transactions " />
           </>
         )}
 

@@ -269,7 +269,7 @@ function App() {
           }
         />
         <Route
-          path="/credit-account"
+          path="/account-transactions"
           element={
             <ProtectedRoute>
               <Layout>

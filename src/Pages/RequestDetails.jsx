@@ -37,8 +37,9 @@ const typeFieldConfig = {
     { label: "Forward To", key: "forwardTo" },
   ],
   job: [
-    { label: "Current Job", key: "currentJob" },
     { label: "Employment Status", key: "employmentStatus" },
+    { label: "Current Salary", key: "currentSalary" },
+    { label: "Expected Salary", key: "expectedSalary" },
     { label: "Education", key: "education" },
     { label: "Skills", key: "skills" },
     { label: "Preferred Job Type", key: "preferredJobType" },
@@ -358,7 +359,7 @@ const RequestDetails = () => {
             className="flex items-center text-red-500 font-bold text-lg mt-1 hover:underline"
           >
             <ChevronLeft size={20} />
-            <h1>Request Details</h1>
+            <h1>Assistances Details</h1>
           </button>
         </div>
       </div>
@@ -366,27 +367,120 @@ const RequestDetails = () => {
       <div className="bg-white border border-gray-200 rounded-lg shadow-sm mb-6 overflow-hidden">
         <div className="flex justify-between px-4 py-2 border-b border-gray-100 bg-gray-50/50">
           <span className="text-sm text-gray-600">
-            Family Head : <span className="font-bold">{row?.family_head_name || "-"}</span>
+            Family Head :{" "}
+            <span className="font-bold">
+              {row?.family_head_name || "-"}
+            </span>
           </span>
         </div>
+
         <div className="p-6 flex gap-8">
           <img
             src={row?.photo ? row.photo : "/user.png"}
             alt="Profile"
             className="w-24 h-24 rounded-lg object-cover border border-gray-200"
           />
-          <div className="grid grid-cols-2 flex-grow gap-y-4">
+
+          <div className="grid grid-cols-2 flex-grow gap-x-10 gap-y-3">
+            {/* Left Side */}
             <div>
-              <h2 className="text-xl font-bold text-gray-800">{row.family_member_name}</h2>
+              <h2 className="text-xl font-bold text-gray-800 mb-2">
+                {row?.family_member_name || "-"}
+              </h2>
+
               <p className="text-sm text-gray-500">
-                M.S. ID : <span className="font-semibold text-gray-700">{row?.diksharthi_id || "-"}</span>
+                M.S. ID :{" "}
+                <span className="font-semibold text-gray-700">
+                  {row?.diksharthi_id || "-"}
+                </span>
               </p>
+
               <p className="text-sm text-gray-500">
-                Relation : <span className="font-semibold text-gray-700">{row?.relation_key || row?.relation || "-"}</span>
+                M.S. Name :{" "}
+                <span className="font-semibold text-gray-700">
+                  {row?.sadhu_sadhvi_name || "-"}
+                </span>
               </p>
+
               <p className="text-sm text-gray-500">
-                Assistance Type : <span className="font-semibold text-gray-700">{row?.assistance_type || row?.type || "-"}</span>
+                Relation to M.S. :{" "}
+                <span className="font-semibold text-gray-700">
+                  {row?.relation_key || row?.relation || "-"}
+                </span>
               </p>
+
+              <p className="text-sm text-gray-500">
+                Assistance Type :{" "}
+                <span className="font-semibold text-gray-700">
+                  {row?.assistance_type || row?.type || "-"}
+                </span>
+              </p>
+
+              <p className="text-sm text-gray-500">
+                Address / City :{" "}
+                <span className="font-semibold text-gray-700">
+                  {row?.address || "-"}
+                </span>
+              </p>
+            </div>
+
+            {/* Right Side */}
+            <div>
+              <p className="text-sm text-gray-500">
+                Mobile No :{" "}
+                <span className="font-semibold text-gray-700">
+                  {row?.mobile_number || "-"}
+                </span>
+              </p>
+
+              <p className="text-sm text-gray-500">
+                Aadhar No :{" "}
+                <span className="font-semibold text-gray-700">
+                  {row?.aadhar_number || "-"}
+                </span>
+              </p>
+
+              <p className="text-sm text-gray-500">
+                PAN No :{" "}
+                <span className="font-semibold text-gray-700">
+                  {row?.pan_number || "-"}
+                </span>
+              </p>
+
+              <p className="text-sm text-gray-500">
+                DOB :{" "}
+                <span className="font-semibold text-gray-700">
+                  {row?.dob?.slice(0, 10) || "-"}
+                </span>
+              </p>
+
+              {/* <p className="text-sm text-gray-500">
+                Ayushman Coverage :{" "}
+                <span className="font-semibold text-gray-700">
+                  {row?.ayushman_coverage || "-"}
+                </span>
+              </p>
+
+              <p className="text-sm text-gray-500">
+                Mediclaim :{" "}
+                <span className="font-semibold text-gray-700">
+                  {row?.has_mediclaim_policy || "-"}
+                </span>
+              </p> */}
+
+              {/* <p className="text-sm text-gray-500">
+                Mediclaim Amount :{" "}
+                <span className="font-semibold text-gray-700">
+                  {row?.mediclaim_amount || "-"}
+                </span>
+              </p>
+
+              <p className="text-sm text-gray-500">
+                Company Name :{" "}
+                <span className="font-semibold text-gray-700">
+                  {row?.mediclaim_company_name || "-"}
+                </span>
+              </p> */}
             </div>
           </div>
         </div>
@@ -506,21 +600,28 @@ const RequestDetails = () => {
         {/* Diksharthi Feedback */}
         <div className="mb-6 border-b pb-4">
           <h4 className="font-semibold text-blue-600 mb-3">
-            Diksharthi Feedback
+            Karyakarta Feedback
           </h4>
 
           {row?.diksharthi_feedback?.length > 0 ? (
             row.diksharthi_feedback.map((item, index) => (
               <div
                 key={index}
-                className="mb-3 p-3 bg-blue-50 rounded-md border"
+                className="mb-3 p-3 bg-blue-50 rounded-md border overflow-hidden"
               >
-                <p className="text-xs text-gray-500 mb-1">
+                <p className="text-xs text-gray-500 mb-2">
                   {item.feedback_date?.slice(0, 10)} | {item.feedback_time}
                 </p>
 
                 <div
-                  className="text-sm text-gray-700"
+                  className="text-sm text-gray-700 leading-relaxed
+                     break-all whitespace-pre-wrap
+                     overflow-hidden w-full"
+                  style={{
+                    wordBreak: "break-word",
+                    overflowWrap: "break-word",
+                    whiteSpace: "pre-wrap"
+                  }}
                   dangerouslySetInnerHTML={{
                     __html: item.feedback || "-"
                   }}
@@ -532,6 +633,7 @@ const RequestDetails = () => {
           )}
         </div>
 
+
         {/* Operation Manager Feedback */}
         <div className="mb-6 border-b pb-4">
           <h4 className="font-semibold text-green-600 mb-3">
@@ -542,15 +644,28 @@ const RequestDetails = () => {
             row.operation_manager_feedback.map((item, index) => (
               <div
                 key={index}
-                className="mb-3 p-3 bg-green-50 rounded-md border"
+                className="mb-3 p-3 bg-green-50 rounded-md border overflow-hidden"
               >
-                <p className="text-xs text-gray-500 mb-1">
+                <p className="text-xs text-gray-500 mb-2">
                   {item.feedback_date?.slice(0, 10)} | {item.feedback_time}
                 </p>
 
-                <div className="text-sm text-gray-700">
-                  {item.feedback || "-"}
-                </div>
+                <div
+                  className="text-sm text-gray-700 leading-relaxed
+                     break-all whitespace-pre-wrap
+                     overflow-hidden w-full"
+                  style={{
+                    wordBreak: "break-word",
+                    overflowWrap: "break-word",
+                    whiteSpace: "pre-wrap"
+                  }}
+                  
+                  dangerouslySetInnerHTML={{
+                    __html: item.feedback || "-",
+                  }}
+                />
+                  {/* {item.feedback || "-"}
+                </div> */}
               </div>
             ))
           ) : (
@@ -561,7 +676,7 @@ const RequestDetails = () => {
         {/* Final Feedback */}
         <div>
           <h4 className="font-semibold text-red-500 mb-3">
-            Latest Internal Feedback
+            Assitences Feedback
           </h4>
 
           {row?.feedback?.length > 0 ? (

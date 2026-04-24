@@ -1143,7 +1143,7 @@ const DiksharthiListing = () => {
       const link = document.createElement("a");
 
       link.href = downloadUrl;
-      link.download = `Diksharthi_Application_${diksharthi.id}.pdf`;
+      link.download = `Diksharthi_Details_${diksharthi.id}.pdf`;
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -2167,6 +2167,12 @@ const DiksharthiListing = () => {
                       )}
 
                     {/*  */}
+                    <Section title="RBF Criteria">
+                      <Grid>
+                        <DetailItem label="RBF Criteria" value={viewModalData?.rbf_criteria || "N/A"} />
+                        <DetailItem label="Relation Name " value={viewModalData?.relation_name || "N/A"} />
+                      </Grid>
+                    </Section>
                     <Section title="Spoken To">
                       <Grid>
                         <DetailItem label="Name" value={viewModalData?.spoken_to || "N/A"} />
@@ -2174,17 +2180,46 @@ const DiksharthiListing = () => {
                       </Grid>
                     </Section>
                     {/* ADDRESS */}
-                    <Section title="Address Details">
-                      <Grid>
-                        <DetailItem label="Permanent Address" value={viewModalData?.permanent_address || "N/A"} />
-                        <DetailItem label="Current Address" value={viewModalData?.current_address || "N/A"} />
-                        <DetailItem label="Village" value={viewModalData?.village || "N/A"} />
-                        <DetailItem label="Taluka" value={viewModalData?.taluka || "N/A"} />
-                        <DetailItem label="District" value={viewModalData?.district || "N/A"} />
-                        <DetailItem label="State" value={viewModalData?.state || "N/A"} />
-                        <DetailItem label="Pin Code" value={viewModalData?.pin_code || "N/A"} />
-                      </Grid>
-                    </Section>
+                    {viewModalData?.rbf_criteria === "Yes" && (
+                      <Section title="Address Details">
+                        <Grid>
+                          <DetailItem
+                            label="Permanent Address"
+                            value={viewModalData?.permanent_address || "N/A"}
+                          />
+
+                          <DetailItem
+                            label="Current Address"
+                            value={viewModalData?.current_address || "N/A"}
+                          />
+
+                          <DetailItem
+                            label="Village"
+                            value={viewModalData?.village || "N/A"}
+                          />
+
+                          <DetailItem
+                            label="Taluka"
+                            value={viewModalData?.taluka || "N/A"}
+                          />
+
+                          <DetailItem
+                            label="District"
+                            value={viewModalData?.district || "N/A"}
+                          />
+
+                          <DetailItem
+                            label="State"
+                            value={viewModalData?.state || "N/A"}
+                          />
+
+                          <DetailItem
+                            label="Pin Code"
+                            value={viewModalData?.pin_code || "N/A"}
+                          />
+                        </Grid>
+                      </Section>
+                    )}
                     {/* TOP SECTION */}
                     <div className="flex flex-col md:flex-row gap-6 border-t  py-6">
                       {/* LEFT */}
@@ -2991,11 +3026,11 @@ const DiksharthiListing = () => {
 
       {omFeedbackModalData && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-3xl p-6">
 
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold">
-                Send to Case Coordinator
+               Operations Manager Feedback
               </h2>
 
               <button
@@ -3010,12 +3045,19 @@ const DiksharthiListing = () => {
               M.S. ID: {omFeedbackModalData.id} - {omFeedbackModalData.sadhu_sadhvi_name}
             </p>
 
-            <textarea
+            {/* <textarea
               rows="5"
               value={omFeedback}
               onChange={(e) => setOmFeedback(e.target.value)}
               placeholder="Enter feedback..."
               className="w-full border rounded-lg p-3 text-sm resize-none"
+            /> */}
+
+            <JoditEditor
+              ref={editor}
+              value={omFeedback}
+              config={queryEditorConfig}
+              onBlur={(newContent) => setOmFeedback(newContent)}
             />
 
             <div className="flex justify-end gap-2 mt-4">
@@ -3137,17 +3179,21 @@ const DiksharthiListing = () => {
                               key={index}
                               className="border rounded-xl p-4 bg-green-50"
                             >
-                              <p className="text-sm text-gray-800">
-                                {item.feedback}
-                              </p>
-
-                              <div className="mt-2 text-xs text-gray-500 flex justify-between">
+                              <div className="text-sm text-gray-500 break-words flex justify-end">
 
                                 <span>
                                   {formatIndianDate(item.feedback_date?.slice(0, 10))}{" "}
                                   {item.feedback_time}
                                 </span>
                               </div>
+                              <div
+                                className="text-sm text-gray-700 mb-3 leading-relaxed break-words whitespace-pre-wrap overflow-hidden prose max-w-none"
+                                dangerouslySetInnerHTML={{
+                                  __html: item.feedback || "-",
+                                }}
+                              />
+
+                              
                             </div>
                           )
                         )}

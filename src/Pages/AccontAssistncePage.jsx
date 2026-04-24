@@ -329,6 +329,7 @@ function AccontAssistncePage() {
                     <table className="w-full border-collapse text-left">
                         <thead>
                             <tr className="bg-[#fdf2d7]">
+                                <th className="p-4 font-semibold text-slate-700 border-b">M.S. ID</th>
                                 <th className="p-4 font-semibold text-slate-700 border-b">M.S. Name</th>
                                 <th className="p-4 font-semibold text-slate-700 border-b">Family Member</th>
                                 <th className="p-4 font-semibold text-slate-700 border-b">Relation</th>
@@ -371,12 +372,17 @@ function AccontAssistncePage() {
                                     <tr key={item.id} className="group transition-colors hover:bg-slate-50/50">
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-3">
-                                                <span className="text-sm font-semibold text-slate-700">{item?.sadhu_sadhvi_name || "-"}</span>
+                                                <span className="text-sm font-semibold text-slate-700">{item?.diksharthi_id || "-"}</span>
                                             </div>
                                         </td>
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-3">
-                                                <span className="text-sm font-semibold text-slate-700">  {`${item?.family_member_firstName || ""} ${item?.family_member_lastName || ""}`.trim() || "-"}</span>
+                                                <span className="text-sm font-semibold text-slate-700">{item?.diksharthi_name || "-"}</span>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <div className="flex items-center gap-3">
+                                                <span className="text-sm font-semibold text-slate-700">{item?.family_member_name || "-"}</span>
                                             </div>
                                         </td>
 
@@ -396,7 +402,7 @@ function AccontAssistncePage() {
                                         </td>
                                         <td className="px-6 py-4">
                                             <span className="text-sm font-semibold text-slate-700">
-                                                {item?.case_id || "-"}
+                                                {item?.fan_id || "-"}
                                             </span>
                                         </td>
                                         <td className="px-6 py-4">
