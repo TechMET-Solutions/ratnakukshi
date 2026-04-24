@@ -116,25 +116,25 @@ const getAllowedActions = ({ role, status }) => {
   // ✅ CASE COORDINATOR
   if (normalizedRole === "case coordinator") {
     if (normalizedStatus === "pending" || normalizedStatus === "queries") {
-      return ["approve", "queries", "send-to-committee-member", "rejected","queries"];
+      return ["approve", "queries", "send-to-committee-member", "rejected", "queries"];
     }
 
     if (normalizedStatus === "committee member") {
-      return ["send-to-expert-panel", "rejected","queries"];
+      return ["send-to-expert-panel", "rejected", "queries"];
     }
   }
 
   // ✅ COMMITTEE MEMBER
   if (normalizedRole === "committee member") {
     if (normalizedStatus === "committee member") {
-      return ["approve", "rejected", "queries"];
+      return ["approve", "rejected", "queries", "send-to-expert-panel"];
     }
   }
 
   // ✅ EXPERT PANEL
   if (isExpertPanelRole(normalizedRole)) {
     if (normalizedStatus === "expert panel") {
-      return ["queries"];
+      return ["approve", "queries"];
     }
   }
 
@@ -161,10 +161,10 @@ const AssistancePage = () => {
   const dropdownContainerRef = useRef(null);
 
   const role = String(user?.role || "").toLowerCase();
+  const isStaff = role === "staff";
   const isKaryakarta = role === "karyakarta";
   const isCaseCoordinator = role === "case-coordinator";
-  const isExpertPanel =
-    role === "expert-panel" || role.startsWith("expert-panel-");
+  const isExpertPanel = role === "expert-panel" || role.startsWith("expert-panel-");
   const isCommitteeMember = role === "committee-member";
   const canAccessAssistance = isKaryakarta || isCaseCoordinator || isExpertPanel || isCommitteeMember;
 
@@ -315,57 +315,6 @@ const AssistancePage = () => {
     setActiveRow(null);
   };
 
-  // const handleStatusAction = async () => {
-  //   if (!activeRow || !actionType) return;
-  //   if (actionType === "queries" && !String(queriesReason || "").trim()) {
-  //     setActionError("Please provide query reason before submitting.");
-  //     return;
-  //   }
-
-  //   const actionTypeMap = {
-  //     "send-to-committee-member": "committee-member",
-  //     "send-to-expert-panel": "expert-panel",
-  //     approve: "approve",
-  //     rejected: "rejected",
-  //     queries: "queries",
-  //   };
-
-  //   const finalActionType = actionTypeMap[actionType] || actionType;
-
-  //   try {
-  //     setIsActionLoading(true);
-
-  //     const formData = new FormData();
-  //     formData.append("id", activeRow?.id ?? "");
-  //     formData.append("assistance_id", activeRow?.id ?? "");
-  //     formData.append("diksharthi_id", activeRow?.diksharthi_id ?? "");
-  //     formData.append("relation", activeRow?.relation ?? "");
-  //     formData.append("assistance_type", activeRow?.assistance_type ?? "");
-  //     formData.append("actorRole", role.replaceAll("-", " "));
-
-  //     if (actionType === "queries") {
-  //       formData.append("query_reason", queriesReason || "");
-  //       if (queryFile) formData.append("query_image", queryFile);
-  //     }
-
-  //     await axios.put(
-  //       `${API}/api/assistance/status/${finalActionType}`,
-  //       formData
-  //     );
-
-  //     await fetchFamilyAccounting();
-  //     handleCloseActionModal();
-  //   } catch (error) {
-  //     console.log(error?.response?.data); // 🔥 debug
-  //     setActionError(
-  //       error?.response?.data?.message || "Failed to update assistance status."
-  //     );
-  //   } finally {
-  //     setIsActionLoading(false);
-  //   }
-  // };
-
-
   const handleStatusAction = async () => {
     if (!activeRow || !actionType) return;
 
@@ -461,16 +410,6 @@ const AssistancePage = () => {
     "send-to-expert-panel": "Send",
   };
 
-  const actionDescMap = {
-    approve: "Are you sure you want to approve this request?",
-    rejected: "Are you sure you want to reject this request?",
-    queries: "Please provide queriesReason for the query.",
-    "send-to-committee-member":
-      "Are you sure you want to send this request to the committee member?",
-    "send-to-expert-panel":
-      "Are you sure you want to send this request to the expert panel?",
-  };
-
   const getFeedbackHistory = (row) => parseFeedbackHistory(row?.feedback);
 
   const getQueryText = (row) => {
@@ -557,10 +496,12 @@ const AssistancePage = () => {
                             >
                               <Eye size={16} className="text-yellow-500" /> View Details
                             </button>
-
-                            {hasQuery && (
+                            {(hasQuery || !isStaff ) && (
                               <button
-                                onClick={() => { setViewQueryRow(row); setOpenDropdownId(null); }}
+                                onClick={() => {
+                                  setViewQueryRow(row);
+                                  setOpenDropdownId(null);
+                                }}
                                 className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
                               >
                                 <FileText size={16} className="text-blue-600" /> View Feedback
@@ -728,7 +669,7 @@ const AssistancePage = () => {
                     <p className="text-sm text-gray-500">
                       {searchType === "family"
                         ? `${asDisplayText(item.family_member_firstName)} ${asDisplayText(item.family_member_lastName, "")}`.trim() +
-                          ` (${asDisplayText(item.relation)})`
+                        ` (${asDisplayText(item.relation)})`
                         : asDisplayText(item.diksharthi_code)}
                     </p>
                   </div>
@@ -910,28 +851,23 @@ const AssistancePage = () => {
                   <div className="text-center">
                     <h4 className="font-semibold text-lg text-slate-700">
                       {asDisplayText(
-                        `${activeRow?.family_member_name || ""} `,
-                        "Request"
+                        `${activeRow?.family_member_name || ""} `
+
                       )}
                     </h4>
                   </div>
 
-                  <p className="text-sm text-slate-600 text-center">
-                    {actionDescMap[actionType]}
-                  </p>
-
-                  
-                    <div className="space-y-3 text-left">
-                      <label className="block text-sm font-medium text-slate-700 mb-1">
-                        Feedback
-                      </label>
-                      <JoditEditor
-                        value={queriesReason}
-                        config={queryEditorConfig}
-                        onBlur={(newValue) => setQueriesReason(newValue)}
-                        onChange={() => { }}
-                      />
-                      {/* <div>
+                  <div className="space-y-3 text-left">
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      Feedback
+                    </label>
+                    <JoditEditor
+                      value={queriesReason}
+                      config={queryEditorConfig}
+                      onBlur={(newValue) => setQueriesReason(newValue)}
+                      onChange={() => { }}
+                    />
+                    {/* <div>
                         <label className="mb-1 block text-sm font-medium text-slate-700">
                           Upload File
                         </label>
@@ -944,8 +880,8 @@ const AssistancePage = () => {
                           {queryFile?.name || "No file chosen"}
                         </p>
                       </div> */}
-                    </div>
-                  
+                  </div>
+
 
                   {actionError && (
                     <p className="text-sm text-red-600 text-center">{actionError}</p>
@@ -1020,8 +956,8 @@ const AssistancePage = () => {
                             <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                               <span
                                 className={`px-2.5 py-0.5 rounded-md text-[11px] font-bold uppercase ${item?.status?.toLowerCase() === "pending"
-                                    ? "bg-amber-100 text-amber-700"
-                                    : "bg-blue-100 text-blue-700"
+                                  ? "bg-amber-100 text-amber-700"
+                                  : "bg-blue-100 text-blue-700"
                                   }`}
                               >
                                 {item?.status?.toLowerCase() === "committee-member"

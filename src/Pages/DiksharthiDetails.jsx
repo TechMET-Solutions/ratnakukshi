@@ -947,18 +947,73 @@ const DiksharthiListing = () => {
     setFeedbackForm(emptyFeedbackForm);
   };
 
-  // const openFamilyDetailsModal = async (diksharthi) => {
+  //  const openFamilyDetailsModal = async (diksharthi) => {
   //   if (!diksharthi?.id) return;
+
   //   setIsFamilyDetailsLoading(true);
   //   setFamilyDetailsModalData({ diksharthi, details: null });
+
   //   try {
   //     const response = await fetch(`${API}/api/family-details/${diksharthi.id}`);
   //     const result = await response.json().catch(() => ({}));
-  //     if (response.ok && result?.success) {
-  //       setFamilyDetailsModalData({ diksharthi, details: result?.data });
+
+  //     console.log("result", result);
+
+  //     if (response.ok && result?.success && result?.data?.length > 0) {
+
+  //       // ✅ FIX: take first object
+  //       const apiData = result.data[0];
+
+  //       // ✅ TRANSFORM DATA
+  //       const transformed = {
+  //         permanent_address: apiData.formData?.permanentAddress,
+  //         current_address: apiData.formData?.currentAddress,
+  //         village: apiData.formData?.village,
+  //         taluka: apiData.formData?.taluka,
+  //         district: apiData.formData?.district,
+  //         states: apiData.formData?.state,
+  //         pin_code: apiData.formData?.pinCode,
+  //         house_details: apiData.formData?.houseDetails,
+  //         type_of_house: apiData.formData?.typeOfHouse,
+  //         maintenance_cost: apiData.formData?.maintenanceCost,
+  //         light_bill_cost: apiData.formData?.lightBillCost,
+  //         rent_cost: apiData.formData?.rentCost,
+  //         mediclaim: apiData.formData?.mediclaim === "Yes" ? "1" : "0",
+  //         family_mediclaim_amount: apiData.formData?.Family_mediclaim_amount,
+  //         mediclaim_premium_amount: apiData.formData?.mediclaimPremiumAmount,
+  //         ngo_assistance: apiData.formData?.ngoAssistance,
+  //         ngo_sangh_name: apiData.formData?.sanghName,
+  //         ngo_amount: apiData.formData?.ngoAmount,
+  //         ngo_frequency: apiData.formData?.ngoFrequency || apiData.formData?.ngo_frequency,
+  //         ngo_remark: apiData.formData?.ngoRemark,
+
+  //         // ✅ relation mapping
+  //         relation_details: Object.fromEntries(
+  //           Object.entries(apiData.relationDetails || {}).map(([key, val]) => [
+  //             key,
+  //             {
+  //               firstName: val.firstName,
+  //               lastName: val.lastName,
+  //               aadharNumber: val.aadharNumber,
+  //               panNumber: val.panNumber,
+  //               ayushman: val.ayushman === "Yes",
+  //               mediclaim: val.mediclaim === "Yes",
+  //               mediclaim_amount: val.mediclaimAmount,
+  //               needAssistance: val.needAssistance === "Yes",
+  //               family_head: val.family_head,
+  //               assistanceCategories: val.assistanceCategories || [],
+  //               photo: val.photo,
+  //             },
+  //           ])
+  //         ),
+  //       };
+
+  //       setFamilyDetailsModalData({ diksharthi, details: transformed });
+
   //     } else {
   //       setFamilyDetailsModalData({ diksharthi, details: null });
   //     }
+
   //   } catch (error) {
   //     console.error("Failed to fetch family details", error);
   //     setFamilyDetailsModalData({ diksharthi, details: null });
@@ -967,7 +1022,6 @@ const DiksharthiListing = () => {
   //   }
   // };
 
-
   const openFamilyDetailsModal = async (diksharthi) => {
     if (!diksharthi?.id) return;
 
@@ -975,67 +1029,90 @@ const DiksharthiListing = () => {
     setFamilyDetailsModalData({ diksharthi, details: null });
 
     try {
-      const response = await fetch(`${API}/api/family-details/${diksharthi.id}`);
-      const result = await response.json().catch(() => ({}));
+      // ✅ NEW API
+      const response = await fetch(
+        `${API}/api/viewfamilydetails/${diksharthi.id}`
+      );
 
-      if (response.ok && result?.success && result?.data?.length > 0) {
+      const result = await response.json();
 
-        // ✅ FIX: take first object
-        const apiData = result.data[0];
+      console.log("NEW API RESULT =>", result);
 
-        // ✅ TRANSFORM DATA
+      if (response.ok && result?.success && result?.data) {
+        const apiData = result.data;
+
+        // ✅ family_members array ko relation_details format me convert
+        const relationDetails = {};
+
+        if (
+          apiData.family_members &&
+          Array.isArray(apiData.family_members)
+        ) {
+          apiData.family_members.forEach((member) => {
+            relationDetails[member.relation_key || "Member"] = {
+              firstName: member.first_name,
+              lastName: member.last_name,
+              aadharNumber: member.aadhar_number,
+              panNumber: member.pan_number,
+              ayushman:
+                member.ayushman_coverage === "Yes" ? true : false,
+              mediclaim:
+                member.has_mediclaim_policy === "Yes" ? true : false,
+              mediclaim_amount: member.mediclaim_amount,
+              needAssistance:
+                member.need_assistance === "Yes" ? true : false,
+              family_head: member.is_primary === 1,
+              assistanceCategories: [],
+              photo: member.photo,
+            };
+          });
+        }
+
+        // ✅ modal old structure maintain
         const transformed = {
-          permanent_address: apiData.formData?.permanentAddress,
-          current_address: apiData.formData?.currentAddress,
-          village: apiData.formData?.village,
-          taluka: apiData.formData?.taluka,
-          district: apiData.formData?.district,
-          states: apiData.formData?.state,
-          pin_code: apiData.formData?.pinCode,
-          house_details: apiData.formData?.houseDetails,
-          type_of_house: apiData.formData?.typeOfHouse,
-          maintenance_cost: apiData.formData?.maintenanceCost,
-          light_bill_cost: apiData.formData?.lightBillCost,
-          rent_cost: apiData.formData?.rentCost,
-          mediclaim: apiData.formData?.mediclaim === "Yes" ? "1" : "0",
-          family_mediclaim_amount: apiData.formData?.Family_mediclaim_amount,
-          mediclaim_premium_amount: apiData.formData?.mediclaimPremiumAmount,
-          ngo_assistance: apiData.formData?.ngoAssistance,
-          ngo_sangh_name: apiData.formData?.sanghName,
-          ngo_amount: apiData.formData?.ngoAmount,
-          ngo_frequency: apiData.formData?.ngoFrequency || apiData.formData?.ngo_frequency,
-          ngo_remark: apiData.formData?.ngoRemark,
+          permanent_address: apiData.permanent_address,
+          current_address: apiData.current_address,
+          village: apiData.village,
+          taluka: apiData.taluka,
+          district: apiData.district,
+          states: apiData.state,
+          pin_code: apiData.pin_code,
+          house_details: apiData.house_details,
+          type_of_house: apiData.type_of_house,
+          maintenance_cost: apiData.maintenance_cost,
+          light_bill_cost: apiData.light_bill_cost,
+          rent_cost: apiData.rent_cost,
+          mediclaim: apiData.mediclaim === "Yes" ? "1" : "0",
+          family_mediclaim_amount:
+            apiData.family_mediclaim_amount,
+          mediclaim_premium_amount:
+            apiData.mediclaim_premium_amount,
+          ngo_assistance: apiData.ngo_assistance,
+          ngo_sangh_name: apiData.ngo_sangh_name,
+          ngo_amount: apiData.ngo_amount,
+          ngo_frequency: apiData.ngo_frequency,
+          ngo_remark: apiData.ngo_remark,
 
-          // ✅ relation mapping
-          relation_details: Object.fromEntries(
-            Object.entries(apiData.relationDetails || {}).map(([key, val]) => [
-              key,
-              {
-                firstName: val.firstName,
-                lastName: val.lastName,
-                aadharNumber: val.aadharNumber,
-                panNumber: val.panNumber,
-                ayushman: val.ayushman === "Yes",
-                mediclaim: val.mediclaim === "Yes",
-                mediclaim_amount: val.mediclaimAmount,
-                needAssistance: val.needAssistance === "Yes",
-                family_head: val.family_head,
-                assistanceCategories: val.assistanceCategories || [],
-                photo: val.photo,
-              },
-            ])
-          ),
+          relation_details: relationDetails,
         };
 
-        setFamilyDetailsModalData({ diksharthi, details: transformed });
-
+        setFamilyDetailsModalData({
+          diksharthi,
+          details: transformed,
+        });
       } else {
-        setFamilyDetailsModalData({ diksharthi, details: null });
+        setFamilyDetailsModalData({
+          diksharthi,
+          details: null,
+        });
       }
-
     } catch (error) {
       console.error("Failed to fetch family details", error);
-      setFamilyDetailsModalData({ diksharthi, details: null });
+
+      setFamilyDetailsModalData({
+        diksharthi,
+        details: null,
+      });
     } finally {
       setIsFamilyDetailsLoading(false);
     }
@@ -1143,7 +1220,7 @@ const DiksharthiListing = () => {
       const link = document.createElement("a");
 
       link.href = downloadUrl;
-      link.download = `Diksharthi_Details_${diksharthi.id}.pdf`;
+      link.download = `Form No ${diksharthi.id}.pdf`;
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -1341,54 +1418,6 @@ const DiksharthiListing = () => {
     return result;
   };
 
-  // const formatExcelData = (data) => {
-  //   return data.map((item) => {
-  //     const family = item.family_details || {};
-  //     const relations = family.relation_details || {};
-
-  //     return {
-  //       // Basic Info
-  //       Date: formatIndianDate(item.created_at),
-  //       ID: item.id,
-  //       Name: item.sadhu_sadhvi_name,
-  //       Gender: item.gender,
-  //       Age: item.age,
-  //       Mobile: item.mobile_no,
-
-  //       // Address
-  //       Village: item.village,
-  //       Taluka: item.taluka,
-  //       District: item.district,
-  //       State: item.state,
-  //       PinCode: item.pin_code,
-
-  //       // RBF
-  //       RBF_Criteria: item.rbf_criteria,
-  //       Relation: item.relation,
-  //       Family_Member_Name:
-  //         (item.family_member_firstName || "") +
-  //         " " +
-  //         (item.family_member_lastName || ""),
-
-  //       // Family Info
-  //       Head_of_Family: family.head_of_family,
-  //       Family_Village: family.village,
-  //       Family_District: family.district,
-  //       House_Type: family.type_of_house,
-  //       Mediclaim: family.mediclaim === "1" ? "Yes" : "No",
-
-  //       // Example Relation (Father)
-  //       Father_Name:
-  //         relations?.father?.firstName +
-  //         " " +
-  //         relations?.father?.lastName || "",
-  //       Father_Aadhar: relations?.father?.aadharNumber || "",
-
-  //       // Dates
-  //     };
-  //   });
-  // };
-
 
   const formatExcelData = (data) => {
     return data.map((item) => {
@@ -1399,8 +1428,6 @@ const DiksharthiListing = () => {
         // ================= BASIC =================
         Date: formatIndianDate(item.created_at),
         ID: item.id,
-        // User_ID: item.user_id,
-        // Karyakarta_ID: item.karykarata_id,
         Name: item.sadhu_sadhvi_name,
         Gender: item.gender,
         Age: item.age,
@@ -1411,7 +1438,6 @@ const DiksharthiListing = () => {
         Samudaay: item.samudaay,
         Guru_Name: item.guru_name,
         Acharya: item.acharya,
-        // Gaachh: item.gaachh,
         Gadipati: item.gadipati,
 
         // ================= STATUS =================
@@ -1444,15 +1470,6 @@ const DiksharthiListing = () => {
         District: item.district,
         State: item.state,
         PinCode: item.pin_code,
-
-        // ================= VISIT =================
-        Visit_Date: getCurrentSchedule(item)?.date
-          ? formatIndianDate(getCurrentSchedule(item)?.date)
-          : "",
-        Visit_Time: getCurrentSchedule(item)?.time || "",
-
-        // ================= SYSTEM =================
-        Status: item.status,
 
         // ================= FAMILY DETAILS =================
         Head_of_Family: family.head_of_family,
@@ -1505,7 +1522,7 @@ const DiksharthiListing = () => {
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8",
     });
 
-    saveAs(blob, "Formatted_Diksharthi.xlsx");
+    saveAs(blob, "Master Data.xlsx");
   };
 
 
