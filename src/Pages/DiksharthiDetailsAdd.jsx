@@ -418,9 +418,6 @@ const DiksharthiDetailsAdd = () => {
   console.log(formData.familyRelations, "familyRelations");
 
   const [CurrentDiksarthiStore, setCurrentDiksarthiStore] = useState(false);
-
-
-
   console.log(formData?.familyRelationDetails, "familyRelationDetails");
   const [isEditLoading, setIsEditLoading] = useState(false);
   const navigate = useNavigate();

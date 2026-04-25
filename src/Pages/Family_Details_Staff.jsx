@@ -899,174 +899,353 @@ const Family_Details_Staff = ({
 //   };
 
   
+  // const handleSave = async () => {
+  //   if (loading) return;
+  //   setLoading(true);
+
+  //   try {
+     
+  //     const errors = {};
+
+  //     Object.entries(relationDetails || {}).forEach(([rel, details]) => {
+  //       const mobile = details?.mobileNumber?.trim();
+  //       if (mobile && !/^[1-9]\d{9}$/.test(mobile)) {
+  //         errors[`mobile_${rel}`] = "Invalid mobile number";
+  //       }
+  //     });
+
+  //     if (Object.keys(errors).length > 0) {
+  //       setValidationErrors(errors);
+  //       alert("Please fix validation errors");
+  //       return;
+  //     }
+  //     const cleaned = {};
+
+  //     Object.entries(relationDetails || {}).forEach(([relationKey, val]) => {
+  //       if (!val) return;
+
+  //       cleaned[relationKey] = {
+  //         relationKey,
+
+  //         firstName: val.firstName?.trim() || "",
+  //         lastName: val.lastName?.trim() || "",
+  //         mobileNumber: val.mobileNumber?.trim() || "",
+  //         aadharNumber: val.aadharNumber?.trim() || "",
+  //         panNumber: val.panNumber?.trim() || "",
+  //         guardian: val.guardian || "",
+  //         family_head: headOfFamily === relationKey,
+
+  //         dob: val.dob || "",
+  //         age: val.age || "",
+
+  //         ayushmanCoverage: val.ayushmanCoverage || val.ayushman || "",
+  //         ayushmanAmount:
+  //           val.ayushmanAmount || val.ayushman_Amount || "",
+
+  //         medicalPolicy: val.medicalPolicy || val.mediclaim || "",
+  //         mediclaimAmount:
+  //           val.mediclaimAmount || val.mediclaim_amount || "",
+  //         mediclaimCompanyName:
+  //           val.mediclaimCompanyName ||
+  //           val.mediclaim_company_name ||
+  //           "",
+  //         mediclaimPremiumAmount:
+  //           val.mediclaimPremiumAmount ||
+  //           val.member_mediclaim_premium_amount ||
+  //           "",
+  //         mediclaimType:
+  //           val.mediclaimType || val.mediclaim_type || "",
+
+  //         needAssistance: val.needAssistance || "",
+  //         assistanceCategories: val.assistanceCategories || [],
+  //       };
+  //     });
+
+  //     // ================================
+  //     // 🔥 CLEAN & REMOVE DUPLICATE ASSISTANCE
+  //     // ================================
+  //     const formattedAssistance = {};
+
+  //     Object.entries(assistanceData || {}).forEach(([rel, types]) => {
+  //       if (!types || typeof types !== "object") return;
+
+  //       const uniqueTypes = {};
+
+  //       Object.entries(types).forEach(([type, data]) => {
+  //         // ❌ skip empty / null
+  //         if (!data || Object.keys(data).length === 0) return;
+
+  //         // ✅ overwrite duplicate (same type)
+  //         uniqueTypes[type] = {
+  //           ...data,
+  //           status: data?.status || "Pending",
+  //         };
+  //       });
+
+  //       // ❌ skip relation if no valid assistance
+  //       if (Object.keys(uniqueTypes).length > 0) {
+  //         formattedAssistance[rel] = uniqueTypes;
+  //       }
+  //     });
+
+  //     // ================================
+  //     // 🔹 UNIQUE ASSISTANCE TYPES
+  //     // ================================
+  //     const selectedAssistance = [
+  //       ...new Set(
+  //         Object.values(formattedAssistance).flatMap((rel) =>
+  //           Object.keys(rel)
+  //         )
+  //       ),
+  //     ];
+
+  //     // ================================
+  //     // 🔹 FORM DATA BUILD
+  //     // ================================
+  //     const fd = new FormData();
+
+  //     fd.append("diksharthi_id", newdiksarthi);
+  //     fd.append("form_step", 2);
+
+  //     const relationArray = Object.keys(cleaned);
+
+  //     fd.append("family_relation", relationArray.join(","));
+  //     fd.append("family_relation_details", JSON.stringify(cleaned));
+  //     fd.append("same_relations_with_fan", "No");
+
+  //     fd.append("assistance", selectedAssistance.join(","));
+  //     fd.append(
+  //       "assistance_data",
+  //       JSON.stringify(formattedAssistance)
+  //     );
+
+  //     console.log("🚀 FINAL PAYLOAD:", {
+  //       cleaned,
+  //       formattedAssistance,
+  //       selectedAssistance,
+  //     });
+
+  //     // ================================
+  //     // 🔹 API CALL
+  //     // ================================
+  //     const res = await axios.put(
+  //       `${API}/api/update-diksharthi/${newdiksarthi}`,
+  //       fd,
+  //       {
+  //         headers: { "Content-Type": "multipart/form-data" },
+  //       }
+  //     );
+
+  //     console.log("✅ RESPONSE =>", res.data);
+
+  //     setCurrentDiksarthiStore(true);
+  //     setCurrentStep(3);
+
+  //     if (res?.data?.success) {
+  //       alert("Family Details Added successfully ✅");
+  //     } else {
+  //       alert(res?.data?.message || "Update failed");
+  //     }
+  //   } catch (err) {
+  //     console.error("❌ ERROR =>", err);
+  //     alert("Something went wrong");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
   const handleSave = async () => {
-    if (loading) return;
-    setLoading(true);
+  if (loading) return;
+  setLoading(true);
 
-    try {
-      // ================================
-      // 🔹 VALIDATION
-      // ================================
-      const errors = {};
+  try {
+    const errors = {};
+    let hasHead = false;
 
-      Object.entries(relationDetails || {}).forEach(([rel, details]) => {
-        const mobile = details?.mobileNumber?.trim();
+    // ================================
+    // 🔹 VALIDATION
+    // ================================
+    Object.entries(relationDetails || {}).forEach(([rel, details]) => {
+      if (!details) return;
 
-      //   if (!mobile) {
-      //     errors[`mobile_${rel}`] = "Mobile number required";
-      //   } else if (!/^[1-9]\d{9}$/.test(mobile)) {
-      //     errors[`mobile_${rel}`] = "Invalid mobile number";
-        //   }
-        
-        
-        if (mobile && !/^[1-9]\d{9}$/.test(mobile)) {
-          errors[`mobile_${rel}`] = "Invalid mobile number";
-        }
-      });
+      const firstName = details.firstName?.trim();
+      const lastName = details.lastName?.trim();
+      const mobile = details.mobileNumber?.trim();
 
-      if (Object.keys(errors).length > 0) {
-        setValidationErrors(errors);
-        alert("Please fix validation errors");
-        return;
+      // Clean relation name (remove numbers)
+      const relationName = rel.replace(/\d+/g, "").toUpperCase();
+
+      // ✅ First Name
+      if (!firstName) {
+        errors[`firstName_${rel}`] = `${relationName}: First Name is required`;
       }
 
-      // ================================
-      // 🔹 CLEAN FAMILY DATA
-      // ================================
-      const cleaned = {};
+      // ✅ Last Name
+      if (!lastName) {
+        errors[`lastName_${rel}`] = `${relationName}: Last Name is required`;
+      }
 
-      Object.entries(relationDetails || {}).forEach(([relationKey, val]) => {
-        if (!val) return;
+      // ✅ Mobile validation
+      if (mobile && !/^[1-9]\d{9}$/.test(mobile)) {
+        errors[`mobile_${rel}`] = `${relationName}: Invalid mobile number`;
+      }
 
-        cleaned[relationKey] = {
-          relationKey,
+      // ✅ Head of Family check
+      if (headOfFamily === rel) {
+        hasHead = true;
+      }
+    });
 
-          firstName: val.firstName?.trim() || "",
-          lastName: val.lastName?.trim() || "",
-          mobileNumber: val.mobileNumber?.trim() || "",
-          aadharNumber: val.aadharNumber?.trim() || "",
-          panNumber: val.panNumber?.trim() || "",
-          guardian: val.guardian || "",
-          family_head: headOfFamily === relationKey,
+    // ❌ No Head selected
+    if (!hasHead) {
+      alert("⚠️ Please select at least one Head of Family");
+      return;
+    }
 
-          dob: val.dob || "",
-          age: val.age || "",
+    // ❌ Validation errors
+    if (Object.keys(errors).length > 0) {
+      setValidationErrors(errors);
 
-          ayushmanCoverage: val.ayushmanCoverage || val.ayushman || "",
-          ayushmanAmount:
-            val.ayushmanAmount || val.ayushman_Amount || "",
+      // const errorList = Object.values(errors).join("\n");
+      // alert(`⚠️ Please fix the following errors:\n\n${errorList}`);
 
-          medicalPolicy: val.medicalPolicy || val.mediclaim || "",
-          mediclaimAmount:
-            val.mediclaimAmount || val.mediclaim_amount || "",
-          mediclaimCompanyName:
-            val.mediclaimCompanyName ||
-            val.mediclaim_company_name ||
-            "",
-          mediclaimPremiumAmount:
-            val.mediclaimPremiumAmount ||
-            val.member_mediclaim_premium_amount ||
-            "",
-          mediclaimType:
-            val.mediclaimType || val.mediclaim_type || "",
+      return;
+    }
 
-          needAssistance: val.needAssistance || "",
-          assistanceCategories: val.assistanceCategories || [],
+    // ================================
+    // 🔹 CLEAN DATA
+    // ================================
+    const cleaned = {};
+
+    Object.entries(relationDetails || {}).forEach(([relationKey, val]) => {
+      if (!val) return;
+
+      cleaned[relationKey] = {
+        relationKey,
+
+        firstName: val.firstName?.trim() || "",
+        lastName: val.lastName?.trim() || "",
+        mobileNumber: val.mobileNumber?.trim() || "",
+        aadharNumber: val.aadharNumber?.trim() || "",
+        panNumber: val.panNumber?.trim() || "",
+        guardian: val.guardian || "",
+        family_head: headOfFamily === relationKey,
+
+        dob: val.dob || "",
+        age: val.age || "",
+
+        ayushmanCoverage: val.ayushmanCoverage || val.ayushman || "",
+        ayushmanAmount:
+          val.ayushmanAmount || val.ayushman_Amount || "",
+
+        medicalPolicy: val.medicalPolicy || val.mediclaim || "",
+        mediclaimAmount:
+          val.mediclaimAmount || val.mediclaim_amount || "",
+        mediclaimCompanyName:
+          val.mediclaimCompanyName ||
+          val.mediclaim_company_name ||
+          "",
+        mediclaimPremiumAmount:
+          val.mediclaimPremiumAmount ||
+          val.member_mediclaim_premium_amount ||
+          "",
+        mediclaimType:
+          val.mediclaimType || val.mediclaim_type || "",
+
+        needAssistance: val.needAssistance || "",
+        assistanceCategories: val.assistanceCategories || [],
+      };
+    });
+
+    // ================================
+    // 🔥 CLEAN ASSISTANCE DATA
+    // ================================
+    const formattedAssistance = {};
+
+    Object.entries(assistanceData || {}).forEach(([rel, types]) => {
+      if (!types || typeof types !== "object") return;
+
+      const uniqueTypes = {};
+
+      Object.entries(types).forEach(([type, data]) => {
+        if (!data || Object.keys(data).length === 0) return;
+
+        uniqueTypes[type] = {
+          ...data,
+          status: data?.status || "Pending",
         };
       });
 
-      // ================================
-      // 🔥 CLEAN & REMOVE DUPLICATE ASSISTANCE
-      // ================================
-      const formattedAssistance = {};
+      if (Object.keys(uniqueTypes).length > 0) {
+        formattedAssistance[rel] = uniqueTypes;
+      }
+    });
 
-      Object.entries(assistanceData || {}).forEach(([rel, types]) => {
-        if (!types || typeof types !== "object") return;
+    // ================================
+    // 🔹 UNIQUE ASSISTANCE TYPES
+    // ================================
+    const selectedAssistance = [
+      ...new Set(
+        Object.values(formattedAssistance).flatMap((rel) =>
+          Object.keys(rel)
+        )
+      ),
+    ];
 
-        const uniqueTypes = {};
+    // ================================
+    // 🔹 FORM DATA
+    // ================================
+    const fd = new FormData();
 
-        Object.entries(types).forEach(([type, data]) => {
-          // ❌ skip empty / null
-          if (!data || Object.keys(data).length === 0) return;
+    fd.append("diksharthi_id", newdiksarthi);
+    fd.append("form_step", 2);
 
-          // ✅ overwrite duplicate (same type)
-          uniqueTypes[type] = {
-            ...data,
-            status: data?.status || "Pending",
-          };
-        });
+    const relationArray = Object.keys(cleaned);
 
-        // ❌ skip relation if no valid assistance
-        if (Object.keys(uniqueTypes).length > 0) {
-          formattedAssistance[rel] = uniqueTypes;
-        }
-      });
+    fd.append("family_relation", relationArray.join(","));
+    fd.append("family_relation_details", JSON.stringify(cleaned));
+    fd.append("same_relations_with_fan", "No");
 
-      // ================================
-      // 🔹 UNIQUE ASSISTANCE TYPES
-      // ================================
-      const selectedAssistance = [
-        ...new Set(
-          Object.values(formattedAssistance).flatMap((rel) =>
-            Object.keys(rel)
-          )
-        ),
-      ];
+    fd.append("assistance", selectedAssistance.join(","));
+    fd.append(
+      "assistance_data",
+      JSON.stringify(formattedAssistance)
+    );
 
-      // ================================
-      // 🔹 FORM DATA BUILD
-      // ================================
-      const fd = new FormData();
+    console.log("🚀 FINAL PAYLOAD:", {
+      cleaned,
+      formattedAssistance,
+      selectedAssistance,
+    });
 
-      fd.append("diksharthi_id", newdiksarthi);
-      fd.append("form_step", 2);
+    // ================================
+    // 🔹 API CALL
+    // ================================
+    const res = await axios.put(
+      `${API}/api/update-diksharthi/${newdiksarthi}`,
+      fd,
+      {
+        headers: { "Content-Type": "multipart/form-data" },
+      }
+    );
 
-      const relationArray = Object.keys(cleaned);
+    console.log("✅ RESPONSE =>", res.data);
 
-      fd.append("family_relation", relationArray.join(","));
-      fd.append("family_relation_details", JSON.stringify(cleaned));
-      fd.append("same_relations_with_fan", "No");
-
-      fd.append("assistance", selectedAssistance.join(","));
-      fd.append(
-        "assistance_data",
-        JSON.stringify(formattedAssistance)
-      );
-
-      console.log("🚀 FINAL PAYLOAD:", {
-        cleaned,
-        formattedAssistance,
-        selectedAssistance,
-      });
-
-      // ================================
-      // 🔹 API CALL
-      // ================================
-      const res = await axios.put(
-        `${API}/api/update-diksharthi/${newdiksarthi}`,
-        fd,
-        {
-          headers: { "Content-Type": "multipart/form-data" },
-        }
-      );
-
-      console.log("✅ RESPONSE =>", res.data);
-
+    if (res?.data?.success) {
+      alert("✅ Family Details Added Successfully");
       setCurrentDiksarthiStore(true);
       setCurrentStep(3);
-
-      if (res?.data?.success) {
-        alert("Family Details Added successfully ✅");
-      } else {
-        alert(res?.data?.message || "Update failed");
-      }
-    } catch (err) {
-      console.error("❌ ERROR =>", err);
-      alert("Something went wrong");
-    } finally {
-      setLoading(false);
+    } else {
+      alert(res?.data?.message || "❌ Update failed");
     }
-  };
+
+  } catch (err) {
+    console.error("❌ ERROR =>", err);
+    alert("❌ Something went wrong");
+  } finally {
+    setLoading(false);
+  }
+};
   const handleMedicalChange = (relation, field, value) => {
     if (isAssistanceFieldLocked(relation, "Medical", field)) return;
 
@@ -1578,6 +1757,12 @@ const Family_Details_Staff = ({
                               }}
                               className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                             />
+
+                            {validationErrors[`firstName_${rel}`] && (
+    <p className="text-red-500 text-xs mt-1">
+      {validationErrors[`firstName_${rel}`]}
+    </p>
+  )}
                           </div>
                           <div className="w-[200px]">
                             <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -1600,6 +1785,11 @@ const Family_Details_Staff = ({
                               }}
                               className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                             />
+                             {validationErrors[`lastName_${rel}`] && (
+    <p className="text-red-500 text-xs mt-1">
+      {validationErrors[`lastName_${rel}`]}
+    </p>
+  )}
                           </div>
 
                           {/* Aadhar Number */}
