@@ -101,7 +101,8 @@ const getStatusToneClass = (status) => {
   if (normalizedStatus === "queries") return "text-amber-600";
   if (
     normalizedStatus === "send to committee member" ||
-    normalizedStatus === "send to expert panel"
+    normalizedStatus === "send to expert panel" ||
+    normalizedStatus === "case coordinator"
   ) {
     return "text-blue-600";
   }
@@ -134,7 +135,7 @@ const getAllowedActions = ({ role, status }) => {
   // ✅ EXPERT PANEL
   if (isExpertPanelRole(normalizedRole)) {
     if (normalizedStatus === "expert panel") {
-      return ["approve", "queries"];
+      return ["send-to-case-coordinator", "queries"];
     }
   }
 
@@ -324,6 +325,7 @@ const AssistancePage = () => {
       const actionTypeMap = {
         "send-to-committee-member": "committee-member",
         "send-to-expert-panel": "expert-panel",
+        "send-to-case-coordinator": "case-coordinator",
         approve: "approve",
         rejected: "rejected",
         queries: "queries",
@@ -333,7 +335,8 @@ const AssistancePage = () => {
 
       const payload = {
         feedback: queriesReason,     // editor text
-        loginId: user?.id           // logged user id
+        loginId: user?.id,           // logged user id
+        loginRole: user?.role,           // logged user id
       };
 
       await axios.put(
@@ -400,6 +403,7 @@ const AssistancePage = () => {
     queries: "Raise Query",
     "send-to-committee-member": "Send To Committee Member",
     "send-to-expert-panel": "Send To Expert Panel",
+    "send-to-case-coordinator": "Send To Case Coordinator",
   };
 
   const actionButtonLabelMap = {
@@ -408,6 +412,7 @@ const AssistancePage = () => {
     queries: "Submit Query",
     "send-to-committee-member": "Send",
     "send-to-expert-panel": "Send",
+    "send-to-case-coordinator": "Send",
   };
 
   const getFeedbackHistory = (row) => parseFeedbackHistory(row?.feedback);
@@ -541,6 +546,14 @@ const AssistancePage = () => {
                                     className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-violet-600 hover:bg-violet-50 transition-colors"
                                   >
                                     <FileText size={16} /> Send to Expert
+                                  </button>
+                                )}
+                                {allowedActions.includes("send-to-case-coordinator") && (
+                                  <button
+                                    onClick={() => { handleOpenActionModal(row, "send-to-case-coordinator"); setOpenDropdownId(null); }}
+                                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-indigo-600 hover:bg-indigo-50 transition-colors"
+                                  >
+                                    <FileText size={16} /> Send to Case Coordinator
                                   </button>
                                 )}
                                 {allowedActions.includes("rejected") && (
