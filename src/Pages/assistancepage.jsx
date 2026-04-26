@@ -93,12 +93,30 @@ const STATUS_LABELS = {
   send_to_expert_panel: "Send to Expert Panel",
 };
 
+// const getStatusToneClass = (status) => {
+//   const normalizedStatus = normalizeWorkflowValue(status);
+
+//   if (normalizedStatus === "approve") return "text-green-600";
+//   if (normalizedStatus === "rejected") return "text-red-600";
+//   if (normalizedStatus === "queries") return "text-amber-600";
+//   if (
+//     normalizedStatus === "send to committee member" ||
+//     normalizedStatus === "send to expert panel" ||
+//     normalizedStatus === "case coordinator"
+//   ) {
+//     return "text-blue-600";
+//   }
+
+//   return "text-yellow-600";
+// };
+
 const getStatusToneClass = (status) => {
   const normalizedStatus = normalizeWorkflowValue(status);
 
   if (normalizedStatus === "approve") return "text-green-600";
   if (normalizedStatus === "rejected") return "text-red-600";
   if (normalizedStatus === "queries") return "text-amber-600";
+
   if (
     normalizedStatus === "send to committee member" ||
     normalizedStatus === "send to expert panel" ||
@@ -110,6 +128,17 @@ const getStatusToneClass = (status) => {
   return "text-yellow-600";
 };
 
+const getStatusLabel = (status) => {
+  const normalizedStatus = normalizeWorkflowValue(status);
+
+  if (normalizedStatus === "case coordinator") {
+    return "Approve by Expert Panel";
+  }
+
+  return capitalizeFirst(status);
+};
+
+
 const getAllowedActions = ({ role, status }) => {
   const normalizedRole = normalizeWorkflowValue(role);
   const normalizedStatus = normalizeWorkflowValue(status);
@@ -120,8 +149,11 @@ const getAllowedActions = ({ role, status }) => {
       return ["approve", "queries", "send-to-committee-member", "rejected", "queries"];
     }
 
-    if (normalizedStatus === "committee member") {
+    if (normalizedStatus === "committee member" ) {
       return ["send-to-expert-panel", "rejected", "queries"];
+    }
+    if ( normalizedStatus === "case coordinator") {
+      return ["approve", "rejected", "queries"];
     }
   }
 
@@ -365,17 +397,21 @@ const AssistancePage = () => {
       const status = normalizeWorkflowValue(row.status);
       const rowType = normalizeWorkflowValue(row.assistance_type);
 
-      // if (normalizedRole === "karyakarta") {
-      //   return status === "pending" || status === "queries";
-      // }
+      if (normalizedRole === "staff") {
+        return status === "queries";
+      }
+
+      if (normalizedRole === "karyakarta") {
+        return status === "pending" || status === "queries";
+      }
 
       // if (normalizedRole === "case-coordinator") {
       //   return true; // sab dikhana hai
       // }
 
-      // if (normalizedRole === "committee-member") {
-      //   return status === "committee member";
-      // }
+      if (normalizedRole === "committee-member") {
+        return status === "committee member";
+      }
 
       if (
         normalizedRole === "expert-panel" ||
@@ -446,7 +482,7 @@ const AssistancePage = () => {
           <thead>
             <tr className="bg-[#fdf2d7]">
               <th className="p-4 font-semibold text-slate-700 border-b">M.S. ID</th>
-              <th className="p-4 font-semibold text-slate-700 border-b">S.L. ID</th>
+              {/* <th className="p-4 font-semibold text-slate-700 border-b">S.L. ID</th> */}
               <th className="p-4 font-semibold text-slate-700 border-b">M.S. Name</th>
               <th className="p-4 font-semibold text-slate-700 border-b">Family Member</th>
               <th className="p-4 font-semibold text-slate-700 border-b">Relation</th>
@@ -466,8 +502,8 @@ const AssistancePage = () => {
 
               return (
                 <tr key={rowActionKey} className="hover:bg-slate-50 transition-colors">
-                  <td className="p-4 text-slate-600">{asDisplayText(row.id)}</td>
-                  <td className="p-4 text-slate-600">{asDisplayText(row.sl_id)}</td>
+                  <td className="p-4 text-slate-600">{asDisplayText(row.diksharthi_id)}</td>
+                  {/* <td className="p-4 text-slate-600">{asDisplayText(row.sl_id)}</td> */}
                   <td className="p-4 text-slate-600">{asDisplayText(row.diksharthi_name)}</td>
                   <td className="p-4 text-slate-600">{asDisplayText(row.family_member_name)}</td>
                   <td className="p-4 text-slate-600">{asDisplayText(row.relation_key)}</td>
