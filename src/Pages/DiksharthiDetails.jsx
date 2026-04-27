@@ -1419,10 +1419,122 @@ const DiksharthiListing = () => {
   };
 
 
+  // const formatExcelData = (data) => {
+  //   return data.map((item) => {
+  //     const family = item.family_details || {};
+  //     const relations = family.relation_details || {};
+
+  //     return {
+  //       // ================= BASIC =================
+  //       Date: formatIndianDate(item.created_at),
+  //       ID: item.id,
+  //       Name: item.sadhu_sadhvi_name,
+  //       Gender: item.gender,
+  //       Age: item.age,
+  //       DOB: item.dob ? formatIndianDate(item.dob) : "",
+
+  //       // ================= RELIGIOUS =================
+  //       Pad: item.pad,
+  //       Samudaay: item.samudaay,
+  //       Guru_Name: item.guru_name,
+  //       Acharya: item.acharya,
+  //       Gadipati: item.gadipati,
+
+  //       // ================= STATUS =================
+  //       Vidhyaman: item.is_alive,
+  //       Vihar_Location: item.vihar_location,
+  //       Samadhi_Date: item.samadhi_date
+  //         ? formatIndianDate(item.samadhi_date)
+  //         : "",
+  //       Samadhi_Place: item.samadhi_place,
+
+  //       // ================= RBF =================
+  //       RBF_Criteria: item.rbf_criteria,
+  //       Relation: item.relation,
+  //       Family_Relations: item.family_relation,
+  //       Assistance_Received: item.assistance_received,
+
+  //       // ================= FAMILY MEMBER =================
+  //       Family_First_Name: item.family_member_firstName,
+  //       Family_Last_Name: item.family_member_lastName,
+
+  //       // ================= CONTACT =================
+  //       Mobile: item.mobile_no,
+
+  //       // ================= ADDRESS =================
+  //       Permanent_Address: item.permanent_address,
+  //       Current_Address: item.current_address,
+  //       Village: item.village,
+  //       Taluka: item.taluka,
+  //       District: item.district,
+  //       State: item.state,
+  //       PinCode: item.pin_code,
+
+  //       // ================= FAMILY DETAILS =================
+       
+  //       // ================= RELATION DETAILS =================
+  //       Father_Name:
+  //         (relations?.father?.firstName || "") +
+  //         " " +
+  //         (relations?.father?.lastName || ""),
+  //       Father_Aadhar: relations?.father?.aadharNumber || "",
+
+  //       // ================= EXTRA =================
+  //       Summary: item.summary
+  //         ? item.summary.replace(/<[^>]+>/g, "") // HTML remove
+  //         : "",
+  //     };
+  //   });
+  // };
+
   const formatExcelData = (data) => {
     return data.map((item) => {
-      const family = item.family_details || {};
-      const relations = family.relation_details || {};
+      const relationDetails = item.family_relation_details_json || {};
+
+      const dynamicRelations = {};
+
+      Object.keys(relationDetails).forEach((relation) => {
+        const rel = relationDetails[relation];
+
+        dynamicRelations[`${relation}_Name`] =
+          `${rel?.firstName || ""} ${rel?.lastName || ""}`.trim();
+
+        dynamicRelations[`${relation}_Age`] = rel?.age || "";
+        dynamicRelations[`${relation}_DOB`] = rel?.dob
+          ? formatIndianDate(rel.dob)
+          : "";
+
+        dynamicRelations[`${relation}_Mobile`] = rel?.mobileNumber || "";
+        dynamicRelations[`${relation}_Aadhar`] = rel?.aadharNumber || "";
+        dynamicRelations[`${relation}_PAN`] = rel?.panNumber || "";
+
+        dynamicRelations[`${relation}_MedicalPolicy`] =
+          rel?.medicalPolicy || "";
+
+        dynamicRelations[`${relation}_MediclaimType`] =
+          rel?.mediclaimType || "";
+
+        dynamicRelations[`${relation}_MediclaimAmount`] =
+          rel?.mediclaimAmount || "";
+
+        dynamicRelations[`${relation}_MediclaimCompany`] =
+          rel?.mediclaimCompanyName || "";
+
+        dynamicRelations[`${relation}_PremiumAmount`] =
+          rel?.mediclaimPremiumAmount || "";
+
+        dynamicRelations[`${relation}_AyushmanCoverage`] =
+          rel?.ayushmanCoverage || "";
+
+        dynamicRelations[`${relation}_AyushmanAmount`] =
+          rel?.ayushmanAmount || "";
+
+        dynamicRelations[`${relation}_NeedAssistance`] =
+          rel?.needAssistance || "";
+
+        dynamicRelations[`${relation}_FamilyHead`] =
+          rel?.family_head ? "Yes" : "No";
+      });
 
       return {
         // ================= BASIC =================
@@ -1441,7 +1553,7 @@ const DiksharthiListing = () => {
         Gadipati: item.gadipati,
 
         // ================= STATUS =================
-        Is_Alive: item.is_alive,
+        Vidhyaman: item.is_alive,
         Vihar_Location: item.vihar_location,
         Samadhi_Date: item.samadhi_date
           ? formatIndianDate(item.samadhi_date)
@@ -1460,7 +1572,6 @@ const DiksharthiListing = () => {
 
         // ================= CONTACT =================
         Mobile: item.mobile_no,
-        Alt_Mobile: item.alt_mobile_no,
 
         // ================= ADDRESS =================
         Permanent_Address: item.permanent_address,
@@ -1471,28 +1582,17 @@ const DiksharthiListing = () => {
         State: item.state,
         PinCode: item.pin_code,
 
-        // ================= FAMILY DETAILS =================
-        Head_of_Family: family.head_of_family,
-        Family_Village: family.village,
-        Family_District: family.district,
-        House_Type: family.type_of_house,
-        Mediclaim: family.mediclaim === "1" ? "Yes" : "No",
-
-        // ================= RELATION DETAILS =================
-        Father_Name:
-          (relations?.father?.firstName || "") +
-          " " +
-          (relations?.father?.lastName || ""),
-        Father_Aadhar: relations?.father?.aadharNumber || "",
+        // ================= ALL RELATIONS AUTO =================
+        ...dynamicRelations,
 
         // ================= EXTRA =================
         Summary: item.summary
-          ? item.summary.replace(/<[^>]+>/g, "") // HTML remove
+          ? item.summary.replace(/<[^>]+>/g, "")
           : "",
       };
     });
   };
-
+  
   const downloadFormattedExcel = () => {
     if (!selectedRows.length) {
       alert("Please select at least one record to export");
@@ -1876,7 +1976,7 @@ const DiksharthiListing = () => {
                               >
                                 {downloadingPdfId === diksharthi.id ? (
                                   <ButtonLoader />
-                                ) :( "Application PDF")}
+                                ) : ("Application PDF")}
                               </button>
                               {/* <button
                                 className="rounded-lg bg-emerald-600 text-sm px-2 py-1 text-white disabled:opacity-60"
@@ -2176,7 +2276,7 @@ const DiksharthiListing = () => {
                                 `${viewModalData?.family_member_firstName || "N/A"} ${viewModalData?.family_member_lastName || ""}`.trim()
                               }
                             />
-                            <DetailItem label="Assistance" value={viewModalData?.assistance_received} />
+                            {/* <DetailItem label="Assistance" value={viewModalData?.assistance_received} /> */}
                             <DetailItem label="Mobile No" value={viewModalData?.mobile_no || "N/A"} />
                             {/* <DetailItem label="Alt Mobile No" value={viewModalData?.alt_mobile_no} /> */}
                           </Grid>
@@ -2258,7 +2358,16 @@ const DiksharthiListing = () => {
                                     : "N/A"
                               }
                             />
-                            <DetailItem label="Gender" value={viewModalData?.gender} />
+                            <DetailItem
+                              label="Gender"
+                              value={
+                                String(viewModalData?.gender || "").trim().toLowerCase() === "sadhu"
+                                  ? "Male"
+                                  : String(viewModalData?.gender || "").trim().toLowerCase() === "sadhvi"
+                                    ? "Female"
+                                    : viewModalData?.gender
+                              }
+                            />
                             <DetailItem label="Pad" value={viewModalData?.pad} />
                             <DetailItem label="Samudaay" value={viewModalData?.samudaay} />
                             <DetailItem label="Guru" value={viewModalData?.guru_name || viewModalData?.guruName} />
@@ -2419,8 +2528,9 @@ const DiksharthiListing = () => {
               {/* Data Display Section */}
               <p><span className="font-semibold">M.S. ID:</span> {assignModalData?.id || "-"}</p>
               <p><span className="font-semibold">M.S. Name:</span> {assignModalData?.sadhu_sadhvi_name || "-"}</p>
+              <p><span className="font-semibold">Contact No:</span> {assignModalData?.mobile_no || "-"}</p>
               <p>
-                <span className="font-semibold">City:</span>{" "}
+                <span className="font-semibold">Address:</span>{" "}
                 {assignModalData?.district}, {assignModalData?.state}
               </p>
 
@@ -2818,7 +2928,7 @@ const DiksharthiListing = () => {
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 px-4">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-3xl">
             <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-              <h3 className="text-lg font-semibold text-gray-800">Add Feedback</h3>
+              <h3 className="text-lg font-semibold text-gray-800">Add Karyakarta Feedback</h3>
               <button
                 type="button"
                 className="p-1 rounded hover:bg-gray-100"
@@ -2861,7 +2971,7 @@ const DiksharthiListing = () => {
                 <JoditEditor
                   ref={editor}
                   value={feedbackForm.feedback}
-                 config={queryEditorConfig}
+                  config={queryEditorConfig}
                   onBlur={(newContent) =>
                     setFeedbackForm({
                       ...feedbackForm,
@@ -3047,7 +3157,7 @@ const DiksharthiListing = () => {
 
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold">
-               Operations Manager Feedback
+                Operations Manager Feedback
               </h2>
 
               <button
@@ -3141,44 +3251,44 @@ const DiksharthiListing = () => {
                         No feedback found
                       </p>
                     ) : (
-                          <div className="space-y-4">
-                            {omFeedbackList.diksharthi_feedback.map((item, index) => (
-                              <div
-                                key={index}
-                                className="border rounded-xl p-4 shadow-sm bg-white w-full overflow-hidden"
-                              >
-                                {/* Top Row */}
-                                <div className="flex justify-between items-center flex-wrap gap-2 mb-3">
-                                  <div className="text-sm font-semibold text-slate-700">
-                                    <span
-                                      className={`px-3 py-1 rounded-md text-xs font-semibold ${item.status === "Yes"
-                                        ? "bg-green-100 text-green-700"
-                                        : "bg-red-100 text-red-700"
-                                        }`}
-                                    >
-                                     Is Visted : {item.status || "-"}
-                                    </span>
-                                  </div>
-
-                                  <div className="text-sm text-gray-500 break-words">
-                                    {formatIndianDate(item.feedback_date?.slice(0, 10))} |{" "}
-                                    {item.feedback_time}
-                                  </div>
-                                </div>
-
-                                {/* Feedback Text Fix */}
-
-                                <div
-                                  className="text-sm text-gray-700 mb-3 leading-relaxed break-words whitespace-pre-wrap overflow-hidden prose max-w-none"
-                                  dangerouslySetInnerHTML={{
-                                    __html: item.feedback || "-",
-                                  }}
-                                />
-
-                               
+                      <div className="space-y-4">
+                        {omFeedbackList.diksharthi_feedback.map((item, index) => (
+                          <div
+                            key={index}
+                            className="border rounded-xl p-4 shadow-sm bg-white w-full overflow-hidden"
+                          >
+                            {/* Top Row */}
+                            <div className="flex justify-between items-center flex-wrap gap-2 mb-3">
+                              <div className="text-sm font-semibold text-slate-700">
+                                <span
+                                  className={`px-3 py-1 rounded-md text-xs font-semibold ${item.status === "Yes"
+                                    ? "bg-green-100 text-green-700"
+                                    : "bg-red-100 text-red-700"
+                                    }`}
+                                >
+                                  Is Visted : {item.status || "-"}
+                                </span>
                               </div>
-                            ))}
+
+                              <div className="text-sm text-gray-500 break-words">
+                                {formatIndianDate(item.feedback_date?.slice(0, 10))} |{" "}
+                                {item.feedback_time}
+                              </div>
+                            </div>
+
+                            {/* Feedback Text Fix */}
+
+                            <div
+                              className="text-sm text-gray-700 mb-3 leading-relaxed break-words whitespace-pre-wrap overflow-hidden prose max-w-none"
+                              dangerouslySetInnerHTML={{
+                                __html: item.feedback || "-",
+                              }}
+                            />
+
+
                           </div>
+                        ))}
+                      </div>
                     )}
                   </div>
 
@@ -3210,7 +3320,7 @@ const DiksharthiListing = () => {
                                 }}
                               />
 
-                              
+
                             </div>
                           )
                         )}

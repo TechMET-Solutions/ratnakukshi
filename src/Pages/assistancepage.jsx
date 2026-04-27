@@ -186,6 +186,7 @@ const AssistancePage = () => {
   const [activeRow, setActiveRow] = useState(null);
   const [actionType, setActionType] = useState("");
   const [queriesReason, setQueriesReason] = useState("");
+  const [approveAmount, setApproveAmount] = useState("");
   const [queryFile, setQueryFile] = useState(null);
   const [actionError, setActionError] = useState("");
   const [isActionLoading, setIsActionLoading] = useState(false);
@@ -330,10 +331,20 @@ const AssistancePage = () => {
       },
     });
   };
+  // const handleOpenActionModal = (row, type) => {
+  //   setActiveRow(row);
+  //   setActionType(type);
+  //   setQueriesReason("");
+  //   setQueryFile(null);
+  //   setActionError("");
+  //   setIsModalOpen(true);
+  // };
+
   const handleOpenActionModal = (row, type) => {
     setActiveRow(row);
     setActionType(type);
     setQueriesReason("");
+    setApproveAmount("");
     setQueryFile(null);
     setActionError("");
     setIsModalOpen(true);
@@ -365,10 +376,19 @@ const AssistancePage = () => {
 
       const finalActionType = actionTypeMap[actionType] || actionType;
 
+      // const payload = {
+      //   feedback: queriesReason,     // editor text
+      //   loginId: user?.id,           // logged user id
+      //   loginRole: user?.role,           // logged user id
+      // };
+
       const payload = {
-        feedback: queriesReason,     // editor text
-        loginId: user?.id,           // logged user id
-        loginRole: user?.role,           // logged user id
+        feedback: queriesReason,
+        loginId: user?.id,
+        loginRole: user?.role,
+        ...(actionType === "approve" && {
+          approve_amount: approveAmount
+        })
       };
 
       await axios.put(
@@ -510,7 +530,8 @@ const AssistancePage = () => {
                   <td className="p-4 text-slate-600">{asDisplayText(row.assistance_type)}</td>
                   <td className="p-4 text-slate-600">{asDisplayText(row.fan_id)}</td>
                   <td className={`p-4 font-semibold ${getStatusToneClass(row.status)}`}>
-                    {capitalizeFirst(asDisplayText(row.status))}
+                    {/* {capitalizeFirst(asDisplayText(row.status))} */}
+                    {getStatusLabel(asDisplayText(row.status))}
                   </td>
 
                   <td className="relative p-4 text-center">
@@ -529,7 +550,7 @@ const AssistancePage = () => {
                       </button>
 
                       {isOpen && (
-                        <div className="absolute right-4 top-12 z-[120] w-56 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl animate-in fade-in slide-in-from-top-2 duration-200">
+                        <div className="absolute right-4 top-12 z-[120] w-60 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl animate-in fade-in slide-in-from-top-2 duration-200">
                           <div className="py-1">
                             <button
                               onClick={() => { navigate("/request-details", { state: row }); setOpenDropdownId(null); }}
@@ -905,6 +926,21 @@ const AssistancePage = () => {
                       )}
                     </h4>
                   </div>
+
+                  {actionType === "approve" && (
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">
+                        Approve Amount
+                      </label>
+                      <input
+                        type="number"
+                        value={approveAmount}
+                        onChange={(e) => setApproveAmount(e.target.value)}
+                        placeholder="Enter approve amount"
+                        className="w-full rounded-lg border border-slate-300 px-4 py-2 outline-none focus:ring-2 focus:ring-blue-200"
+                      />
+                    </div>
+                  )}
 
                   <div className="space-y-3 text-left">
                     <label className="block text-sm font-medium text-slate-700 mb-1">

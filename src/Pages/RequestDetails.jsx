@@ -381,7 +381,7 @@ const RequestDetails = () => {
             className="w-24 h-24 rounded-lg object-cover border border-gray-200"
           />
 
-          <div className="grid grid-cols-2 flex-grow gap-x-10 gap-y-3">
+          <div className="grid grid-cols-3 flex-grow gap-x-10 gap-y-3">
             {/* Left Side */}
             <div>
               <h2 className="text-xl font-bold text-gray-800 mb-2">
@@ -409,6 +409,9 @@ const RequestDetails = () => {
                 </span>
               </p>
 
+              
+            </div>
+            <div>
               <p className="text-sm text-gray-500">
                 Assistance Type :{" "}
                 <span className="font-semibold text-gray-700">
@@ -422,16 +425,17 @@ const RequestDetails = () => {
                   {row?.address || "-"}
                 </span>
               </p>
-            </div>
-
-            {/* Right Side */}
-            <div>
               <p className="text-sm text-gray-500">
                 Mobile No :{" "}
                 <span className="font-semibold text-gray-700">
                   {row?.mobile_number || "-"}
                 </span>
               </p>
+            </div>
+
+            {/* Right Side */}
+            <div>
+              
 
               <p className="text-sm text-gray-500">
                 Aadhar No :{" "}

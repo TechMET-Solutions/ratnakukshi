@@ -675,6 +675,132 @@ const DiksharthiDetailsAdd = () => {
     fetchAllDiksharthi();
   }, [editId]);
 
+  // const handleChange = (e) => {
+  //   const { name, value } = e.target;
+  //   let sanitizedValue = value;
+
+  //   if (name === "mobileNo" || name === "altMobileNo") {
+  //     sanitizedValue = value.replace(/\D/g, "").slice(0, 10);
+  //   }
+
+  //   if (name === "pinCode") {
+  //     sanitizedValue = value.replace(/\D/g, "").slice(0, 6);
+  //   }
+
+  //   setFormData((prev) => {
+  //     let nextState = { ...prev, [name]: sanitizedValue };
+
+  //     if (name === "pinCode") {
+  //       if (sanitizedValue.length === 6) {
+  //         fetchPincodeDetails(sanitizedValue);
+  //       }
+  //     }
+
+  //     // Auto-calculate age when DOB changes
+  //     if (name === "dob") {
+  //       nextState.age = calculateAge(sanitizedValue);
+  //     }
+
+  //     if (name === "isAlive") {
+  //       nextState.viharLocation =
+  //         sanitizedValue === "Yes" ? prev.viharLocation : "";
+  //       if (sanitizedValue === "Yes") {
+  //         nextState.samadhiDate = "";
+  //         nextState.samadhiPlace = "";
+  //       }
+  //     }
+
+  //     if (name === "fanIdExists") {
+  //       if (sanitizedValue === "No") {
+  //         nextState.fan_id = "";
+  //         nextState.sameRelationsWithFan = false;
+  //         setFanIdSearch("");
+  //       }
+  //       if (sanitizedValue === "Yes" && prev?.fan_id) {
+  //         setFanIdSearch(prev.fan_id);
+  //       }
+  //     }
+  //     if (name === "rbfCriteria" && sanitizedValue === "No") {
+  //       nextState.relation = "";
+  //       nextState.family_member_firstName = "";
+  //       nextState.family_member_lastName = "";
+  //       nextState.mobileNo = "";
+  //       nextState.familyRelations = [];
+  //       nextState.familyRelationDetails = {};
+  //       nextState.permanentAddress = "";
+  //       nextState.pinCode = "";
+  //       nextState.district = "";
+  //       nextState.state = "";
+  //       nextState.assistanceReceived = "";
+  //       nextState.assistance = [];
+  //       nextState.relation_name = ""; 
+  //     }
+
+
+  //     if (name === "relation" && value !== "sister" && value !== "daughter") {
+  //       nextState.isMarried = "";
+  //     }
+
+  //     if (name === "relation" && String(sanitizedValue || "").trim()) {
+  //       const relations = Array.isArray(nextState?.familyRelations)
+  //         ? nextState.familyRelations
+  //         : [];
+  //       if (!relations.includes(sanitizedValue)) {
+  //         nextState.familyRelations = [...relations, sanitizedValue];
+  //       }
+  //       if (!nextState?.familyRelationDetails?.[sanitizedValue]) {
+  //         nextState.familyRelationDetails = {
+  //           ...(nextState.familyRelationDetails || {}),
+  //           [sanitizedValue]: createEmptyFamilyRelationDetails(),
+  //         };
+  //       }
+  //     }
+
+  //     if (name === "isMarried" && value === "Yes") {
+  //       nextState.assistanceReceived = "";
+  //     }
+  //     return nextState;
+  //   });
+
+  //   const nextRbfCriteria =
+  //     name === "rbfCriteria" ? sanitizedValue : formData.rbfCriteria;
+
+  //   if (name === "rbfCriteria" && sanitizedValue !== "Yes") {
+  //     setErrors((prev) => {
+  //       const next = { ...prev };
+  //       [
+  //         "relation",
+  //         "family_member_firstName",
+  //         "family_member_lastName",
+  //         "mobileNo",
+  //         "permanentAddress",
+  //         "pinCode",
+  //         "district",
+  //         "state",
+  //         "assistanceReceived",
+  //       ].forEach((field) => delete next[field]);
+  //       return next;
+  //     });
+  //     return;
+  //   }
+
+  //   if (rbfMandatoryFields.includes(name) || name === "relation") {
+  //     const errorMessage =
+  //       name === "relation" &&
+  //         nextRbfCriteria === "Yes" &&
+  //         !String(sanitizedValue || "").trim()
+  //         ? "Required for RBF"
+  //         : validateRbfField(name, sanitizedValue, nextRbfCriteria);
+
+  //     setErrors((prev) => {
+  //       const next = { ...prev };
+  //       if (errorMessage) next[name] = errorMessage;
+  //       else delete next[name];
+  //       return next;
+  //     });
+  //   }
+  // };
+  
   const handleChange = (e) => {
     const { name, value } = e.target;
     let sanitizedValue = value;
@@ -685,6 +811,13 @@ const DiksharthiDetailsAdd = () => {
 
     if (name === "pinCode") {
       sanitizedValue = value.replace(/\D/g, "").slice(0, 6);
+    }
+
+    // ✅ Guru Name Prefix Auto Add
+    if (name === "guruName" || name === "gadipati" || name === "acharya" ) {
+      sanitizedValue = `Param Pujya ${value
+        .replace(/^Param Pujya\s*/i, "")
+        .trim()}`;
     }
 
     setFormData((prev) => {
@@ -704,6 +837,7 @@ const DiksharthiDetailsAdd = () => {
       if (name === "isAlive") {
         nextState.viharLocation =
           sanitizedValue === "Yes" ? prev.viharLocation : "";
+
         if (sanitizedValue === "Yes") {
           nextState.samadhiDate = "";
           nextState.samadhiPlace = "";
@@ -716,10 +850,12 @@ const DiksharthiDetailsAdd = () => {
           nextState.sameRelationsWithFan = false;
           setFanIdSearch("");
         }
+
         if (sanitizedValue === "Yes" && prev?.fan_id) {
           setFanIdSearch(prev.fan_id);
         }
       }
+
       if (name === "rbfCriteria" && sanitizedValue === "No") {
         nextState.relation = "";
         nextState.family_member_firstName = "";
@@ -733,9 +869,8 @@ const DiksharthiDetailsAdd = () => {
         nextState.state = "";
         nextState.assistanceReceived = "";
         nextState.assistance = [];
-        nextState.relation_name = ""; 
+        nextState.relation_name = "";
       }
-
 
       if (name === "relation" && value !== "sister" && value !== "daughter") {
         nextState.isMarried = "";
@@ -745,9 +880,11 @@ const DiksharthiDetailsAdd = () => {
         const relations = Array.isArray(nextState?.familyRelations)
           ? nextState.familyRelations
           : [];
+
         if (!relations.includes(sanitizedValue)) {
           nextState.familyRelations = [...relations, sanitizedValue];
         }
+
         if (!nextState?.familyRelationDetails?.[sanitizedValue]) {
           nextState.familyRelationDetails = {
             ...(nextState.familyRelationDetails || {}),
@@ -759,6 +896,7 @@ const DiksharthiDetailsAdd = () => {
       if (name === "isMarried" && value === "Yes") {
         nextState.assistanceReceived = "";
       }
+
       return nextState;
     });
 
@@ -768,6 +906,7 @@ const DiksharthiDetailsAdd = () => {
     if (name === "rbfCriteria" && sanitizedValue !== "Yes") {
       setErrors((prev) => {
         const next = { ...prev };
+
         [
           "relation",
           "family_member_firstName",
@@ -779,8 +918,10 @@ const DiksharthiDetailsAdd = () => {
           "state",
           "assistanceReceived",
         ].forEach((field) => delete next[field]);
+
         return next;
       });
+
       return;
     }
 
@@ -794,12 +935,15 @@ const DiksharthiDetailsAdd = () => {
 
       setErrors((prev) => {
         const next = { ...prev };
+
         if (errorMessage) next[name] = errorMessage;
         else delete next[name];
+
         return next;
       });
     }
   };
+  
   const validate = () => {
     let newErrors = {};
 
@@ -1786,7 +1930,7 @@ const DiksharthiDetailsAdd = () => {
                       checked={formData.gender === "Sadhu"}
                       onChange={handleChange}
                     />{" "}
-                    Sadhu
+                    Male
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
@@ -1796,7 +1940,7 @@ const DiksharthiDetailsAdd = () => {
                       checked={formData.gender === "Sadhvi"}
                       onChange={handleChange}
                     />{" "}
-                    Sadhvi
+                    Female
                   </label>
                 </div>
                 {errors.gender && (

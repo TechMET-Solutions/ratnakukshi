@@ -1747,12 +1747,8 @@ const Family_Details_Staff = ({
                               onChange={(e) => {
                                 const value = e.target.value;
 
-                                if (/^[A-Za-z]*$/.test(value)) {
-                                  handleRelationDetailChange(
-                                    rel,
-                                    "firstName",
-                                    value,
-                                  );
+                                if (/^[A-Za-z\s]*$/.test(value)) {
+                                  handleRelationDetailChange(rel, "firstName", value);
                                 }
                               }}
                               className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
@@ -1775,12 +1771,8 @@ const Family_Details_Staff = ({
                                 const value = e.target.value;
 
                                 // Allow only alphabets (A–Z, a–z)
-                                if (/^[A-Za-z]*$/.test(value)) {
-                                  handleRelationDetailChange(
-                                    rel,
-                                    "lastName",
-                                    value,
-                                  );
+                                if (/^[A-Za-z\s]*$/.test(value)) {
+                                  handleRelationDetailChange(rel, "lastName", value);
                                 }
                               }}
                               className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
@@ -2209,7 +2201,7 @@ const Family_Details_Staff = ({
                               </div>
                               <div className="w-[200px]">
                                 <label className="block text-sm font-medium text-slate-700 mb-1">
-                                  Mediclaim Compnay Name
+                                  Mediclaim Company Name
                                   <span className="text-red-500">*</span>
                                 </label>
                                 <input
@@ -5432,7 +5424,7 @@ const Family_Details_Staff = ({
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Mediclaim Compnay Name
+                    Mediclaim Company Name
                   </label>
                   <input
                     type="text"

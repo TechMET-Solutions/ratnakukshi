@@ -485,14 +485,31 @@ const FamilyDetailsForm = () => {
       setHeadOfFamily(relation);
     }
   };
+  // const resolvePhotoUrl = (photo) => {
+  //   if (!photo) return "/user.png";
+
+  //   // If already full URL
+  //   if (photo.startsWith("http")) return photo;
+
+  //   // If stored as filename/path from backend
+  //   return `${API}/uploads/${photo}`;
+  // };
+
   const resolvePhotoUrl = (photo) => {
     if (!photo) return "/user.png";
 
-    // If already full URL
-    if (photo.startsWith("http")) return photo;
+    const imagePath = String(photo).trim();
 
-    // If stored as filename/path from backend
-    return `${API}/uploads/${photo}`;
+    // ✅ already full url from api
+    if (
+      imagePath.startsWith("http://") ||
+      imagePath.startsWith("https://")
+    ) {
+      return imagePath;
+    }
+
+    // ✅ backend relative path
+    return `${API}/${imagePath.replace(/^\/+/, "")}`;
   };
 
   const calculateAgeFromDob = (dobValue) => {
@@ -767,6 +784,265 @@ const FamilyDetailsForm = () => {
   console.log(assistanceData, "assistanceData");
 
   const [validationErrors, setValidationErrors] = useState({});
+  // useEffect(() => {
+  //   if (!id) return;
+
+  //   const fetchFamilyDetailsById = async () => {
+  //     try {
+  //       const [diksharthiRes, familyRes] = await Promise.all([
+  //         axios.get(`${API}/api/diksharthi/${id}`),
+  //         axios
+  //           .get(`${API}/api/family-details/${id}`)
+  //           .catch(() => ({ data: { data: [] } })),
+  //       ]);
+
+  //       const diksharthiData = diksharthiRes?.data?.data || {};
+  //       const familyData = familyRes?.data?.data?.[0] || {};
+
+  //       // ================= FORM DATA =================
+  //       const normalizedFormData = {
+  //         permanentAddress:
+  //           familyData?.formData?.permanentAddress ||
+  //           diksharthiData?.permanent_address ||
+  //           "",
+  //         currentAddress:
+  //           familyData?.formData?.currentAddress ||
+  //           diksharthiData?.current_address ||
+  //           "",
+  //         village: familyData?.formData?.village || diksharthiData?.village || "",
+  //         taluka: familyData?.formData?.taluka || diksharthiData?.taluka || "",
+  //         district: familyData?.formData?.district || diksharthiData?.district || "",
+  //         state: familyData?.formData?.state || diksharthiData?.state || "",
+  //         pinCode: familyData?.formData?.pinCode || diksharthiData?.pin_code || "",
+
+  //         houseDetails:
+  //           familyData?.formData?.houseDetails || diksharthiData?.house_details || "",
+  //         typeOfHouse:
+  //           familyData?.formData?.typeOfHouse || diksharthiData?.type_of_house || "",
+  //         maintenanceCost:
+  //           familyData?.formData?.maintenanceCost ||
+  //           diksharthiData?.maintenance_cost ||
+  //           "",
+  //         lightBillCost:
+  //           familyData?.formData?.lightBillCost ||
+  //           diksharthiData?.light_bill_cost ||
+  //           "",
+  //         rentCost: familyData?.formData?.rentCost || diksharthiData?.rent_cost || "",
+
+  //         mediclaim: normalizeBooleanWithFallback(
+  //           familyData?.formData?.mediclaim,
+  //           diksharthiData?.mediclaim
+  //         ),
+  //         family_mediclaim_type:
+  //           familyData?.formData?.family_mediclaim_type ||
+  //           diksharthiData?.Family_mediclaim_type ||
+  //           "",
+  //         Family_mediclaim_amount:
+  //           familyData?.formData?.Family_mediclaim_amount ||
+  //           diksharthiData?.family_mediclaim_amount ||
+  //           "",
+  //         mediclaimPremiumAmount:
+  //           familyData?.formData?.mediclaimPremiumAmount ||
+  //           diksharthiData?.mediclaim_premium_amount ||
+  //           "",
+  //         family_mediclaim_companyName:
+  //           familyData?.formData?.family_mediclaim_companyName ||
+  //           diksharthiData?.family_mediclaim_companyName ||
+  //           "",
+
+  //         ngoAssistance: normalizeBooleanWithFallback(
+  //           familyData?.formData?.ngoAssistance,
+  //           diksharthiData?.ngo_assistance
+  //         ),
+  //         sanghName:
+  //           familyData?.formData?.sanghName || diksharthiData?.ngo_sangh_name || "",
+  //         ngoAmount: familyData?.formData?.ngoAmount || diksharthiData?.ngo_amount || "",
+  //         ngoFrequency:
+  //           familyData?.formData?.ngoFrequency ||
+  //           familyData?.formData?.ngo_frequency ||
+  //           diksharthiData?.ngo_frequency ||
+  //           "",
+  //         ngoRemark: familyData?.formData?.ngoRemark || diksharthiData?.ngo_remark || "",
+  //       };
+
+  //       // ================= RELATIONS FROM API =================
+  //       const diksharthiRelations = String(
+  //         diksharthiData?.family_relation || ""
+  //       )
+  //         .split(",")
+  //         .map((r) => normalizeRelationLabel(r))
+  //         .filter(Boolean);
+
+  //       const apiRelations = [
+  //         ...new Set(
+  //           (familyData?.formData?.relations || []).map(
+  //             (r) => normalizeRelationLabel(r)
+  //           )
+  //         ),
+  //       ];
+
+  //       // ================= SELECTED RELATION =================
+  //       const relationFromApiRaw = familyData?.relation || diksharthiData?.relation || null;
+  //       const formattedRelation = normalizeRelationLabel(relationFromApiRaw) || null;
+
+  //       // ================= RELATION DETAILS =================
+  //       const relationDetailsRaw = familyData?.relationDetails ?? {};
+  //       const normalizedRelationDetails = {};
+
+  //       Object.keys(relationDetailsRaw).forEach((key) => {
+  //         const formattedKey = normalizeRelationLabel(key);
+  //         const dobValue =
+  //           relationDetailsRaw[key]?.dob ||
+  //           relationDetailsRaw[key]?.dateOfBirth ||
+  //           "";
+  //         const normalizedDobValue = normalizeDateForInput(dobValue);
+  //         const derivedAge = calculateAgeFromDob(normalizedDobValue);
+  //         normalizedRelationDetails[formattedKey] = {
+  //           relationName: formattedKey,
+  //           firstName: relationDetailsRaw[key]?.firstName || "",
+  //           lastName: relationDetailsRaw[key]?.lastName || "",
+  //           dob: normalizedDobValue,
+  //           age:
+  //             relationDetailsRaw[key]?.age !== undefined &&
+  //             relationDetailsRaw[key]?.age !== null &&
+  //             relationDetailsRaw[key]?.age !== ""
+  //               ? relationDetailsRaw[key]?.age
+  //               : derivedAge,
+  //           guardian:
+  //             relationDetailsRaw[key]?.guardian ||
+  //             relationDetailsRaw[key]?.guardianName ||
+  //             "",
+  //           aadharNumber: relationDetailsRaw[key]?.aadharNumber || "",
+  //           mobileNumber:
+  //             relationDetailsRaw[key]?.mobileNumber ||
+  //             relationDetailsRaw[key]?.mobile_no ||
+  //             "",
+  //           panNumber: relationDetailsRaw[key]?.panNumber || "",
+  //           photo: relationDetailsRaw[key]?.photo || "",
+  //           ayushman: normalizeYesNoToBoolean(
+  //             relationDetailsRaw[key]?.ayushman ??
+  //               relationDetailsRaw[key]?.ayushman_coverage
+  //           ),
+  //           mediclaim: normalizeYesNoToBoolean(
+  //             relationDetailsRaw[key]?.mediclaim ??
+  //               relationDetailsRaw[key]?.has_mediclaim_policy
+  //           ),
+  //           ayushman_Amount: relationDetailsRaw[key]?.amount || null,
+  //           mediclaim_amount: relationDetailsRaw[key]?.mediclaimAmount || null,
+  //           member_mediclaim_premium_amount: relationDetailsRaw[key]?.mediclaimPremiumAmount || null,
+  //           mediclaim_company_name: relationDetailsRaw[key]?.mediclaimCompanyName || null,
+  //           mediclaim_type: relationDetailsRaw[key]?.mediclaim_type || null,
+  //           // "mediclaimAmount": "1500",
+  //           // "mediclaimCompanyName": "uyhgtfd",
+  //           // "mediclaimPremiumAmount": "1000",
+
+  //           needAssistance: normalizeYesNoToBoolean(
+  //             relationDetailsRaw[key]?.needAssistance ??
+  //               relationDetailsRaw[key]?.need_assistance
+  //           ),
+  //           family_head: relationDetailsRaw[key]?.family_head || false,
+  //           assistanceCategories: relationDetailsRaw[key]?.assistanceCategories || [],
+  //         };
+  //       });
+
+  //       if (!Object.keys(normalizedRelationDetails).length && formattedRelation) {
+  //         normalizedRelationDetails[formattedRelation] = {
+  //           relationName: formattedRelation,
+  //           firstName: diksharthiData?.family_member_firstName || "",
+  //           lastName: diksharthiData?.family_member_lastName || "",
+  //           dob: "",
+  //           age: "",
+  //           guardian: "",
+  //           aadharNumber: "",
+  //           mobileNumber: diksharthiData?.mobile_no || "",
+  //           panNumber: "",
+  //           photo: "",
+  //           ayushman: null,
+  //           mediclaim: null,
+  //           ayushman_Amount: null,
+  //           mediclaim_amount: null,
+  //           member_mediclaim_premium_amount: null,
+  //           mediclaim_company_name: null,
+  //           mediclaim_type: null,
+  //           needAssistance: null,
+  //           family_head: true,
+  //           assistanceCategories: [],
+  //         };
+  //       }
+
+  //       // ================= FINAL RELATIONS ARRAY =================
+  //       const relationKeysFromDetails = Object.keys(normalizedRelationDetails || {});
+  //       const finalRelations = Array.from(
+  //         new Set(
+  //           [
+  //             ...apiRelations,
+  //             ...diksharthiRelations,
+  //             formattedRelation,
+  //             ...relationKeysFromDetails,
+  //           ].filter(Boolean)
+  //         )
+  //       );
+
+  //       // ================= HEAD OF FAMILY =================
+  //       const apiHead =
+  //         Object.entries(normalizedRelationDetails).find(([_, val]) => val?.family_head)?.[0] ||
+  //         formattedRelation ||
+  //         null;
+
+  //       // ================= ASSISTANCE DATA =================
+  //       const assistanceRaw = familyData?.assistanceData ?? {};
+  //       const selectedAssistance = familyData?.assistance ?? {};
+
+  //       const normalizedAssistanceData = {};
+  //       Object.keys(assistanceRaw).forEach((key) => {
+  //         const formattedKey = key.charAt(0).toUpperCase() + key.slice(1).toLowerCase();
+  //         normalizedAssistanceData[formattedKey] = assistanceRaw[key];
+  //       });
+
+  //       // ================= EXPAND RELATIONS =================
+  //       const expanded = finalRelations.reduce((acc, relationKey) => {
+  //         acc[relationKey] = true;
+  //         return acc;
+  //       }, {});
+
+  //       // ================= SET STATE =================
+  //       setFormData((prev) => ({
+  //         ...prev,
+  //         ...normalizedFormData,
+  //         relations: finalRelations,
+  //       }));
+
+  //       setRelationDetails(normalizedRelationDetails);
+  //       setHeadOfFamily(apiHead);
+  //       setAssistanceData(normalizedAssistanceData);
+  //       setselectedAssistance(selectedAssistance);
+  //       setdefaultAssisatce(selectedAssistance)
+  //       setSelectedRelation(formattedRelation || apiHead || finalRelations[0] || null); // default selected
+  //       setExpandedRelations(expanded);
+  //       setFamilyRecordId(familyData?.id ?? null);
+  //       setInitialLockSnapshot({
+  //         formData: normalizedFormData,
+  //         relationDetails: normalizedRelationDetails,
+  //         assistanceData: normalizedAssistanceData,
+  //         headOfFamily: apiHead,
+  //       });
+
+  //       // ================= DEBUG =================
+  //       console.log("FINAL relationDetails:", normalizedRelationDetails);
+  //       console.log("FINAL assistanceData:", normalizedAssistanceData);
+  //       console.log("FINAL relations (formData):", finalRelations);
+  //       console.log("Selected Relation:", formattedRelation);
+  //       console.log("Expanded Relations:", expanded);
+
+  //     } catch (error) {
+  //       console.error("Error fetching family details:", error);
+  //     }
+  //   };
+
+  //   fetchFamilyDetailsById();
+  // }, [id]);
+
+
   useEffect(() => {
     if (!id) return;
 
@@ -782,249 +1058,92 @@ const FamilyDetailsForm = () => {
         const diksharthiData = diksharthiRes?.data?.data || {};
         const familyData = familyRes?.data?.data?.[0] || {};
 
-        // ================= FORM DATA =================
+        // ✅ ONLY TOP FORM DATA
         const normalizedFormData = {
           permanentAddress:
             familyData?.formData?.permanentAddress ||
             diksharthiData?.permanent_address ||
             "",
+
           currentAddress:
             familyData?.formData?.currentAddress ||
             diksharthiData?.current_address ||
             "",
-          village: familyData?.formData?.village || diksharthiData?.village || "",
-          taluka: familyData?.formData?.taluka || diksharthiData?.taluka || "",
-          district: familyData?.formData?.district || diksharthiData?.district || "",
-          state: familyData?.formData?.state || diksharthiData?.state || "",
-          pinCode: familyData?.formData?.pinCode || diksharthiData?.pin_code || "",
+
+          village:
+            familyData?.formData?.village ||
+            diksharthiData?.village ||
+            "",
+
+          taluka:
+            familyData?.formData?.taluka ||
+            diksharthiData?.taluka ||
+            "",
+
+          district:
+            familyData?.formData?.district ||
+            diksharthiData?.district ||
+            "",
+
+          state:
+            familyData?.formData?.state ||
+            diksharthiData?.state ||
+            "",
+
+          pinCode:
+            familyData?.formData?.pinCode ||
+            diksharthiData?.pin_code ||
+            "",
 
           houseDetails:
-            familyData?.formData?.houseDetails || diksharthiData?.house_details || "",
+            familyData?.formData?.houseDetails ||
+            diksharthiData?.house_details ||
+            "",
+
           typeOfHouse:
-            familyData?.formData?.typeOfHouse || diksharthiData?.type_of_house || "",
+            familyData?.formData?.typeOfHouse ||
+            diksharthiData?.type_of_house ||
+            "",
+
           maintenanceCost:
             familyData?.formData?.maintenanceCost ||
             diksharthiData?.maintenance_cost ||
             "",
+
           lightBillCost:
             familyData?.formData?.lightBillCost ||
             diksharthiData?.light_bill_cost ||
             "",
-          rentCost: familyData?.formData?.rentCost || diksharthiData?.rent_cost || "",
 
-          mediclaim: normalizeBooleanWithFallback(
-            familyData?.formData?.mediclaim,
-            diksharthiData?.mediclaim
-          ),
-          family_mediclaim_type:
-            familyData?.formData?.family_mediclaim_type ||
-            diksharthiData?.Family_mediclaim_type ||
+          rentCost:
+            familyData?.formData?.rentCost ||
+            diksharthiData?.rent_cost ||
             "",
-          Family_mediclaim_amount:
-            familyData?.formData?.Family_mediclaim_amount ||
-            diksharthiData?.family_mediclaim_amount ||
-            "",
-          mediclaimPremiumAmount:
-            familyData?.formData?.mediclaimPremiumAmount ||
-            diksharthiData?.mediclaim_premium_amount ||
-            "",
-          family_mediclaim_companyName:
-            familyData?.formData?.family_mediclaim_companyName ||
-            diksharthiData?.family_mediclaim_companyName ||
-            "",
-
-          ngoAssistance: normalizeBooleanWithFallback(
-            familyData?.formData?.ngoAssistance,
-            diksharthiData?.ngo_assistance
-          ),
-          sanghName:
-            familyData?.formData?.sanghName || diksharthiData?.ngo_sangh_name || "",
-          ngoAmount: familyData?.formData?.ngoAmount || diksharthiData?.ngo_amount || "",
-          ngoFrequency:
-            familyData?.formData?.ngoFrequency ||
-            familyData?.formData?.ngo_frequency ||
-            diksharthiData?.ngo_frequency ||
-            "",
-          ngoRemark: familyData?.formData?.ngoRemark || diksharthiData?.ngo_remark || "",
         };
 
-        // ================= RELATIONS FROM API =================
-        const diksharthiRelations = String(
-          diksharthiData?.family_relation || ""
-        )
-          .split(",")
-          .map((r) => normalizeRelationLabel(r))
-          .filter(Boolean);
+        // ✅ relationDetails REMOVE
+        // ✅ assistance REMOVE
+        // ✅ selected relation REMOVE
 
-        const apiRelations = [
-          ...new Set(
-            (familyData?.formData?.relations || []).map(
-              (r) => normalizeRelationLabel(r)
-            )
-          ),
-        ];
-
-        // ================= SELECTED RELATION =================
-        const relationFromApiRaw = familyData?.relation || diksharthiData?.relation || null;
-        const formattedRelation = normalizeRelationLabel(relationFromApiRaw) || null;
-
-        // ================= RELATION DETAILS =================
-        const relationDetailsRaw = familyData?.relationDetails ?? {};
-        const normalizedRelationDetails = {};
-
-        Object.keys(relationDetailsRaw).forEach((key) => {
-          const formattedKey = normalizeRelationLabel(key);
-          const dobValue =
-            relationDetailsRaw[key]?.dob ||
-            relationDetailsRaw[key]?.dateOfBirth ||
-            "";
-          const normalizedDobValue = normalizeDateForInput(dobValue);
-          const derivedAge = calculateAgeFromDob(normalizedDobValue);
-          normalizedRelationDetails[formattedKey] = {
-            relationName: formattedKey,
-            firstName: relationDetailsRaw[key]?.firstName || "",
-            lastName: relationDetailsRaw[key]?.lastName || "",
-            dob: normalizedDobValue,
-            age:
-              relationDetailsRaw[key]?.age !== undefined &&
-              relationDetailsRaw[key]?.age !== null &&
-              relationDetailsRaw[key]?.age !== ""
-                ? relationDetailsRaw[key]?.age
-                : derivedAge,
-            guardian:
-              relationDetailsRaw[key]?.guardian ||
-              relationDetailsRaw[key]?.guardianName ||
-              "",
-            aadharNumber: relationDetailsRaw[key]?.aadharNumber || "",
-            mobileNumber:
-              relationDetailsRaw[key]?.mobileNumber ||
-              relationDetailsRaw[key]?.mobile_no ||
-              "",
-            panNumber: relationDetailsRaw[key]?.panNumber || "",
-            photo: relationDetailsRaw[key]?.photo || "",
-            ayushman: normalizeYesNoToBoolean(
-              relationDetailsRaw[key]?.ayushman ??
-                relationDetailsRaw[key]?.ayushman_coverage
-            ),
-            mediclaim: normalizeYesNoToBoolean(
-              relationDetailsRaw[key]?.mediclaim ??
-                relationDetailsRaw[key]?.has_mediclaim_policy
-            ),
-            ayushman_Amount: relationDetailsRaw[key]?.amount || null,
-            mediclaim_amount: relationDetailsRaw[key]?.mediclaimAmount || null,
-            member_mediclaim_premium_amount: relationDetailsRaw[key]?.mediclaimPremiumAmount || null,
-            mediclaim_company_name: relationDetailsRaw[key]?.mediclaimCompanyName || null,
-            mediclaim_type: relationDetailsRaw[key]?.mediclaim_type || null,
-            // "mediclaimAmount": "1500",
-            // "mediclaimCompanyName": "uyhgtfd",
-            // "mediclaimPremiumAmount": "1000",
-
-            needAssistance: normalizeYesNoToBoolean(
-              relationDetailsRaw[key]?.needAssistance ??
-                relationDetailsRaw[key]?.need_assistance
-            ),
-            family_head: relationDetailsRaw[key]?.family_head || false,
-            assistanceCategories: relationDetailsRaw[key]?.assistanceCategories || [],
-          };
-        });
-
-        if (!Object.keys(normalizedRelationDetails).length && formattedRelation) {
-          normalizedRelationDetails[formattedRelation] = {
-            relationName: formattedRelation,
-            firstName: diksharthiData?.family_member_firstName || "",
-            lastName: diksharthiData?.family_member_lastName || "",
-            dob: "",
-            age: "",
-            guardian: "",
-            aadharNumber: "",
-            mobileNumber: diksharthiData?.mobile_no || "",
-            panNumber: "",
-            photo: "",
-            ayushman: null,
-            mediclaim: null,
-            ayushman_Amount: null,
-            mediclaim_amount: null,
-            member_mediclaim_premium_amount: null,
-            mediclaim_company_name: null,
-            mediclaim_type: null,
-            needAssistance: null,
-            family_head: true,
-            assistanceCategories: [],
-          };
-        }
-
-        // ================= FINAL RELATIONS ARRAY =================
-        const relationKeysFromDetails = Object.keys(normalizedRelationDetails || {});
-        const finalRelations = Array.from(
-          new Set(
-            [
-              ...apiRelations,
-              ...diksharthiRelations,
-              formattedRelation,
-              ...relationKeysFromDetails,
-            ].filter(Boolean)
-          )
-        );
-
-        // ================= HEAD OF FAMILY =================
-        const apiHead =
-          Object.entries(normalizedRelationDetails).find(([_, val]) => val?.family_head)?.[0] ||
-          formattedRelation ||
-          null;
-
-        // ================= ASSISTANCE DATA =================
-        const assistanceRaw = familyData?.assistanceData ?? {};
-        const selectedAssistance = familyData?.assistance ?? {};
-
-        const normalizedAssistanceData = {};
-        Object.keys(assistanceRaw).forEach((key) => {
-          const formattedKey = key.charAt(0).toUpperCase() + key.slice(1).toLowerCase();
-          normalizedAssistanceData[formattedKey] = assistanceRaw[key];
-        });
-
-        // ================= EXPAND RELATIONS =================
-        const expanded = finalRelations.reduce((acc, relationKey) => {
-          acc[relationKey] = true;
-          return acc;
-        }, {});
-
-        // ================= SET STATE =================
         setFormData((prev) => ({
           ...prev,
           ...normalizedFormData,
-          relations: finalRelations,
         }));
 
-        setRelationDetails(normalizedRelationDetails);
-        setHeadOfFamily(apiHead);
-        setAssistanceData(normalizedAssistanceData);
-        setselectedAssistance(selectedAssistance);
-        setdefaultAssisatce(selectedAssistance)
-        setSelectedRelation(formattedRelation || apiHead || finalRelations[0] || null); // default selected
-        setExpandedRelations(expanded);
         setFamilyRecordId(familyData?.id ?? null);
-        setInitialLockSnapshot({
-          formData: normalizedFormData,
-          relationDetails: normalizedRelationDetails,
-          assistanceData: normalizedAssistanceData,
-          headOfFamily: apiHead,
-        });
 
-        // ================= DEBUG =================
-        console.log("FINAL relationDetails:", normalizedRelationDetails);
-        console.log("FINAL assistanceData:", normalizedAssistanceData);
-        console.log("FINAL relations (formData):", finalRelations);
-        console.log("Selected Relation:", formattedRelation);
-        console.log("Expanded Relations:", expanded);
+        setInitialLockSnapshot((prev) => ({
+          ...prev,
+          formData: normalizedFormData,
+        }));
 
       } catch (error) {
-        console.error("Error fetching family details:", error);
+        console.error(error);
       }
     };
 
     fetchFamilyDetailsById();
   }, [id]);
-
 
   const fetchFamilyMembers = async () => {
   try {
@@ -1048,6 +1167,8 @@ const FamilyDetailsForm = () => {
         aadharNumber: member.aadharNumber || "",
         mobileNumber: member.mobileNumber || "",
         panNumber: member.panNumber || "",
+
+        photo: member.photo || "",
 
         mediclaim: member.mediclaimType ? true : false,
         mediclaim_amount: member.mediclaimAmount || "",
@@ -2019,19 +2140,15 @@ useEffect(() => {
                             <input
                               type="text"
                               value={relationDetails[rel]?.firstName || ""}
-                              // onChange={(e) =>
-                              //   handleRelationDetailChange(
-                              //     rel,
-                              //     "firstName",
-                              //     e.target.value,
-                              //   )
-                              // }
+                             
                               onChange={(e) => {
                                 const value = e.target.value;
 
-                                if (/^[A-Za-z]*$/.test(value)) {
+                                
+                                if (/^[A-Za-z\s]*$/.test(value)) {
                                   handleRelationDetailChange(rel, "firstName", value);
                                 }
+                                
                               }}
                               className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                             />
@@ -2043,18 +2160,12 @@ useEffect(() => {
                             <input
                               type="text"
                               value={relationDetails[rel]?.lastName || ""}
-                              // onChange={(e) =>
-                              //   handleRelationDetailChange(
-                              //     rel,
-                              //     "lastName",
-                              //     e.target.value,
-                              //   )
-                              // }
+                              
                               onChange={(e) => {
                                 const value = e.target.value;
 
-                                // Allow only alphabets (A–Z, a–z)
-                                if (/^[A-Za-z]*$/.test(value)) {
+                               
+                                if (/^[A-Za-z\s]*$/.test(value)) {
                                   handleRelationDetailChange(rel, "lastName", value);
                                 }
                               }}
@@ -5322,12 +5433,13 @@ useEffect(() => {
                           <img
                             src={
                               relationDetails[rel]?.photoPreview
-                                ? relationDetails[rel].photoPreview
-                                : typeof relationDetails[rel]?.photo === "string"
-                                  ? resolvePhotoUrl(relationDetails[rel].photo)
-                                  : "/user.png"
+                                ? relationDetails[rel]?.photoPreview
+                                : relationDetails[rel]?.photo || "/user.png"
                             }
                             alt="profile"
+                            onError={(e) => {
+                              e.currentTarget.src = "/user.png";
+                            }}
                             className="w-[120px] h-[120px] border-2 border-gray-400 rounded object-cover"
                           />
                           <div
