@@ -15,7 +15,8 @@ import {
   FileBadge,
   Globe,
   ShieldCheck,
-  ReceiptText
+  ReceiptText,
+  CalendarDays
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -109,6 +110,13 @@ const Sidebar = () => {
 
           <>
             <NavItem isCollapsed={isCollapsed} to="/assistance" icon={<HeartHandshake size={22} />} label="Assistance" />
+
+          </>
+        )}
+        {( isCaseCoordinator) && (
+
+          <>
+            <NavItem isCollapsed={isCollapsed} to="/meeting-schedule" icon={<CalendarDays size={22} />} label="Meeting Schedule" />
 
           </>
         )}

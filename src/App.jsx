@@ -26,6 +26,7 @@ import DebitAccountPage from "./pages/DebitAccountPage";
 import AccontAssistncePage from "./pages/AccontAssistncePage";
 import FamilyBasicInfo from "./pages/FamilyBasicInfo";
 import StaffDashboard from "./pages/dashboard/StaffDashboard";
+import MeetingSchedule from "./pages/MeetingSchedule";
 
 const Layout = ({ children }) => {
   return (
@@ -79,6 +80,16 @@ function App() {
             <ProtectedRoute>
               <Layout>
                 <DiksharthiListing />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/meeting-schedule"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <MeetingSchedule />
               </Layout>
             </ProtectedRoute>
           }
