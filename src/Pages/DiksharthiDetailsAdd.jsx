@@ -800,7 +800,7 @@ const DiksharthiDetailsAdd = () => {
   //     });
   //   }
   // };
-  
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     let sanitizedValue = value;
@@ -814,7 +814,7 @@ const DiksharthiDetailsAdd = () => {
     }
 
     // ✅ Guru Name Prefix Auto Add
-    if (name === "guruName" || name === "gadipati" || name === "acharya" ) {
+    if (name === "sadhu_sadhvi_name" || name === "guruName" || name === "gadipati" || name === "acharya") {
       sanitizedValue = `Param Pujya ${value
         .replace(/^Param Pujya\s*/i, "")
         .trim()}`;
@@ -943,8 +943,9 @@ const DiksharthiDetailsAdd = () => {
       });
     }
   };
-  
+
   const validate = () => {
+    debugger
     let newErrors = {};
 
     if (formData.rbfCriteria === "Yes") {
@@ -2132,44 +2133,44 @@ const DiksharthiDetailsAdd = () => {
                 />
               </div>
 
-                {/* Spoken To Name */}
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Spoken To <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    name="spokenTo"
-                    value={formData.spokenTo}
-                    onChange={handleChange}
-                    type="text"
-                    placeholder="Enter name"
-                    className="w-full p-2 border border-slate-300 rounded-md outline-none"
-                  />
-                  {errors.spokenTo && (
-                    <p className="text-red-500 text-xs">{errors.spokenTo}</p>
-                  )}
-                </div>
-
-                {/* Spoken To Relation */}
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Relation <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    name="spokenTo_Relation"
-                    value={formData.spokenTo_Relation}
-                    onChange={handleChange}
-                    type="text"
-                    placeholder="Enter relation (e.g. Father, Brother)"
-                    className="w-full p-2 border border-slate-300 rounded-md outline-none"
-                  />
-                  {errors.spokenTo_Relation && (
-                    <p className="text-red-500 text-xs">
-                      {errors.spokenTo_Relation}
-                    </p>
-                  )}
+              {/* Spoken To Name */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Spoken To <span className="text-red-500">*</span>
+                </label>
+                <input
+                  name="spokenTo"
+                  value={formData.spokenTo}
+                  onChange={handleChange}
+                  type="text"
+                  placeholder="Enter name"
+                  className="w-full p-2 border border-slate-300 rounded-md outline-none"
+                />
+                {errors.spokenTo && (
+                  <p className="text-red-500 text-xs">{errors.spokenTo}</p>
+                )}
               </div>
-              
+
+              {/* Spoken To Relation */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Relation <span className="text-red-500">*</span>
+                </label>
+                <input
+                  name="spokenTo_Relation"
+                  value={formData.spokenTo_Relation}
+                  onChange={handleChange}
+                  type="text"
+                  placeholder="Enter relation (e.g. Father, Brother)"
+                  className="w-full p-2 border border-slate-300 rounded-md outline-none"
+                />
+                {errors.spokenTo_Relation && (
+                  <p className="text-red-500 text-xs">
+                    {errors.spokenTo_Relation}
+                  </p>
+                )}
+              </div>
+
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">RBF Criteria <span className="text-red-500">*</span></label>
                 <div className="flex gap-4 mt-2">

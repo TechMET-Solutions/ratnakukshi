@@ -194,6 +194,12 @@ const AssistancePage = () => {
   const [openDropdownId, setOpenDropdownId] = useState(null);
   const dropdownContainerRef = useRef(null);
 
+  // Pagination State
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [statusFilter, setStatusFilter] = useState("all");
+
   const role = String(user?.role || "").toLowerCase();
   const isStaff = role === "staff";
   const isKaryakarta = role === "karyakarta";
@@ -202,19 +208,46 @@ const AssistancePage = () => {
   const isCommitteeMember = role === "committee-member";
   const canAccessAssistance = isKaryakarta || isCaseCoordinator || isExpertPanel || isCommitteeMember;
 
-  const fetchFamilyAccounting = async () => {
+  // const fetchFamilyAccounting = async () => {
+  //   try {
+  //     const res = await axios.get(`${API}/api/assistance/allAssistance`);
+  //     setTableData(asArray(res?.data?.data));
+  //   } catch (error) {
+  //     console.error("Failed to fetch family accounting details:", error);
+  //     setTableData([]);
+  //   }
+  // };
+
+  const fetchFamilyAccounting = async (
+    currentPage = page,
+    currentStatus = statusFilter
+  ) => {
     try {
-      const res = await axios.get(`${API}/api/assistance/allAssistance`);
+      const res = await axios.get(`${API}/api/assistance/allAssistance`, {
+        params: {
+          page: currentPage,
+          limit,
+          status: currentStatus,
+        },
+      });
+
       setTableData(asArray(res?.data?.data));
+      setTotalPages(res?.data?.pagination?.totalPages || 1);
+      setPage(res?.data?.pagination?.page || 1);
+
     } catch (error) {
-      console.error("Failed to fetch family accounting details:", error);
+      console.error("Failed to fetch assistance:", error);
       setTableData([]);
     }
   };
+  
+  // useEffect(() => {
+  //   fetchFamilyAccounting();
+  // }, []);
 
   useEffect(() => {
-    fetchFamilyAccounting();
-  }, []);
+    fetchFamilyAccounting(page, statusFilter);
+  }, [page, statusFilter]);
 
   useEffect(() => {
     if (!openDropdownId) return undefined;
@@ -634,10 +667,37 @@ const AssistancePage = () => {
           </tbody>
         </table>
       </div>
+      <div className="flex flex-col md:flex-row justify-between items-center gap-4 px-4 py-1.5 border-t bg-slate-50">
+
+        <p className="text-sm text-slate-600">
+          Page <span className="font-semibold">{page}</span> of{" "}
+          <span className="font-semibold">{totalPages}</span>
+        </p>
+
+        <div className="flex gap-2">
+          <button
+            disabled={page === 1}
+            onClick={() => setPage((prev) => prev - 1)}
+            className="px-3 py-1.5 text-sm rounded-md border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Prev
+          </button>
+
+          <button
+            disabled={page === totalPages}
+            onClick={() => setPage((prev) => prev + 1)}
+            className="px-3 py-1.5 text-sm rounded-md border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Next
+          </button>
+        </div>
+      </div>
     </div>
   );
 
 
+ 
+  
   const groupByRelation = (data) => {
     const grouped = {};
 
@@ -749,7 +809,25 @@ const AssistancePage = () => {
           </div>
 
         </div>
-
+        {/* <div className="flex gap-4 mt-4 items-center">
+          <select
+            value={statusFilter}
+            onChange={(e) => {
+              setStatusFilter(e.target.value);
+              setPage(1);
+            }}
+            className="border border-slate-300 px-4 py-2 rounded-lg"
+          >
+            <option value="all">All Status</option>
+            <option value="pending">Pending</option>
+            <option value="approve">Approve</option>
+            <option value="queries">Queries</option>
+            <option value="rejected">Rejected</option>
+            <option value="committee-member">Committee Member</option>
+            <option value="expert-panel">Expert Panel</option>
+            <option value="case-coordinator">Case Coordinator</option>
+          </select>
+        </div> */}
         {/* {selectedSadhu &&
           familyDetails.map((family) => (
             <div key={family.id} className="space-y-6">

@@ -639,7 +639,7 @@ const RequestDetails = () => {
 
 
         {/* Operation Manager Feedback */}
-        <div className="mb-6 border-b pb-4">
+        {/* <div className="mb-6 border-b pb-4">
           <h4 className="font-semibold text-green-600 mb-3">
             Operation Manager Feedback
           </h4>
@@ -668,14 +668,13 @@ const RequestDetails = () => {
                     __html: item.feedback || "-",
                   }}
                 />
-                  {/* {item.feedback || "-"}
-                </div> */}
+                  
               </div>
             ))
           ) : (
             <p className="text-sm text-gray-400">No Feedback Found</p>
           )}
-        </div>
+        </div> */}
 
         {/* Final Feedback */}
         <div>
