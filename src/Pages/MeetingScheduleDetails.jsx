@@ -75,19 +75,15 @@ function MeetingScheduleDetails() {
                         <button
                             type="button"
                             onClick={() => navigate("/meeting-schedule")}
-                            className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm"
+                            className="items-center px-4 py-2 text-sm font-medium text-slate-700"
                         >
                             <ArrowLeft size={16} />
-                            Back
                         </button>
 
                         <div>
                             <h1 className="text-2xl font-bold text-slate-800">
                                 Meeting Details
                             </h1>
-                            <p className="text-sm text-slate-500">
-                                View meeting info and selected assistance cases.
-                            </p>
                         </div>
                     </div>
 
