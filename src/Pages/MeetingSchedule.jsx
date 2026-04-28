@@ -6,6 +6,7 @@ import {
     Edit,
     Trash2,
     X,
+    Eye,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { API } from "../api/BaseURL";
@@ -465,7 +466,7 @@ function MeetingSchedule() {
                                             onClick={() => handleViewMeeting(item)}
                                             className="text-blue-500"
                                         >
-                                            <Search size={18} />
+                                            <Eye size={18} />
                                         </button>
 
                                         {isCaseCoordinator && (
@@ -511,8 +512,8 @@ function MeetingSchedule() {
             {/* ================= ADD MODAL ================= */}
 
             {isMeetingModalOpen && (
-                <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-                    <div className="bg-white w-full max-w-3xl rounded-xl shadow-xl">
+                <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-2">
+                    <div className="bg-white w-full max-w-4xl mx-4 md:mx-6 rounded-xl shadow-xl max-h-[95vh] overflow-hidden flex flex-col">
 
                         {/* Header */}
                         <div className="flex justify-between items-center p-5 border-b">
@@ -532,7 +533,7 @@ function MeetingSchedule() {
                         </div>
 
                         {/* Body */}
-                        <div className="p-6 space-y-5">
+                        <div className="p-6 space-y-5 overflow-y-auto flex-1">
 
                             <div>
                                 <label className="text-sm font-medium">
@@ -558,7 +559,7 @@ function MeetingSchedule() {
                             </div>
 
                             {/* Cases */}
-                            <div>
+                            {/* <div>
                                 <label className="text-sm font-medium">
                                     Select Cases
                                 </label>
@@ -639,18 +640,11 @@ function MeetingSchedule() {
 
                             {!isEditMode && (
                                 <div className="rounded-xl border border-blue-100 bg-blue-50/40 p-4 space-y-3">
-                                    <div>
-                                        <h3 className="text-sm font-semibold text-slate-700">
-                                            Send to Committee Member
-                                        </h3>
-                                        <p className="text-xs text-slate-500 mt-1">
-                                            This action separately changes selected pending cases to committee member status and saves feedback.
-                                        </p>
-                                    </div>
+                                   
 
                                     <div>
                                         <label className="text-sm font-medium text-slate-700">
-                                            Feedback
+                                           Case Coordinator Feedback
                                         </label>
                                         <div className="mt-2 rounded-lg overflow-hidden bg-white">
                                             <JoditEditor
@@ -679,7 +673,7 @@ function MeetingSchedule() {
                                         </button>
                                     </div>
                                 </div>
-                            )}
+                            )} */}
                         </div>
 
                         {/* Footer */}
