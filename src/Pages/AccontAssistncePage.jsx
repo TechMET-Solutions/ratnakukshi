@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { API } from "../api/BaseURL";
-import { ClipboardList, Loader2, AlertCircle, Eye, Search } from "lucide-react";
+import { ClipboardList, Loader2, AlertCircle, Eye, Search, Download, MoreVertical } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const initialBankForm = {
@@ -17,6 +17,8 @@ const BankDetailsModal = ({ isOpen, onClose, selectedItem, onSaved }) => {
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState("");
+
+    const [openMenuId, setOpenMenuId] = useState(null);
 
     useEffect(() => {
         if (!isOpen || !selectedItem?.id) return;
@@ -64,6 +66,8 @@ const BankDetailsModal = ({ isOpen, onClose, selectedItem, onSaved }) => {
             [name]: name === "ifsc_code" ? value.toUpperCase() : value,
         }));
     };
+
+
 
     const handleSave = async () => {
         if (!selectedItem?.id) return;
@@ -248,13 +252,18 @@ function AccontAssistncePage() {
     const [isBankModalOpen, setIsBankModalOpen] = useState(false);
     const [selectedItem, setSelectedItem] = useState(null);
 
+    const [openMenuId, setOpenMenuId] = useState(null);
+
     useEffect(() => {
         const fetchAssistance = async () => {
             try {
                 setLoading(true);
                 setError("");
 
-                const res = await fetch(`${API}/api/assistance/allAssistance`);
+                const res = await fetch(
+                    `${API}/api/assistance/allAssistance?page=1&limit=10&status=approve`
+                );
+
                 const data = await res.json().catch(() => ({}));
 
                 if (!res.ok || data?.success === false) {
@@ -278,7 +287,6 @@ function AccontAssistncePage() {
         const q = searchText.trim().toLowerCase();
 
         return rows
-            .filter((item) => String(item?.status).toLowerCase() === "approve") // ✅ only approved
             .filter((item) => {
                 if (!q) return true;
 
@@ -302,6 +310,35 @@ function AccontAssistncePage() {
         if (!text) return "";
         return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
     };
+
+
+    const handleDownload = async (id) => {
+        try {
+            const response = await fetch(
+                `${API}/api/report/sanction-letters/${id}`
+            );
+
+            if (!response.ok) {
+                throw new Error("Failed to download file");
+            }
+
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = `sanction-letter-${id}.pdf`; // file name
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+
+            window.URL.revokeObjectURL(url);
+        } catch (error) {
+            console.error("Download error:", error);
+            alert("Failed to download sanction letter");
+        }
+    };
+
 
     return (
         <div className="mx-auto max-w-7xl px-4 py-8">
@@ -410,7 +447,7 @@ function AccontAssistncePage() {
                                                 {capitalizeFirst(item?.status || "-")}
                                             </span>
                                         </td>
-                                        <td className="px-6 py-4 text-right">
+                                        {/* <td className="px-6 py-4 text-right">
                                             <button
                                                 onClick={() => {
                                                     navigate("/request-details", {
@@ -425,6 +462,13 @@ function AccontAssistncePage() {
                                                 <Eye size={16} className="text-yellow-500" /> View Details
                                             </button>
                                             <button
+                                                onClick={() => handleDownload(item?.id)}
+                                                className="flex items-center gap-2 px-3 py-2 mt-2 text-sm bg-green-50 text-green-600 rounded hover:bg-green-100"
+                                            >
+                                                <Download size={16} />
+                                                Download
+                                            </button>
+                                            <button
                                                 onClick={() => {
                                                     setSelectedItem(item);
                                                     setIsBankModalOpen(true);
@@ -433,6 +477,61 @@ function AccontAssistncePage() {
                                             >
                                                 Bank Details
                                             </button>
+                                        </td> */}
+
+                                        <td className="px-6 py-4 text-right relative">
+                                            <button
+                                                onClick={() =>
+                                                    setOpenMenuId(openMenuId === item.id ? null : item.id)
+                                                }
+                                                className="p-2 rounded hover:bg-gray-100"
+                                            >
+                                                <MoreVertical size={18} />
+                                            </button>
+
+                                            {openMenuId === item.id && (
+                                                <div className="absolute right-6 mt-2 w-44 bg-white border rounded-lg shadow-lg z-50">
+
+                                                    <button
+                                                        onClick={() => {
+                                                            navigate("/request-details", {
+                                                                state: {
+                                                                    id: item?.id,
+                                                                    ...item,
+                                                                },
+                                                            });
+                                                            setOpenMenuId(null);
+                                                        }}
+                                                        className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2"
+                                                    >
+                                                        <Eye size={16} />
+                                                        View Details
+                                                    </button>
+
+                                                    <button
+                                                        onClick={() => {
+                                                            handleDownload(item?.id);
+                                                            setOpenMenuId(null);
+                                                        }}
+                                                        className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2"
+                                                    >
+                                                        <Download size={16} />
+                                                        Download
+                                                    </button>
+
+                                                    <button
+                                                        onClick={() => {
+                                                            setSelectedItem(item);
+                                                            setIsBankModalOpen(true);
+                                                            setOpenMenuId(null);
+                                                        }}
+                                                        className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2"
+                                                    >
+                                                        Bank Details
+                                                    </button>
+
+                                                </div>
+                                            )}
                                         </td>
                                     </tr>
                                 ))
