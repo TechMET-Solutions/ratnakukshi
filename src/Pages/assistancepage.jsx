@@ -192,6 +192,8 @@ const AssistancePage = () => {
   const [isActionLoading, setIsActionLoading] = useState(false);
   const [viewQueryRow, setViewQueryRow] = useState(null);
   const [openDropdownId, setOpenDropdownId] = useState(null);
+  const [selectedRowIds, setSelectedRowIds] = useState([]);
+  const [actionRows, setActionRows] = useState([]);
   const dropdownContainerRef = useRef(null);
 
   // Pagination State
@@ -248,6 +250,10 @@ const AssistancePage = () => {
   useEffect(() => {
     fetchFamilyAccounting(page, statusFilter);
   }, [page, statusFilter]);
+
+  useEffect(() => {
+    setSelectedRowIds([]);
+  }, [tableData, page, statusFilter]);
 
   useEffect(() => {
     if (!openDropdownId) return undefined;
@@ -375,6 +381,7 @@ const AssistancePage = () => {
 
   const handleOpenActionModal = (row, type) => {
     setActiveRow(row);
+    setActionRows(row ? [row] : []);
     setActionType(type);
     setQueriesReason("");
     setApproveAmount("");
@@ -387,13 +394,45 @@ const AssistancePage = () => {
     setIsModalOpen(false);
     setActionType("");
     setQueriesReason("");
+    setApproveAmount("");
     setQueryFile(null);
     setActionError("");
     setActiveRow(null);
+    setActionRows([]);
+  };
+
+  const isPendingRow = (row) =>
+    normalizeWorkflowValue(row?.status) === "pending";
+
+  const isBulkSelectableRow = (row) => isCaseCoordinator && isPendingRow(row);
+
+  const handleToggleRowSelection = (rowId) => {
+    setSelectedRowIds((prev) =>
+      prev.includes(rowId)
+        ? prev.filter((id) => id !== rowId)
+        : [...prev, rowId]
+    );
+  };
+
+  const handleOpenBulkActionModal = () => {
+    const selectedRows = getFilteredData().filter(
+      (row) => selectedRowIds.includes(row.id) && isBulkSelectableRow(row)
+    );
+
+    if (selectedRows.length === 0) return;
+
+    setActiveRow(selectedRows[0]);
+    setActionRows(selectedRows);
+    setActionType("send-to-committee-member");
+    setQueriesReason("");
+    setApproveAmount("");
+    setQueryFile(null);
+    setActionError("");
+    setIsModalOpen(true);
   };
 
   const handleStatusAction = async () => {
-    if (!activeRow || !actionType) return;
+    if (!actionRows.length || !actionType) return;
 
     try {
       setIsActionLoading(true);
@@ -424,12 +463,17 @@ const AssistancePage = () => {
         })
       };
 
-      await axios.put(
-        `${API}/api/assistance/status/${finalActionType}/${activeRow.id}`,
-        payload
+      await Promise.all(
+        actionRows.map((row) =>
+          axios.put(
+            `${API}/api/assistance/status/${finalActionType}/${row.id}`,
+            payload
+          )
+        )
       );
 
       await fetchFamilyAccounting();
+      setSelectedRowIds([]);
       handleCloseActionModal();
 
     } catch (error) {
@@ -528,12 +572,34 @@ const AssistancePage = () => {
       .map((value) => String(value ?? ""))
       .join("__");
 
+  const filteredData = getFilteredData();
+  const selectedPendingCount = filteredData.filter(
+    (row) => selectedRowIds.includes(row.id) && isBulkSelectableRow(row)
+  ).length;
+
   const renderDefaultTable = () => (
     <div className="mt-8 overflow-visible rounded-lg border border-blue-400 shadow-sm">
+      {isCaseCoordinator && selectedPendingCount > 0 && (
+        <div className="flex items-center justify-between gap-3 border-b border-slate-200 bg-slate-50 px-4 py-3">
+          <p className="text-sm font-medium text-slate-700">
+            {selectedPendingCount} pending case{selectedPendingCount > 1 ? "s" : ""} selected
+          </p>
+          <button
+            type="button"
+            onClick={handleOpenBulkActionModal}
+            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-700"
+          >
+            Send to Committee Member
+          </button>
+        </div>
+      )}
       <div className=" overflow-y-visible">
         <table className="w-full h-9xl text-left border-collapse bg-white">
           <thead>
             <tr className="bg-[#fdf2d7]">
+              {isCaseCoordinator && (
+                <th className="p-4 font-semibold text-slate-700 border-b text-center">Select</th>
+              )}
               <th className="p-4 font-semibold text-slate-700 border-b">M.S. ID</th>
               {/* <th className="p-4 font-semibold text-slate-700 border-b">S.L. ID</th> */}
               <th className="p-4 font-semibold text-slate-700 border-b">M.S. Name</th>
@@ -546,15 +612,28 @@ const AssistancePage = () => {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {getFilteredData().map((row, index) => {
+            {filteredData.map((row, index) => {
               const hasQuery = getFeedbackHistory(row).length > 0 || Boolean(getQueryText(row));
               const rowActionKey = getRowActionKey(row, index);
               const isOpen = openDropdownId === rowActionKey;
               const allowedActions = getAllowedActions({ role, status: row.status });
               const canTakeAction = allowedActions.length > 0;
+              const isSelectable = isBulkSelectableRow(row);
+              const isChecked = selectedRowIds.includes(row.id);
 
               return (
                 <tr key={rowActionKey} className="hover:bg-slate-50 transition-colors">
+                  {isCaseCoordinator && (
+                    <td className="p-4 text-center">
+                      <input
+                        type="checkbox"
+                        checked={isChecked}
+                        disabled={!isSelectable}
+                        onChange={() => handleToggleRowSelection(row.id)}
+                        className="h-4 w-4 accent-blue-600 disabled:cursor-not-allowed disabled:opacity-40"
+                      />
+                    </td>
+                  )}
                   <td className="p-4 text-slate-600">{asDisplayText(row.diksharthi_id)}</td>
                   {/* <td className="p-4 text-slate-600">{asDisplayText(row.sl_id)}</td> */}
                   <td className="p-4 text-slate-600">{asDisplayText(row.diksharthi_name)}</td>
@@ -998,10 +1077,9 @@ const AssistancePage = () => {
 
                   <div className="text-center">
                     <h4 className="font-semibold text-lg text-slate-700">
-                      {asDisplayText(
-                        `${activeRow?.family_member_name || ""} `
-
-                      )}
+                      {actionRows.length > 1
+                        ? `${actionRows.length} selected cases`
+                        : asDisplayText(`${activeRow?.family_member_name || ""} `)}
                     </h4>
                   </div>
 
