@@ -349,7 +349,29 @@ const DiksharthiListing = () => {
             String(item?.karykarata_id || item?.admin_id || "") === String(loggedInUserId)
         );
 
-      } else {
+      } else if (
+        role === "case-coordinator" ||
+        role === "committer-member" ||
+        role === "export-panel" ||
+        role === "expert-panel-livelihoodexpenses" ||
+        role === "expert-panel-job" ||
+        role === "expert-panel-medical" ||
+        role === "expert-panel-food" ||
+        role === "expert-panel-rent" ||
+        role === "expert-panel-educations" ||
+        role === "expert-panel-housing" ||
+        role === "expert-panel-vaiyavacch" ||
+        role === "account"
+      ) {
+        filteredRecords = allRecords.filter((item) => {
+          const status = String(item?.status || "")
+            .trim()
+            .toLowerCase();
+
+          return status === "coordinator";
+        });
+      }
+      else {
         filteredRecords = allRecords;
       }
 

@@ -956,6 +956,8 @@ const DiksharthiDetailsAdd = () => {
       selectedRelations.forEach((relationKey) => {
         const details = formData?.familyRelationDetails?.[relationKey] || {};
 
+        console.log(details,"details")
+
         // ✅ First Name
         if (!String(details?.firstName || "").trim()) {
           newErrors[`family_firstName_${relationKey}`] = "Required";
