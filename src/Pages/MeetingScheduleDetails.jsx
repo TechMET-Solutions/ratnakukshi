@@ -408,7 +408,7 @@ function MeetingScheduleDetails() {
                                                         <td className={`px-6 py-4 text-sm font-medium ${getStatusToneClass(item.status)}`}>
                                                             {getStatusLabel(item.status)}
                                                         </td>
-                                                        <td className="relative px-6 py-4 text-center">
+                                                        <td className="px-6 py-4 text-center">
                                                             <div
                                                                 ref={isOpen ? dropdownContainerRef : null}
                                                                 className="inline-block"
@@ -425,7 +425,7 @@ function MeetingScheduleDetails() {
                                                                 </button>
 
                                                                 {isOpen && (
-                                                                    <div className="absolute right-4 top-12 z-[120] w-56 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl">
+                                                                    <div className="fixed right-10 mt-2 z-[9999] w-56 rounded-xl border border-slate-200 bg-white shadow-xl">
                                                                         <div className="py-1">
                                                                             <button
                                                                                 onClick={() => {
