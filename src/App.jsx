@@ -27,6 +27,7 @@ import AccontAssistncePage from "./pages/AccontAssistncePage";
 import FamilyBasicInfo from "./pages/FamilyBasicInfo";
 import StaffDashboard from "./pages/dashboard/StaffDashboard";
 import MeetingSchedule from "./pages/MeetingSchedule";
+import MeetingScheduleDetails from "./pages/MeetingScheduleDetails";
 
 const Layout = ({ children }) => {
   return (
@@ -90,6 +91,16 @@ function App() {
             <ProtectedRoute>
               <Layout>
                 <MeetingSchedule />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/meeting-schedule/:id"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <MeetingScheduleDetails />
               </Layout>
             </ProtectedRoute>
           }

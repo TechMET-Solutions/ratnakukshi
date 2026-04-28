@@ -113,7 +113,7 @@ const Sidebar = () => {
 
           </>
         )}
-        {( isCaseCoordinator) && (
+        {(isCaseCoordinator || isCommitteeMember) && (
 
           <>
             <NavItem isCollapsed={isCollapsed} to="/meeting-schedule" icon={<CalendarDays size={22} />} label="Meeting Schedule" />

@@ -7,6 +7,7 @@ import {
     Trash2,
     X,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { API } from "../api/BaseURL";
 import { formatIndianDate } from "../utils/formatIndianDate";
 import { useAuth } from "../context/AuthContext";
@@ -15,12 +16,14 @@ import { queryEditorConfig } from "../utils/joditconfig";
 
 function MeetingSchedule() {
     const { user } = useAuth();
+    const navigate = useNavigate();
+    const role = String(user?.role || "").trim().toLowerCase();
+    const isCaseCoordinator = role === "case-coordinator";
     const [meetings, setMeetings] = useState([]);
     const [searchTerm, setSearchTerm] = useState("");
 
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-    const [isViewModalOpen, setIsViewModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     // ================= ADD NEW STATE =================
     const [isMeetingModalOpen, setIsMeetingModalOpen] = useState(false);
@@ -214,18 +217,8 @@ function MeetingSchedule() {
     // ================= ADD FUNCTIONS =================
 
     // VIEW
-    const handleViewMeeting = async (row) => {
-        try {
-            const res = await axios.get(
-                `${API}/api/meeting/${row.id}`
-            );
-
-            setSelectedMeeting(res?.data?.data);
-            setIsViewModalOpen(true);
-
-        } catch (error) {
-            console.error(error);
-        }
+    const handleViewMeeting = (row) => {
+        navigate(`/meeting-schedule/${row.id}`);
     };
 
 
@@ -390,13 +383,15 @@ function MeetingSchedule() {
                     Meeting Schedule
                 </h1>
 
-                <button
-                    onClick={openAddModal}
-                    className="bg-[#d94452] hover:bg-[#c13946] text-white px-4 py-2 rounded-md flex items-center gap-2 text-sm font-medium shadow-sm"
-                >
-                    <Plus size={18} />
-                    Create Meeting
-                </button>
+                {isCaseCoordinator && (
+                    <button
+                        onClick={openAddModal}
+                        className="bg-[#d94452] hover:bg-[#c13946] text-white px-4 py-2 rounded-md flex items-center gap-2 text-sm font-medium shadow-sm"
+                    >
+                        <Plus size={18} />
+                        Create Meeting
+                    </button>
+                )}
             </div>
 
             {/* TABLE */}
@@ -473,22 +468,26 @@ function MeetingSchedule() {
                                             <Search size={18} />
                                         </button>
 
-                                        <button
-                                            onClick={() => handleEditMeeting(item)}
-                                            className="text-green-500"
-                                        >
-                                            <Edit size={18} />
-                                        </button>
+                                        {isCaseCoordinator && (
+                                            <button
+                                                onClick={() => handleEditMeeting(item)}
+                                                className="text-green-500"
+                                            >
+                                                <Edit size={18} />
+                                            </button>
+                                        )}
 
-                                        <button
-                                            onClick={() => {
-                                                setSelectedMeeting(item);
-                                                setIsDeleteModalOpen(true);
-                                            }}
-                                            className="text-red-500"
-                                        >
-                                            <Trash2 size={18} />
-                                        </button>
+                                        {isCaseCoordinator && (
+                                            <button
+                                                onClick={() => {
+                                                    setSelectedMeeting(item);
+                                                    setIsDeleteModalOpen(true);
+                                                }}
+                                                className="text-red-500"
+                                            >
+                                                <Trash2 size={18} />
+                                            </button>
+                                        )}
 
                                     </div>
                                 </td>
@@ -752,118 +751,6 @@ function MeetingSchedule() {
                 </div>
             )}
 
-            {isViewModalOpen && selectedMeeting && (
-                <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl">
-
-                        {/* Header */}
-                        <div className="p-5 border-b flex justify-between items-center">
-                            <h2 className="text-lg font-bold text-slate-700">
-                                Meeting Details
-                            </h2>
-
-                            <button
-                                onClick={() => setIsViewModalOpen(false)}
-                                className="text-slate-500 hover:text-red-500"
-                            >
-                                <X />
-                            </button>
-                        </div>
-
-                        {/* Body */}
-                        <div className="p-6 space-y-5">
-
-                            <div className="grid grid-cols-2 gap-4">
-
-                                <div className="border rounded-lg p-4 bg-slate-50">
-                                    <p className="text-sm text-slate-500">
-                                        Meeting ID
-                                    </p>
-                                    <p className="font-semibold text-slate-700 mt-1">
-                                        {selectedMeeting.meeting_no}
-                                    </p>
-                                </div>
-
-                                <div className="border rounded-lg p-4 bg-slate-50">
-                                    <p className="text-sm text-slate-500">
-                                        Meeting Date
-                                    </p>
-                                    <p className="font-semibold text-slate-700 mt-1">
-                                        {formatIndianDate(
-                                            selectedMeeting.meeting_date
-                                        )}
-                                    </p>
-                                </div>
-
-                            </div>
-
-                            <div>
-                                <p className="text-sm font-semibold text-slate-700 mb-3">
-                                    Selected Cases
-                                </p>
-
-                                <div className="space-y-2 max-h-72 overflow-y-auto">
-
-                                    {(() => {
-                                        let caseList = [];
-
-                                        try {
-                                            if (
-                                                Array.isArray(
-                                                    selectedMeeting.selected_cases
-                                                )
-                                            ) {
-                                                caseList =
-                                                    selectedMeeting.selected_cases;
-                                            } else if (
-                                                typeof selectedMeeting.selected_cases ===
-                                                "string"
-                                            ) {
-                                                caseList = JSON.parse(
-                                                    selectedMeeting.selected_cases
-                                                );
-                                            } else if (
-                                                selectedMeeting.selected_cases
-                                            ) {
-                                                caseList = [
-                                                    selectedMeeting.selected_cases,
-                                                ];
-                                            }
-                                        } catch {
-                                            caseList = [];
-                                        }
-
-                                        return Array.isArray(caseList)
-                                            ? caseList.map((id, index) => (
-                                                <div
-                                                    key={index}
-                                                    className="px-4 py-3 border rounded-lg bg-white shadow-sm text-sm font-medium text-slate-700"
-                                                >
-                                                    Case ID : {id}
-                                                </div>
-                                            ))
-                                            : null;
-                                    })()}
-
-                                </div>
-                            </div>
-
-                        </div>
-
-                        {/* Footer */}
-                        <div className="p-5 border-t flex justify-end">
-                            <button
-                                onClick={() => setIsViewModalOpen(false)}
-                                className="px-4 py-2 rounded bg-slate-700 text-white"
-                            >
-                                Close
-                            </button>
-                        </div>
-
-                    </div>
-                </div>
-            )}
-          
         </div>
     );
 }
