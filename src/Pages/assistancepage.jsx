@@ -194,6 +194,8 @@ const AssistancePage = () => {
   const [openDropdownId, setOpenDropdownId] = useState(null);
   const [selectedRowIds, setSelectedRowIds] = useState([]);
   const [actionRows, setActionRows] = useState([]);
+  const [meetingOptions, setMeetingOptions] = useState([]);
+  const [selectedMeetingId, setSelectedMeetingId] = useState("");
   const dropdownContainerRef = useRef(null);
 
   // Pagination State
@@ -250,6 +252,20 @@ const AssistancePage = () => {
   useEffect(() => {
     fetchFamilyAccounting(page, statusFilter);
   }, [page, statusFilter]);
+
+  useEffect(() => {
+    const fetchMeetings = async () => {
+      try {
+        const res = await axios.get(`${API}/api/all-meeting?page=1&limit=1000`);
+        setMeetingOptions(asArray(res?.data?.data));
+      } catch (error) {
+        console.error("Failed to fetch meeting schedule:", error);
+        setMeetingOptions([]);
+      }
+    };
+
+    fetchMeetings();
+  }, []);
 
   useEffect(() => {
     setSelectedRowIds([]);
@@ -385,6 +401,7 @@ const AssistancePage = () => {
     setActionType(type);
     setQueriesReason("");
     setApproveAmount("");
+    setSelectedMeetingId(String(row?.meeting_id || ""));
     setQueryFile(null);
     setActionError("");
     setIsModalOpen(true);
@@ -395,6 +412,7 @@ const AssistancePage = () => {
     setActionType("");
     setQueriesReason("");
     setApproveAmount("");
+    setSelectedMeetingId("");
     setQueryFile(null);
     setActionError("");
     setActiveRow(null);
@@ -426,6 +444,7 @@ const AssistancePage = () => {
     setActionType("send-to-committee-member");
     setQueriesReason("");
     setApproveAmount("");
+    setSelectedMeetingId("");
     setQueryFile(null);
     setActionError("");
     setIsModalOpen(true);
@@ -433,6 +452,11 @@ const AssistancePage = () => {
 
   const handleStatusAction = async () => {
     if (!actionRows.length || !actionType) return;
+
+    if (actionType === "send-to-committee-member" && !selectedMeetingId) {
+      setActionError("Please select meeting ID");
+      return;
+    }
 
     try {
       setIsActionLoading(true);
@@ -458,6 +482,9 @@ const AssistancePage = () => {
         feedback: queriesReason,
         loginId: user?.id,
         loginRole: user?.role,
+        ...(actionType === "send-to-committee-member" && {
+          meeting_id: selectedMeetingId,
+        }),
         ...(actionType === "approve" && {
           approve_amount: approveAmount
         })
@@ -1095,6 +1122,26 @@ const AssistancePage = () => {
                         placeholder="Enter approve amount"
                         className="w-full rounded-lg border border-slate-300 px-4 py-2 outline-none focus:ring-2 focus:ring-blue-200"
                       />
+                    </div>
+                  )}
+
+                  {actionType === "send-to-committee-member" && (
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">
+                        Meeting ID
+                      </label>
+                      <select
+                        value={selectedMeetingId}
+                        onChange={(e) => setSelectedMeetingId(e.target.value)}
+                        className="w-full rounded-lg border border-slate-300 px-4 py-2 outline-none focus:ring-2 focus:ring-blue-200"
+                      >
+                        <option value="">Select meeting ID</option>
+                        {meetingOptions.map((meeting) => (
+                          <option key={meeting.id} value={meeting.id}>
+                            {meeting.meeting_no || meeting.id}
+                          </option>
+                        ))}
+                      </select>
                     </div>
                   )}
 

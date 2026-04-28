@@ -9,8 +9,12 @@ import {
 } from "lucide-react";
 import { API } from "../api/BaseURL";
 import { formatIndianDate } from "../utils/formatIndianDate";
+import { useAuth } from "../context/AuthContext";
+import JoditEditor from "jodit-react";
+import { queryEditorConfig } from "../utils/joditconfig";
 
 function MeetingSchedule() {
+    const { user } = useAuth();
     const [meetings, setMeetings] = useState([]);
     const [searchTerm, setSearchTerm] = useState("");
 
@@ -26,6 +30,9 @@ function MeetingSchedule() {
 
     const [pendingCases, setPendingCases] = useState([]);
     const [loadingCases, setLoadingCases] = useState(false);
+    const [committeeFeedback, setCommitteeFeedback] = useState("");
+    const [isSendingToCommittee, setIsSendingToCommittee] = useState(false);
+    const [committeeError, setCommitteeError] = useState("");
 
     // const [formData, setFormData] = useState({
     //     meetingNo: "",
@@ -81,6 +88,8 @@ function MeetingSchedule() {
         setIsEditMode(false);
 
         setSelectedMeeting(null);
+        setCommitteeFeedback("");
+        setCommitteeError("");
 
         setFormData({
             meetingDate: "",
@@ -146,6 +155,7 @@ function MeetingSchedule() {
 
             setIsAddModalOpen(false);
             fetchMeetings();
+            setIsMeetingModalOpen(false);
 
         } catch (error) {
             console.error(error);
@@ -322,10 +332,51 @@ function MeetingSchedule() {
             );
 
             setIsEditModalOpen(false);
+            setIsMeetingModalOpen(false);
             fetchMeetings();
 
         } catch (error) {
             console.error(error);
+        }
+    };
+
+    const handleSendToCommitteeMember = async () => {
+        try {
+            if (formData.selectedCases.length === 0) {
+                alert("Select at least one case");
+                return;
+            }
+
+            setCommitteeError("");
+            setIsSendingToCommittee(true);
+
+            await Promise.all(
+                formData.selectedCases.map((caseId) =>
+                    axios.put(
+                        `${API}/api/assistance/status/committee-member/${caseId}`,
+                        {
+                            feedback: committeeFeedback,
+                            loginId: user?.id,
+                            loginRole: user?.role,
+                        }
+                    )
+                )
+            );
+
+            await fetchPendingCases();
+            setFormData((prev) => ({
+                ...prev,
+                selectedCases: [],
+            }));
+            setCommitteeFeedback("");
+            alert("Selected cases sent to committee member successfully");
+        } catch (error) {
+            console.error(error);
+            setCommitteeError(
+                error?.response?.data?.message || "Failed to send cases to committee member"
+            );
+        } finally {
+            setIsSendingToCommittee(false);
         }
     };
 
@@ -586,6 +637,50 @@ function MeetingSchedule() {
                                     )}
                                 </div>
                             </div>
+
+                            {!isEditMode && (
+                                <div className="rounded-xl border border-blue-100 bg-blue-50/40 p-4 space-y-3">
+                                    <div>
+                                        <h3 className="text-sm font-semibold text-slate-700">
+                                            Send to Committee Member
+                                        </h3>
+                                        <p className="text-xs text-slate-500 mt-1">
+                                            This action separately changes selected pending cases to committee member status and saves feedback.
+                                        </p>
+                                    </div>
+
+                                    <div>
+                                        <label className="text-sm font-medium text-slate-700">
+                                            Feedback
+                                        </label>
+                                        <div className="mt-2 rounded-lg overflow-hidden bg-white">
+                                            <JoditEditor
+                                                value={committeeFeedback}
+                                                config={queryEditorConfig}
+                                                onBlur={(newValue) => setCommitteeFeedback(newValue)}
+                                                onChange={() => { }}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {committeeError && (
+                                        <p className="text-sm text-red-600">{committeeError}</p>
+                                    )}
+
+                                    <div className="flex justify-end">
+                                        <button
+                                            type="button"
+                                            onClick={handleSendToCommitteeMember}
+                                            disabled={isSendingToCommittee}
+                                            className="px-4 py-2 rounded bg-blue-600 text-white disabled:opacity-60"
+                                        >
+                                            {isSendingToCommittee
+                                                ? "Sending..."
+                                                : "Send to Committee Member"}
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         {/* Footer */}
