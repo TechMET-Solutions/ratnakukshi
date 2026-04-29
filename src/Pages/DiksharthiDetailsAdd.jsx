@@ -836,7 +836,7 @@ const DiksharthiDetailsAdd = () => {
 
       sanitizedValue = `Param Pujya ${sanitizedValue}`;
     }
-    
+
 
     setFormData((prev) => {
       let nextState = { ...prev, [name]: sanitizedValue };
@@ -1011,25 +1011,6 @@ const DiksharthiDetailsAdd = () => {
 
       if (!String(formData.isAlive || "").trim()) {
         newErrors.isAlive = "Please select Yes or No";
-      }
-
-      // If Alive = Yes
-      if (
-        formData.isAlive === "Yes" &&
-        !String(formData.viharLocation || "").trim()
-      ) {
-        newErrors.viharLocation = "Vihar Location is required";
-      }
-
-      // If Alive = No
-      if (formData.isAlive === "No") {
-        if (!String(formData.samadhiDate || "").trim()) {
-          newErrors.samadhiDate = "Samadhi Date is required";
-        }
-
-        if (!String(formData.samadhiPlace || "").trim()) {
-          newErrors.samadhiPlace = "Samadhi Place is required";
-        }
       }
 
       if (!String(formData.rbfCriteria || "").trim()) {
@@ -2273,7 +2254,7 @@ const DiksharthiDetailsAdd = () => {
               {formData.isAlive === "Yes" && (
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Vihar Location <span className="text-red-500">*</span>
+                    Vihar Location 
                   </label>
                   <input
                     name="viharLocation"

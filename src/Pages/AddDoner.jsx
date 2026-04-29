@@ -2348,7 +2348,7 @@ function AddDonor() {
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">
                       Number of Installment
-                      <span className="text-red-500">*</span>
+                      
                     </label>
                     <select
                       value={numInstallments}
@@ -2374,7 +2374,7 @@ function AddDonor() {
                   <div className="">
                     <label className="block text-sm font-medium text-slate-700 mb-1">
                       Total Installments Amount
-                      <span className="text-red-500">*</span>
+                      
                     </label>
                     <input
                       type="text"
@@ -2421,7 +2421,7 @@ function AddDonor() {
                             <div>
                               <label className="block text-sm font-medium text-slate-700 mb-1">
                                 Installment Amount
-                                <span className="text-red-500">*</span>
+                                
                               </label>
                               <input
                                 type="text"
@@ -2442,7 +2442,7 @@ function AddDonor() {
                             <div>
                               <label className="block text-sm font-medium text-slate-700 mb-1">
                                 Installment Due Date
-                                <span className="text-red-500">*</span>
+                                
                               </label>
 
                               <input

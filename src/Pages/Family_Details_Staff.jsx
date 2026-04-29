@@ -2121,7 +2121,6 @@ const Family_Details_Staff = ({
                             <div className="w-[200px] mt-4">
                               <label className="block text-sm font-medium text-slate-700 mb-1">
                                 Ayushman Amount
-                                <span className="text-red-500">*</span>
                               </label>
                               <input
                                 type="number"
@@ -2148,7 +2147,6 @@ const Family_Details_Staff = ({
                               <div className="w-[200px]">
                                 <label className="block text-sm font-medium text-slate-700 mb-1">
                                   Mediclaim Amount
-                                  <span className="text-red-500">*</span>
                                 </label>
                                 <input
                                   type="number"
@@ -2168,7 +2166,7 @@ const Family_Details_Staff = ({
                               <div className="w-[200px]">
                                 <label className="block text-sm font-medium text-slate-700 mb-1">
                                   Yearly Premium Amount
-                                  <span className="text-red-500">*</span>
+                                  
                                 </label>
                                 <input
                                   type="number"
@@ -2202,7 +2200,7 @@ const Family_Details_Staff = ({
                               <div className="w-[200px]">
                                 <label className="block text-sm font-medium text-slate-700 mb-1">
                                   Mediclaim Company Name
-                                  <span className="text-red-500">*</span>
+                                 
                                 </label>
                                 <input
                                   type="text"
@@ -2223,7 +2221,7 @@ const Family_Details_Staff = ({
                               <div className="w-[200px]">
                                 <label className="block text-sm font-medium text-slate-700 mb-1">
                                   Mediclaim Type
-                                  <span className="text-red-500">*</span>
+                                 
                                 </label>
                                 <select
                                   className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
@@ -2251,7 +2249,7 @@ const Family_Details_Staff = ({
                         {toBool(relationDetails[rel]?.needAssistance) === true && (
                           <div className="w-full mt-6">
                             <p className="text-sm font-medium text-slate-700 mb-3">
-                              Assistances<span className="text-red-500">*</span>
+                              Assistances
                             </p>
                             <div className="flex flex-wrap gap-4">
                               {assistanceTypes.map((type) => {
