@@ -1897,7 +1897,7 @@ useEffect(() => {
               </label>
               <input
                 type="text"
-                placeholder="e.g. Apartment, Villa"
+                placeholder="e.g. Apartment"
                 value={formData.typeOfHouse}
                 onChange={(e) => updateFormField("typeOfHouse", e.target.value)}
                 // readOnly={isFormFieldLocked("typeOfHouse")}

@@ -3097,7 +3097,7 @@ const DiksharthiDetailsAdd = () => {
                   value={formData.typeOfHouse}
                   onChange={handleChange}
                   type="text"
-                  placeholder="e.g. Apartment, Villa"
+                  placeholder="e.g. Apartment"
                   className="w-full p-2 border border-slate-300 rounded-md outline-none"
                 />
               </div>
