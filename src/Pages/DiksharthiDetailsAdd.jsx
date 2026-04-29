@@ -814,11 +814,29 @@ const DiksharthiDetailsAdd = () => {
     }
 
     // ✅ Guru Name Prefix Auto Add
-    if (name === "sadhu_sadhvi_name" || name === "guruName" || name === "gadipati" || name === "acharya") {
-      sanitizedValue = `Param Pujya ${value
-        .replace(/^Param Pujya\s*/i, "")
-        .trim()}`;
+    // if (name === "sadhu_sadhvi_name" || name === "guruName" || name === "gadipati" || name === "acharya") {
+    //   sanitizedValue = `Param Pujya ${value
+    //     .replace(/^Param Pujya\s*/i, "")
+    //     .trim()}`;
+    // }
+
+
+    if (
+      name === "sadhu_sadhvi_name" ||
+      name === "guruName" ||
+      name === "gadipati" ||
+      name === "acharya"
+    ) {
+      sanitizedValue = value
+        .replace(/^Param Pujya\s*/i, "")   // remove old prefix
+        .replace(/[0-9]/g, "")            // remove digits
+        .replace(/[^a-zA-Z\s]/g, "")      // allow only letters + space
+        .replace(/\s{2,}/g, " ")          // multiple spaces => single
+        .replace(/^\s+/, "");             // allow typing after prefix
+
+      sanitizedValue = `Param Pujya ${sanitizedValue}`;
     }
+    
 
     setFormData((prev) => {
       let nextState = { ...prev, [name]: sanitizedValue };
@@ -947,6 +965,87 @@ const DiksharthiDetailsAdd = () => {
   const validate = () => {
     debugger
     let newErrors = {};
+
+    // ==========================================
+    // ✅ STEP 1: M.S. Details Validation
+    // ==========================================
+    if (currentStep === 1) {
+      if (!String(formData.sadhu_sadhvi_name || "").trim()) {
+        newErrors.sadhu_sadhvi_name = "Name is required";
+      }
+
+      if (!String(formData.fanIdExists || "").trim()) {
+        newErrors.fanIdExists = "Please select Yes or No";
+      }
+
+      if (
+        formData.fanIdExists === "Yes" &&
+        !String(formData.fan_id || fanIdSearch || "").trim()
+      ) {
+        newErrors.fan_id = "Please select FAN ID";
+      }
+
+      if (!String(formData.gender || "").trim()) {
+        newErrors.gender = "Gender is required";
+      }
+
+      if (!String(formData.pad || "").trim()) {
+        newErrors.pad = "Pad is required";
+      }
+
+      if (!String(formData.samudaay || "").trim()) {
+        newErrors.samudaay = "Samudaay is required";
+      }
+
+      if (!String(formData.guruName || "").trim()) {
+        newErrors.guruName = "Guru Name is required";
+      }
+
+      if (!String(formData.acharya || "").trim()) {
+        newErrors.acharya = "Acharya Name is required";
+      }
+
+      if (!String(formData.gadipati || "").trim()) {
+        newErrors.gadipati = "Gadipati Name is required";
+      }
+
+      if (!String(formData.isAlive || "").trim()) {
+        newErrors.isAlive = "Please select Yes or No";
+      }
+
+      // If Alive = Yes
+      if (
+        formData.isAlive === "Yes" &&
+        !String(formData.viharLocation || "").trim()
+      ) {
+        newErrors.viharLocation = "Vihar Location is required";
+      }
+
+      // If Alive = No
+      if (formData.isAlive === "No") {
+        if (!String(formData.samadhiDate || "").trim()) {
+          newErrors.samadhiDate = "Samadhi Date is required";
+        }
+
+        if (!String(formData.samadhiPlace || "").trim()) {
+          newErrors.samadhiPlace = "Samadhi Place is required";
+        }
+      }
+
+      if (!String(formData.rbfCriteria || "").trim()) {
+        newErrors.rbfCriteria = "Please select Yes or No";
+      }
+
+      if (!String(formData.relation_name || "").trim()) {
+        newErrors.relation_name = "Relation Name is required";
+      }
+      if (!String(formData.spokenTo || "").trim()) {
+        newErrors.spokenTo = "Spoken To is required";
+      }
+      if (!String(formData.spokenTo_Relation || "").trim()) {
+        newErrors.spokenTo_Relation = "Spoken Relation Name is required";
+      }
+    }
 
     // ==========================================
     // ✅ STEP 3: Address and House Details
@@ -2816,7 +2915,7 @@ const DiksharthiDetailsAdd = () => {
                     }}
                   />
                   <label className="text-sm text-slate-700 cursor-pointer">
-                    Same as Permanent Address
+                    Same as Current Address
                   </label>
                 </div>
 
@@ -3098,7 +3197,7 @@ const DiksharthiDetailsAdd = () => {
 
               <div className="col-span-1 md:col-span-2 xl:col-span-2 border border-slate-200 rounded-lg p-4 bg-slate-50">
                 <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Does the family have any Mediclaim policy?
+                  Does the family have any Mediclaim policy? <span className="text-red-500">*</span>
                 </label>
                 <div className="flex gap-4 mt-2">
                   <label className="flex items-center gap-2 cursor-pointer">
@@ -3132,7 +3231,7 @@ const DiksharthiDetailsAdd = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                     <div>
                       <label className="block text-sm font-medium text-slate-700 mb-1">
-                        Mediclaim Type
+                        Mediclaim Type <span className="text-red-500">*</span>
                       </label>
                       <select
                         name="family_mediclaim_type"
@@ -3151,7 +3250,7 @@ const DiksharthiDetailsAdd = () => {
 
                     <div>
                       <label className="block text-sm font-medium text-slate-700 mb-1">
-                        Family Mediclaim Policy Amount
+                        Family Mediclaim Policy Amount <span className="text-red-500">*</span>
                       </label>
                       <input
                         name="Family_mediclaim_amount"
@@ -3167,7 +3266,7 @@ const DiksharthiDetailsAdd = () => {
 
                     <div>
                       <label className="block text-sm font-medium text-slate-700 mb-1">
-                        Mediclaim Premium Amount
+                        Mediclaim Premium Amount <span className="text-red-500">*</span>
                       </label>
                       <input
                         name="mediclaimPremiumAmount"
@@ -3185,7 +3284,7 @@ const DiksharthiDetailsAdd = () => {
 
                     <div>
                       <label className="block text-sm font-medium text-slate-700 mb-1">
-                        Mediclaim Company Name
+                        Mediclaim Company Name <span className="text-red-500">*</span>
                       </label>
                       <input
                         name="family_mediclaim_companyName"
@@ -3204,7 +3303,7 @@ const DiksharthiDetailsAdd = () => {
 
               <div className="col-span-1 md:col-span-2 xl:col-span-2 border border-slate-200 rounded-lg p-4 bg-slate-50">
                 <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Is any Sangh/NGO assistance received?
+                  Is any Sangh/NGO assistance received? <span className="text-red-500">*</span>
                 </label>
                 <div className="flex gap-4 mt-2">
                   <label className="flex items-center gap-2 cursor-pointer">
@@ -3244,7 +3343,7 @@ const DiksharthiDetailsAdd = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                     <div>
                       <label className="block text-sm font-medium text-slate-700 mb-1">
-                        Sangh Name
+                        Sangh Name<span className="text-red-500">*</span>
                       </label>
                       <input
                         name="sanghName"
@@ -3260,7 +3359,7 @@ const DiksharthiDetailsAdd = () => {
 
                     <div>
                       <label className="block text-sm font-medium text-slate-700 mb-1">
-                        Amount
+                        Amount <span className="text-red-500">*</span>
                       </label>
                       <input
                         name="ngoAmount"
@@ -3276,7 +3375,7 @@ const DiksharthiDetailsAdd = () => {
 
                     <div>
                       <label className="block text-sm font-medium text-slate-700 mb-1">
-                        Frequency
+                        Frequency <span className="text-red-500">*</span>
                       </label>
                       <select
                         name="ngoFrequency"
@@ -3296,7 +3395,7 @@ const DiksharthiDetailsAdd = () => {
 
                     <div>
                       <label className="block text-sm font-medium text-slate-700 mb-1">
-                        Details / Remark
+                        Details / Remark <span className="text-red-500">*</span>
                       </label>
                       <textarea
                         name="ngoRemark"
@@ -3396,7 +3495,7 @@ const DiksharthiDetailsAdd = () => {
             <>
               <div className="col-span-4">
                 <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Summary
+                  Summary <span className="text-red-500">*</span>
                 </label>
 
                 <JoditEditor

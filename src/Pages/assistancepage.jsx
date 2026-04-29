@@ -86,7 +86,7 @@ const capitalizeFirst = (text) => {
 
 const STATUS_LABELS = {
   pending: "Pending",
-  approve: "Approved",
+  approved: "Approved",
   rejected: "Rejected",
   queries: "Queries",
   send_to_committee_member: "Send to Committee Member",
@@ -113,7 +113,8 @@ const STATUS_LABELS = {
 const getStatusToneClass = (status) => {
   const normalizedStatus = normalizeWorkflowValue(status);
 
-  if (normalizedStatus === "approve") return "text-green-600";
+  if (
+    normalizedStatus === "approve" ||normalizedStatus === "approved") return "text-green-600";
   if (normalizedStatus === "rejected") return "text-red-600";
   if (normalizedStatus === "queries") return "text-amber-600";
 
@@ -128,11 +129,28 @@ const getStatusToneClass = (status) => {
   return "text-yellow-600";
 };
 
+// const getStatusLabel = (status) => {
+//   const normalizedStatus = normalizeWorkflowValue(status);
+
+//   if (normalizedStatus === "case coordinator") {
+//     return "Approve by Expert Panel";
+//   }
+
+//   return capitalizeFirst(status);
+// };
+
 const getStatusLabel = (status) => {
   const normalizedStatus = normalizeWorkflowValue(status);
 
   if (normalizedStatus === "case coordinator") {
-    return "Approve by Expert Panel";
+    return "Approved by Expert Panel";
+  }
+
+  if (
+    normalizedStatus === "approve" ||
+    normalizedStatus === "approved"
+  ) {
+    return "Approved";
   }
 
   return capitalizeFirst(status);
@@ -153,7 +171,7 @@ const getAllowedActions = ({ role, status }) => {
       return ["send-to-expert-panel", "rejected", "queries"];
     }
     if ( normalizedStatus === "case coordinator") {
-      return ["approve", "rejected", "queries"];
+      return ["approve", "send-to-committee-member", "rejected", "queries"];
     }
   }
 
@@ -558,8 +576,8 @@ const AssistancePage = () => {
   };
 
   const actionTitleMap = {
-    approve: "Approve Request",
-    rejected: "Reject Request",
+    approve: "Approved Request",
+    rejected: "Rejected Request",
     queries: "Raise Query",
     "send-to-committee-member": "Send To Committee Member",
     "send-to-expert-panel": "Send To Expert Panel",
@@ -717,7 +735,7 @@ const AssistancePage = () => {
                                     onClick={() => { handleOpenActionModal(row, "approve"); setOpenDropdownId(null); }}
                                     className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-green-600 hover:bg-green-50 transition-colors"
                                   >
-                                    <CheckCircle size={16} /> Approve
+                                    <CheckCircle size={16} /> Approved
                                   </button>
                                 )}
                                 {allowedActions.includes("queries") && (
@@ -1250,8 +1268,8 @@ const AssistancePage = () => {
                               >
                                 {item?.status?.toLowerCase() === "committee-member"
                                   ? "Case Co-ordinator Summary"
-                                  : item?.status?.toLowerCase() === "approve"
-                                    ? "Approve"
+                                  : ["approve", "approved"].includes(item?.status?.toLowerCase())
+                                    ? "Approved"
                                     : capitalizeFirst(asDisplayText(item?.status, "Status"))}
                               </span>
                               <span className="text-[11px] text-slate-400 font-medium flex items-center gap-1">
