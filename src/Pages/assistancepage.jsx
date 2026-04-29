@@ -85,8 +85,8 @@ const capitalizeFirst = (text) => {
 };
 
 const STATUS_LABELS = {
-  pending: "Pending11",
-  approve: "Approve",
+  pending: "Pending",
+  approve: "Approved",
   rejected: "Rejected",
   queries: "Queries",
   send_to_committee_member: "Send to Committee Member",

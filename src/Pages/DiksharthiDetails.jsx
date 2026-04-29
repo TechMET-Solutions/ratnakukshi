@@ -351,7 +351,7 @@ const DiksharthiListing = () => {
 
       } else if (
         role === "case-coordinator" ||
-        role === "committer-member" ||
+        role === "committee-member" ||
         role === "export-panel" ||
         role === "expert-panel-livelihoodexpenses" ||
         role === "expert-panel-job" ||
