@@ -2,14 +2,14 @@ import axios from "axios";
 import JoditEditor from "jodit-react";
 import {
   CheckCircle,
+  Clock,
+  EllipsisVertical,
   Eye,
   FileText,
   Search,
   User,
   X,
-  XCircle,
-  EllipsisVertical,
-  Clock
+  XCircle
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -114,7 +114,7 @@ const getStatusToneClass = (status) => {
   const normalizedStatus = normalizeWorkflowValue(status);
 
   if (
-    normalizedStatus === "approve" ||normalizedStatus === "approved") return "text-green-600";
+    normalizedStatus === "approve" || normalizedStatus === "approved") return "text-green-600";
   if (normalizedStatus === "rejected") return "text-red-600";
   if (normalizedStatus === "queries") return "text-amber-600";
 
@@ -139,11 +139,37 @@ const getStatusToneClass = (status) => {
 //   return capitalizeFirst(status);
 // };
 
+// const getStatusLabel = (status) => {
+//   const normalizedStatus = normalizeWorkflowValue(status);
+
+//   if (normalizedStatus === "case coordinator") {
+//     return "Received form Expert Panel";
+//   }
+
+//   if (normalizedStatus === "send_to_case_coordinator") {
+//     return "Received form Committee Member";
+//   }
+
+//   if (
+//     normalizedStatus === "approve" ||
+//     normalizedStatus === "approved"
+//   ) {
+//     return "Approved";
+//   }
+
+//   return capitalizeFirst(status);
+// };
+
+
 const getStatusLabel = (status) => {
   const normalizedStatus = normalizeWorkflowValue(status);
 
   if (normalizedStatus === "case coordinator") {
-    return "Approved by Expert Panel";
+    return "Received from Expert Panel";
+  }
+
+  if (normalizedStatus === "send to case coordinator") {
+    return "Received from Committee Member";
   }
 
   if (
@@ -153,9 +179,16 @@ const getStatusLabel = (status) => {
     return "Approved";
   }
 
-  return capitalizeFirst(status);
-};
+  if (normalizedStatus === "committee member") {
+    return "Received by Committee Member";
+  }
 
+  if (normalizedStatus === "expert panel") {
+    return "Received by Expert Panel";
+  }
+
+  return capitalizeFirst(asDisplayText(status));
+};
 
 const getAllowedActions = ({ role, status }) => {
   const normalizedRole = normalizeWorkflowValue(role);
@@ -167,10 +200,13 @@ const getAllowedActions = ({ role, status }) => {
       return ["approve", "queries", "send-to-committee-member", "rejected", "queries"];
     }
 
-    if (normalizedStatus === "committee member" ) {
+    if (normalizedStatus === "committee member") {
       return ["send-to-expert-panel", "rejected", "queries"];
     }
-    if ( normalizedStatus === "case coordinator") {
+    if (normalizedStatus === "case coordinator") {
+      return ["approve", "send-to-committee-member", "rejected", "queries"];
+    }
+    if (normalizedStatus === "send to case coordinator") {
       return ["approve", "send-to-committee-member", "rejected", "queries"];
     }
   }
@@ -262,7 +298,7 @@ const AssistancePage = () => {
       setTableData([]);
     }
   };
-  
+
   // useEffect(() => {
   //   fetchFamilyAccounting();
   // }, []);
@@ -715,7 +751,7 @@ const AssistancePage = () => {
                             >
                               <Eye size={16} className="text-yellow-500" /> View Details
                             </button>
-                            {(hasQuery || !isStaff ) && (
+                            {(hasQuery || !isStaff) && (
                               <button
                                 onClick={() => {
                                   setViewQueryRow(row);
@@ -820,8 +856,8 @@ const AssistancePage = () => {
   );
 
 
- 
-  
+
+
   const groupByRelation = (data) => {
     const grouped = {};
 

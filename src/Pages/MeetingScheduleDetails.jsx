@@ -75,13 +75,13 @@ const getAllowedActions = ({ role, status }) => {
 
     if (normalizedRole === "committee member") {
         if (normalizedStatus === "committee member") {
-            return ["approve", "rejected", "queries"];
+            return ["approve", "rejected", "queries", "send_to_case_coordinator"];
         }
     }
 
     if (isExpertPanelRole(normalizedRole)) {
         if (normalizedStatus === "expert panel") {
-            return ["queries"];
+            return ["send_to_case_coordinator", "queries"];
         }
     }
 
@@ -274,12 +274,14 @@ function MeetingScheduleDetails() {
         approve: "Approve Request",
         rejected: "Reject Request",
         queries: "Raise Query",
+        send_to_case_coordinator: "Send to Case Coordinator",
     };
 
     const actionButtonLabelMap = {
         approve: "Approve",
         rejected: "Reject",
         queries: "Submit Query",
+        send_to_case_coordinator: "Send",
     };
 
     return (
@@ -425,7 +427,7 @@ function MeetingScheduleDetails() {
                                                                 </button>
 
                                                                 {isOpen && (
-                                                                    <div className="fixed right-10 mt-2 z-[9999] w-56 rounded-xl border border-slate-200 bg-white shadow-xl">
+                                                                    <div className="fixed right-10 mt-2 z-[9999] w-60 rounded-xl border border-slate-200 bg-white shadow-xl">
                                                                         <div className="py-1">
                                                                             <button
                                                                                 onClick={() => {
@@ -460,6 +462,18 @@ function MeetingScheduleDetails() {
                                                                                             className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-green-600 hover:bg-green-50"
                                                                                         >
                                                                                             <CheckCircle size={16} /> Approve
+                                                                                        </button>
+                                                                                    )}
+                                                                                    {allowedActions.includes("send_to_case_coordinator") && (
+                                                                                        <button
+                                                                                            onClick={() => {
+                                                                                                handleOpenActionModal(item, "send_to_case_coordinator");
+                                                                                                setOpenDropdownId(null);
+                                                                                            }}
+                                                                                            className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-blue-600 hover:bg-blue-50"
+                                                                                        >
+                                                                                            <CheckCircle size={16} />
+                                                                                            Send to Case Coordinator
                                                                                         </button>
                                                                                     )}
                                                                                     {allowedActions.includes("queries") && (

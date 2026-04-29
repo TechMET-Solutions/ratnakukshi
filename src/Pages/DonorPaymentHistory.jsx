@@ -483,7 +483,7 @@ function DonorPaymentHistory() {
 
               <div className="grid grid-cols-1 gap-1.5">
                 <label className="text-sm font-medium text-slate-700">
-                  From RBF Bank Account
+                  To RBF Bank Account
                 </label>
 
                 <select
@@ -511,10 +511,9 @@ function DonorPaymentHistory() {
                   className="w-full border border-slate-300 p-2.5 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 outline-none appearance-none"
                 >
                   <option value="">Select</option>
+                  <option value="Success">Success</option>
                   <option value="Pending">Pending</option>
-                  <option value="Completed">Completed</option>
-                  <option value="Failed">Failed</option>
-                  <option value="Cancelled">Cancelled</option>
+                 
                 </select>
               </div>
             </div>
