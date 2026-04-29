@@ -948,6 +948,100 @@ const DiksharthiDetailsAdd = () => {
     debugger
     let newErrors = {};
 
+    // ==========================================
+    // ✅ STEP 3: Address and House Details
+    // ==========================================
+    if (currentStep === 3) {
+      // Permanent Address
+      if (!String(formData.permanentAddress || "").trim()) {
+        newErrors.permanentAddress = "Permanent Address is required";
+      }
+
+      // Pin Code
+      if (!String(formData.pinCode || "").trim()) {
+        newErrors.pinCode = "Pin Code is required";
+      } else if (!/^\d{6}$/.test(formData.pinCode)) {
+        newErrors.pinCode = "Pin Code must be 6 digits";
+      }
+
+      // District / City
+      if (!String(formData.district || "").trim()) {
+        newErrors.district = "District / City is required";
+      }
+
+      // State
+      if (!String(formData.state || "").trim()) {
+        newErrors.state = "State is required";
+      }
+
+      // House (own or rented)
+      if (!formData.houseDetails) {
+        newErrors.houseDetails = "Please select Own or Rented";
+      }
+    }
+
+    // ==========================================
+    // ✅ STEP 4: Mediclaims and NGO
+    // ==========================================
+    if (currentStep === 4) {
+      // Mediclaim - must be explicitly set
+      if (formData.mediclaim === null || formData.mediclaim === undefined || formData.mediclaim === "") {
+        newErrors.mediclaim = "Please select Yes or No for Mediclaim";
+      }
+
+      // If Mediclaim is Yes, validate mediclaim fields
+      if (formData.mediclaim === true) {
+        if (!String(formData.family_mediclaim_type || "").trim()) {
+          newErrors.family_mediclaim_type = "Mediclaim Type is required";
+        }
+        if (!String(formData.Family_mediclaim_amount || "").trim()) {
+          newErrors.Family_mediclaim_amount = "Policy Amount is required";
+        }
+        if (!String(formData.mediclaimPremiumAmount || "").trim()) {
+          newErrors.mediclaimPremiumAmount = "Premium Amount is required";
+        }
+        if (!String(formData.family_mediclaim_companyName || "").trim()) {
+          newErrors.family_mediclaim_companyName = "Company Name is required";
+        }
+      }
+
+      // NGO Assistance - must be explicitly set
+      if (formData.ngoAssistance === null || formData.ngoAssistance === undefined || formData.ngoAssistance === "") {
+        newErrors.ngoAssistance = "Please select Yes or No for NGO Assistance";
+      }
+
+      // If NGO Assistance is Yes, validate NGO fields
+      if (formData.ngoAssistance === true) {
+        if (!String(formData.sanghName || "").trim()) {
+          newErrors.sanghName = "Sangh Name is required";
+        }
+        if (!String(formData.ngoAmount || "").trim()) {
+          newErrors.ngoAmount = "Amount is required";
+        }
+        if (!String(formData.ngoFrequency || "").trim()) {
+          newErrors.ngoFrequency = "Frequency is required";
+        }
+        if (!String(formData.ngoRemark || "").trim()) {
+          newErrors.ngoRemark = "Details / Remark is required";
+        }
+      }
+    }
+
+    // ==========================================
+    // ✅ STEP 5: Summary
+    // ==========================================
+    if (currentStep === 5) {
+      const summaryText = String(formData.summary || "").trim();
+      // Remove HTML tags for validation check
+      const plainText = summaryText.replace(/<[^>]*>/g, "").trim();
+      if (!plainText) {
+        newErrors.summary = "Summary is required";
+      }
+    }
+
+    // ==========================================
+    // ✅ FAMILY RELATIONS (Step 2 onwards)
+    // ==========================================
     if (formData.rbfCriteria === "Yes") {
       const selectedRelations = Array.isArray(formData?.familyRelations)
         ? formData.familyRelations
@@ -956,7 +1050,7 @@ const DiksharthiDetailsAdd = () => {
       selectedRelations.forEach((relationKey) => {
         const details = formData?.familyRelationDetails?.[relationKey] || {};
 
-        console.log(details,"details")
+        console.log(details, "details")
 
         // ✅ First Name
         if (!String(details?.firstName || "").trim()) {
@@ -2909,6 +3003,9 @@ const DiksharthiDetailsAdd = () => {
                     Rented
                   </label>
                 </div>
+                {errors.houseDetails && (
+                  <p className="text-red-500 text-xs">{errors.houseDetails}</p>
+                )}
               </div>
 
               <div>
@@ -3027,6 +3124,9 @@ const DiksharthiDetailsAdd = () => {
                     No
                   </label>
                 </div>
+                {errors.mediclaim && (
+                  <p className="text-red-500 text-xs mt-1">{errors.mediclaim}</p>
+                )}
 
                 {formData.mediclaim === true && (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
@@ -3044,6 +3144,9 @@ const DiksharthiDetailsAdd = () => {
                         <option value="single">Single</option>
                         <option value="joint">Joint</option>
                       </select>
+                      {errors.family_mediclaim_type && (
+                        <p className="text-red-500 text-xs mt-1">{errors.family_mediclaim_type}</p>
+                      )}
                     </div>
 
                     <div>
@@ -3057,6 +3160,9 @@ const DiksharthiDetailsAdd = () => {
                         type="number"
                         className="w-full p-2 border border-slate-300 rounded-md outline-none bg-white"
                       />
+                      {errors.Family_mediclaim_amount && (
+                        <p className="text-red-500 text-xs mt-1">{errors.Family_mediclaim_amount}</p>
+                      )}
                     </div>
 
                     <div>
@@ -3088,6 +3194,9 @@ const DiksharthiDetailsAdd = () => {
                         type="text"
                         className="w-full p-2 border border-slate-300 rounded-md outline-none bg-white"
                       />
+                      {errors.family_mediclaim_companyName && (
+                        <p className="text-red-500 text-xs mt-1">{errors.family_mediclaim_companyName}</p>
+                      )}
                     </div>
                   </div>
                 )}
@@ -3127,6 +3236,9 @@ const DiksharthiDetailsAdd = () => {
                     No
                   </label>
                 </div>
+                {errors.ngoAssistance && (
+                  <p className="text-red-500 text-xs mt-1">{errors.ngoAssistance}</p>
+                )}
 
                 {formData.ngoAssistance === true && (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
@@ -3141,6 +3253,9 @@ const DiksharthiDetailsAdd = () => {
                         type="text"
                         className="w-full p-2 border border-slate-300 rounded-md outline-none bg-white"
                       />
+                      {errors.sanghName && (
+                        <p className="text-red-500 text-xs mt-1">{errors.sanghName}</p>
+                      )}
                     </div>
 
                     <div>
@@ -3154,6 +3269,9 @@ const DiksharthiDetailsAdd = () => {
                         type="number"
                         className="w-full p-2 border border-slate-300 rounded-md outline-none bg-white"
                       />
+                      {errors.ngoAmount && (
+                        <p className="text-red-500 text-xs mt-1">{errors.ngoAmount}</p>
+                      )}
                     </div>
 
                     <div>
@@ -3171,6 +3289,9 @@ const DiksharthiDetailsAdd = () => {
                         <option value="Quarterly">Quarterly</option>
                         <option value="Annually">Annually</option>
                       </select>
+                      {errors.ngoFrequency && (
+                        <p className="text-red-500 text-xs mt-1">{errors.ngoFrequency}</p>
+                      )}
                     </div>
 
                     <div>
@@ -3184,6 +3305,9 @@ const DiksharthiDetailsAdd = () => {
                         rows={2}
                         className="w-full p-2 border border-slate-300 rounded-md outline-none resize-none bg-white"
                       />
+                      {errors.ngoRemark && (
+                        <p className="text-red-500 text-xs mt-1">{errors.ngoRemark}</p>
+                      )}
                     </div>
                   </div>
                 )}
@@ -3284,6 +3408,9 @@ const DiksharthiDetailsAdd = () => {
                     }))
                   }
                 />
+                {errors.summary && (
+                  <p className="text-red-500 text-xs mt-1">{errors.summary}</p>
+                )}
               </div>
 
               <div className="col-span-4 mt-2">
