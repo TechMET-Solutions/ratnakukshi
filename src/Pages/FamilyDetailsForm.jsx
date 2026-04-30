@@ -20,12 +20,12 @@ const INITIAL_FORM_DATA = {
   rentCost: "",
   lightBillCost: "",
   relations: [],
-  mediclaim: null,
+  mediclaim: false,
   family_mediclaim_type: "",
   Family_mediclaim_amount: "",
   mediclaimPremiumAmount: "",
   family_mediclaim_companyName: "",
-  ngoAssistance: null,
+  ngoAssistance: false,
   sanghName: "",
   ngoAmount: "",
   ngoFrequency: "",
@@ -777,7 +777,7 @@ const FamilyDetailsForm = () => {
     return true;
   });
 
-  const [assistanceData, setAssistanceData] = useState([]);
+  const [assistanceData, setAssistanceData] = useState({});
   const [selectedAssistance, setselectedAssistance] = useState([]);
   const [defaultAssistance, setdefaultAssisatce] = useState([]);
   console.log(selectedAssistance, "selectedAssistance")
@@ -1119,6 +1119,18 @@ const FamilyDetailsForm = () => {
             familyData?.formData?.rentCost ||
             diksharthiData?.rent_cost ||
             "",
+
+          // Do not prefill these sections from API data
+          mediclaim: false,
+          family_mediclaim_type: "",
+          Family_mediclaim_amount: "",
+          mediclaimPremiumAmount: "",
+          family_mediclaim_companyName: "",
+          ngoAssistance: false,
+          sanghName: "",
+          ngoAmount: "",
+          ngoFrequency: "",
+          ngoRemark: "",
         };
 
         // ✅ relationDetails REMOVE
@@ -1170,23 +1182,28 @@ const FamilyDetailsForm = () => {
 
           photo: member.photo || "",
 
-          mediclaim: member.mediclaimType ? true : false,
-          mediclaim_amount: member.mediclaimAmount || "",
-          mediclaim_company_name: member.mediclaimCompanyName || "",
-          member_mediclaim_premium_amount: member.mediclaimPremiumAmount || "",
+          // Do not prefill Mediclaim fields from API
+          mediclaim: false,
+          mediclaim_amount: "",
+          mediclaim_company_name: "",
+          member_mediclaim_premium_amount: "",
 
           ayushman: member.ayushmanCoverage ? true : false,
           ayushman_Amount: member.ayushmanAmount || "",
 
-          needAssistance:
-            member.needAssistance === "yes" ? true : false,
+          // Do not prefill Need Assistance from API
+          needAssistance: false,
 
-          assistanceCategories: member.assistanceCategories || [],
+          // Do not prefill selected assistance categories from API
+          assistanceCategories: [],
           family_head: member.family_head || false,
         };
       });
 
       setRelationDetails(formattedData);
+      setAssistanceData({});
+      setDeselectedAssistance([]);
+      setExtraAssistance([]);
 
       const relationKeys = Object.keys(formattedData);
 

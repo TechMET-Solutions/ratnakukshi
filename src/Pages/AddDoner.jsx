@@ -505,7 +505,7 @@ function AddDonor() {
       }
 
       alert(
-        isEditMode ? "Donor Updated Successfully" : "Donor Created Successfully",
+        isEditMode ? "Members and Contributions Updated Successfully" : "Members and Contributions Created Successfully",
       );
 
       navigate("/members-contributions");

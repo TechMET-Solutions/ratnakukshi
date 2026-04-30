@@ -270,7 +270,7 @@ const Family_Details_Staff = ({
 
   console.log(additionalRelations, "additionalRelations");
   const [headOfFamily, setHeadOfFamily] = useState(null);
-  console.log(headOfFamily,"headOfFamily")
+  console.log(headOfFamily, "headOfFamily")
   const [familyRecordId, setFamilyRecordId] = useState(null);
   console.log(headOfFamily, "headOfFamily");
   const handleCheckbox = (relation) => {
@@ -743,168 +743,168 @@ const Family_Details_Staff = ({
     fetchFamily();
   }, [id, newdiksarthi]);
 
-  
 
 
-//   const handleSave = async () => {
-//     if (loading) return;
-//     setLoading(true);
 
-//     try {
-//       const errors = {};
-//       Object.entries(relationDetails || {}).forEach(([rel, details]) => {
-//         const mobile = details?.mobileNumber?.trim();
+  //   const handleSave = async () => {
+  //     if (loading) return;
+  //     setLoading(true);
 
-//         if (!mobile) {
-//           errors[`mobile_${rel}`] = "Mobile number required";
-//         } else if (!/^[1-9]\d{9}$/.test(mobile)) {
-//           errors[`mobile_${rel}`] = "Invalid mobile number";
-//         }
-//       });
+  //     try {
+  //       const errors = {};
+  //       Object.entries(relationDetails || {}).forEach(([rel, details]) => {
+  //         const mobile = details?.mobileNumber?.trim();
 
-//       if (Object.keys(errors).length > 0) {
-//         setValidationErrors(errors);
-//         alert("Please fix validation errors");
-//         return;
-//       }
- 
-// const cleaned = {};
+  //         if (!mobile) {
+  //           errors[`mobile_${rel}`] = "Mobile number required";
+  //         } else if (!/^[1-9]\d{9}$/.test(mobile)) {
+  //           errors[`mobile_${rel}`] = "Invalid mobile number";
+  //         }
+  //       });
 
-// Object.entries(relationDetails || {}).forEach(([relationKey, val]) => {
-//   if (!val) return;
+  //       if (Object.keys(errors).length > 0) {
+  //         setValidationErrors(errors);
+  //         alert("Please fix validation errors");
+  //         return;
+  //       }
 
-//   cleaned[relationKey] = {
-//     relationKey,
+  // const cleaned = {};
 
-//     // ✅ BASIC
-//     firstName: val.firstName?.trim() || "",
-//     lastName: val.lastName?.trim() || "",
-//     mobileNumber: val.mobileNumber?.trim() || "",
-//     aadharNumber: val.aadharNumber?.trim() || "",
-//     panNumber: val.panNumber?.trim() || "",
-//     // family_head: !!val.family_head,
-//     guardian: val.guardian || "",
-//    family_head: headOfFamily === relationKey,
-//     // ✅ PERSONAL
-//     dob: val.dob || "",
-//     age: val.age || "",
+  // Object.entries(relationDetails || {}).forEach(([relationKey, val]) => {
+  //   if (!val) return;
 
-//     // ✅ AYUSHMAN
-//     ayushmanCoverage: val.ayushmanCoverage || val.ayushman || "",
-//     ayushmanAmount:
-//       val.ayushmanAmount ||
-//       val.ayushman_Amount ||
-//       "",
+  //   cleaned[relationKey] = {
+  //     relationKey,
 
-//     // ✅ MEDICLAIM
-//     medicalPolicy: val.medicalPolicy || val.mediclaim || "",
-//     mediclaimAmount:
-//       val.mediclaimAmount ||
-//       val.mediclaim_amount ||
-//       "",
-//     mediclaimCompanyName:
-//       val.mediclaimCompanyName ||
-//       val.mediclaim_company_name ||
-//       "",
-//     mediclaimPremiumAmount:
-//       val.mediclaimPremiumAmount ||
-//       val.member_mediclaim_premium_amount ||
-//       "",
-//     mediclaimType:
-//       val.mediclaimType ||
-//       val.mediclaim_type ||
-//       "",
+  //     // ✅ BASIC
+  //     firstName: val.firstName?.trim() || "",
+  //     lastName: val.lastName?.trim() || "",
+  //     mobileNumber: val.mobileNumber?.trim() || "",
+  //     aadharNumber: val.aadharNumber?.trim() || "",
+  //     panNumber: val.panNumber?.trim() || "",
+  //     // family_head: !!val.family_head,
+  //     guardian: val.guardian || "",
+  //    family_head: headOfFamily === relationKey,
+  //     // ✅ PERSONAL
+  //     dob: val.dob || "",
+  //     age: val.age || "",
 
-//     // ✅ ASSISTANCE
-//     needAssistance: val.needAssistance || "",
+  //     // ✅ AYUSHMAN
+  //     ayushmanCoverage: val.ayushmanCoverage || val.ayushman || "",
+  //     ayushmanAmount:
+  //       val.ayushmanAmount ||
+  //       val.ayushman_Amount ||
+  //       "",
 
-//     // ✅ EXTRA (optional future safe)
-//     assistanceCategories: val.assistanceCategories || [],
-//   };
-// });
-//       // ================================
-//       // 🔥 ASSISTANCE
-//       // ================================
-//       // const formattedAssistance = assistanceData || {};
+  //     // ✅ MEDICLAIM
+  //     medicalPolicy: val.medicalPolicy || val.mediclaim || "",
+  //     mediclaimAmount:
+  //       val.mediclaimAmount ||
+  //       val.mediclaim_amount ||
+  //       "",
+  //     mediclaimCompanyName:
+  //       val.mediclaimCompanyName ||
+  //       val.mediclaim_company_name ||
+  //       "",
+  //     mediclaimPremiumAmount:
+  //       val.mediclaimPremiumAmount ||
+  //       val.member_mediclaim_premium_amount ||
+  //       "",
+  //     mediclaimType:
+  //       val.mediclaimType ||
+  //       val.mediclaim_type ||
+  //       "",
 
-//       const formattedAssistance = {};
+  //     // ✅ ASSISTANCE
+  //     needAssistance: val.needAssistance || "",
 
-//       Object.entries(assistanceData || {}).forEach(([rel, types]) => {
-//         formattedAssistance[rel] = {};
+  //     // ✅ EXTRA (optional future safe)
+  //     assistanceCategories: val.assistanceCategories || [],
+  //   };
+  // });
+  //       // ================================
+  //       // 🔥 ASSISTANCE
+  //       // ================================
+  //       // const formattedAssistance = assistanceData || {};
 
-//         Object.entries(types || {}).forEach(([type, data]) => {
-//           // ❌ skip empty data
-//           if (!data || Object.keys(data).length === 0) return;
+  //       const formattedAssistance = {};
 
-//           // ✅ unique by type (overwrite if duplicate)
-//           formattedAssistance[rel][type] = data;
-//         });
-//       });
+  //       Object.entries(assistanceData || {}).forEach(([rel, types]) => {
+  //         formattedAssistance[rel] = {};
 
-//       // const assistanceTypesSet = new Set();
+  //         Object.entries(types || {}).forEach(([type, data]) => {
+  //           // ❌ skip empty data
+  //           if (!data || Object.keys(data).length === 0) return;
 
-//       const selectedAssistance = Array.from(
-//   new Set(
-//     Object.values(formattedAssistance)
-//       .flatMap((rel) => Object.keys(rel))
-//   )
-// );
+  //           // ✅ unique by type (overwrite if duplicate)
+  //           formattedAssistance[rel][type] = data;
+  //         });
+  //       });
 
-//       Object.values(formattedAssistance).forEach((relObj) => {
-//         Object.keys(relObj || {}).forEach((type) => {
-//           assistanceTypesSet.add(type);
-//         });
-//       });
+  //       // const assistanceTypesSet = new Set();
 
-//       const selectedAssistance = Array.from(assistanceTypesSet);
-//       const fd = new FormData();
+  //       const selectedAssistance = Array.from(
+  //   new Set(
+  //     Object.values(formattedAssistance)
+  //       .flatMap((rel) => Object.keys(rel))
+  //   )
+  // );
 
-//       fd.append("diksharthi_id", newdiksarthi); // optional but ok
+  //       Object.values(formattedAssistance).forEach((relObj) => {
+  //         Object.keys(relObj || {}).forEach((type) => {
+  //           assistanceTypesSet.add(type);
+  //         });
+  //       });
 
-//       fd.append("form_step", 2);
+  //       const selectedAssistance = Array.from(assistanceTypesSet);
+  //       const fd = new FormData();
 
-//       const relationArray = Object.keys(cleaned);
+  //       fd.append("diksharthi_id", newdiksarthi); // optional but ok
 
-//       fd.append("family_relation", relationArray.join(","));
-//       fd.append("family_relation_details", JSON.stringify(cleaned));
-//       fd.append("same_relations_with_fan", "No");
+  //       fd.append("form_step", 2);
 
-//       fd.append("assistance", selectedAssistance.join(","));
-//       fd.append("assistance_data", JSON.stringify(formattedAssistance));
+  //       const relationArray = Object.keys(cleaned);
 
-//       console.log("🚀 UPDATE PAYLOAD READY");
-//       const res = await axios.put(
-//         `${API}/api/update-diksharthi/${newdiksarthi}`, // ✅ ID HERE
-//         fd,
-//         {
-//           headers: { "Content-Type": "multipart/form-data" },
-//         },
-//       );
+  //       fd.append("family_relation", relationArray.join(","));
+  //       fd.append("family_relation_details", JSON.stringify(cleaned));
+  //       fd.append("same_relations_with_fan", "No");
 
-//       console.log("✅ UPDATE RESPONSE =>", res.data);
-//       setCurrentDiksarthiStore(true);
-//       setCurrentStep(3);
+  //       fd.append("assistance", selectedAssistance.join(","));
+  //       fd.append("assistance_data", JSON.stringify(formattedAssistance));
 
-//       if (res?.data?.success) {
-//         alert("Updated successfully ✅");
-//       } else {
-//         alert(res?.data?.message || "Update failed");
-//       }
-//     } catch (err) {
-//       console.error("❌ ERROR =>", err);
-//       alert("Something went wrong");
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
+  //       console.log("🚀 UPDATE PAYLOAD READY");
+  //       const res = await axios.put(
+  //         `${API}/api/update-diksharthi/${newdiksarthi}`, // ✅ ID HERE
+  //         fd,
+  //         {
+  //           headers: { "Content-Type": "multipart/form-data" },
+  //         },
+  //       );
 
-  
+  //       console.log("✅ UPDATE RESPONSE =>", res.data);
+  //       setCurrentDiksarthiStore(true);
+  //       setCurrentStep(3);
+
+  //       if (res?.data?.success) {
+  //         alert("Updated successfully ✅");
+  //       } else {
+  //         alert(res?.data?.message || "Update failed");
+  //       }
+  //     } catch (err) {
+  //       console.error("❌ ERROR =>", err);
+  //       alert("Something went wrong");
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
+
+
   // const handleSave = async () => {
   //   if (loading) return;
   //   setLoading(true);
 
   //   try {
-     
+
   //     const errors = {};
 
   //     Object.entries(relationDetails || {}).forEach(([rel, details]) => {
@@ -1055,197 +1055,205 @@ const Family_Details_Staff = ({
   // };
 
   const handleSave = async () => {
-  if (loading) return;
-  setLoading(true);
+    if (loading) return;
+    setLoading(true);
 
-  try {
-    const errors = {};
-    let hasHead = false;
+    try {
+      const errors = {};
+      let hasHead = false;
 
-    // ================================
-    // 🔹 VALIDATION
-    // ================================
-    Object.entries(relationDetails || {}).forEach(([rel, details]) => {
-      if (!details) return;
+      // ================================
+      // 🔹 VALIDATION
+      // ================================
+      Object.entries(relationDetails || {}).forEach(([rel, details]) => {
+        if (!details) return;
 
-      const firstName = details.firstName?.trim();
-      const lastName = details.lastName?.trim();
-      const mobile = details.mobileNumber?.trim();
+        const firstName = details.firstName?.trim();
+        const lastName = details.lastName?.trim();
+        const mobile = details.mobileNumber?.trim();
 
-      // Clean relation name (remove numbers)
-      const relationName = rel.replace(/\d+/g, "").toUpperCase();
+        // Clean relation name (remove numbers)
+        const relationName = rel.replace(/\d+/g, "").toUpperCase();
 
-      // ✅ First Name
-      if (!firstName) {
-        errors[`firstName_${rel}`] = `${relationName}: First Name is required`;
+        // ✅ First Name
+        if (!firstName) {
+          errors[`firstName_${rel}`] = `${relationName}: First Name is required`;
+        }
+
+        // ✅ Last Name
+        if (!lastName) {
+          errors[`lastName_${rel}`] = `${relationName}: Last Name is required`;
+        }
+
+        // ✅ Mobile validation
+        if (mobile && !/^[1-9]\d{9}$/.test(mobile)) {
+          errors[`mobile_${rel}`] = `${relationName}: Invalid mobile number`;
+        }
+
+        if (details.ayushman === null) {
+          errors[`ayushman_${rel}`] = "Please select Ayushman option";
+        }
+
+        if (details.mediclaim === null) {
+          errors[`mediclaim_${rel}`] = "Please select Mediclaim option";
+        }
+
+        // ✅ Head of Family check
+        if (headOfFamily === rel) {
+          hasHead = true;
+        }
+      });
+
+      // ❌ No Head selected
+      if (!hasHead) {
+        alert("⚠️ Please select at least one Head of Family");
+        return;
       }
 
-      // ✅ Last Name
-      if (!lastName) {
-        errors[`lastName_${rel}`] = `${relationName}: Last Name is required`;
+      // ❌ Validation errors
+      if (Object.keys(errors).length > 0) {
+        setValidationErrors(errors);
+
+        // const errorList = Object.values(errors).join("\n");
+        // alert(`⚠️ Please fix the following errors:\n\n${errorList}`);
+
+        return;
       }
 
-      // ✅ Mobile validation
-      if (mobile && !/^[1-9]\d{9}$/.test(mobile)) {
-        errors[`mobile_${rel}`] = `${relationName}: Invalid mobile number`;
-      }
+      // ================================
+      // 🔹 CLEAN DATA
+      // ================================
+      const cleaned = {};
 
-      // ✅ Head of Family check
-      if (headOfFamily === rel) {
-        hasHead = true;
-      }
-    });
+      Object.entries(relationDetails || {}).forEach(([relationKey, val]) => {
+        if (!val) return;
 
-    // ❌ No Head selected
-    if (!hasHead) {
-      alert("⚠️ Please select at least one Head of Family");
-      return;
-    }
+        cleaned[relationKey] = {
+          relationKey,
 
-    // ❌ Validation errors
-    if (Object.keys(errors).length > 0) {
-      setValidationErrors(errors);
+          firstName: val.firstName?.trim() || "",
+          lastName: val.lastName?.trim() || "",
+          mobileNumber: val.mobileNumber?.trim() || "",
+          aadharNumber: val.aadharNumber?.trim() || "",
+          panNumber: val.panNumber?.trim() || "",
+          guardian: val.guardian || "",
+          family_head: headOfFamily === relationKey,
 
-      // const errorList = Object.values(errors).join("\n");
-      // alert(`⚠️ Please fix the following errors:\n\n${errorList}`);
+          dob: val.dob || "",
+          age: val.age || "",
 
-      return;
-    }
+          ayushmanCoverage: val.ayushmanCoverage || val.ayushman || "",
+          ayushmanAmount:
+            val.ayushmanAmount || val.ayushman_Amount || "",
 
-    // ================================
-    // 🔹 CLEAN DATA
-    // ================================
-    const cleaned = {};
+          medicalPolicy: val.medicalPolicy || val.mediclaim || "",
+          mediclaimAmount:
+            val.mediclaimAmount || val.mediclaim_amount || "",
+          mediclaimCompanyName:
+            val.mediclaimCompanyName ||
+            val.mediclaim_company_name ||
+            "",
+          mediclaimPremiumAmount:
+            val.mediclaimPremiumAmount ||
+            val.member_mediclaim_premium_amount ||
+            "",
+          mediclaimType:
+            val.mediclaimType || val.mediclaim_type || "",
 
-    Object.entries(relationDetails || {}).forEach(([relationKey, val]) => {
-      if (!val) return;
-
-      cleaned[relationKey] = {
-        relationKey,
-
-        firstName: val.firstName?.trim() || "",
-        lastName: val.lastName?.trim() || "",
-        mobileNumber: val.mobileNumber?.trim() || "",
-        aadharNumber: val.aadharNumber?.trim() || "",
-        panNumber: val.panNumber?.trim() || "",
-        guardian: val.guardian || "",
-        family_head: headOfFamily === relationKey,
-
-        dob: val.dob || "",
-        age: val.age || "",
-
-        ayushmanCoverage: val.ayushmanCoverage || val.ayushman || "",
-        ayushmanAmount:
-          val.ayushmanAmount || val.ayushman_Amount || "",
-
-        medicalPolicy: val.medicalPolicy || val.mediclaim || "",
-        mediclaimAmount:
-          val.mediclaimAmount || val.mediclaim_amount || "",
-        mediclaimCompanyName:
-          val.mediclaimCompanyName ||
-          val.mediclaim_company_name ||
-          "",
-        mediclaimPremiumAmount:
-          val.mediclaimPremiumAmount ||
-          val.member_mediclaim_premium_amount ||
-          "",
-        mediclaimType:
-          val.mediclaimType || val.mediclaim_type || "",
-
-        needAssistance: val.needAssistance || "",
-        assistanceCategories: val.assistanceCategories || [],
-      };
-    });
-
-    // ================================
-    // 🔥 CLEAN ASSISTANCE DATA
-    // ================================
-    const formattedAssistance = {};
-
-    Object.entries(assistanceData || {}).forEach(([rel, types]) => {
-      if (!types || typeof types !== "object") return;
-
-      const uniqueTypes = {};
-
-      Object.entries(types).forEach(([type, data]) => {
-        if (!data || Object.keys(data).length === 0) return;
-
-        uniqueTypes[type] = {
-          ...data,
-          status: data?.status || "Pending",
+          needAssistance: val.needAssistance || "",
+          assistanceCategories: val.assistanceCategories || [],
         };
       });
 
-      if (Object.keys(uniqueTypes).length > 0) {
-        formattedAssistance[rel] = uniqueTypes;
+      // ================================
+      // 🔥 CLEAN ASSISTANCE DATA
+      // ================================
+      const formattedAssistance = {};
+
+      Object.entries(assistanceData || {}).forEach(([rel, types]) => {
+        if (!types || typeof types !== "object") return;
+
+        const uniqueTypes = {};
+
+        Object.entries(types).forEach(([type, data]) => {
+          if (!data || Object.keys(data).length === 0) return;
+
+          uniqueTypes[type] = {
+            ...data,
+            status: data?.status || "Pending",
+          };
+        });
+
+        if (Object.keys(uniqueTypes).length > 0) {
+          formattedAssistance[rel] = uniqueTypes;
+        }
+      });
+
+      // ================================
+      // 🔹 UNIQUE ASSISTANCE TYPES
+      // ================================
+      const selectedAssistance = [
+        ...new Set(
+          Object.values(formattedAssistance).flatMap((rel) =>
+            Object.keys(rel)
+          )
+        ),
+      ];
+
+      // ================================
+      // 🔹 FORM DATA
+      // ================================
+      const fd = new FormData();
+
+      fd.append("diksharthi_id", newdiksarthi);
+      fd.append("form_step", 2);
+
+      const relationArray = Object.keys(cleaned);
+
+      fd.append("family_relation", relationArray.join(","));
+      fd.append("family_relation_details", JSON.stringify(cleaned));
+      fd.append("same_relations_with_fan", "No");
+
+      fd.append("assistance", selectedAssistance.join(","));
+      fd.append(
+        "assistance_data",
+        JSON.stringify(formattedAssistance)
+      );
+
+      console.log("🚀 FINAL PAYLOAD:", {
+        cleaned,
+        formattedAssistance,
+        selectedAssistance,
+      });
+
+      // ================================
+      // 🔹 API CALL
+      // ================================
+      const res = await axios.put(
+        `${API}/api/update-diksharthi/${newdiksarthi}`,
+        fd,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        }
+      );
+
+      console.log("✅ RESPONSE =>", res.data);
+
+      if (res?.data?.success) {
+        alert("✅ Family Details Added Successfully");
+        setCurrentDiksarthiStore(true);
+        setCurrentStep(3);
+      } else {
+        alert(res?.data?.message || "❌ Update failed");
       }
-    });
 
-    // ================================
-    // 🔹 UNIQUE ASSISTANCE TYPES
-    // ================================
-    const selectedAssistance = [
-      ...new Set(
-        Object.values(formattedAssistance).flatMap((rel) =>
-          Object.keys(rel)
-        )
-      ),
-    ];
-
-    // ================================
-    // 🔹 FORM DATA
-    // ================================
-    const fd = new FormData();
-
-    fd.append("diksharthi_id", newdiksarthi);
-    fd.append("form_step", 2);
-
-    const relationArray = Object.keys(cleaned);
-
-    fd.append("family_relation", relationArray.join(","));
-    fd.append("family_relation_details", JSON.stringify(cleaned));
-    fd.append("same_relations_with_fan", "No");
-
-    fd.append("assistance", selectedAssistance.join(","));
-    fd.append(
-      "assistance_data",
-      JSON.stringify(formattedAssistance)
-    );
-
-    console.log("🚀 FINAL PAYLOAD:", {
-      cleaned,
-      formattedAssistance,
-      selectedAssistance,
-    });
-
-    // ================================
-    // 🔹 API CALL
-    // ================================
-    const res = await axios.put(
-      `${API}/api/update-diksharthi/${newdiksarthi}`,
-      fd,
-      {
-        headers: { "Content-Type": "multipart/form-data" },
-      }
-    );
-
-    console.log("✅ RESPONSE =>", res.data);
-
-    if (res?.data?.success) {
-      alert("✅ Family Details Added Successfully");
-      setCurrentDiksarthiStore(true);
-      setCurrentStep(3);
-    } else {
-      alert(res?.data?.message || "❌ Update failed");
+    } catch (err) {
+      console.error("❌ ERROR =>", err);
+      alert("❌ Something went wrong");
+    } finally {
+      setLoading(false);
     }
-
-  } catch (err) {
-    console.error("❌ ERROR =>", err);
-    alert("❌ Something went wrong");
-  } finally {
-    setLoading(false);
-  }
-};
+  };
   const handleMedicalChange = (relation, field, value) => {
     if (isAssistanceFieldLocked(relation, "Medical", field)) return;
 
@@ -1629,18 +1637,16 @@ const Family_Details_Staff = ({
                         {/* Head of Family Member - Exclusive */}
                         <div className="flex gap-4">
                           <div
-                            className={`mb-4 p-3 w-[180px] rounded-md ${
-                              headOfFamily !== null && headOfFamily !== rel
+                            className={`mb-4 p-3 w-[180px] rounded-md ${headOfFamily !== null && headOfFamily !== rel
                                 ? "bg-gray-100 opacity-50"
                                 : "bg-blue-50"
-                            }`}
+                              }`}
                           >
                             <label
-                              className={`flex items-center gap-2 ${
-                                headOfFamily !== null && headOfFamily !== rel
+                              className={`flex items-center gap-2 ${headOfFamily !== null && headOfFamily !== rel
                                   ? "cursor-not-allowed"
                                   : "cursor-pointer"
-                              }`}
+                                }`}
                             >
                               <input
                                 type="radio"
@@ -1755,10 +1761,10 @@ const Family_Details_Staff = ({
                             />
 
                             {validationErrors[`firstName_${rel}`] && (
-    <p className="text-red-500 text-xs mt-1">
-      {validationErrors[`firstName_${rel}`]}
-    </p>
-  )}
+                              <p className="text-red-500 text-xs mt-1">
+                                {validationErrors[`firstName_${rel}`]}
+                              </p>
+                            )}
                           </div>
                           <div className="w-[200px]">
                             <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -1777,11 +1783,11 @@ const Family_Details_Staff = ({
                               }}
                               className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                             />
-                             {validationErrors[`lastName_${rel}`] && (
-    <p className="text-red-500 text-xs mt-1">
-      {validationErrors[`lastName_${rel}`]}
-    </p>
-  )}
+                            {validationErrors[`lastName_${rel}`] && (
+                              <p className="text-red-500 text-xs mt-1">
+                                {validationErrors[`lastName_${rel}`]}
+                              </p>
+                            )}
                           </div>
 
                           {/* Aadhar Number */}
@@ -1816,7 +1822,6 @@ const Family_Details_Staff = ({
                           <div className="w-[200px]">
                             <label className="block text-sm font-medium text-slate-700 mb-1">
                               Aadhar Number
-                              <span className="text-red-500">*</span>
                             </label>
 
                             <input
@@ -1877,19 +1882,19 @@ const Family_Details_Staff = ({
                             <label className="block text-sm font-medium text-slate-700 mb-1">
                               DOB
                             </label>
-                           <input
-  type="date"
-  value={
-    relationDetails[rel]?.dob
-      ? relationDetails[rel].dob.split("T")[0]
-      : ""
-  }
-  max={new Date().toISOString().split("T")[0]}
-  onChange={(e) =>
-    handleRelationDetailChange(rel, "dob", e.target.value)
-  }
-  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
-/>
+                            <input
+                              type="date"
+                              value={
+                                relationDetails[rel]?.dob
+                                  ? relationDetails[rel].dob.split("T")[0]
+                                  : ""
+                              }
+                              max={new Date().toISOString().split("T")[0]}
+                              onChange={(e) =>
+                                handleRelationDetailChange(rel, "dob", e.target.value)
+                              }
+                              className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
+                            />
                           </div>
 
                           <div className="w-[120px]">
@@ -1971,7 +1976,7 @@ const Family_Details_Staff = ({
                                   type="radio"
                                   name={`ayushman-${rel}`}
                                   value="false"
-                                  
+
                                   // checked={
                                   //   toBool(
                                   //     relationDetails?.[rel]?.ayushmanCoverage
@@ -1993,6 +1998,11 @@ const Family_Details_Staff = ({
                                 No
                               </label>
                             </div>
+                            {validationErrors[`ayushman_${rel}`] && (
+                              <p className="text-red-500 text-xs mt-1">
+                                {validationErrors[`ayushman_${rel}`]}
+                              </p>
+                            )}
                           </div>
 
                           {/* Do they have any Mediclaim policy?* Radio */}
@@ -2006,7 +2016,7 @@ const Family_Details_Staff = ({
                                 <input
                                   type="radio"
                                   name={`mediclaim-${rel}`}
-                                  
+
 
                                   checked={
                                     toBool(
@@ -2046,70 +2056,76 @@ const Family_Details_Staff = ({
                                 />
                                 No
                               </label>
-                            </div>
+                              </div>
+                              
+                              {validationErrors[`mediclaim_${rel}`] && (
+                                <p className="text-red-500 text-xs mt-1">
+                                  {validationErrors[`mediclaim_${rel}`]}
+                                </p>
+                              )}
                           </div>
 
                           {!(
                             (rel === "Sister" || rel === "Daughter") &&
                             relationDetails[rel]?.isMarried === true
                           ) && (
-                            <div>
-                              <p className="text-sm font-medium text-slate-700 mb-2">
-                                Need Assistance
-                                <span className="text-red-500">*</span>
-                              </p>
-                              <div className="flex gap-4">
-                                <label className="flex items-center gap-2">
-                                  <input
-                                    type="radio"
-                                    name={`needAssistance-${rel}`}
-                                    // checked={
-                                    //   relationDetails[rel]?.needAssistance ===
-                                    //   true
-                                    // }
-                                    checked={toBool(relationDetails[rel]?.needAssistance) === true}
-                                    onChange={() => {
-                                      const aadhar =
-                                        relationDetails?.[rel]?.aadharNumber;
+                              <div>
+                                <p className="text-sm font-medium text-slate-700 mb-2">
+                                  Need Assistance
+                                  <span className="text-red-500">*</span>
+                                </p>
+                                <div className="flex gap-4">
+                                  <label className="flex items-center gap-2">
+                                    <input
+                                      type="radio"
+                                      name={`needAssistance-${rel}`}
+                                      // checked={
+                                      //   relationDetails[rel]?.needAssistance ===
+                                      //   true
+                                      // }
+                                      checked={toBool(relationDetails[rel]?.needAssistance) === true}
+                                      onChange={() => {
+                                        const aadhar =
+                                          relationDetails?.[rel]?.aadharNumber;
 
-                                      if (!aadhar || aadhar.trim() === "") {
-                                        alert(
-                                          "Please add the Aadhaar details first",
+                                        if (!aadhar || aadhar.trim() === "") {
+                                          alert(
+                                            "Please add the Aadhaar details first",
+                                          );
+                                          return;
+                                        }
+
+                                        handleRelationDetailChange(
+                                          rel,
+                                          "needAssistance",
+                                          true,
                                         );
-                                        return;
+                                      }}
+                                    />
+                                    Yes
+                                  </label>
+                                  <label className="flex items-center gap-2">
+                                    <input
+                                      type="radio"
+                                      name={`needAssistance-${rel}`}
+                                      // checked={
+                                      //   relationDetails[rel]?.needAssistance ===
+                                      //   false
+                                      // }
+                                      checked={toBool(relationDetails[rel]?.needAssistance) === false}
+                                      onChange={() =>
+                                        handleRelationDetailChange(
+                                          rel,
+                                          "needAssistance",
+                                          false,
+                                        )
                                       }
-
-                                      handleRelationDetailChange(
-                                        rel,
-                                        "needAssistance",
-                                        true,
-                                      );
-                                    }}
-                                  />
-                                  Yes
-                                </label>
-                                <label className="flex items-center gap-2">
-                                  <input
-                                    type="radio"
-                                    name={`needAssistance-${rel}`}
-                                    // checked={
-                                    //   relationDetails[rel]?.needAssistance ===
-                                    //   false
-                                    // }
-                                    checked={toBool(relationDetails[rel]?.needAssistance) === false}
-                                    onChange={() =>
-                                      handleRelationDetailChange(
-                                        rel,
-                                        "needAssistance",
-                                        false,
-                                      )
-                                    }
-                                  />
-                                  No
-                                </label>
+                                    />
+                                    No
+                                  </label>
+                                </div>
                               </div>
-                            </div>
-                          )}
+                            )}
                         </div>
                         {/* Amount - Conditional Render */}
                         <div className="flex gap-5">
@@ -2118,131 +2134,131 @@ const Family_Details_Staff = ({
                             relationDetails?.[rel]?.ayushmanCoverage ??
                             relationDetails?.[rel]?.ayushman_coverage
                           ) === true && (
-                            <div className="w-[200px] mt-4">
-                              <label className="block text-sm font-medium text-slate-700 mb-1">
-                                Ayushman Amount
-                              </label>
-                              <input
-                                type="number"
-                                value={
-                                  relationDetails[rel]?.ayushmanAmount || ""
-                                }
-                                onChange={(e) =>
-                                  handleRelationDetailChange(
-                                    rel,
-                                    "ayushmanAmount",
-                                    e.target.value,
-                                  )
-                                }
-                                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
-                              />
-                            </div>
-                          )}
-                            { 
-                              toBool(
-                                relationDetails?.[rel]?.mediclaim ??
-                                relationDetails?.[rel]?.medicalPolicy
-                          ) === true && (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                              <div className="w-[200px]">
+                              <div className="w-[200px] mt-4">
                                 <label className="block text-sm font-medium text-slate-700 mb-1">
-                                  Mediclaim Amount
+                                  Ayushman Amount
                                 </label>
                                 <input
                                   type="number"
                                   value={
-                                    relationDetails[rel]?.mediclaimAmount || ""
+                                    relationDetails[rel]?.ayushmanAmount || ""
                                   }
                                   onChange={(e) =>
                                     handleRelationDetailChange(
                                       rel,
-                                      "mediclaimAmount",
+                                      "ayushmanAmount",
                                       e.target.value,
                                     )
                                   }
                                   className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                                 />
                               </div>
-                              <div className="w-[200px]">
-                                <label className="block text-sm font-medium text-slate-700 mb-1">
-                                  Yearly Premium Amount
-                                  
-                                </label>
-                                <input
-                                  type="number"
-                                  value={
-                                    relationDetails[rel]
-                                      ?.mediclaimPremiumAmount || ""
-                                  }
-                                  onChange={(e) => {
-                                    const premium = Number(e.target.value);
-                                    const mediclaim = Number(
-                                      relationDetails[rel]?.mediclaim_amount,
-                                    );
-
-                                    // Prevent equal OR greater
-                                    if (premium >= mediclaim) {
-                                      alert(
-                                        "Yearly premium must be less than mediclaim amount",
-                                      );
-                                      return;
+                            )}
+                          {
+                            toBool(
+                              relationDetails?.[rel]?.mediclaim ??
+                              relationDetails?.[rel]?.medicalPolicy
+                            ) === true && (
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                                <div className="w-[200px]">
+                                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                                    Mediclaim Amount
+                                  </label>
+                                  <input
+                                    type="number"
+                                    value={
+                                      relationDetails[rel]?.mediclaimAmount || ""
                                     }
+                                    onChange={(e) =>
+                                      handleRelationDetailChange(
+                                        rel,
+                                        "mediclaimAmount",
+                                        e.target.value,
+                                      )
+                                    }
+                                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
+                                  />
+                                </div>
+                                <div className="w-[200px]">
+                                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                                    Yearly Premium Amount
 
-                                    handleRelationDetailChange(
-                                      rel,
-                                      "mediclaimPremiumAmount",
-                                      e.target.value,
-                                    );
-                                  }}
-                                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
-                                />
+                                  </label>
+                                  <input
+                                    type="number"
+                                    value={
+                                      relationDetails[rel]
+                                        ?.mediclaimPremiumAmount || ""
+                                    }
+                                    onChange={(e) => {
+                                      const premium = Number(e.target.value);
+                                      const mediclaim = Number(
+                                        relationDetails[rel]?.mediclaim_amount,
+                                      );
+
+                                      // Prevent equal OR greater
+                                      if (premium >= mediclaim) {
+                                        alert(
+                                          "Yearly premium must be less than mediclaim amount",
+                                        );
+                                        return;
+                                      }
+
+                                      handleRelationDetailChange(
+                                        rel,
+                                        "mediclaimPremiumAmount",
+                                        e.target.value,
+                                      );
+                                    }}
+                                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
+                                  />
+                                </div>
+                                <div className="w-[200px]">
+                                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                                    Mediclaim Company Name
+
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={
+                                      relationDetails[rel]
+                                        ?.mediclaimCompanyName || ""
+                                    }
+                                    onChange={(e) =>
+                                      handleRelationDetailChange(
+                                        rel,
+                                        "mediclaimCompanyName",
+                                        e.target.value,
+                                      )
+                                    }
+                                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
+                                  />
+                                </div>
+                                <div className="w-[200px]">
+                                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                                    Mediclaim Type
+
+                                  </label>
+                                  <select
+                                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
+                                    value={
+                                      relationDetails[rel]?.mediclaimType || ""
+                                    }
+                                    onChange={(e) =>
+                                      handleRelationDetailChange(
+                                        rel,
+                                        "mediclaimType",
+                                        e.target.value,
+                                      )
+                                    }
+                                  >
+                                    <option value="">Select Type</option>
+                                    <option value="single">Single</option>
+                                    <option value="joint">Joint</option>
+                                  </select>
+                                </div>
                               </div>
-                              <div className="w-[200px]">
-                                <label className="block text-sm font-medium text-slate-700 mb-1">
-                                  Mediclaim Company Name
-                                 
-                                </label>
-                                <input
-                                  type="text"
-                                  value={
-                                    relationDetails[rel]
-                                      ?.mediclaimCompanyName || ""
-                                  }
-                                  onChange={(e) =>
-                                    handleRelationDetailChange(
-                                      rel,
-                                      "mediclaimCompanyName",
-                                      e.target.value,
-                                    )
-                                  }
-                                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
-                                />
-                              </div>
-                              <div className="w-[200px]">
-                                <label className="block text-sm font-medium text-slate-700 mb-1">
-                                  Mediclaim Type
-                                 
-                                </label>
-                                <select
-                                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
-                                  value={
-                                    relationDetails[rel]?.mediclaimType || ""
-                                  }
-                                  onChange={(e) =>
-                                    handleRelationDetailChange(
-                                      rel,
-                                      "mediclaimType",
-                                      e.target.value,
-                                    )
-                                  }
-                                >
-                                  <option value="">Select Type</option>
-                                  <option value="single">Single</option>
-                                  <option value="joint">Joint</option>
-                                </select>
-                              </div>
-                            </div>
-                          )}
+                            )}
                         </div>
 
                         {/* Show Assistance Categories when Need Assistance is Yes */}
@@ -2279,20 +2295,20 @@ const Family_Details_Staff = ({
                                   defaultAssistance,
                                 )
                                   ? defaultAssistance
-                                      .filter((i) => i) // remove null/undefined
-                                      .map((i) =>
-                                        String(i).toLowerCase().trim(),
-                                      )
+                                    .filter((i) => i) // remove null/undefined
+                                    .map((i) =>
+                                      String(i).toLowerCase().trim(),
+                                    )
                                   : [];
                                 const extraAssist = Array.isArray(
                                   selectedAssistance,
                                 )
                                   ? selectedAssistance.map((i) =>
-                                      String(i).toLowerCase(),
-                                    )
+                                    String(i).toLowerCase(),
+                                  )
                                   : Object.values(selectedAssistance || {}).map(
-                                      (i) => String(i).toLowerCase(),
-                                    );
+                                    (i) => String(i).toLowerCase(),
+                                  );
 
                                 const isSameRelation =
                                   rel?.toLowerCase() ===
@@ -2421,257 +2437,257 @@ const Family_Details_Staff = ({
                               Object.keys(assistanceData?.[rel] || {}).includes("Medical") ||
                               (selectedRelation === rel &&
                                 selectedAssistance?.includes("Medical"))) && (
-                              <div className="mt-6 p-6 border rounded-lg bg-white shadow-sm font-sans">
-                                <h3 className="text-xl font-semibold mb-6 text-gray-800">
-                                  Medical support Assistance
-                                </h3>
+                                <div className="mt-6 p-6 border rounded-lg bg-white shadow-sm font-sans">
+                                  <h3 className="text-xl font-semibold mb-6 text-gray-800">
+                                    Medical support Assistance
+                                  </h3>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-6">
-                                  {/* Row 1 */}
-                                  <div className="flex flex-col gap-1">
-                                    <label className="text-[11px] font-bold uppercase text-gray-500">
-                                      Type of Medical Issue?*
-                                    </label>
-                                    <select
-                                      className="border p-2 rounded bg-white outline-none focus:border-blue-500"
-                                      value={
-                                        assistanceData[rel]?.Medical
-                                          ?.issueType || ""
-                                      }
-                                      onChange={(e) =>
-                                        handleMedicalChange(
-                                          rel,
-                                          "issueType",
-                                          e.target.value,
-                                        )
-                                      }
-                                    >
-                                      <option value="Surgery">Surgery</option>
-                                      <option value="Medicine">Medicine</option>
-                                      <option value="Therapy">Therapy</option>
-                                    </select>
-                                  </div>
+                                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-6">
+                                    {/* Row 1 */}
+                                    <div className="flex flex-col gap-1">
+                                      <label className="text-[11px] font-bold uppercase text-gray-500">
+                                        Type of Medical Issue?*
+                                      </label>
+                                      <select
+                                        className="border p-2 rounded bg-white outline-none focus:border-blue-500"
+                                        value={
+                                          assistanceData[rel]?.Medical
+                                            ?.issueType || ""
+                                        }
+                                        onChange={(e) =>
+                                          handleMedicalChange(
+                                            rel,
+                                            "issueType",
+                                            e.target.value,
+                                          )
+                                        }
+                                      >
+                                        <option value="Surgery">Surgery</option>
+                                        <option value="Medicine">Medicine</option>
+                                        <option value="Therapy">Therapy</option>
+                                      </select>
+                                    </div>
 
-                                  <div className="flex flex-col gap-2 md:col-span-2 lg:col-span-3">
-                                    <label className="text-[11px] font-bold uppercase text-gray-500">
-                                      Disease / Condition Name*
-                                    </label>
+                                    <div className="flex flex-col gap-2 md:col-span-2 lg:col-span-3">
+                                      <label className="text-[11px] font-bold uppercase text-gray-500">
+                                        Disease / Condition Name*
+                                      </label>
 
-                                    {(assistanceData[rel]?.Medical?.diseases
-                                      ?.length
-                                      ? assistanceData[rel]?.Medical?.diseases
-                                      : [
+                                      {(assistanceData[rel]?.Medical?.diseases
+                                        ?.length
+                                        ? assistanceData[rel]?.Medical?.diseases
+                                        : [
                                           {
                                             diseaseName:
                                               assistanceData[rel]?.Medical
                                                 ?.diseaseName || "",
                                           },
                                         ]
-                                    ).map((diseaseItem, diseaseIndex) => (
-                                      <div
-                                        key={`${rel}-disease-${diseaseIndex}`}
-                                        className="flex gap-2 items-center"
-                                      >
-                                        <input
-                                          type="text"
-                                          value={diseaseItem?.diseaseName || ""}
-                                          onChange={(e) =>
-                                            handleDiseaseChange(
-                                              rel,
-                                              diseaseIndex,
-                                              "diseaseName",
-                                              e.target.value,
-                                            )
-                                          }
-                                          className="border p-2 rounded outline-none focus:border-blue-500 flex-1"
-                                          placeholder={`Disease ${diseaseIndex + 1}`}
-                                        />
-                                        {(assistanceData[rel]?.Medical?.diseases
-                                          ?.length || 1) > 1 && (
-                                          <button
-                                            type="button"
-                                            className="px-3 py-2 rounded bg-red-100 text-red-700 text-sm"
-                                            onClick={() => {
-                                              const filteredDiseases = (
-                                                assistanceData[rel]?.Medical
-                                                  ?.diseases || []
-                                              ).filter(
-                                                (_, idx) =>
-                                                  idx !== diseaseIndex,
-                                              );
+                                      ).map((diseaseItem, diseaseIndex) => (
+                                        <div
+                                          key={`${rel}-disease-${diseaseIndex}`}
+                                          className="flex gap-2 items-center"
+                                        >
+                                          <input
+                                            type="text"
+                                            value={diseaseItem?.diseaseName || ""}
+                                            onChange={(e) =>
                                               handleDiseaseChange(
                                                 rel,
                                                 diseaseIndex,
-                                                "removeDisease",
-                                                filteredDiseases,
-                                              );
-                                            }}
-                                          >
-                                            Remove
-                                          </button>
-                                        )}
-                                      </div>
-                                    ))}
-
-                                    <button
-                                      type="button"
-                                      className="w-fit px-3 py-2 rounded bg-blue-50 text-blue-700 text-sm"
-                                      onClick={() => handleAddDisease(rel)}
-                                    >
-                                      + Add Disease
-                                    </button>
-                                  </div>
-
-                                  <div className="flex flex-col gap-1">
-                                    <label className="text-[11px] font-bold uppercase text-gray-500">
-                                      Any Permanent Issue?*
-                                    </label>
-                                    <div className="flex gap-4 mt-2">
-                                      {["Yes", "No"].map((opt) => (
-                                        <label
-                                          key={opt}
-                                          className="flex items-center gap-2 text-sm"
-                                        >
-                                          <input
-                                            type="radio"
-                                            name={`perm-${rel}`}
-                                            checked={
-                                              assistanceData[rel]?.Medical
-                                                ?.isPermanent === opt
-                                            }
-                                            onChange={() =>
-                                              handleMedicalChange(
-                                                rel,
-                                                "isPermanent",
-                                                opt,
+                                                "diseaseName",
+                                                e.target.value,
                                               )
                                             }
-                                          />{" "}
-                                          {opt}
-                                        </label>
+                                            className="border p-2 rounded outline-none focus:border-blue-500 flex-1"
+                                            placeholder={`Disease ${diseaseIndex + 1}`}
+                                          />
+                                          {(assistanceData[rel]?.Medical?.diseases
+                                            ?.length || 1) > 1 && (
+                                              <button
+                                                type="button"
+                                                className="px-3 py-2 rounded bg-red-100 text-red-700 text-sm"
+                                                onClick={() => {
+                                                  const filteredDiseases = (
+                                                    assistanceData[rel]?.Medical
+                                                      ?.diseases || []
+                                                  ).filter(
+                                                    (_, idx) =>
+                                                      idx !== diseaseIndex,
+                                                  );
+                                                  handleDiseaseChange(
+                                                    rel,
+                                                    diseaseIndex,
+                                                    "removeDisease",
+                                                    filteredDiseases,
+                                                  );
+                                                }}
+                                              >
+                                                Remove
+                                              </button>
+                                            )}
+                                        </div>
                                       ))}
+
+                                      <button
+                                        type="button"
+                                        className="w-fit px-3 py-2 rounded bg-blue-50 text-blue-700 text-sm"
+                                        onClick={() => handleAddDisease(rel)}
+                                      >
+                                        + Add Disease
+                                      </button>
                                     </div>
-                                  </div>
 
-                                  {/* Row 2 */}
-                                  <div className="flex flex-col gap-1">
-                                    <label className="text-[11px] font-bold uppercase text-gray-500">
-                                      Estimated/Actual Medical Expenses*
-                                    </label>
-                                    <input
-                                      type="number"
-                                      value={
-                                        assistanceData[rel]?.Medical
-                                          ?.estimatedExpense || ""
-                                      }
-                                      onChange={(e) =>
-                                        handleMedicalChange(
-                                          rel,
-                                          "estimatedExpense",
-                                          e.target.value,
-                                        )
-                                      }
-                                      className="border p-2 rounded outline-none focus:border-blue-500"
-                                    />
-                                  </div>
-
-                                  <div className="flex flex-col gap-1">
-                                    <label className="text-[11px] font-bold uppercase text-gray-500">
-                                      Urgency Level?*
-                                    </label>
-                                    <div className="flex gap-4 mt-2">
-                                      {["High", "Medium", "Low"].map(
-                                        (level) => (
+                                    <div className="flex flex-col gap-1">
+                                      <label className="text-[11px] font-bold uppercase text-gray-500">
+                                        Any Permanent Issue?*
+                                      </label>
+                                      <div className="flex gap-4 mt-2">
+                                        {["Yes", "No"].map((opt) => (
                                           <label
-                                            key={level}
+                                            key={opt}
                                             className="flex items-center gap-2 text-sm"
                                           >
                                             <input
                                               type="radio"
-                                              name={`urgency-${rel}`}
+                                              name={`perm-${rel}`}
                                               checked={
                                                 assistanceData[rel]?.Medical
-                                                  ?.urgency === level
+                                                  ?.isPermanent === opt
                                               }
                                               onChange={() =>
                                                 handleMedicalChange(
                                                   rel,
-                                                  "urgency",
-                                                  level,
+                                                  "isPermanent",
+                                                  opt,
                                                 )
                                               }
                                             />{" "}
-                                            {level}
+                                            {opt}
                                           </label>
-                                        ),
-                                      )}
+                                        ))}
+                                      </div>
                                     </div>
-                                  </div>
 
-                                  <div className="flex flex-col gap-1">
-                                    <label className="text-[11px] font-bold uppercase text-gray-500">
-                                      Treatment Ongoing?*
-                                    </label>
-                                    <div className="flex gap-4 mt-2">
-                                      {["Yes", "No"].map((opt) => (
-                                        <label
-                                          key={opt}
-                                          className="flex items-center gap-2 text-sm"
-                                        >
-                                          <input
-                                            type="radio"
-                                            name={`ongoing-${rel}`}
-                                            checked={
-                                              assistanceData[rel]?.Medical
-                                                ?.isOngoing === opt
-                                            }
-                                            onChange={() =>
-                                              handleMedicalChange(
-                                                rel,
-                                                "isOngoing",
-                                                opt,
-                                              )
-                                            }
-                                          />{" "}
-                                          {opt}
-                                        </label>
-                                      ))}
+                                    {/* Row 2 */}
+                                    <div className="flex flex-col gap-1">
+                                      <label className="text-[11px] font-bold uppercase text-gray-500">
+                                        Estimated/Actual Medical Expenses*
+                                      </label>
+                                      <input
+                                        type="number"
+                                        value={
+                                          assistanceData[rel]?.Medical
+                                            ?.estimatedExpense || ""
+                                        }
+                                        onChange={(e) =>
+                                          handleMedicalChange(
+                                            rel,
+                                            "estimatedExpense",
+                                            e.target.value,
+                                          )
+                                        }
+                                        className="border p-2 rounded outline-none focus:border-blue-500"
+                                      />
                                     </div>
-                                  </div>
 
-                                  {/* Row 3 */}
-                                  <div className="flex flex-col gap-1">
-                                    <label className="text-[11px] font-bold uppercase text-gray-500">
-                                      Major Surgery Expected*
-                                    </label>
-                                    <div className="flex gap-4 mt-2">
-                                      {["Yes", "No"].map((opt) => (
-                                        <label
-                                          key={opt}
-                                          className="flex items-center gap-2 text-sm"
-                                        >
-                                          <input
-                                            type="radio"
-                                            name={`surgery-${rel}`}
-                                            checked={
-                                              assistanceData[rel]?.Medical
-                                                ?.majorSurgery === opt
-                                            }
-                                            onChange={() =>
-                                              handleMedicalChange(
-                                                rel,
-                                                "majorSurgery",
-                                                opt,
-                                              )
-                                            }
-                                          />{" "}
-                                          {opt}
-                                        </label>
-                                      ))}
+                                    <div className="flex flex-col gap-1">
+                                      <label className="text-[11px] font-bold uppercase text-gray-500">
+                                        Urgency Level?*
+                                      </label>
+                                      <div className="flex gap-4 mt-2">
+                                        {["High", "Medium", "Low"].map(
+                                          (level) => (
+                                            <label
+                                              key={level}
+                                              className="flex items-center gap-2 text-sm"
+                                            >
+                                              <input
+                                                type="radio"
+                                                name={`urgency-${rel}`}
+                                                checked={
+                                                  assistanceData[rel]?.Medical
+                                                    ?.urgency === level
+                                                }
+                                                onChange={() =>
+                                                  handleMedicalChange(
+                                                    rel,
+                                                    "urgency",
+                                                    level,
+                                                  )
+                                                }
+                                              />{" "}
+                                              {level}
+                                            </label>
+                                          ),
+                                        )}
+                                      </div>
                                     </div>
-                                  </div>
 
-                                  {/* <div className="flex flex-col gap-1">
+                                    <div className="flex flex-col gap-1">
+                                      <label className="text-[11px] font-bold uppercase text-gray-500">
+                                        Treatment Ongoing?*
+                                      </label>
+                                      <div className="flex gap-4 mt-2">
+                                        {["Yes", "No"].map((opt) => (
+                                          <label
+                                            key={opt}
+                                            className="flex items-center gap-2 text-sm"
+                                          >
+                                            <input
+                                              type="radio"
+                                              name={`ongoing-${rel}`}
+                                              checked={
+                                                assistanceData[rel]?.Medical
+                                                  ?.isOngoing === opt
+                                              }
+                                              onChange={() =>
+                                                handleMedicalChange(
+                                                  rel,
+                                                  "isOngoing",
+                                                  opt,
+                                                )
+                                              }
+                                            />{" "}
+                                            {opt}
+                                          </label>
+                                        ))}
+                                      </div>
+                                    </div>
+
+                                    {/* Row 3 */}
+                                    <div className="flex flex-col gap-1">
+                                      <label className="text-[11px] font-bold uppercase text-gray-500">
+                                        Major Surgery Expected*
+                                      </label>
+                                      <div className="flex gap-4 mt-2">
+                                        {["Yes", "No"].map((opt) => (
+                                          <label
+                                            key={opt}
+                                            className="flex items-center gap-2 text-sm"
+                                          >
+                                            <input
+                                              type="radio"
+                                              name={`surgery-${rel}`}
+                                              checked={
+                                                assistanceData[rel]?.Medical
+                                                  ?.majorSurgery === opt
+                                              }
+                                              onChange={() =>
+                                                handleMedicalChange(
+                                                  rel,
+                                                  "majorSurgery",
+                                                  opt,
+                                                )
+                                              }
+                                            />{" "}
+                                            {opt}
+                                          </label>
+                                        ))}
+                                      </div>
+                                    </div>
+
+                                    {/* <div className="flex flex-col gap-1">
                                       <label className="text-[11px] font-bold uppercase text-gray-500">
                                         Assistance Required For*
                                       </label>
@@ -2692,193 +2708,193 @@ const Family_Details_Staff = ({
                                       />
                                     </div> */}
 
-                                  <div className="flex flex-col gap-1">
-                                    <label className="text-[11px] font-bold uppercase text-gray-500">
-                                      Repeated Medical Assistance Required?*
-                                    </label>
-                                    <div className="flex gap-4 mt-2">
-                                      <label className="flex items-center gap-2 text-sm">
-                                        <input
-                                          type="checkbox"
-                                          checked={
-                                            assistanceData[rel]?.Medical
-                                              ?.repeatedAssistance || false
-                                          }
-                                          onChange={(e) =>
-                                            handleMedicalChange(
-                                              rel,
-                                              "repeatedAssistance",
-                                              e.target.checked,
-                                            )
-                                          }
-                                        />{" "}
-                                        Yes
+                                    <div className="flex flex-col gap-1">
+                                      <label className="text-[11px] font-bold uppercase text-gray-500">
+                                        Repeated Medical Assistance Required?*
                                       </label>
-                                      <label className="flex items-center gap-2 text-sm">
-                                        <input
-                                          type="checkbox"
-                                          checked={
-                                            !assistanceData[rel]?.Medical
-                                              ?.repeatedAssistance
-                                          }
-                                          onChange={(e) =>
-                                            handleMedicalChange(
-                                              rel,
-                                              "repeatedAssistance",
-                                              !e.target.checked,
-                                            )
-                                          }
-                                        />{" "}
-                                        No
-                                      </label>
-                                    </div>
-                                  </div>
-
-                                  {assistanceData[rel]?.Medical
-                                    ?.repeatedAssistance && (
-                                    <div className="col-span-full md:col-span-3">
-                                      <div className="space-y-3">
-                                        {(
-                                          assistanceData[rel]?.Medical
-                                            ?.diseases || []
-                                        ).map((diseaseItem, diseaseIndex) => (
-                                          <div
-                                            key={`${rel}-treatment-${diseaseIndex}`}
-                                            className="border rounded-lg p-3 bg-gray-50"
-                                          >
-                                            <p className="text-xs font-semibold text-gray-700 mb-2">
-                                              {diseaseItem?.diseaseName
-                                                ? `Treatment Plan - ${diseaseItem.diseaseName}`
-                                                : `Treatment Plan - Disease ${diseaseIndex + 1}`}
-                                            </p>
-
-                                            <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
-                                              <div className="flex flex-col gap-1">
-                                                <label className="text-[11px] font-bold uppercase text-gray-500">
-                                                  Treatment Frequency*
-                                                </label>
-                                                <select
-                                                  className="border p-2 rounded bg-white outline-none focus:border-blue-500"
-                                                  value={
-                                                    diseaseItem?.frequency || ""
-                                                  }
-                                                  onChange={(e) =>
-                                                    handleDiseaseChange(
-                                                      rel,
-                                                      diseaseIndex,
-                                                      "frequency",
-                                                      e.target.value,
-                                                    )
-                                                  }
-                                                >
-                                                  <option value="">
-                                                    Select
-                                                  </option>
-                                                  <option value="Daily">
-                                                    Daily
-                                                  </option>
-                                                  <option value="Alternate Days">
-                                                    Alternate Days
-                                                  </option>
-                                                  <option value="Weekly">
-                                                    Weekly
-                                                  </option>
-                                                  <option value="Bi-Weekly">
-                                                    Bi-Weekly
-                                                  </option>
-                                                  <option value="Monthly">
-                                                    Monthly
-                                                  </option>
-                                                  <option value="Quarterly">
-                                                    Quarterly
-                                                  </option>
-                                                  <option value="Yearly">
-                                                    Yearly
-                                                  </option>
-                                                </select>
-                                              </div>
-
-                                              <div className="flex flex-col gap-1">
-                                                <label className="text-[11px] font-bold uppercase text-gray-500">
-                                                  Estimated Cost Per Session*
-                                                </label>
-                                                <input
-                                                  type="number"
-                                                  value={
-                                                    diseaseItem?.costPerSession ||
-                                                    ""
-                                                  }
-                                                  onChange={(e) =>
-                                                    handleDiseaseChange(
-                                                      rel,
-                                                      diseaseIndex,
-                                                      "costPerSession",
-                                                      e.target.value,
-                                                    )
-                                                  }
-                                                  className="border p-2 rounded outline-none focus:border-blue-500"
-                                                />
-                                              </div>
-
-                                              <div className="flex flex-col gap-1">
-                                                <label className="text-[11px] font-bold uppercase text-gray-500">
-                                                  Expected Number of Sessions*
-                                                </label>
-                                                <input
-                                                  type="number"
-                                                  value={
-                                                    diseaseItem?.sessionsCount ||
-                                                    ""
-                                                  }
-                                                  onChange={(e) =>
-                                                    handleDiseaseChange(
-                                                      rel,
-                                                      diseaseIndex,
-                                                      "sessionsCount",
-                                                      e.target.value,
-                                                    )
-                                                  }
-                                                  className="border p-2 rounded outline-none focus:border-blue-500"
-                                                />
-                                              </div>
-
-                                              <div className="flex flex-col gap-1">
-                                                <label className="text-[11px] font-bold uppercase text-gray-500">
-                                                  Calculated Total
-                                                </label>
-                                                <input
-                                                  type="number"
-                                                  readOnly
-                                                  value={
-                                                    diseaseItem?.totalEstimatedCost ||
-                                                    ""
-                                                  }
-                                                  className="border p-2 rounded bg-gray-100 text-gray-600 outline-none"
-                                                />
-                                              </div>
-                                            </div>
-                                          </div>
-                                        ))}
-
-                                        <div className="flex flex-col gap-1 w-full md:w-72">
-                                          <label className="text-[11px] font-bold uppercase text-gray-500">
-                                            Overall Calculated Total
-                                          </label>
+                                      <div className="flex gap-4 mt-2">
+                                        <label className="flex items-center gap-2 text-sm">
                                           <input
-                                            type="number"
-                                            readOnly
-                                            value={
+                                            type="checkbox"
+                                            checked={
                                               assistanceData[rel]?.Medical
-                                                ?.totalEstimatedCost || ""
+                                                ?.repeatedAssistance || false
                                             }
-                                            className="border p-2 rounded bg-gray-100 text-gray-700 outline-none"
-                                          />
-                                        </div>
+                                            onChange={(e) =>
+                                              handleMedicalChange(
+                                                rel,
+                                                "repeatedAssistance",
+                                                e.target.checked,
+                                              )
+                                            }
+                                          />{" "}
+                                          Yes
+                                        </label>
+                                        <label className="flex items-center gap-2 text-sm">
+                                          <input
+                                            type="checkbox"
+                                            checked={
+                                              !assistanceData[rel]?.Medical
+                                                ?.repeatedAssistance
+                                            }
+                                            onChange={(e) =>
+                                              handleMedicalChange(
+                                                rel,
+                                                "repeatedAssistance",
+                                                !e.target.checked,
+                                              )
+                                            }
+                                          />{" "}
+                                          No
+                                        </label>
                                       </div>
                                     </div>
-                                  )}
 
-                                  {/* <div className="col-span-full md:col-span-2">
+                                    {assistanceData[rel]?.Medical
+                                      ?.repeatedAssistance && (
+                                        <div className="col-span-full md:col-span-3">
+                                          <div className="space-y-3">
+                                            {(
+                                              assistanceData[rel]?.Medical
+                                                ?.diseases || []
+                                            ).map((diseaseItem, diseaseIndex) => (
+                                              <div
+                                                key={`${rel}-treatment-${diseaseIndex}`}
+                                                className="border rounded-lg p-3 bg-gray-50"
+                                              >
+                                                <p className="text-xs font-semibold text-gray-700 mb-2">
+                                                  {diseaseItem?.diseaseName
+                                                    ? `Treatment Plan - ${diseaseItem.diseaseName}`
+                                                    : `Treatment Plan - Disease ${diseaseIndex + 1}`}
+                                                </p>
+
+                                                <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
+                                                  <div className="flex flex-col gap-1">
+                                                    <label className="text-[11px] font-bold uppercase text-gray-500">
+                                                      Treatment Frequency*
+                                                    </label>
+                                                    <select
+                                                      className="border p-2 rounded bg-white outline-none focus:border-blue-500"
+                                                      value={
+                                                        diseaseItem?.frequency || ""
+                                                      }
+                                                      onChange={(e) =>
+                                                        handleDiseaseChange(
+                                                          rel,
+                                                          diseaseIndex,
+                                                          "frequency",
+                                                          e.target.value,
+                                                        )
+                                                      }
+                                                    >
+                                                      <option value="">
+                                                        Select
+                                                      </option>
+                                                      <option value="Daily">
+                                                        Daily
+                                                      </option>
+                                                      <option value="Alternate Days">
+                                                        Alternate Days
+                                                      </option>
+                                                      <option value="Weekly">
+                                                        Weekly
+                                                      </option>
+                                                      <option value="Bi-Weekly">
+                                                        Bi-Weekly
+                                                      </option>
+                                                      <option value="Monthly">
+                                                        Monthly
+                                                      </option>
+                                                      <option value="Quarterly">
+                                                        Quarterly
+                                                      </option>
+                                                      <option value="Yearly">
+                                                        Yearly
+                                                      </option>
+                                                    </select>
+                                                  </div>
+
+                                                  <div className="flex flex-col gap-1">
+                                                    <label className="text-[11px] font-bold uppercase text-gray-500">
+                                                      Estimated Cost Per Session*
+                                                    </label>
+                                                    <input
+                                                      type="number"
+                                                      value={
+                                                        diseaseItem?.costPerSession ||
+                                                        ""
+                                                      }
+                                                      onChange={(e) =>
+                                                        handleDiseaseChange(
+                                                          rel,
+                                                          diseaseIndex,
+                                                          "costPerSession",
+                                                          e.target.value,
+                                                        )
+                                                      }
+                                                      className="border p-2 rounded outline-none focus:border-blue-500"
+                                                    />
+                                                  </div>
+
+                                                  <div className="flex flex-col gap-1">
+                                                    <label className="text-[11px] font-bold uppercase text-gray-500">
+                                                      Expected Number of Sessions*
+                                                    </label>
+                                                    <input
+                                                      type="number"
+                                                      value={
+                                                        diseaseItem?.sessionsCount ||
+                                                        ""
+                                                      }
+                                                      onChange={(e) =>
+                                                        handleDiseaseChange(
+                                                          rel,
+                                                          diseaseIndex,
+                                                          "sessionsCount",
+                                                          e.target.value,
+                                                        )
+                                                      }
+                                                      className="border p-2 rounded outline-none focus:border-blue-500"
+                                                    />
+                                                  </div>
+
+                                                  <div className="flex flex-col gap-1">
+                                                    <label className="text-[11px] font-bold uppercase text-gray-500">
+                                                      Calculated Total
+                                                    </label>
+                                                    <input
+                                                      type="number"
+                                                      readOnly
+                                                      value={
+                                                        diseaseItem?.totalEstimatedCost ||
+                                                        ""
+                                                      }
+                                                      className="border p-2 rounded bg-gray-100 text-gray-600 outline-none"
+                                                    />
+                                                  </div>
+                                                </div>
+                                              </div>
+                                            ))}
+
+                                            <div className="flex flex-col gap-1 w-full md:w-72">
+                                              <label className="text-[11px] font-bold uppercase text-gray-500">
+                                                Overall Calculated Total
+                                              </label>
+                                              <input
+                                                type="number"
+                                                readOnly
+                                                value={
+                                                  assistanceData[rel]?.Medical
+                                                    ?.totalEstimatedCost || ""
+                                                }
+                                                className="border p-2 rounded bg-gray-100 text-gray-700 outline-none"
+                                              />
+                                            </div>
+                                          </div>
+                                        </div>
+                                      )}
+
+                                    {/* <div className="col-span-full md:col-span-2">
                                       <label className="text-[11px] font-bold uppercase text-gray-500">
                                         Upload Medical Documents
                                       </label>
@@ -2959,172 +2975,172 @@ const Family_Details_Staff = ({
                                       </div>
                                     </div> */}
 
-                                  <div className="col-span-full md:col-span-2">
-                                    <label className="text-[11px] font-bold uppercase text-gray-500">
-                                      Upload Medical Documents
-                                    </label>
+                                    <div className="col-span-full md:col-span-2">
+                                      <label className="text-[11px] font-bold uppercase text-gray-500">
+                                        Upload Medical Documents
+                                      </label>
 
-                                    {(
-                                      assistanceData[rel]?.Medical
-                                        ?.medicalDocuments || []
-                                    ).map((doc, index) => (
-                                      <div
-                                        key={index}
-                                        className="flex gap-2 mt-2 items-center"
-                                      >
-                                        {/* Document Name */}
-                                        <input
-                                          type="text"
-                                          placeholder="Document Name"
-                                          value={doc.documentName}
-                                          onChange={(e) =>
-                                            handleDocumentChange(
-                                              rel,
-                                              index,
-                                              "documentName",
-                                              e.target.value,
-                                            )
-                                          }
-                                          className="border p-2 rounded w-1/3"
-                                        />
-
-                                        {/* File Input */}
-                                        <input
-                                          type="file"
-                                          id={`file-upload-${rel}-${index}`}
-                                          multiple
-                                          className="hidden"
-                                          accept="image/*,.pdf"
-                                          onChange={(e) => {
-                                            const files = Array.from(
-                                              e.target.files,
-                                            );
-                                            handleDocumentChange(
-                                              rel,
-                                              index,
-                                              "files",
-                                              files,
-                                            );
-                                          }}
-                                        />
-
-                                        {/* Upload Button */}
-                                        <button
-                                          type="button"
-                                          onClick={() =>
-                                            document
-                                              .getElementById(
-                                                `file-upload-${rel}-${index}`,
-                                              )
-                                              .click()
-                                          }
-                                          className="border-2 border-blue-500 text-blue-500 px-3 py-2 rounded"
+                                      {(
+                                        assistanceData[rel]?.Medical
+                                          ?.medicalDocuments || []
+                                      ).map((doc, index) => (
+                                        <div
+                                          key={index}
+                                          className="flex gap-2 mt-2 items-center"
                                         >
-                                          Upload
-                                        </button>
+                                          {/* Document Name */}
+                                          <input
+                                            type="text"
+                                            placeholder="Document Name"
+                                            value={doc.documentName}
+                                            onChange={(e) =>
+                                              handleDocumentChange(
+                                                rel,
+                                                index,
+                                                "documentName",
+                                                e.target.value,
+                                              )
+                                            }
+                                            className="border p-2 rounded w-1/3"
+                                          />
 
-                                        {/* File Names */}
-                                        <div className="text-sm text-gray-500 max-w-[150px] truncate">
-                                          {doc.files?.length
-                                            ? doc.files
+                                          {/* File Input */}
+                                          <input
+                                            type="file"
+                                            id={`file-upload-${rel}-${index}`}
+                                            multiple
+                                            className="hidden"
+                                            accept="image/*,.pdf"
+                                            onChange={(e) => {
+                                              const files = Array.from(
+                                                e.target.files,
+                                              );
+                                              handleDocumentChange(
+                                                rel,
+                                                index,
+                                                "files",
+                                                files,
+                                              );
+                                            }}
+                                          />
+
+                                          {/* Upload Button */}
+                                          <button
+                                            type="button"
+                                            onClick={() =>
+                                              document
+                                                .getElementById(
+                                                  `file-upload-${rel}-${index}`,
+                                                )
+                                                .click()
+                                            }
+                                            className="border-2 border-blue-500 text-blue-500 px-3 py-2 rounded"
+                                          >
+                                            Upload
+                                          </button>
+
+                                          {/* File Names */}
+                                          <div className="text-sm text-gray-500 max-w-[150px] truncate">
+                                            {doc.files?.length
+                                              ? doc.files
                                                 .map((f) => f.name)
                                                 .join(", ")
-                                            : "No file"}
+                                              : "No file"}
+                                          </div>
+
+                                          {/* Remove Button */}
+                                          <button
+                                            type="button"
+                                            onClick={() => {
+                                              const docs =
+                                                assistanceData[rel]?.Medical
+                                                  ?.medicalDocuments || [];
+                                              handleMedicalChange(
+                                                rel,
+                                                "medicalDocuments",
+                                                docs.filter(
+                                                  (_, i) => i !== index,
+                                                ),
+                                              );
+                                            }}
+                                            className="text-red-500 text-lg"
+                                          >
+                                            ✕
+                                          </button>
                                         </div>
+                                      ))}
 
-                                        {/* Remove Button */}
-                                        <button
-                                          type="button"
-                                          onClick={() => {
-                                            const docs =
-                                              assistanceData[rel]?.Medical
-                                                ?.medicalDocuments || [];
-                                            handleMedicalChange(
-                                              rel,
-                                              "medicalDocuments",
-                                              docs.filter(
-                                                (_, i) => i !== index,
-                                              ),
-                                            );
-                                          }}
-                                          className="text-red-500 text-lg"
-                                        >
-                                          ✕
-                                        </button>
-                                      </div>
-                                    ))}
+                                      {/* Add Button */}
+                                      <button
+                                        type="button"
+                                        onClick={() => handleAddDocument(rel)}
+                                        className="mt-3 text-white px-2 py-1 flex items-center justify-center rounded-lg bg-blue-500"
+                                      >
+                                        <Plus /> Documents
+                                      </button>
+                                    </div>
 
-                                    {/* Add Button */}
-                                    <button
-                                      type="button"
-                                      onClick={() => handleAddDocument(rel)}
-                                      className="mt-3 text-white px-2 py-1 flex items-center justify-center rounded-lg bg-blue-500"
-                                    >
-                                      <Plus /> Documents
-                                    </button>
+                                    <div className="hidden lg:block"></div>
+
+                                    <div className="flex flex-col gap-1">
+                                      <label className="text-[11px] font-bold uppercase text-gray-500">
+                                        Treatment Start Date*
+                                      </label>
+                                      <input
+                                        type="date"
+                                        className="border p-2 rounded outline-none focus:border-blue-500 w-full"
+                                        onChange={(e) =>
+                                          handleMedicalChange(
+                                            rel,
+                                            "nextDate",
+                                            e.target.value,
+                                          )
+                                        }
+                                      />
+                                    </div>
+                                    <div className="flex flex-col gap-1">
+                                      <label className="text-[11px] font-bold uppercase text-gray-500">
+                                        Amount of Assistance Required?*
+                                      </label>
+                                      <input
+                                        type="number"
+                                        placeholder="0.00"
+                                        value={
+                                          assistanceData[rel]?.Medical
+                                            ?.amountRequired || ""
+                                        }
+                                        onChange={(e) =>
+                                          handleMedicalChange(
+                                            rel,
+                                            "amountRequired",
+                                            e.target.value,
+                                          )
+                                        }
+                                        className="border p-2 rounded outline-none focus:border-blue-500"
+                                      />
+                                    </div>
                                   </div>
 
-                                  <div className="hidden lg:block"></div>
-
-                                  <div className="flex flex-col gap-1">
+                                  <div className="mt-8 flex flex-col gap-1">
                                     <label className="text-[11px] font-bold uppercase text-gray-500">
-                                      Treatment Start Date*
+                                      Remark*
                                     </label>
-                                    <input
-                                      type="date"
-                                      className="border p-2 rounded outline-none focus:border-blue-500 w-full"
-                                      onChange={(e) =>
-                                        handleMedicalChange(
-                                          rel,
-                                          "nextDate",
-                                          e.target.value,
-                                        )
-                                      }
-                                    />
-                                  </div>
-                                  <div className="flex flex-col gap-1">
-                                    <label className="text-[11px] font-bold uppercase text-gray-500">
-                                      Amount of Assistance Required?*
-                                    </label>
-                                    <input
-                                      type="number"
-                                      placeholder="0.00"
+                                    <textarea
+                                      className="border p-2 rounded w-full h-24 outline-none focus:border-blue-500 resize-none"
                                       value={
-                                        assistanceData[rel]?.Medical
-                                          ?.amountRequired || ""
+                                        assistanceData[rel]?.Medical?.remark || ""
                                       }
                                       onChange={(e) =>
                                         handleMedicalChange(
                                           rel,
-                                          "amountRequired",
+                                          "remark",
                                           e.target.value,
                                         )
                                       }
-                                      className="border p-2 rounded outline-none focus:border-blue-500"
-                                    />
+                                    ></textarea>
                                   </div>
                                 </div>
-
-                                <div className="mt-8 flex flex-col gap-1">
-                                  <label className="text-[11px] font-bold uppercase text-gray-500">
-                                    Remark*
-                                  </label>
-                                  <textarea
-                                    className="border p-2 rounded w-full h-24 outline-none focus:border-blue-500 resize-none"
-                                    value={
-                                      assistanceData[rel]?.Medical?.remark || ""
-                                    }
-                                    onChange={(e) =>
-                                      handleMedicalChange(
-                                        rel,
-                                        "remark",
-                                        e.target.value,
-                                      )
-                                    }
-                                  ></textarea>
-                                </div>
-                              </div>
-                            )}
+                              )}
 
                             {
                               //   (
@@ -3312,50 +3328,50 @@ const Family_Details_Staff = ({
                                     </div>
                                     {assistanceData[rel]?.Job
                                       ?.employmentStatus === "employed" && (
-                                      <>
-                                        <div className="flex flex-col gap-1">
-                                          <label className="text-[11px] font-bold uppercase text-gray-500">
-                                            Current Salary*
-                                          </label>
-                                          <input
-                                            type="number"
-                                            value={
-                                              assistanceData[rel]?.Job
-                                                ?.currentSalary || ""
-                                            }
-                                            onChange={(e) =>
-                                              handleJobChange(
-                                                rel,
-                                                "currentSalary",
-                                                e.target.value,
-                                              )
-                                            }
-                                            className="border p-2 rounded outline-none focus:border-blue-500"
-                                          />
-                                        </div>
+                                        <>
+                                          <div className="flex flex-col gap-1">
+                                            <label className="text-[11px] font-bold uppercase text-gray-500">
+                                              Current Salary*
+                                            </label>
+                                            <input
+                                              type="number"
+                                              value={
+                                                assistanceData[rel]?.Job
+                                                  ?.currentSalary || ""
+                                              }
+                                              onChange={(e) =>
+                                                handleJobChange(
+                                                  rel,
+                                                  "currentSalary",
+                                                  e.target.value,
+                                                )
+                                              }
+                                              className="border p-2 rounded outline-none focus:border-blue-500"
+                                            />
+                                          </div>
 
-                                        <div className="flex flex-col gap-1">
-                                          <label className="text-[11px] font-bold uppercase text-gray-500">
-                                            Expected Salary*
-                                          </label>
-                                          <input
-                                            type="number"
-                                            value={
-                                              assistanceData[rel]?.Job
-                                                ?.expectedSalary || ""
-                                            }
-                                            onChange={(e) =>
-                                              handleJobChange(
-                                                rel,
-                                                "expectedSalary",
-                                                e.target.value,
-                                              )
-                                            }
-                                            className="border p-2 rounded outline-none focus:border-blue-500"
-                                          />
-                                        </div>
-                                      </>
-                                    )}
+                                          <div className="flex flex-col gap-1">
+                                            <label className="text-[11px] font-bold uppercase text-gray-500">
+                                              Expected Salary*
+                                            </label>
+                                            <input
+                                              type="number"
+                                              value={
+                                                assistanceData[rel]?.Job
+                                                  ?.expectedSalary || ""
+                                              }
+                                              onChange={(e) =>
+                                                handleJobChange(
+                                                  rel,
+                                                  "expectedSalary",
+                                                  e.target.value,
+                                                )
+                                              }
+                                              className="border p-2 rounded outline-none focus:border-blue-500"
+                                            />
+                                          </div>
+                                        </>
+                                      )}
 
                                     <div className="flex flex-col gap-1">
                                       <label className="text-[11px] font-bold uppercase text-gray-500">
@@ -3461,8 +3477,8 @@ const Family_Details_Staff = ({
                                                   .checked
                                                   ? [...currentTypes, type]
                                                   : currentTypes.filter(
-                                                      (t) => t !== type,
-                                                    );
+                                                    (t) => t !== type,
+                                                  );
                                                 handleJobChange(
                                                   rel,
                                                   "preferredJobType",
@@ -3560,8 +3576,8 @@ const Family_Details_Staff = ({
                                                   .checked
                                                   ? [...currentInterests, place]
                                                   : currentInterests.filter(
-                                                      (p) => p !== place,
-                                                    );
+                                                    (p) => p !== place,
+                                                  );
                                                 handleJobChange(
                                                   rel,
                                                   "interests",
@@ -3601,7 +3617,7 @@ const Family_Details_Staff = ({
                             }
 
                             {
-                             
+
 
                               (relationDetails[
                                 rel
@@ -3696,8 +3712,8 @@ const Family_Details_Staff = ({
                                                     .checked
                                                     ? [...currentTypes, type]
                                                     : currentTypes.filter(
-                                                        (t) => t !== type,
-                                                      );
+                                                      (t) => t !== type,
+                                                    );
                                                   handleFoodChange(
                                                     rel,
                                                     "foodType",
@@ -4059,8 +4075,8 @@ const Family_Details_Staff = ({
                                           <div className="text-sm text-gray-500 max-w-[150px] truncate">
                                             {doc.files?.length
                                               ? doc.files
-                                                  .map((file) => file.name)
-                                                  .join(", ")
+                                                .map((file) => file.name)
+                                                .join(", ")
                                               : "No file"}
                                           </div>
 
@@ -4188,8 +4204,8 @@ const Family_Details_Staff = ({
                                                       .checked
                                                       ? [...currentTypes, type]
                                                       : currentTypes.filter(
-                                                          (t) => t !== type,
-                                                        );
+                                                        (t) => t !== type,
+                                                      );
                                                     handleHousingChange(
                                                       rel,
                                                       "assistanceType",
@@ -4442,22 +4458,21 @@ const Family_Details_Staff = ({
                                                       e.target.value,
                                                     )
                                                   }
-                                                  className={`border p-2 rounded outline-none focus:border-blue-500 ${
-                                                    Number(
-                                                      assistanceData[rel]
-                                                        ?.Housing
-                                                        ?.emiAmountMonthly || 0,
-                                                    ) >
+                                                  className={`border p-2 rounded outline-none focus:border-blue-500 ${Number(
+                                                    assistanceData[rel]
+                                                      ?.Housing
+                                                      ?.emiAmountMonthly || 0,
+                                                  ) >
                                                       Number(
                                                         assistanceData[rel]
                                                           ?.Housing
                                                           ?.loanAmount || 0,
                                                       ) &&
-                                                    assistanceData[rel]?.Housing
-                                                      ?.loanAmount
+                                                      assistanceData[rel]?.Housing
+                                                        ?.loanAmount
                                                       ? "border-red-500 focus:ring-2 focus:ring-red-100"
                                                       : "border-slate-300"
-                                                  }`}
+                                                    }`}
                                                 />
                                                 {Number(
                                                   assistanceData[rel]?.Housing
@@ -4612,10 +4627,10 @@ const Family_Details_Staff = ({
                                                 <div className="text-sm text-gray-500 max-w-[150px] truncate">
                                                   {doc.files?.length
                                                     ? doc.files
-                                                        .map(
-                                                          (file) => file.name,
-                                                        )
-                                                        .join(", ")
+                                                      .map(
+                                                        (file) => file.name,
+                                                      )
+                                                      .join(", ")
                                                     : "No file"}
                                                 </div>
 
@@ -4907,7 +4922,7 @@ const Family_Details_Staff = ({
                             }
 
                             {
-                            (relationDetails[
+                              (relationDetails[
                                 rel
                               ]?.assistanceCategories?.includes(
                                 "Business",
@@ -4917,342 +4932,342 @@ const Family_Details_Staff = ({
                                   selectedAssistance?.includes(
                                     "Business",
                                   ))) && (
-                              <div className="p-6 border rounded-lg bg-white shadow-sm mt-6 font-sans">
-                                <h3 className="text-xl font-semibold mb-6 text-gray-800">
-                                  Business support Assistance
-                                </h3>
+                                <div className="p-6 border rounded-lg bg-white shadow-sm mt-6 font-sans">
+                                  <h3 className="text-xl font-semibold mb-6 text-gray-800">
+                                    Business support Assistance
+                                  </h3>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-6">
-                                  {/* Type of Business Dropdown */}
-                                  <div className="flex flex-col gap-1">
-                                    <label className="text-[11px] font-bold uppercase text-gray-500">
-                                      Type of Business?*
-                                    </label>
-                                    <select
-                                      className="w-full border p-2 rounded mt-1 text-gray-500 outline-none focus:border-blue-500"
-                                      value={
-                                        assistanceData[rel]?.BusinessSupport
-                                          ?.businessType || ""
-                                      }
-                                      onChange={(e) =>
-                                        handleBusinessChange(
-                                          rel,
-                                          "businessType",
-                                          e.target.value,
-                                        )
-                                      }
-                                    >
-                                      <option value="">Select</option>
-                                      <option value="Retail">Retail</option>
-                                      <option value="Service">Service</option>
-                                      <option value="Manufacturing">
-                                        Manufacturing
-                                      </option>
-                                    </select>
-                                  </div>
+                                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-6">
+                                    {/* Type of Business Dropdown */}
+                                    <div className="flex flex-col gap-1">
+                                      <label className="text-[11px] font-bold uppercase text-gray-500">
+                                        Type of Business?*
+                                      </label>
+                                      <select
+                                        className="w-full border p-2 rounded mt-1 text-gray-500 outline-none focus:border-blue-500"
+                                        value={
+                                          assistanceData[rel]?.BusinessSupport
+                                            ?.businessType || ""
+                                        }
+                                        onChange={(e) =>
+                                          handleBusinessChange(
+                                            rel,
+                                            "businessType",
+                                            e.target.value,
+                                          )
+                                        }
+                                      >
+                                        <option value="">Select</option>
+                                        <option value="Retail">Retail</option>
+                                        <option value="Service">Service</option>
+                                        <option value="Manufacturing">
+                                          Manufacturing
+                                        </option>
+                                      </select>
+                                    </div>
 
-                                  {/* Business Duration */}
-                                  <div className="flex flex-col gap-1">
-                                    <label className="text-[11px] font-bold uppercase text-gray-500">
-                                      Business Duration?*
-                                    </label>
-                                    <input
-                                      type="text"
-                                      placeholder="Monthly"
-                                      className="w-full border p-2 rounded mt-1 outline-none focus:border-blue-500"
-                                      value={
-                                        assistanceData[rel]?.BusinessSupport
-                                          ?.duration || ""
-                                      }
-                                      onChange={(e) =>
-                                        handleBusinessChange(
-                                          rel,
-                                          "duration",
-                                          e.target.value,
-                                        )
-                                      }
-                                    />
-                                  </div>
+                                    {/* Business Duration */}
+                                    <div className="flex flex-col gap-1">
+                                      <label className="text-[11px] font-bold uppercase text-gray-500">
+                                        Business Duration?*
+                                      </label>
+                                      <input
+                                        type="text"
+                                        placeholder="Monthly"
+                                        className="w-full border p-2 rounded mt-1 outline-none focus:border-blue-500"
+                                        value={
+                                          assistanceData[rel]?.BusinessSupport
+                                            ?.duration || ""
+                                        }
+                                        onChange={(e) =>
+                                          handleBusinessChange(
+                                            rel,
+                                            "duration",
+                                            e.target.value,
+                                          )
+                                        }
+                                      />
+                                    </div>
 
-                                  {/* Urgency Level */}
-                                  <div className="flex flex-col gap-1">
-                                    <label className="text-[11px] font-bold uppercase text-gray-500">
-                                      Urgency Level?*
-                                    </label>
-                                    <div className="flex gap-4 mt-2">
-                                      {["High", "Medium", "Low"].map(
-                                        (level) => (
+                                    {/* Urgency Level */}
+                                    <div className="flex flex-col gap-1">
+                                      <label className="text-[11px] font-bold uppercase text-gray-500">
+                                        Urgency Level?*
+                                      </label>
+                                      <div className="flex gap-4 mt-2">
+                                        {["High", "Medium", "Low"].map(
+                                          (level) => (
+                                            <label
+                                              key={level}
+                                              className="flex items-center gap-2 text-sm text-gray-600"
+                                            >
+                                              <input
+                                                type="radio"
+                                                name={`biz-urgency-${rel}`}
+                                                checked={
+                                                  assistanceData[rel]
+                                                    ?.BusinessSupport?.urgency ===
+                                                  level
+                                                }
+                                                onChange={() =>
+                                                  handleBusinessChange(
+                                                    rel,
+                                                    "urgency",
+                                                    level,
+                                                  )
+                                                }
+                                              />{" "}
+                                              {level}
+                                            </label>
+                                          ),
+                                        )}
+                                      </div>
+                                    </div>
+
+                                    {/* Row 2: Income & Expenses */}
+                                    <div className="flex flex-col gap-1">
+                                      <label className="text-[11px] font-bold uppercase text-gray-500">
+                                        Monthly Business Income*
+                                      </label>
+                                      <input
+                                        type="number"
+                                        className="w-full border p-2 rounded mt-1 outline-none focus:border-blue-500"
+                                        value={
+                                          assistanceData[rel]?.BusinessSupport
+                                            ?.income || ""
+                                        }
+                                        onChange={(e) =>
+                                          handleBusinessChange(
+                                            rel,
+                                            "income",
+                                            e.target.value,
+                                          )
+                                        }
+                                      />
+                                    </div>
+
+                                    <div className="flex flex-col gap-1">
+                                      <label className="text-[11px] font-bold uppercase text-gray-500">
+                                        Monthly Business Expenses*
+                                      </label>
+                                      <input
+                                        type="number"
+                                        className="w-full border p-2 rounded mt-1 outline-none focus:border-blue-500"
+                                        value={
+                                          assistanceData[rel]?.BusinessSupport
+                                            ?.expenses || ""
+                                        }
+                                        onChange={(e) =>
+                                          handleBusinessChange(
+                                            rel,
+                                            "expenses",
+                                            e.target.value,
+                                          )
+                                        }
+                                      />
+                                    </div>
+
+                                    {/* Business Condition */}
+                                    <div className="flex flex-col gap-1">
+                                      <label className="text-[11px] font-bold uppercase text-gray-500">
+                                        Business Condition*
+                                      </label>
+                                      <div className="flex gap-4 mt-2">
+                                        {["Profit", "Loss", "Closed"].map(
+                                          (cond) => (
+                                            <label
+                                              key={cond}
+                                              className="flex items-center gap-2 text-sm text-gray-600"
+                                            >
+                                              <input
+                                                type="radio"
+                                                name={`biz-condition-${rel}`}
+                                                checked={
+                                                  assistanceData[rel]
+                                                    ?.BusinessSupport
+                                                    ?.condition === cond
+                                                }
+                                                onChange={() =>
+                                                  handleBusinessChange(
+                                                    rel,
+                                                    "condition",
+                                                    cond,
+                                                  )
+                                                }
+                                              />{" "}
+                                              {cond}
+                                            </label>
+                                          ),
+                                        )}
+                                      </div>
+                                    </div>
+
+                                    {/* Row 3: Dependents, Loans, Uploads */}
+                                    <div className="flex flex-col gap-1">
+                                      <label className="text-[11px] font-bold uppercase text-gray-500">
+                                        Business Dependents (Count)*
+                                      </label>
+                                      <input
+                                        type="number"
+                                        className="w-full border p-2 rounded mt-1 outline-none focus:border-blue-500"
+                                        value={
+                                          assistanceData[rel]?.BusinessSupport
+                                            ?.dependents || ""
+                                        }
+                                        onChange={(e) =>
+                                          handleBusinessChange(
+                                            rel,
+                                            "dependents",
+                                            e.target.value,
+                                          )
+                                        }
+                                      />
+                                    </div>
+
+                                    <div className="flex flex-col gap-1">
+                                      <label className="text-[11px] font-bold uppercase text-gray-500">
+                                        Any Business Loan?*
+                                      </label>
+                                      <div className="flex gap-4 mt-2">
+                                        {["Yes", "No"].map((opt) => (
                                           <label
-                                            key={level}
+                                            key={opt}
                                             className="flex items-center gap-2 text-sm text-gray-600"
                                           >
                                             <input
                                               type="radio"
-                                              name={`biz-urgency-${rel}`}
+                                              name={`biz-loan-${rel}`}
                                               checked={
                                                 assistanceData[rel]
-                                                  ?.BusinessSupport?.urgency ===
-                                                level
+                                                  ?.BusinessSupport?.hasLoan ===
+                                                opt
                                               }
                                               onChange={() =>
                                                 handleBusinessChange(
                                                   rel,
-                                                  "urgency",
-                                                  level,
+                                                  "hasLoan",
+                                                  opt,
                                                 )
                                               }
                                             />{" "}
-                                            {level}
+                                            {opt}
                                           </label>
-                                        ),
-                                      )}
+                                        ))}
+                                      </div>
                                     </div>
-                                  </div>
 
-                                  {/* Row 2: Income & Expenses */}
-                                  <div className="flex flex-col gap-1">
-                                    <label className="text-[11px] font-bold uppercase text-gray-500">
-                                      Monthly Business Income*
-                                    </label>
-                                    <input
-                                      type="number"
-                                      className="w-full border p-2 rounded mt-1 outline-none focus:border-blue-500"
-                                      value={
-                                        assistanceData[rel]?.BusinessSupport
-                                          ?.income || ""
-                                      }
-                                      onChange={(e) =>
-                                        handleBusinessChange(
-                                          rel,
-                                          "income",
-                                          e.target.value,
-                                        )
-                                      }
-                                    />
-                                  </div>
+                                    {/* Upload Documents (If Any) */}
+                                    <div className="flex flex-col gap-1">
+                                      <label className="text-[11px] font-bold uppercase text-gray-500">
+                                        Upload Business Documents (If Any)
+                                      </label>
+                                      <div className="flex border rounded mt-1 overflow-hidden">
+                                        <label className="bg-gray-100 px-3 py-2 text-sm border-r cursor-pointer hover:bg-gray-200 transition">
+                                          Choose File
+                                          <input
+                                            type="file"
+                                            className="hidden"
+                                            onChange={(e) =>
+                                              handleBusinessChange(
+                                                rel,
+                                                "bizDoc",
+                                                e.target.files[0],
+                                              )
+                                            }
+                                          />
+                                        </label>
+                                        <span className="px-3 py-2 text-sm text-gray-400 truncate">
+                                          {assistanceData[rel]?.BusinessSupport
+                                            ?.bizDoc?.name || "No file chosen"}
+                                        </span>
+                                      </div>
+                                    </div>
 
-                                  <div className="flex flex-col gap-1">
-                                    <label className="text-[11px] font-bold uppercase text-gray-500">
-                                      Monthly Business Expenses*
-                                    </label>
-                                    <input
-                                      type="number"
-                                      className="w-full border p-2 rounded mt-1 outline-none focus:border-blue-500"
-                                      value={
-                                        assistanceData[rel]?.BusinessSupport
-                                          ?.expenses || ""
-                                      }
-                                      onChange={(e) =>
-                                        handleBusinessChange(
-                                          rel,
-                                          "expenses",
-                                          e.target.value,
-                                        )
-                                      }
-                                    />
-                                  </div>
-
-                                  {/* Business Condition */}
-                                  <div className="flex flex-col gap-1">
-                                    <label className="text-[11px] font-bold uppercase text-gray-500">
-                                      Business Condition*
-                                    </label>
-                                    <div className="flex gap-4 mt-2">
-                                      {["Profit", "Loss", "Closed"].map(
-                                        (cond) => (
+                                    {/* Row 4: Schemes & Quotations */}
+                                    <div className="flex flex-col gap-1">
+                                      <label className="text-[11px] font-bold uppercase text-gray-500">
+                                        Any Government Scheme/Subsidy?*
+                                      </label>
+                                      <div className="flex gap-4 mt-2">
+                                        {["Yes", "No"].map((opt) => (
                                           <label
-                                            key={cond}
+                                            key={opt}
                                             className="flex items-center gap-2 text-sm text-gray-600"
                                           >
                                             <input
                                               type="radio"
-                                              name={`biz-condition-${rel}`}
+                                              name={`biz-scheme-${rel}`}
                                               checked={
                                                 assistanceData[rel]
-                                                  ?.BusinessSupport
-                                                  ?.condition === cond
+                                                  ?.BusinessSupport?.hasScheme ===
+                                                opt
                                               }
                                               onChange={() =>
                                                 handleBusinessChange(
                                                   rel,
-                                                  "condition",
-                                                  cond,
+                                                  "hasScheme",
+                                                  opt,
                                                 )
                                               }
                                             />{" "}
-                                            {cond}
+                                            {opt}
                                           </label>
-                                        ),
-                                      )}
+                                        ))}
+                                      </div>
+                                    </div>
+
+                                    {/* Upload Quotation */}
+                                    <div className="flex flex-col gap-1">
+                                      <label className="text-[11px] font-bold uppercase text-gray-500">
+                                        Upload Quotation / Estimate
+                                      </label>
+                                      <div className="flex border rounded mt-1 overflow-hidden">
+                                        <label className="bg-gray-100 px-3 py-2 text-sm border-r cursor-pointer hover:bg-gray-200 transition">
+                                          Choose File
+                                          <input
+                                            type="file"
+                                            className="hidden"
+                                            onChange={(e) =>
+                                              handleBusinessChange(
+                                                rel,
+                                                "quotationFile",
+                                                e.target.files[0],
+                                              )
+                                            }
+                                          />
+                                        </label>
+                                        <span className="px-3 py-2 text-sm text-gray-400 truncate">
+                                          {assistanceData[rel]?.BusinessSupport
+                                            ?.quotationFile?.name ||
+                                            "No file chosen"}
+                                        </span>
+                                      </div>
                                     </div>
                                   </div>
 
-                                  {/* Row 3: Dependents, Loans, Uploads */}
-                                  <div className="flex flex-col gap-1">
+                                  {/* Remark Section */}
+                                  <div className="mt-8 flex flex-col gap-1">
                                     <label className="text-[11px] font-bold uppercase text-gray-500">
-                                      Business Dependents (Count)*
+                                      Remark*
                                     </label>
-                                    <input
-                                      type="number"
-                                      className="w-full border p-2 rounded mt-1 outline-none focus:border-blue-500"
+                                    <textarea
+                                      placeholder="Write here..."
+                                      className="w-full border p-2 rounded mt-1 h-24 outline-none resize-none focus:border-blue-500"
                                       value={
                                         assistanceData[rel]?.BusinessSupport
-                                          ?.dependents || ""
+                                          ?.remark || ""
                                       }
                                       onChange={(e) =>
                                         handleBusinessChange(
                                           rel,
-                                          "dependents",
+                                          "remark",
                                           e.target.value,
                                         )
                                       }
-                                    />
-                                  </div>
-
-                                  <div className="flex flex-col gap-1">
-                                    <label className="text-[11px] font-bold uppercase text-gray-500">
-                                      Any Business Loan?*
-                                    </label>
-                                    <div className="flex gap-4 mt-2">
-                                      {["Yes", "No"].map((opt) => (
-                                        <label
-                                          key={opt}
-                                          className="flex items-center gap-2 text-sm text-gray-600"
-                                        >
-                                          <input
-                                            type="radio"
-                                            name={`biz-loan-${rel}`}
-                                            checked={
-                                              assistanceData[rel]
-                                                ?.BusinessSupport?.hasLoan ===
-                                              opt
-                                            }
-                                            onChange={() =>
-                                              handleBusinessChange(
-                                                rel,
-                                                "hasLoan",
-                                                opt,
-                                              )
-                                            }
-                                          />{" "}
-                                          {opt}
-                                        </label>
-                                      ))}
-                                    </div>
-                                  </div>
-
-                                  {/* Upload Documents (If Any) */}
-                                  <div className="flex flex-col gap-1">
-                                    <label className="text-[11px] font-bold uppercase text-gray-500">
-                                      Upload Business Documents (If Any)
-                                    </label>
-                                    <div className="flex border rounded mt-1 overflow-hidden">
-                                      <label className="bg-gray-100 px-3 py-2 text-sm border-r cursor-pointer hover:bg-gray-200 transition">
-                                        Choose File
-                                        <input
-                                          type="file"
-                                          className="hidden"
-                                          onChange={(e) =>
-                                            handleBusinessChange(
-                                              rel,
-                                              "bizDoc",
-                                              e.target.files[0],
-                                            )
-                                          }
-                                        />
-                                      </label>
-                                      <span className="px-3 py-2 text-sm text-gray-400 truncate">
-                                        {assistanceData[rel]?.BusinessSupport
-                                          ?.bizDoc?.name || "No file chosen"}
-                                      </span>
-                                    </div>
-                                  </div>
-
-                                  {/* Row 4: Schemes & Quotations */}
-                                  <div className="flex flex-col gap-1">
-                                    <label className="text-[11px] font-bold uppercase text-gray-500">
-                                      Any Government Scheme/Subsidy?*
-                                    </label>
-                                    <div className="flex gap-4 mt-2">
-                                      {["Yes", "No"].map((opt) => (
-                                        <label
-                                          key={opt}
-                                          className="flex items-center gap-2 text-sm text-gray-600"
-                                        >
-                                          <input
-                                            type="radio"
-                                            name={`biz-scheme-${rel}`}
-                                            checked={
-                                              assistanceData[rel]
-                                                ?.BusinessSupport?.hasScheme ===
-                                              opt
-                                            }
-                                            onChange={() =>
-                                              handleBusinessChange(
-                                                rel,
-                                                "hasScheme",
-                                                opt,
-                                              )
-                                            }
-                                          />{" "}
-                                          {opt}
-                                        </label>
-                                      ))}
-                                    </div>
-                                  </div>
-
-                                  {/* Upload Quotation */}
-                                  <div className="flex flex-col gap-1">
-                                    <label className="text-[11px] font-bold uppercase text-gray-500">
-                                      Upload Quotation / Estimate
-                                    </label>
-                                    <div className="flex border rounded mt-1 overflow-hidden">
-                                      <label className="bg-gray-100 px-3 py-2 text-sm border-r cursor-pointer hover:bg-gray-200 transition">
-                                        Choose File
-                                        <input
-                                          type="file"
-                                          className="hidden"
-                                          onChange={(e) =>
-                                            handleBusinessChange(
-                                              rel,
-                                              "quotationFile",
-                                              e.target.files[0],
-                                            )
-                                          }
-                                        />
-                                      </label>
-                                      <span className="px-3 py-2 text-sm text-gray-400 truncate">
-                                        {assistanceData[rel]?.BusinessSupport
-                                          ?.quotationFile?.name ||
-                                          "No file chosen"}
-                                      </span>
-                                    </div>
+                                    ></textarea>
                                   </div>
                                 </div>
-
-                                {/* Remark Section */}
-                                <div className="mt-8 flex flex-col gap-1">
-                                  <label className="text-[11px] font-bold uppercase text-gray-500">
-                                    Remark*
-                                  </label>
-                                  <textarea
-                                    placeholder="Write here..."
-                                    className="w-full border p-2 rounded mt-1 h-24 outline-none resize-none focus:border-blue-500"
-                                    value={
-                                      assistanceData[rel]?.BusinessSupport
-                                        ?.remark || ""
-                                    }
-                                    onChange={(e) =>
-                                      handleBusinessChange(
-                                        rel,
-                                        "remark",
-                                        e.target.value,
-                                      )
-                                    }
-                                  ></textarea>
-                                </div>
-                              </div>
-                            )}
+                              )}
                           </div>
                         )}
                       </div>
@@ -5403,13 +5418,12 @@ const Family_Details_Staff = ({
                       updateFormField("mediclaimPremiumAmount", premiumAmount);
                     }}
                     readOnly={isFormFieldLocked("mediclaimPremiumAmount")}
-                    className={`w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-100 outline-none ${
-                      Number(formData.mediclaimPremiumAmount || 0) >=
+                    className={`w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-100 outline-none ${Number(formData.mediclaimPremiumAmount || 0) >=
                         Number(formData.Family_mediclaim_amount || 0) &&
-                      formData.Family_mediclaim_amount
+                        formData.Family_mediclaim_amount
                         ? "border-red-500 focus:ring-red-100"
                         : "border-slate-300"
-                    } ${lockInputClass(isFormFieldLocked("mediclaimPremiumAmount"))}`}
+                      } ${lockInputClass(isFormFieldLocked("mediclaimPremiumAmount"))}`}
                   />
                   {Number(formData.mediclaimPremiumAmount || 0) >
                     Number(formData.Family_mediclaim_amount || 0) &&
@@ -5524,11 +5538,10 @@ const Family_Details_Staff = ({
               type="button"
               onClick={handleSave}
               disabled={loading}
-              className={`px-4 py-2 text-white font-semibold rounded-md transition-colors ${
-                loading
+              className={`px-4 py-2 text-white font-semibold rounded-md transition-colors ${loading
                   ? "bg-blue-400 cursor-not-allowed"
                   : "bg-blue-500 hover:bg-blue-600"
-              }`}
+                }`}
             >
               Save
             </button>
