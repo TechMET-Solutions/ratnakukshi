@@ -276,7 +276,7 @@ const mapDiksharthiToFormData = (record) => {
     samadhiDate: toInputDate(record?.samadhiDate || record?.samadhi_date),
     samadhiPlace: record?.samadhiPlace || record?.samadhi_place || "",
     rbfCriteria: record?.rbfCriteria || record?.rbf_criteria || "",
-    fanIdExists: record?.fan_id ? "Yes" : "",
+    fanIdExists: record?.fan_id ? "Yes" : "No",
     fan_id: record?.fan_id || "",
     sameRelationsWithFan: false,
     relation: inferredRelation,
@@ -1127,37 +1127,37 @@ const DiksharthiDetailsAdd = () => {
         ? formData.familyRelations
         : [];
 
-      selectedRelations.forEach((relationKey) => {
-        const details = formData?.familyRelationDetails?.[relationKey] || {};
+      // selectedRelations.forEach((relationKey) => {
+      //   const details = formData?.familyRelationDetails?.[relationKey] || {};
 
-        console.log(details, "details")
+      //   console.log(details, "details")
 
-        // ✅ First Name
-        if (!String(details?.firstName || "").trim()) {
-          newErrors[`family_firstName_${relationKey}`] = "Required";
-        }
+      //   // ✅ First Name
+      //   if (!String(details?.firstName || "").trim()) {
+      //     newErrors[`family_firstName_${relationKey}`] = "Required";
+      //   }
 
-        // ✅ Last Name
-        if (!String(details?.lastName || "").trim()) {
-          newErrors[`family_lastName_${relationKey}`] = "Required";
-        }
+      //   // ✅ Last Name
+      //   if (!String(details?.lastName || "").trim()) {
+      //     newErrors[`family_lastName_${relationKey}`] = "Required";
+      //   }
 
-        // ✅ Mobile
-        if (!String(details?.mobileNumber || "").trim()) {
-          newErrors[`family_mobile_${relationKey}`] = "Required";
-        } else if (!MOBILE_REGEX.test(details?.mobileNumber)) {
-          newErrors[`family_mobile_${relationKey}`] =
-            "Mobile must be 10 digits";
-        }
+      //   // ✅ Mobile
+      //   if (!String(details?.mobileNumber || "").trim()) {
+      //     newErrors[`family_mobile_${relationKey}`] = "Required";
+      //   } else if (!MOBILE_REGEX.test(details?.mobileNumber)) {
+      //     newErrors[`family_mobile_${relationKey}`] =
+      //       "Mobile must be 10 digits";
+      //   }
 
-        // ✅ AADHAR (FIXED)
-        if (!String(details?.aadharNumber || "").trim()) {
-          newErrors[`family_aadhar_${relationKey}`] = "Required";
-        } else if (!/^\d{12}$/.test(details?.aadharNumber)) {
-          newErrors[`family_aadhar_${relationKey}`] =
-            "Aadhar must be 12 digits";
-        }
-      });
+      //   // ✅ AADHAR (FIXED)
+      //   if (!String(details?.aadharNumber || "").trim()) {
+      //     newErrors[`family_aadhar_${relationKey}`] = "Required";
+      //   } else if (!/^\d{12}$/.test(details?.aadharNumber)) {
+      //     newErrors[`family_aadhar_${relationKey}`] =
+      //       "Aadhar must be 12 digits";
+      //   }
+      // });
     }
 
     // rest validations same...
