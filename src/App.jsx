@@ -28,6 +28,7 @@ import FamilyBasicInfo from "./pages/FamilyBasicInfo";
 import StaffDashboard from "./pages/dashboard/StaffDashboard";
 import MeetingSchedule from "./pages/MeetingSchedule";
 import MeetingScheduleDetails from "./pages/MeetingScheduleDetails";
+import RBFDematDetails from "./pages/RBFDematDetails";
 
 const Layout = ({ children }) => {
   return (
@@ -276,6 +277,16 @@ function App() {
             <ProtectedRoute>
               <Layout>
                 <RBFBankDetails />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/demat-account"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <RBFDematDetails />
               </Layout>
             </ProtectedRoute>
           }

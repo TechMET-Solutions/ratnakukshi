@@ -256,7 +256,27 @@ const AssistancePage = () => {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
-  const [statusFilter, setStatusFilter] = useState("all");
+
+  const getDefaultStatusFilterForRole = (roleValue) => {
+    const normalizedRole = String(roleValue || "").trim().toLowerCase();
+
+    if (normalizedRole === "staff") return "queries";
+    if (normalizedRole === "committee-member") return "committee-member";
+    if (normalizedRole === "case-coordinator") return "pending,case-coordinator";
+    if (normalizedRole === "karyakarta") return "pending,queries";
+    if (
+      normalizedRole === "expert-panel" ||
+      normalizedRole.startsWith("expert-panel-")
+    ) {
+      return "expert-panel";
+    }
+
+    return "all";
+  };
+
+  const [statusFilter, setStatusFilter] = useState(() =>
+    getDefaultStatusFilterForRole(user?.role)
+  );
 
   const role = String(user?.role || "").toLowerCase();
   const isStaff = role === "staff";
@@ -276,6 +296,29 @@ const AssistancePage = () => {
   //   }
   // };
 
+  // const fetchFamilyAccounting = async (
+  //   currentPage = page,
+  //   currentStatus = statusFilter
+  // ) => {
+  //   try {
+  //     const res = await axios.get(`${API}/api/assistance/allAssistance`, {
+  //       params: {
+  //         page: currentPage,
+  //         limit,
+  //         status: currentStatus,
+  //       },
+  //     });
+
+  //     setTableData(asArray(res?.data?.data));
+  //     setTotalPages(res?.data?.pagination?.totalPages || 1);
+  //     setPage(res?.data?.pagination?.page || 1);
+
+  //   } catch (error) {
+  //     console.error("Failed to fetch assistance:", error);
+  //     setTableData([]);
+  //   }
+  // };
+
   const fetchFamilyAccounting = async (
     currentPage = page,
     currentStatus = statusFilter
@@ -285,16 +328,14 @@ const AssistancePage = () => {
         params: {
           page: currentPage,
           limit,
-          status: currentStatus,
+          status: currentStatus === "all" ? "" : currentStatus,
         },
       });
 
       setTableData(asArray(res?.data?.data));
       setTotalPages(res?.data?.pagination?.totalPages || 1);
       setPage(res?.data?.pagination?.page || 1);
-
     } catch (error) {
-      console.error("Failed to fetch assistance:", error);
       setTableData([]);
     }
   };
@@ -306,6 +347,14 @@ const AssistancePage = () => {
   useEffect(() => {
     fetchFamilyAccounting(page, statusFilter);
   }, [page, statusFilter]);
+
+  useEffect(() => {
+    setStatusFilter((current) => {
+      if (current !== "all") return current;
+      return getDefaultStatusFilterForRole(user?.role);
+    });
+    setPage(1);
+  }, [user?.role]);
 
   useEffect(() => {
     const fetchMeetings = async () => {
@@ -567,6 +616,50 @@ const AssistancePage = () => {
   };
 
 
+  // const getFilteredData = () => {
+  //   const normalizedRole = role.toLowerCase();
+  //   const expertPanelType = getExpertPanelAssistanceType(normalizedRole);
+
+  //   return tableData.filter((row) => {
+  //     const status = normalizeWorkflowValue(row.status);
+  //     const rowType = normalizeWorkflowValue(row.assistance_type);
+
+  //     if (normalizedRole === "staff") {
+  //       return status === "queries";
+  //     }
+
+  //     if (normalizedRole === "karyakarta") {
+  //       return status === "pending" || status === "queries";
+  //     }
+
+  //     // if (normalizedRole === "case-coordinator") {
+  //     //   return true; // sab dikhana hai
+  //     // }
+
+  //     if (normalizedRole === "committee-member") {
+  //       return status === "committee member";
+  //     }
+
+  //     if (
+  //       normalizedRole === "expert-panel" ||
+  //       normalizedRole.startsWith("expert-panel-")
+  //     ) {
+  //       const isInExpertPanelStatus = status === "expert panel";
+  //       if (!isInExpertPanelStatus) return false;
+  //       if (!expertPanelType) return true;
+
+  //       if (expertPanelType === "education") {
+  //         return rowType === "education" || rowType === "educations";
+  //       }
+  //       return rowType === expertPanelType;
+  //     }
+
+  //     // return false;
+
+  //     return true;
+  //   });
+  // };
+
   const getFilteredData = () => {
     const normalizedRole = role.toLowerCase();
     const expertPanelType = getExpertPanelAssistanceType(normalizedRole);
@@ -583,9 +676,9 @@ const AssistancePage = () => {
         return status === "pending" || status === "queries";
       }
 
-      // if (normalizedRole === "case-coordinator") {
-      //   return true; // sab dikhana hai
-      // }
+      if (normalizedRole === "case-coordinator") {
+        return status === "pending" || status === "case coordinator";
+      }
 
       if (normalizedRole === "committee-member") {
         return status === "committee member";
@@ -595,22 +688,21 @@ const AssistancePage = () => {
         normalizedRole === "expert-panel" ||
         normalizedRole.startsWith("expert-panel-")
       ) {
-        const isInExpertPanelStatus = status === "expert panel";
-        if (!isInExpertPanelStatus) return false;
+        if (status !== "expert panel") return false;
+
         if (!expertPanelType) return true;
 
         if (expertPanelType === "education") {
           return rowType === "education" || rowType === "educations";
         }
+
         return rowType === expertPanelType;
       }
-
-      // return false;
 
       return true;
     });
   };
-
+ 
   const actionTitleMap = {
     approve: "Approved Request",
     rejected: "Rejected Request",
@@ -654,6 +746,9 @@ const AssistancePage = () => {
       .join("__");
 
   const filteredData = getFilteredData();
+
+  // const filteredData = tableData;
+
   const selectedPendingCount = filteredData.filter(
     (row) => selectedRowIds.includes(row.id) && isBulkSelectableRow(row)
   ).length;

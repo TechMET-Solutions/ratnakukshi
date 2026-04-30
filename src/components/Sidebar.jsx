@@ -122,7 +122,10 @@ const Sidebar = () => {
         )}
 
         {isAdmin || isAccount && (
+          <>
           <NavItem isCollapsed={isCollapsed} to="/bank-details" icon={<Home size={22} />} label="Bank Details" />
+            <NavItem isCollapsed={isCollapsed} to="/demat-account" icon={<Home size={22} />} label="Demat Account Details" />
+          </>
         )}
         {isAccount && (
           <>
