@@ -676,9 +676,10 @@ const AssistancePage = () => {
         return status === "pending" || status === "queries";
       }
 
-      if (normalizedRole === "case-coordinator") {
-        return status === "pending" || status === "case coordinator";
-      }
+      // if (normalizedRole === "case-coordinator") {
+      //   return true;
+      //   // return status === "pending" || status === "case coordinator";
+      // }
 
       if (normalizedRole === "committee-member") {
         return status === "committee member";

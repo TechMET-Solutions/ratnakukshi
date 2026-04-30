@@ -111,7 +111,7 @@ const FamilyDetailsForm = () => {
       : "";
 
   const updateFormField = (fieldName, value, extra = {}) => {
-    // if (isFormFieldLocked(fieldName)) return;
+    if (isFormFieldLocked(fieldName)) return;
     setFormData((prev) => ({
       ...prev,
       [fieldName]: value,
@@ -379,7 +379,7 @@ const FamilyDetailsForm = () => {
   };
 
   const handleRelationDetailChange = (relation, field, value) => {
-    // if (isRelationFieldLocked(relation, field)) return;
+    if (isRelationFieldLocked(relation, field)) return;
 
     setRelationDetails((prev) => {
       const nextRelationDetails = {
@@ -585,7 +585,7 @@ const FamilyDetailsForm = () => {
 
 
   const handleProfileUpload = (relation, event) => {
-    // if (isRelationFieldLocked(relation, "photo")) return;
+    if (isRelationFieldLocked(relation, "photo")) return;
 
     const file = event.target.files?.[0];
 
@@ -617,7 +617,7 @@ const FamilyDetailsForm = () => {
     isRemove = false,
     reason = ""
   ) => {
-    // if (isRelationFieldLocked(relation, "assistanceCategories")) return;
+    if (isRelationFieldLocked(relation, "assistanceCategories")) return;
 
     const lowerCategory = category.toLowerCase();
 
@@ -777,9 +777,9 @@ const FamilyDetailsForm = () => {
     return true;
   });
 
-  const [assistanceData, setAssistanceData] = useState({});
-  const [selectedAssistance, setselectedAssistance] = useState({});
-  const [defaultAssistance, setdefaultAssisatce] = useState({});
+  const [assistanceData, setAssistanceData] = useState([]);
+  const [selectedAssistance, setselectedAssistance] = useState([]);
+  const [defaultAssistance, setdefaultAssisatce] = useState([]);
   console.log(selectedAssistance, "selectedAssistance")
   console.log(assistanceData, "assistanceData");
 
@@ -1146,77 +1146,77 @@ const FamilyDetailsForm = () => {
   }, [id]);
 
   const fetchFamilyMembers = async () => {
-  try {
-    const res = await axios.get(
-      `${API}/api/get-family-members-full/${id}`
-    );
+    try {
+      const res = await axios.get(
+        `${API}/api/get-family-members-full/${id}`
+      );
 
-    const apiData = res?.data?.data || {};
+      const apiData = res?.data?.data || {};
 
-    const formattedData = {};
+      const formattedData = {};
 
-    Object.keys(apiData).forEach((relation) => {
-      const member = apiData[relation];
+      Object.keys(apiData).forEach((relation) => {
+        const member = apiData[relation];
 
-      formattedData[relation] = {
-        relationName: relation,
-        firstName: member.firstName || "",
-        lastName: member.lastName || "",
-        dob: member.dob || "",
-        age: member.age || "",
-        aadharNumber: member.aadharNumber || "",
-        mobileNumber: member.mobileNumber || "",
-        panNumber: member.panNumber || "",
+        formattedData[relation] = {
+          relationName: relation,
+          firstName: member.firstName || "",
+          lastName: member.lastName || "",
+          dob: member.dob || "",
+          age: member.age || "",
+          aadharNumber: member.aadharNumber || "",
+          mobileNumber: member.mobileNumber || "",
+          panNumber: member.panNumber || "",
 
-        photo: member.photo || "",
+          photo: member.photo || "",
 
-        mediclaim: member.mediclaimType ? true : false,
-        mediclaim_amount: member.mediclaimAmount || "",
-        mediclaim_company_name: member.mediclaimCompanyName || "",
-        member_mediclaim_premium_amount: member.mediclaimPremiumAmount || "",
+          mediclaim: member.mediclaimType ? true : false,
+          mediclaim_amount: member.mediclaimAmount || "",
+          mediclaim_company_name: member.mediclaimCompanyName || "",
+          member_mediclaim_premium_amount: member.mediclaimPremiumAmount || "",
 
-        ayushman: member.ayushmanCoverage ? true : false,
-        ayushman_Amount: member.ayushmanAmount || "",
+          ayushman: member.ayushmanCoverage ? true : false,
+          ayushman_Amount: member.ayushmanAmount || "",
 
-        needAssistance:
-          member.needAssistance === "yes" ? true : false,
+          needAssistance:
+            member.needAssistance === "yes" ? true : false,
 
-        assistanceCategories: member.assistanceCategories || [],
-        family_head: member.family_head || false,
-      };
-    });
+          assistanceCategories: member.assistanceCategories || [],
+          family_head: member.family_head || false,
+        };
+      });
 
-    setRelationDetails(formattedData);
+      setRelationDetails(formattedData);
 
-    const relationKeys = Object.keys(formattedData);
+      const relationKeys = Object.keys(formattedData);
 
-    setFormData((prev) => ({
-      ...prev,
-      relations: relationKeys,
-    }));
+      setFormData((prev) => ({
+        ...prev,
+        relations: relationKeys,
+      }));
 
-    const head = Object.keys(formattedData).find(
-      (rel) => formattedData[rel].family_head
-    );
+      const head = Object.keys(formattedData).find(
+        (rel) => formattedData[rel].family_head
+      );
 
-    setHeadOfFamily(head || null);
-    setExpandedRelations(
-      relationKeys.reduce((acc, relationKey) => {
-        acc[relationKey] = true;
-        return acc;
-      }, {})
-    );
+      setHeadOfFamily(head || null);
+      setExpandedRelations(
+        relationKeys.reduce((acc, relationKey) => {
+          acc[relationKey] = true;
+          return acc;
+        }, {})
+      );
 
-  } catch (err) {
-    console.error(err);
-  }
-};
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
-useEffect(() => {
-  if (id) {
-    fetchFamilyMembers();
-  }
-}, [id]);
+  useEffect(() => {
+    if (id) {
+      fetchFamilyMembers();
+    }
+  }, [id]);
 
   const resetForm = () => {
     setFormData(INITIAL_FORM_DATA);
@@ -1411,7 +1411,7 @@ useEffect(() => {
   };
 
   const handleMedicalChange = (relation, field, value) => {
-    // if (isAssistanceFieldLocked(relation, "Medical", field)) return;
+    if (isAssistanceFieldLocked(relation, "Medical", field)) return;
 
     setAssistanceData((prev) => {
       const nextMedical = {
@@ -1450,7 +1450,7 @@ useEffect(() => {
   };
 
   const handleDiseaseChange = (relation, index, field, value) => {
-    // if (isAssistanceFieldLocked(relation, "Medical", "diseases")) return;
+    if (isAssistanceFieldLocked(relation, "Medical", "diseases")) return;
 
     setAssistanceData((prev) => {
       if (field === "removeDisease") {
@@ -1514,7 +1514,7 @@ useEffect(() => {
   };
 
   const handleAddDisease = (relation) => {
-    // if (isAssistanceFieldLocked(relation, "Medical", "diseases")) return;
+    if (isAssistanceFieldLocked(relation, "Medical", "diseases")) return;
 
     setAssistanceData((prev) => ({
       ...prev,
@@ -1537,7 +1537,7 @@ useEffect(() => {
   };
 
   const handleEducationChange = (relation, field, value) => {
-    // if (isAssistanceFieldLocked(relation, "Education", field)) return;
+    if (isAssistanceFieldLocked(relation, "Education", field)) return;
 
     setAssistanceData((prev) => ({
       ...prev,
@@ -1553,7 +1553,7 @@ useEffect(() => {
   };
 
   const handleJobChange = (relation, field, value) => {
-    // if (isAssistanceFieldLocked(relation, "Job", field)) return;
+    if (isAssistanceFieldLocked(relation, "Job", field)) return;
 
     setAssistanceData((prev) => ({
       ...prev,
@@ -1569,7 +1569,7 @@ useEffect(() => {
   };
 
   const handleFoodChange = (relation, field, value) => {
-    // if (isAssistanceFieldLocked(relation, "Food", field)) return;
+    if (isAssistanceFieldLocked(relation, "Food", field)) return;
 
     setAssistanceData((prev) => ({
       ...prev,
@@ -1600,7 +1600,7 @@ useEffect(() => {
   // };
 
   const handleRentChange = (relation, field, value) => {
-    // if (field !== "remarks" && isAssistanceFieldLocked(relation, "Rent", field)) return;
+    if (field !== "remarks" && isAssistanceFieldLocked(relation, "Rent", field)) return;
 
     setAssistanceData((prev) => ({
       ...prev,
@@ -1616,7 +1616,7 @@ useEffect(() => {
   };
 
   const handleHousingChange = (relation, field, value) => {
-    // if (isAssistanceFieldLocked(relation, "Housing", field)) return;
+    if (isAssistanceFieldLocked(relation, "Housing", field)) return;
 
     setAssistanceData((prev) => ({
       ...prev,
@@ -1632,7 +1632,7 @@ useEffect(() => {
   };
 
   const handleVaiyavacchChange = (relation, field, value) => {
-    // if (isAssistanceFieldLocked(relation, "Vaiyavacch", field)) return;
+    if (isAssistanceFieldLocked(relation, "Vaiyavacch", field)) return;
 
     setAssistanceData((prev) => ({
       ...prev,
@@ -1647,7 +1647,7 @@ useEffect(() => {
     }));
   };
   const handleEmergencyChange = (relation, field, value) => {
-    // if (isAssistanceFieldLocked(relation, "LivelihoodExpenses", field)) return;
+    if (isAssistanceFieldLocked(relation, "LivelihoodExpenses", field)) return;
 
     setAssistanceData((prev) => ({
       ...prev,
@@ -1663,7 +1663,7 @@ useEffect(() => {
   };
 
   const handleBusinessChange = (relation, field, value) => {
-    // if (isAssistanceFieldLocked(relation, "Business", field)) return;
+    if (isAssistanceFieldLocked(relation, "Business", field)) return;
 
     setAssistanceData((prev) => ({
       ...prev,
@@ -1866,7 +1866,7 @@ useEffect(() => {
                     onChange={(e) =>
                       updateFormField("houseDetails", e.target.value, { rentCost: "" })
                     }
-                    // disabled={isFormFieldLocked("houseDetails")}
+                    disabled={isFormFieldLocked("houseDetails")}
                     className="w-4 h-4 text-blue-600"
                   />
                   Own
@@ -1882,7 +1882,7 @@ useEffect(() => {
                         maintenanceCost: "",
                       })
                     }
-                    // disabled={isFormFieldLocked("houseDetails")}
+                    disabled={isFormFieldLocked("houseDetails")}
                     className="w-4 h-4 text-blue-600"
                   />
                   Rented
@@ -1897,10 +1897,10 @@ useEffect(() => {
               </label>
               <input
                 type="text"
-                placeholder="e.g. Apartment"
+                placeholder="e.g. Apartment, Villa"
                 value={formData.typeOfHouse}
                 onChange={(e) => updateFormField("typeOfHouse", e.target.value)}
-                // readOnly={isFormFieldLocked("typeOfHouse")}
+                readOnly={isFormFieldLocked("typeOfHouse")}
                 className={`w-full p-2 border border-slate-300 rounded-md outline-none ${lockInputClass(
                   isFormFieldLocked("typeOfHouse")
                 )}`}
@@ -1920,7 +1920,7 @@ useEffect(() => {
                     onChange={(e) =>
                       updateFormField("maintenanceCost", e.target.value)
                     }
-                    // readOnly={isFormFieldLocked("maintenanceCost")}
+                    readOnly={isFormFieldLocked("maintenanceCost")}
                     className={`w-full p-2 border border-slate-300 rounded-md outline-none ${lockInputClass(
                       isFormFieldLocked("maintenanceCost")
                     )}`}
@@ -1935,7 +1935,7 @@ useEffect(() => {
                     type="number"
                     value={formData.rentCost}
                     onChange={(e) => updateFormField("rentCost", e.target.value)}
-                    // readOnly={isFormFieldLocked("rentCost")}
+                    readOnly={isFormFieldLocked("rentCost")}
                     className={`w-full p-2 border border-slate-300 rounded-md outline-none ${lockInputClass(
                       isFormFieldLocked("rentCost")
                     )}`}
@@ -1958,7 +1958,7 @@ useEffect(() => {
                 onChange={(e) =>
                   updateFormField("lightBillCost", e.target.value)
                 }
-                // readOnly={isFormFieldLocked("lightBillCost")}
+                readOnly={isFormFieldLocked("lightBillCost")}
                 className={`w-full p-2 border border-slate-300 rounded-md outline-none ${lockInputClass(
                   isFormFieldLocked("lightBillCost")
                 )}`}
@@ -2140,17 +2140,15 @@ useEffect(() => {
                             <input
                               type="text"
                               value={relationDetails[rel]?.firstName || ""}
-                             
+                              readOnly={isRelationFieldLocked(rel, "firstName")}
+                              className={`w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none ${lockInputClass(isRelationFieldLocked(rel, "firstName"))
+                                }`}
                               onChange={(e) => {
                                 const value = e.target.value;
-
-                                
                                 if (/^[A-Za-z\s]*$/.test(value)) {
                                   handleRelationDetailChange(rel, "firstName", value);
                                 }
-                                
                               }}
-                              className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                             />
                           </div>
                           <div className="w-[200px]">
@@ -2160,11 +2158,11 @@ useEffect(() => {
                             <input
                               type="text"
                               value={relationDetails[rel]?.lastName || ""}
-                              
+                              readOnly={isRelationFieldLocked(rel, "lastName")}
                               onChange={(e) => {
                                 const value = e.target.value;
 
-                               
+
                                 if (/^[A-Za-z\s]*$/.test(value)) {
                                   handleRelationDetailChange(rel, "lastName", value);
                                 }
@@ -2177,13 +2175,14 @@ useEffect(() => {
                           <div className="w-[200px]">
                             <label className="block text-sm font-medium text-slate-700 mb-1">
                               Mobile Number
-                              
+
                             </label>
 
                             <input
                               type="text"
                               value={relationDetails[rel]?.mobileNumber || ""}
                               maxLength={10}
+                              readOnly={isRelationFieldLocked(rel, "mobileNumber")}
                               onChange={(e) => {
                                 const onlyNumbers = e.target.value.replace(/\D/g, "");
                                 handleRelationDetailChange(rel, "mobileNumber", onlyNumbers);
@@ -2206,6 +2205,7 @@ useEffect(() => {
                               type="text"
                               value={relationDetails[rel]?.aadharNumber || ""}
                               maxLength={12}
+                              readOnly={isRelationFieldLocked(rel, "aadharNumber")}
                               onChange={(e) => {
                                 const onlyNumbers = e.target.value.replace(/\D/g, "");
                                 handleRelationDetailChange(rel, "aadharNumber", onlyNumbers);
@@ -2231,6 +2231,7 @@ useEffect(() => {
                               type="text"
                               value={relationDetails[rel]?.panNumber || ""}
                               maxLength={10}
+                              readOnly={isRelationFieldLocked(rel, "panNumber")}
                               onChange={(e) => {
                                 const value = e.target.value
                                   .toUpperCase()                 // convert to uppercase
@@ -2252,6 +2253,7 @@ useEffect(() => {
                               type="date"
                               value={relationDetails[rel]?.dob || ""}
                               max={new Date().toISOString().split("T")[0]}
+                              readOnly={isRelationFieldLocked(rel, "dob")}
                               onChange={(e) =>
                                 handleRelationDetailChange(rel, "dob", e.target.value)
                               }
@@ -2266,7 +2268,6 @@ useEffect(() => {
                             <input
                               type="text"
                               value={relationDetails[rel]?.age ?? ""}
-                              readOnly
                               className="w-full p-2 border border-slate-300 rounded-md bg-gray-50 text-slate-600"
                             />
                           </div>
@@ -5522,7 +5523,7 @@ useEffect(() => {
                     name="mediclaim"
                     checked={formData.mediclaim === true}
                     onChange={() => updateFormField("mediclaim", true)}
-                    // disabled={isFormFieldLocked("mediclaim")}
+                    disabled={isFormFieldLocked("mediclaim")}
                   />{" "}
                   Yes
                 </label>
@@ -5532,7 +5533,7 @@ useEffect(() => {
                     name="mediclaim"
                     checked={formData.mediclaim === false}
                     onChange={() => updateFormField("mediclaim", false)}
-                    // disabled={isFormFieldLocked("mediclaim")}
+                    disabled={isFormFieldLocked("mediclaim")}
                   />{" "}
                   No
                 </label>
@@ -5552,7 +5553,7 @@ useEffect(() => {
                     name="ngo"
                     checked={formData.ngoAssistance === true}
                     onChange={() => updateFormField("ngoAssistance", true)}
-                    // disabled={isFormFieldLocked("ngoAssistance")}
+                    disabled={isFormFieldLocked("ngoAssistance")}
                   />{" "}
                   Yes
                 </label>
@@ -5562,7 +5563,7 @@ useEffect(() => {
                     name="ngo"
                     checked={formData.ngoAssistance === false}
                     onChange={() => updateFormField("ngoAssistance", false)}
-                    // disabled={isFormFieldLocked("ngoAssistance")}
+                    disabled={isFormFieldLocked("ngoAssistance")}
                   />{" "}
                   No
                 </label>
@@ -5589,7 +5590,7 @@ useEffect(() => {
                     onChange={(e) =>
                       updateFormField("family_mediclaim_type", e.target.value)
                     }
-                    // disabled={isFormFieldLocked("family_mediclaim_type")}
+                    disabled={isFormFieldLocked("family_mediclaim_type")}
                   >
                     <option value="">Select Type</option>
                     <option value="single">Single</option>
@@ -5607,7 +5608,7 @@ useEffect(() => {
                     onChange={(e) =>
                       updateFormField("Family_mediclaim_amount", e.target.value)
                     }
-                    // readOnly={isFormFieldLocked("Family_mediclaim_amount")}
+                    readOnly={isFormFieldLocked("Family_mediclaim_amount")}
                     className={`w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none ${lockInputClass(
                       isFormFieldLocked("Family_mediclaim_amount")
                     )}`}
@@ -5621,7 +5622,7 @@ useEffect(() => {
                     type="number"
                     value={formData.mediclaimPremiumAmount || ""}
                     onChange={(e) => {
-                      // if (isFormFieldLocked("mediclaimPremiumAmount")) return;
+                      if (isFormFieldLocked("mediclaimPremiumAmount")) return;
                       let premiumAmount = Number(e.target.value);
                       const coverAmount = Number(formData.Family_mediclaim_amount) || 0;
 
@@ -5633,7 +5634,7 @@ useEffect(() => {
 
                       updateFormField("mediclaimPremiumAmount", premiumAmount);
                     }}
-                    // readOnly={isFormFieldLocked("mediclaimPremiumAmount")}
+                    readOnly={isFormFieldLocked("mediclaimPremiumAmount")}
                     className={`w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-100 outline-none ${Number(formData.mediclaimPremiumAmount || 0) >= Number(formData.Family_mediclaim_amount || 0) &&
                       formData.Family_mediclaim_amount
                       ? "border-red-500 focus:ring-red-100"
@@ -5656,7 +5657,7 @@ useEffect(() => {
                     onChange={(e) =>
                       updateFormField("family_mediclaim_companyName", e.target.value)
                     }
-                    // readOnly={isFormFieldLocked("family_mediclaim_companyName")}
+                    readOnly={isFormFieldLocked("family_mediclaim_companyName")}
                     className={`w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none `}
                   />
                 </div>
@@ -5673,7 +5674,7 @@ useEffect(() => {
                     type="text"
                     value={formData.sanghName || ""}
                     onChange={(e) => updateFormField("sanghName", e.target.value)}
-                    // readOnly={isFormFieldLocked("sanghName")}
+                    readOnly={isFormFieldLocked("sanghName")}
                     className={`w-full p-2 border border-slate-300 rounded-md outline-none `}
                   />
                 </div>
@@ -5686,7 +5687,7 @@ useEffect(() => {
                     type="number"
                     value={formData.ngoAmount || ""}
                     onChange={(e) => updateFormField("ngoAmount", e.target.value)}
-                    // readOnly={isFormFieldLocked("ngoAmount")}
+                    readOnly={isFormFieldLocked("ngoAmount")}
                     className={`w-full p-2 border border-slate-300 rounded-md outline-none $`}
                   />
                 </div>
@@ -5700,7 +5701,7 @@ useEffect(() => {
                     className={`w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none`}
                     value={formData.ngoFrequency || ""}
                     onChange={(e) => updateFormField("ngoFrequency", e.target.value)}
-                    // disabled={isFormFieldLocked("ngoFrequency")}
+                    disabled={isFormFieldLocked("ngoFrequency")}
                   >
                     <option value="">Select Frequency</option>
                     <option value="Monthly">Monthly</option>
@@ -5716,7 +5717,7 @@ useEffect(() => {
                   <textarea
                     value={formData.ngoRemark || ""}
                     onChange={(e) => updateFormField("ngoRemark", e.target.value)}
-                    // readOnly={isFormFieldLocked("ngoRemark")}
+                    readOnly={isFormFieldLocked("ngoRemark")}
                     className={`w-full p-2 border border-slate-300 rounded-md outline-none resize-none `}
                     rows={2}
                   />

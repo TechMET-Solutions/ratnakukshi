@@ -73,11 +73,13 @@ function DonorList() {
 
 
   const filteredDonors = donors.filter((donor) => {
-    const name = donor.personalDetails?.name?.toLowerCase() || "";
+    const name = donor.personalDetails?.firstName?.toLowerCase() || "";
+    const lname = donor.personalDetails?.lastName?.toLowerCase() || "";
     const mobile = donor.personalDetails?.mobileNumber || donor.personalDetails?.mobile || "";
 
     const matchesSearch =
       name.includes(searchTerm.toLowerCase()) ||
+      lname.includes(searchTerm.toLowerCase()) ||
       mobile.includes(searchTerm);
 
     if (filterStatus === "Due") return matchesSearch && donor.dueAmount > 0;
