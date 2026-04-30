@@ -32,9 +32,7 @@ const getStatusBadge = (value) => {
 const EMPTY_FORM = {
     broker_name: "",
     account_holder_name: "",
-    dp_id: "",
     client_id: "",
-    demat_no: "",
     status: "active",
 };
 
@@ -85,9 +83,7 @@ const DematModal = ({ isOpen, onClose, onSave, initialData, loading }) => {
             setFormData({
                 broker_name: initialData.broker_name || "",
                 account_holder_name: initialData.account_holder_name || "",
-                dp_id: initialData.dp_id || "",
                 client_id: initialData.client_id || "",
-                demat_no: initialData.demat_no || "",
                 status: normalizeStatusForForm(initialData.status),
             });
             return;
@@ -137,14 +133,14 @@ const DematModal = ({ isOpen, onClose, onSave, initialData, loading }) => {
                         className="w-full rounded-md border px-3 py-2"
                     />
 
-                    <input
+                    {/* <input
                         placeholder="DP ID"
                         value={formData.dp_id}
                         onChange={(e) =>
                             setFormData({ ...formData, dp_id: e.target.value })
                         }
                         className="w-full rounded-md border px-3 py-2"
-                    />
+                    /> */}
 
                     <input
                         placeholder="Client ID"
@@ -155,7 +151,7 @@ const DematModal = ({ isOpen, onClose, onSave, initialData, loading }) => {
                         className="w-full rounded-md border px-3 py-2"
                     />
 
-                    <input
+                    {/* <input
                         required
                         placeholder="Demat Number"
                         value={formData.demat_no}
@@ -163,7 +159,7 @@ const DematModal = ({ isOpen, onClose, onSave, initialData, loading }) => {
                             setFormData({ ...formData, demat_no: e.target.value })
                         }
                         className="w-full rounded-md border px-3 py-2"
-                    />
+                    /> */}
 
                     <select
                         value={formData.status}
@@ -241,9 +237,7 @@ function RBFDematDetails() {
             const payload = {
                 broker_name: formData.broker_name.trim(),
                 account_holder_name: formData.account_holder_name.trim(),
-                dp_id: formData.dp_id.trim(),
                 client_id: formData.client_id.trim(),
-                demat_no: formData.demat_no.trim(),
                 status: normalizeStatusForApi(formData.status),
             };
 
@@ -337,9 +331,7 @@ function RBFDematDetails() {
                         <tr>
                             <th className="px-6 py-4">Broker Name</th>
                             <th className="px-6 py-4">Holder Name</th>
-                            <th className="px-6 py-4">DP ID</th>
                             <th className="px-6 py-4">Client ID</th>
-                            <th className="px-6 py-4">Demat No</th>
                             <th className="px-6 py-4">Status</th>
                             <th className="px-6 py-4 text-right">Actions</th>
                         </tr>
@@ -353,9 +345,7 @@ function RBFDematDetails() {
                                 <tr key={item.id} className="border-t">
                                     <td className="px-6 py-4">{item.broker_name}</td>
                                     <td className="px-6 py-4">{item.account_holder_name}</td>
-                                    <td className="px-6 py-4">{item.dp_id}</td>
                                     <td className="px-6 py-4">{item.client_id}</td>
-                                    <td className="px-6 py-4">{item.demat_no}</td>
                                     <td className="px-6 py-4">
                                         <span
                                             className={`rounded-full px-2 py-1 text-xs ${badge.className}`}
