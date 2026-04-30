@@ -40,7 +40,7 @@ const parseFeedbackHistory = (value) => {
     const parsed = JSON.parse(value);
     if (Array.isArray(parsed)) return parsed;
     if (parsed && typeof parsed === "object") return [parsed];
-  } catch (error) {
+  } catch {
     return [];
   }
 
@@ -221,7 +221,7 @@ const getAllowedActions = ({ role, status }) => {
   // ✅ EXPERT PANEL
   if (isExpertPanelRole(normalizedRole)) {
     if (normalizedStatus === "expert panel") {
-      return ["send-to-case-coordinator", "queries"];
+      return ["approve", "rejected", "queries", "send-to-case-coordinator"];
     }
   }
 
@@ -241,7 +241,6 @@ const AssistancePage = () => {
   const [actionType, setActionType] = useState("");
   const [queriesReason, setQueriesReason] = useState("");
   const [approveAmount, setApproveAmount] = useState("");
-  const [queryFile, setQueryFile] = useState(null);
   const [actionError, setActionError] = useState("");
   const [isActionLoading, setIsActionLoading] = useState(false);
   const [viewQueryRow, setViewQueryRow] = useState(null);
@@ -254,7 +253,7 @@ const AssistancePage = () => {
 
   // Pagination State
   const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(10);
+  const [limit] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
 
   const getDefaultStatusFilterForRole = (roleValue) => {
@@ -262,7 +261,8 @@ const AssistancePage = () => {
 
     if (normalizedRole === "staff") return "queries";
     if (normalizedRole === "committee-member") return "committee-member";
-    if (normalizedRole === "case-coordinator") return "pending,case-coordinator";
+    // Case coordinator should be able to see all assistance cases (including Expert Panel status).
+    if (normalizedRole === "case-coordinator") return "all";
     if (normalizedRole === "karyakarta") return "pending,queries";
     if (
       normalizedRole === "expert-panel" ||
@@ -280,11 +280,7 @@ const AssistancePage = () => {
 
   const role = String(user?.role || "").toLowerCase();
   const isStaff = role === "staff";
-  const isKaryakarta = role === "karyakarta";
   const isCaseCoordinator = role === "case-coordinator";
-  const isExpertPanel = role === "expert-panel" || role.startsWith("expert-panel-");
-  const isCommitteeMember = role === "committee-member";
-  const canAccessAssistance = isKaryakarta || isCaseCoordinator || isExpertPanel || isCommitteeMember;
 
   // const fetchFamilyAccounting = async () => {
   //   try {
@@ -335,7 +331,7 @@ const AssistancePage = () => {
       setTableData(asArray(res?.data?.data));
       setTotalPages(res?.data?.pagination?.totalPages || 1);
       setPage(res?.data?.pagination?.page || 1);
-    } catch (error) {
+    } catch {
       setTableData([]);
     }
   };
@@ -505,7 +501,6 @@ const AssistancePage = () => {
     setQueriesReason("");
     setApproveAmount("");
     setSelectedMeetingId(String(row?.meeting_id || ""));
-    setQueryFile(null);
     setActionError("");
     setIsModalOpen(true);
   };
@@ -516,7 +511,6 @@ const AssistancePage = () => {
     setQueriesReason("");
     setApproveAmount("");
     setSelectedMeetingId("");
-    setQueryFile(null);
     setActionError("");
     setActiveRow(null);
     setActionRows([]);
@@ -548,7 +542,6 @@ const AssistancePage = () => {
     setQueriesReason("");
     setApproveAmount("");
     setSelectedMeetingId("");
-    setQueryFile(null);
     setActionError("");
     setIsModalOpen(true);
   };
@@ -1349,7 +1342,6 @@ const AssistancePage = () => {
 
         {viewQueryRow && (() => {
           const feedbackHistory = getFeedbackHistory(viewQueryRow);
-          const legacyFeedback = getQueryText(viewQueryRow);
 
           return (
             <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 px-4">
