@@ -34,6 +34,7 @@ const Sidebar = () => {
   const isExpertPanel =
     role === "expert-panel" || role.startsWith("expert-panel-");
   const isCommitteeMember = role === "committee-member";
+  const isCEOPanel = role === "ceo-panel";
 
   const handleLogout = (e) => {
     e.preventDefault();
@@ -87,8 +88,10 @@ const Sidebar = () => {
                       : isCommitteeMember
                         ? "Committee Member"
                         : isAccount
-                          ? "Account Panal"
-                          : "Staff"}
+                          ? "Account Panel"
+                          : isCEOPanel
+                            ? "CEO Panel"
+                            : "Staff"}
           </div>
         )}
       </div>
@@ -106,12 +109,23 @@ const Sidebar = () => {
 
 
         )}
-        {(isAdmin || isStaff || isOperationsManager || isCaseCoordinator || isKaryakarta || isExpertPanel ) && (
+        {(isAdmin || isStaff || isOperationsManager || isCaseCoordinator || isKaryakarta || isExpertPanel ||isCommitteeMember ) && (
 
           <>
             <NavItem isCollapsed={isCollapsed} to="/assistance" icon={<HeartHandshake size={22} />} label="Assistance" />
 
           </>
+        )}
+        {(isStaff ) && (
+
+          <>
+            <NavItem isCollapsed={isCollapsed} to="/queries-assistance" icon={<HeartHandshake size={22} />} label="Queries Assistance" />
+
+          </>
+        )}
+        
+        {isCEOPanel && (
+          <NavItem isCollapsed={isCollapsed} to="/CEO/assistance" icon={<HeartHandshake size={22} />} label="Assistance" />
         )}
         {(isCaseCoordinator || isCommitteeMember) && (
 
@@ -125,6 +139,8 @@ const Sidebar = () => {
           <>
           <NavItem isCollapsed={isCollapsed} to="/bank-details" icon={<Home size={22} />} label="Bank Details" />
             <NavItem isCollapsed={isCollapsed} to="/demat-account" icon={<Home size={22} />} label="Demat Account Details" />
+            <NavItem isCollapsed={isCollapsed} to="/Expenses" icon={<Home size={22} />} label="Expenses" />
+            <NavItem isCollapsed={isCollapsed} to="/InComing" icon={<Home size={22} />} label="InComing" />
           </>
         )}
         {isAccount && (
@@ -153,7 +169,7 @@ const Sidebar = () => {
             <NavItem isCollapsed={isCollapsed} to="/user" icon={<Users size={22} />} label="User Management" />
             <NavItem isCollapsed={isCollapsed} to="/mother-tongue" icon={<Globe size={22} />} label="Mother Tongue" />
             <NavItem isCollapsed={isCollapsed} to="/res-proof" icon={<FileText size={22} />} label="Res. Proof" />
-            {/* <NavItem isCollapsed={isCollapsed} to="/religious-practices" icon={<Home size={22} />} label="Religious" /> */}
+            <NavItem isCollapsed={isCollapsed} to="/Medical-Issue-Type" icon={<Home size={22} />} label="Medical Issue Type" />
             <NavItem isCollapsed={isCollapsed} to="/settings" icon={<Settings size={22} />} label="Settings" />
           </>
         )}

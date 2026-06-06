@@ -40,7 +40,28 @@ const AssistanceDetails = () => {
 
   const [assistanceData, setAssistanceData] = useState({});
   const [relationDetails, setRelationDetails] = useState({});
+const [medicalIssueTypes, setMedicalIssueTypes] = useState([]);
 
+  
+  const getMedicalIssueTypes = async () => {
+  try {
+    const response = await fetch(
+      "https://uat.ratnakukshi.org/api/medicalissuetype/all"
+    );
+
+    const data = await response.json();
+
+    if (data?.success) {
+      setMedicalIssueTypes(data?.data || []);
+    }
+  } catch (error) {
+    console.log("Medical issue fetch error", error);
+  }
+};
+
+useEffect(() => {
+  getMedicalIssueTypes();
+}, []);
   const assistanceTypes = [
     "Medical",
     "Education",
@@ -243,6 +264,33 @@ const AssistanceDetails = () => {
       };
     });
   };
+
+  const handleDocumentChange = (rel, index, field, value) => {
+  setAssistanceData((prev) => {
+    const updated = { ...prev };
+
+    if (!updated[rel]) updated[rel] = {};
+    if (!updated[rel].Medical)
+      updated[rel].Medical = {};
+
+    if (!updated[rel].Medical.medicalDocuments) {
+      updated[rel].Medical.medicalDocuments = [];
+    }
+
+    const documents = [
+      ...updated[rel].Medical.medicalDocuments,
+    ];
+
+    documents[index] = {
+      ...documents[index],
+      [field]: value,
+    };
+
+    updated[rel].Medical.medicalDocuments = documents;
+
+    return updated;
+  });
+};
   const handleEducationChange = (relation, field, value) => {
     setAssistanceData((prev) => ({
       ...prev,
@@ -848,29 +896,36 @@ const AssistanceDetails = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-6">
             {/* Row 1 */}
-            <div className="flex flex-col gap-1">
-              <label className="text-[11px] font-bold uppercase text-gray-500">
-                Type of Medical Issue?*
-              </label>
-              <select
-                className="border p-2 rounded bg-white outline-none focus:border-blue-500"
-                value={
-                  assistanceData[rel]?.Medical
-                    ?.issueType || ""
-                }
-                onChange={(e) =>
-                  handleMedicalChange(
-                    rel,
-                    "issueType",
-                    e.target.value,
-                  )
-                }
-              >
-                <option value="Surgery">Surgery</option>
-                <option value="Medicine">Medicine</option>
-                <option value="Therapy">Therapy</option>
-              </select>
-            </div>
+           <div className="flex flex-col gap-1">
+  <label className="text-[11px] font-bold uppercase text-gray-500">
+    Type of Medical Issue?*
+  </label>
+
+  <select
+    className="border p-2 rounded bg-white outline-none focus:border-blue-500"
+    value={
+      assistanceData[rel]?.Medical?.issueType || ""
+    }
+    onChange={(e) =>
+      handleMedicalChange(
+        rel,
+        "issueType",
+        e.target.value,
+      )
+    }
+  >
+    <option value="">Select Medical Issue</option>
+
+    {medicalIssueTypes?.map((item) => (
+      <option
+        key={item.id}
+        value={item.issue_type}
+      >
+        {item.issue_type}
+      </option>
+    ))}
+  </select>
+</div>
 
             <div className="flex flex-col gap-1">
               <label className="text-[11px] font-bold uppercase text-gray-500">
@@ -1180,87 +1235,7 @@ const AssistanceDetails = () => {
               </div>
             )}
 
-            {/* <div className="col-span-full md:col-span-2">
-                                      <label className="text-[11px] font-bold uppercase text-gray-500">
-                                        Upload Medical Documents
-                                      </label>
-                                      <div className="flex gap-2 mt-1">
-                                        <input
-                                          type="text"
-                                          placeholder="Document Name"
-                                          value={
-                                            assistanceData[rel]?.Medical
-                                              ?.documentName || ""
-                                          }
-                                          onChange={(e) =>
-                                            handleMedicalChange(
-                                              rel,
-                                              "documentName",
-                                              e.target.value,
-                                            )
-                                          }
-                                          className="border p-2 rounded w-1/2 outline-none"
-                                        />
-
-                                        <input
-                                          type="file"
-                                        id={`file-upload-${rel}`}
-                                        multiple
-                                          className="hidden"
-                                        accept="image/*,.pdf"
-                                        onChange={(e) => {
-                                          const files = Array.from(e.target.files);
-                                          handleMedicalChange(rel, "documents", files);
-                                        }}
-                                          // onChange={(e) => {
-                                          //   const file = e.target.files[0];
-                                          //   if (file) {
-                                          //     handleMedicalChange(
-                                          //       rel,
-                                          //       "documentFile",
-                                          //       file,
-                                          //     );
-                                          //   }
-                                          // }}
-                                        />
-
-                                        <button
-                                          type="button"
-                                          onClick={() =>
-                                            document
-                                              .getElementById(
-                                                `file-upload-${rel}`,
-                                              )
-                                              .click()
-                                          }
-                                          className="border-2 border-blue-500 w-[250px] text-blue-500 px-4 py-2 rounded font-medium hover:bg-blue-50 transition"
-                                        >
-                                          Upload Document
-                                        </button>
-
-                                       <span className="text-gray-400 text-sm self-center truncate max-w-[150px]">
-                                          {assistanceData[rel]?.Medical
-                                            ?.documentFile?.name ||
-                                            "No File Chosen"}
-                                        </span>
-                                      
-                                      <div className="mt-2">
-                                        {assistanceData[rel]?.Medical?.documents?.map((file, index) => (
-                                          <div key={index} className="text-sm text-gray-600">
-                                            {file.name}
-                                          </div>
-                                        ))}
-                                      </div>
-
-                                        <button
-                                          type="button"
-                                          className="border rounded-full w-8 h-8 flex items-center justify-center text-gray-400 hover:bg-gray-100"
-                                        >
-                                          +
-                                        </button>
-                                      </div>
-                                    </div> */}
-
+          
             <div className="col-span-full md:col-span-2">
               <label className="text-[11px] font-bold uppercase text-gray-500">
                 Upload Medical Documents
@@ -1347,7 +1322,7 @@ const AssistanceDetails = () => {
 
             <div className="flex flex-col gap-1">
               <label className="text-[11px] font-bold uppercase text-gray-500">
-                Treatment Start Date*
+                Treatment Start Date
               </label>
               <input
                 type="date"
@@ -1386,7 +1361,7 @@ const AssistanceDetails = () => {
 
           <div className="mt-8 flex flex-col gap-1">
             <label className="text-[11px] font-bold uppercase text-gray-500">
-              Remark*
+              Remark
             </label>
             <textarea
               className="border p-2 rounded w-full h-24 outline-none focus:border-blue-500 resize-none"

@@ -1,14 +1,23 @@
-import { Eye, Plus, Search, SquaresExclude, X } from "lucide-react";
+import axios from "axios";
+import { saveAs } from "file-saver";
+import JoditEditor from "jodit-react";
+import { Plus, Search, X } from "lucide-react";
+import { Eye, Files } from "lucide-react";
+import { Pencil } from "lucide-react";
+import { Users } from "lucide-react";
+import { FileDown } from "lucide-react";
+import { Send } from "lucide-react";
+import { UserPlus } from "lucide-react";
+import { ArrowRightCircle } from "lucide-react";
+import { MessageSquare } from "lucide-react";
+import { CheckCircle } from "lucide-react";
+import { FileText, Loader2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import * as XLSX from "xlsx";
-import { saveAs } from "file-saver";
 import { API } from "../api/BaseURL";
 import { useAuth } from "../context/AuthContext";
 import { formatIndianDate, formatTo12Hour } from "../utils/formatIndianDate";
-import JoditEditor from "jodit-react";
-import { queryEditorConfig } from "../utils/joditconfig";
-
 
 // ======================= SMALL BUTTON LOADER =======================
 const ButtonLoader = () => (
@@ -19,7 +28,9 @@ const ButtonLoader = () => (
 
 const DetailItem = ({ label, value }) => (
   <div className="flex flex-col">
-    <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-tight">{label}</span>
+    <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-tight">
+      {label}
+    </span>
     <span className="text-sm font-medium text-gray-800">{value || "-"}</span>
   </div>
 );
@@ -43,16 +54,18 @@ const Section = ({ title, children }) => (
 );
 
 const Grid = ({ children }) => (
-  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-    {children}
-  </div>
+  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">{children}</div>
 );
 
 const normalizeRole = (value) => {
-  const rawRole = String(value || "").trim().toLowerCase();
+  const rawRole = String(value || "")
+    .trim()
+    .toLowerCase();
 
   if (
-    ["case coordinator", "case cordinator", "case-coordinator"].includes(rawRole)
+    ["case coordinator", "case cordinator", "case-coordinator"].includes(
+      rawRole,
+    )
   ) {
     return "case-coordinator";
   }
@@ -78,7 +91,6 @@ const normalizeRole = (value) => {
 //   email: item?.email || "",
 //   role: String(item?.role || "").toLowerCase(),
 // });
-
 
 const normalizeUser = (item) => ({
   id: item?.id,
@@ -123,7 +135,6 @@ const getLocalVisitDateTime = () => {
 const DiksharthiListing = () => {
   const navigate = useNavigate();
 
-
   const editor = useRef(null);
 
   const { user: loggedInUser } = useAuth();
@@ -131,37 +142,47 @@ const DiksharthiListing = () => {
   const [openMenuId, setOpenMenuId] = useState(null);
 
   const role = normalizeRole(loggedInUser?.role || "");
+  console.log(role, "role");
   const loggedInUserId = loggedInUser?.id ?? null;
 
   const [sendingId, setSendingId] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [viewModalData, setViewModalData] = useState(null);
+  console.log(viewModalData, "viewModalData");
   const [isViewLoading, setIsViewLoading] = useState(false);
   const [assignModalData, setAssignModalData] = useState(null);
   const [adminUsers, setAdminUsers] = useState([]);
-  console.log(adminUsers, "adminUsers")
+  console.log(assignModalData, "assignModalData");
   const [selectedAdminId, setSelectedAdminId] = useState("");
   const [isAssigningAdmin, setIsAssigningAdmin] = useState(false);
   const [isAdminListLoading, setIsAdminListLoading] = useState(false);
   const [scheduleVisitModalData, setScheduleVisitModalData] = useState(null);
   const [viewScheduleModalData, setViewScheduleModalData] = useState(null);
   const [familyDetailsModalData, setFamilyDetailsModalData] = useState(null);
+  console.log(familyDetailsModalData, "familyDetailsModalData");
   const [isFamilyDetailsLoading, setIsFamilyDetailsLoading] = useState(false);
   const [scheduleForm, setScheduleForm] = useState(emptyScheduleForm);
   const [isSchedulingVisit, setIsSchedulingVisit] = useState(false);
   const [isViewScheduleLoading, setIsViewScheduleLoading] = useState(false);
   const [updatingVisitStatusId, setUpdatingVisitStatusId] = useState(null);
+  const [feedbackFiles, setFeedbackFiles] = useState([]);
+const handleFeedbackFiles = (e) => {
+  const files = Array.from(e.target.files);
 
+  setFeedbackFiles((prev) => [...prev, ...files]);
+};
   // Feedback states
   const [feedbackModalData, setFeedbackModalData] = useState(null);
   const [feedbackForm, setFeedbackForm] = useState(emptyFeedbackForm);
   const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
   const [viewFeedbackModalData, setViewFeedbackModalData] = useState(null);
   const [isFeedbackLoading, setIsFeedbackLoading] = useState(false);
-  const [isAddingFeedbackToDiksharthi, setIsAddingFeedbackToDiksharthi] = useState(false);
+  const [isAddingFeedbackToDiksharthi, setIsAddingFeedbackToDiksharthi] =
+    useState(false);
   const [downloadingPdfId, setDownloadingPdfId] = useState(null);
-  const [downloadingApplicationId, setDownloadingApplicationId] = useState(null);
+  const [downloadingApplicationId, setDownloadingApplicationId] =
+    useState(null);
 
   const itemsPerPage = 10;
 
@@ -170,11 +191,45 @@ const DiksharthiListing = () => {
   const [feedbackStatus, setFeedbackStatus] = useState({});
 
   const [searchAdmin, setSearchAdmin] = useState("");
+  const [approvalModal, setApprovalModal] = useState(false);
+  const [selectedDiksharthi, setSelectedDiksharthi] = useState(null);
+  const [approvalStatus, setApprovalStatus] = useState("");
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [selectedDiksharthiId, setSelectedDiksharthiId] = useState(null);
+  
 
+  
+  const handleOpenApprovalModal = (diksharthi) => {
+    setSelectedDiksharthi(diksharthi);
+    setApprovalModal(true);
+  };
+  const queryEditorConfig = {
+    readonly: false,
+    height: 300,
+    askBeforePasteHTML: false,
+    askBeforePasteFromWord: false,
+    defaultActionOnPaste: "insert_as_html",
+  };
+  // Submit Approval
+  const handleCommitteeApproval = async () => {
+    try {
+      console.log("Status:", approvalStatus);
+      console.log("Selected:", selectedDiksharthi);
+
+      // 🔥 Call your API here
+
+      alert(`Application ${approvalStatus} successfully`);
+
+      setApprovalModal(false);
+      setApprovalStatus("");
+    } catch (error) {
+      console.error(error);
+    }
+  };
   const filteredAdmins = adminUsers.filter((admin) =>
     (admin.name || admin.email || "")
       .toLowerCase()
-      .includes(searchAdmin.toLowerCase())
+      .includes(searchAdmin.toLowerCase()),
   );
 
   // ======================= STATES =======================
@@ -192,15 +247,11 @@ const DiksharthiListing = () => {
     setOmFeedback("");
   };
 
-
   // ======================= API SUBMIT =======================
   const handleSubmitOMFeedback = async () => {
     if (!omFeedbackModalData?.id) return;
 
-    if (!omFeedback.trim()) {
-      alert("Please enter feedback");
-      return;
-    }
+   
 
     try {
       setIsSubmittingOmFeedback(true);
@@ -211,16 +262,13 @@ const DiksharthiListing = () => {
         submitted_by: loggedInUserId,
       };
 
-      const response = await fetch(
-        `${API}/api/feedback/createfeedback`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
-        }
-      );
+      const response = await fetch(`${API}/api/feedback/createfeedback`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
 
       const result = await response.json();
 
@@ -235,7 +283,6 @@ const DiksharthiListing = () => {
 
       setOmFeedbackModalData(null);
       setOmFeedback("");
-
     } catch (error) {
       console.error(error);
       alert(error.message || "Failed to submit feedback");
@@ -272,7 +319,7 @@ const DiksharthiListing = () => {
       setViewOMFeedbackModal(diksharthi);
 
       const response = await fetch(
-        `${API}/api/feedback/all-feedback/${diksharthi.id}`
+        `${API}/api/feedback/all-feedback/${diksharthi.id}`,
       );
 
       const result = await response.json();
@@ -287,7 +334,6 @@ const DiksharthiListing = () => {
         operation_manager_feedback:
           result?.data?.operation_manager_feedback || [],
       });
-
     } catch (error) {
       console.error(error);
       alert("Failed to load feedback");
@@ -296,22 +342,50 @@ const DiksharthiListing = () => {
     }
   };
 
+  // const fetchFeedbackStatus = async (records) => {
+  //   try {
+  //     const ids = records.map((item) => item.id);
+
+  //     const res = await fetch(`${API}/api/feedback/view/${item.id}`, {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //       },
+  //       body: JSON.stringify({ ids }),
+  //     });
+
+  //     const data = await res.json();
+  //     setFeedbackStatus(data || {});
+  //   } catch (err) {
+  //     console.error(err);
+  //   }
+  // };
+
   const fetchFeedbackStatus = async (records) => {
     try {
-      const ids = records.map((item) => item.id);
+      if (!records?.length) return;
 
-      const res = await fetch(`${API}/api/feedback/view/${item.id}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ ids }),
-      });
+      const responses = await Promise.all(
+        records.map(async (item) => {
+          const res = await fetch(`${API}/api/feedback/view/${item.id}`);
 
-      const data = await res.json();
-      setFeedbackStatus(data || {});
+          const data = await res.json();
+
+          return {
+            id: item.id,
+            data,
+          };
+        }),
+      );
+
+      const statusMap = responses.reduce((acc, curr) => {
+        acc[curr.id] = curr.data;
+        return acc;
+      }, {});
+
+      setFeedbackStatus(statusMap);
     } catch (err) {
-      console.error(err);
+      console.error("Error fetching feedback status:", err);
     }
   };
 
@@ -321,35 +395,37 @@ const DiksharthiListing = () => {
       const data = await res.json();
       const allRecords = Array.isArray(data?.data) ? data.data : [];
 
-
-
-
       let filteredRecords = [];
 
-      if (role === "staff") {
-        // Staff sees only their own records
-        filteredRecords = allRecords.filter(
-          (item) => String(item?.user_id) === String(loggedInUserId)
-        );
-
-      } else if (role === "operations-manager") {
-        // Operations manager sees only records
-        // sent by staff AND not pending
+      // if (role === "staff") {
+      //   // Staff sees only their own records
+      //   filteredRecords = allRecords.filter(
+      //     (item) => String(item?.user_id) === String(loggedInUserId),
+      //   );
+      // } else 
+        
+        if (role === "operations-manager") {
+        
         filteredRecords = allRecords.filter((item) => {
           const status = String(item?.status || "")
             .trim()
             .toLowerCase();
 
-          return status === "send" || status === "manager" || status === "coordinator";
+          return (
+            status === "send" ||
+            status === "manager" ||
+            status === "coordinator"
+          );
         });
       } else if (role === "karyakarta") {
-        // Karyakarta sees only assigned records
-        filteredRecords = allRecords.filter(
-          (item) =>
-            String(item?.karykarata_id || item?.admin_id || "") === String(loggedInUserId)
-        );
-
-      } else if (
+  // Karyakarta sees only assigned records with status = send
+  filteredRecords = allRecords.filter(
+    (item) =>
+      String(item?.karykarata_id || item?.admin_id || "") ===
+        String(loggedInUserId) &&
+      item?.status === "send"
+  );
+} else if (
         role === "case-coordinator" ||
         role === "committee-member" ||
         role === "export-panel" ||
@@ -370,14 +446,12 @@ const DiksharthiListing = () => {
 
           return status === "coordinator";
         });
-      }
-      else {
+      } else {
         filteredRecords = allRecords;
       }
 
       setDiksharthiList(filteredRecords);
       await fetchFeedbackStatus(filteredRecords);
-
     } catch (error) {
       console.error(error);
     }
@@ -396,7 +470,7 @@ const DiksharthiListing = () => {
   }, [searchTerm, diksharthiList.length]);
 
   const handleSendToOpManager = async (id) => {
-    debugger
+    debugger;
     try {
       setSendingId(id);
       const res = await fetch(`${API}/api/update-diksharthi-status/${id}`, {
@@ -424,21 +498,62 @@ const DiksharthiListing = () => {
     }
   };
 
-  const handleSendToOM = async (id) => {
-    debugger
-    try {
-      setSendingId(id);
-      const res = await fetch(`${API}/api/update-diksharthi-status/${id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          status: "manager",
-        }),
-      });
+  // const handleSendToOM = async (id) => {
+  //   debugger;
+  //   try {
+  //     setSendingId(id);
+  //     const res = await fetch(`${API}/api/update-diksharthi-status/${id}`, {
+  //       method: "PUT",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //       },
+  //       body: JSON.stringify({
+  //         status: "manager",
+  //       }),
+  //     });
 
-      // coordinator
+  //     // coordinator
+
+  //     const data = await res.json();
+
+  //     if (!res.ok || !data.success) {
+  //       throw new Error(data.message || "Failed to update diksharthi status");
+  //     }
+
+  //     await fetchDiksharthiList();
+  //   } catch (error) {
+  //     console.error(error);
+  //     alert("Failed to send to Operations Manager");
+  //   } finally {
+  //     setSendingId(null);
+  //   }
+  // };
+  const openConfirmModal = (id) => {
+    debugger;
+    setSelectedDiksharthiId(id);
+    setShowConfirmModal(true);
+  };
+
+  const closeConfirmModal = () => {
+    setSelectedDiksharthiId(null);
+    setShowConfirmModal(false);
+  };
+  const handleSendToOM = async () => {
+    try {
+      setSendingId(selectedDiksharthiId);
+
+      const res = await fetch(
+        `${API}/api/update-diksharthi-status/${selectedDiksharthiId}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            status: "manager",
+          }),
+        },
+      );
 
       const data = await res.json();
 
@@ -447,6 +562,8 @@ const DiksharthiListing = () => {
       }
 
       await fetchDiksharthiList();
+
+      closeConfirmModal();
     } catch (error) {
       console.error(error);
       alert("Failed to send to Operations Manager");
@@ -455,7 +572,7 @@ const DiksharthiListing = () => {
     }
   };
   const handleSendToCaseCO = async (id) => {
-    debugger
+    debugger;
     try {
       setSendingId(id);
       const res = await fetch(`${API}/api/update-diksharthi-status/${id}`, {
@@ -501,21 +618,23 @@ const DiksharthiListing = () => {
 
   const totalPages = Math.max(
     1,
-    Math.ceil(filteredDiksharthiList.length / itemsPerPage)
+    Math.ceil(filteredDiksharthiList.length / itemsPerPage),
   );
 
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedList = filteredDiksharthiList.slice(
     startIndex,
-    startIndex + itemsPerPage
+    startIndex + itemsPerPage,
   );
 
   const getAssistanceSummary = (diksharthi) => {
-    const assistanceItems = Array.isArray(diksharthi?.family_details?.assistanceData)
+    const assistanceItems = Array.isArray(
+      diksharthi?.family_details?.assistanceData,
+    )
       ? diksharthi.family_details.assistanceData
       : [];
     const queryItem = assistanceItems.find(
-      (item) => String(item?.status || "").toLowerCase() === "queries"
+      (item) => String(item?.status || "").toLowerCase() === "queries",
     );
     return {
       status: queryItem?.status || assistanceItems[0]?.status || "Pending",
@@ -524,7 +643,9 @@ const DiksharthiListing = () => {
   };
 
   const getDiksharthiStatus = (diksharthi) =>
-    String(diksharthi?.status || "").trim().toLowerCase();
+    String(diksharthi?.status || "")
+      .trim()
+      .toLowerCase();
 
   const getAliveStatus = (diksharthi) =>
     String(diksharthi?.is_alive || diksharthi?.isAlive || "")
@@ -533,16 +654,26 @@ const DiksharthiListing = () => {
 
   const isAdminUnassigned = (diksharthi) => {
     const assignedId = diksharthi?.karykarata_id || diksharthi?.admin_id;
-    return assignedId === null || assignedId === undefined || String(assignedId).trim() === "" || String(assignedId) === "0";
+    return (
+      assignedId === null ||
+      assignedId === undefined ||
+      String(assignedId).trim() === "" ||
+      String(assignedId) === "0"
+    );
   };
 
   const getUserNameById = (userId) => {
-    if (userId === null || userId === undefined || String(userId).trim() === "" || String(userId) === "0") {
+    if (
+      userId === null ||
+      userId === undefined ||
+      String(userId).trim() === "" ||
+      String(userId) === "0"
+    ) {
       return "-";
     }
 
     const matchedUser = userDirectory.find(
-      (user) => String(user?.id) === String(userId)
+      (user) => String(user?.id) === String(userId),
     );
 
     return matchedUser?.name || matchedUser?.email || String(userId);
@@ -588,7 +719,9 @@ const DiksharthiListing = () => {
     hasVisitDateTime(diksharthi) || hasRescheduledVisit(diksharthi);
 
   const isVisitMarkedYes = (diksharthi) =>
-    String(diksharthi?.current_visit_status || "").trim().toLowerCase() === "yes";
+    String(diksharthi?.current_visit_status || "")
+      .trim()
+      .toLowerCase() === "yes";
 
   const shouldUseRescheduleFlow = (diksharthi) =>
     hasAnyVisitSchedule(diksharthi) && !isVisitMarkedYes(diksharthi);
@@ -601,7 +734,7 @@ const DiksharthiListing = () => {
     const normalizedUsers = rows.map(normalizeUser);
 
     const karyakarta = normalizedUsers.filter(
-      (user) => String(user?.role || "").toLowerCase() === "karyakarta"
+      (user) => String(user?.role || "").toLowerCase() === "karyakarta",
     );
 
     setUserDirectory(normalizedUsers);
@@ -610,17 +743,77 @@ const DiksharthiListing = () => {
     return karyakarta; // ✅ RETURN
   };
 
+  // const familyDetails = (() => {
+  //   try {
+  //     if (!viewModalData?.family_relation_details_json) return {};
+  //     return typeof viewModalData.family_relation_details_json === "string"
+  //       ? JSON.parse(viewModalData.family_relation_details_json)
+  //       : viewModalData.family_relation_details_json;
+  //   } catch (e) {
+  //     return {};
+  //   }
+  // })();
   const familyDetails = (() => {
     try {
-      if (!viewModalData?.family_relation_details_json) return {};
-      return typeof viewModalData.family_relation_details_json === "string"
-        ? JSON.parse(viewModalData.family_relation_details_json)
-        : viewModalData.family_relation_details_json;
+      // ✅ Get family relation json
+      const relationData = viewModalData?.family_relation_details_json || {};
+
+      // ✅ If empty return {}
+      if (Object.keys(relationData).length === 0) {
+        return {};
+      }
+
+      // ✅ Convert all relations into formatted object
+      return Object.entries(relationData).reduce((acc, [relation, member]) => {
+        acc[relation] = {
+          firstName: member?.firstName || "",
+          lastName: member?.lastName || "",
+          mobileNumber: member?.mobileNumber || "",
+          aadharNumber: member?.aadharNumber || "",
+          panNumber: member?.panNumber || "",
+
+          medicalPolicy:
+            member?.medicalPolicy === true ||
+            member?.medicalPolicy === "Yes" ||
+            member?.medicalPolicy === 1 ||
+            member?.medicalPolicy === "1"
+              ? "Yes"
+              : "No",
+
+          ayushmanCoverage:
+            member?.ayushmanCoverage === true ||
+            member?.ayushmanCoverage === "Yes" ||
+            member?.ayushmanCoverage === 1 ||
+            member?.ayushmanCoverage === "1"
+              ? "Yes"
+              : "No",
+
+          needAssistance:
+            member?.needAssistance === true ||
+            member?.needAssistance === "Yes" ||
+            member?.needAssistance === 1 ||
+            member?.needAssistance === "1"
+              ? "Yes"
+              : "No",
+
+          age: member?.age || "",
+          dob: member?.dob || "",
+          guardian: member?.guardian || "",
+          mediclaimType: member?.mediclaimType || "",
+          mediclaimAmount: member?.mediclaimAmount || "",
+          ayushmanAmount: member?.ayushmanAmount || "",
+          mediclaimCompanyName: member?.mediclaimCompanyName || "",
+
+          assistanceCategories: member?.assistanceCategories || [],
+        };
+
+        return acc;
+      }, {});
     } catch (e) {
+      console.log("Family Details Error:", e);
       return {};
     }
   })();
-
   // const fetchAdminUsers = async () => {
   //   debugger
   //   try {
@@ -658,7 +851,6 @@ const DiksharthiListing = () => {
     await fetchAdminUsers();
   };
 
-
   const openScheduleVisitModal = (diksharthi) => {
     const current = getCurrentSchedule(diksharthi);
     const openForFreshSchedule = !shouldUseRescheduleFlow(diksharthi);
@@ -668,9 +860,7 @@ const DiksharthiListing = () => {
       date: openForFreshSchedule
         ? ""
         : String(current?.date || "").slice(0, 10),
-      time: openForFreshSchedule
-        ? ""
-        : String(current?.time || "").slice(0, 5),
+      time: openForFreshSchedule ? "" : String(current?.time || "").slice(0, 5),
       mobile: diksharthi?.mobile_no || "",
     });
   };
@@ -716,7 +906,12 @@ const DiksharthiListing = () => {
 
       setScheduleVisitModalData(null);
       setScheduleForm(emptyScheduleForm);
-      alert(result?.message || (isReschedule ? "Visit rescheduled successfully" : "Visit schedule saved successfully"));
+      alert(
+        result?.message ||
+          (isReschedule
+            ? "Visit rescheduled successfully"
+            : "Visit schedule saved successfully"),
+      );
       await fetchDiksharthiList();
     } catch (error) {
       console.error(error);
@@ -726,69 +921,107 @@ const DiksharthiListing = () => {
     }
   };
 
+  // const handleVisitStatusChange = async (diksharthi, nextStatus) => {
+  //   if (!diksharthi?.id || !nextStatus) return;
 
+  //   try {
+  //     setUpdatingVisitStatusId(diksharthi.id);
+
+  //     const currentSchedule = getCurrentSchedule(diksharthi);
+
+  //     // ✅ Indian Date & Time
+  //     const now = new Date();
+
+  //     const indianDate = now.toLocaleDateString("en-CA", {
+  //       timeZone: "Asia/Kolkata",
+  //     }); // YYYY-MM-DD
+
+  //     const indianTime = now.toLocaleTimeString("en-GB", {
+  //       timeZone: "Asia/Kolkata",
+  //       hour12: false,
+  //     }); // HH:mm:ss
+
+  //     const shouldStoreVisitDateTime =
+  //       String(nextStatus).trim().toLowerCase() === "yes";
+
+  //     const payload = {
+  //       is_visited: nextStatus,
+
+  //       ...(shouldStoreVisitDateTime
+  //         ? {
+  //             visit_date: currentSchedule?.date || indianDate,
+  //             visit_time: currentSchedule?.time || indianTime,
+  //           }
+  //         : {}),
+  //     };
+
+  //     const response = await fetch(`${API}/api/visit-status/${diksharthi.id}`, {
+  //       method: "PUT",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //       },
+  //       body: JSON.stringify(payload),
+  //     });
+
+  //     const result = await response.json().catch(() => ({}));
+
+  //     if (!response.ok) {
+  //       throw new Error(result?.message || "Failed to update visit status");
+  //     }
+
+  //     await fetchDiksharthiList();
+  //   } catch (error) {
+  //     console.error(error);
+  //     alert(error?.message || "Failed to update visit status");
+  //   } finally {
+  //     setUpdatingVisitStatusId(null);
+  //   }
+  // };
   const handleVisitStatusChange = async (diksharthi, nextStatus) => {
     if (!diksharthi?.id || !nextStatus) return;
 
-    try {
-      setUpdatingVisitStatusId(diksharthi.id);
+    const currentSchedule = getCurrentSchedule(diksharthi);
 
-      const currentSchedule = getCurrentSchedule(diksharthi);
+    const now = new Date();
 
-      // ✅ Indian Date & Time
-      const now = new Date();
+    const indianDate = now.toLocaleDateString("en-CA", {
+      timeZone: "Asia/Kolkata",
+    });
 
-      const indianDate = now.toLocaleDateString("en-CA", {
-        timeZone: "Asia/Kolkata",
-      }); // YYYY-MM-DD
+    const indianTime = now.toLocaleTimeString("en-GB", {
+      timeZone: "Asia/Kolkata",
+      hour12: false,
+    });
 
-      const indianTime = now.toLocaleTimeString("en-GB", {
-        timeZone: "Asia/Kolkata",
-        hour12: false,
-      }); // HH:mm:ss
+    const shouldStoreVisitDateTime =
+      String(nextStatus).trim().toLowerCase() === "yes";
 
-      const shouldStoreVisitDateTime =
-        String(nextStatus).trim().toLowerCase() === "yes";
-
-      const payload = {
-        is_visited: nextStatus,
-
-        ...(shouldStoreVisitDateTime
-          ? {
+    const payload = {
+      is_visited: nextStatus,
+      ...(shouldStoreVisitDateTime
+        ? {
             visit_date: currentSchedule?.date || indianDate,
             visit_time: currentSchedule?.time || indianTime,
           }
-          : {}),
-      };
+        : {}),
+    };
 
-      const response = await fetch(
-        `${API}/api/visit-status/${diksharthi.id}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
-        }
-      );
+    const response = await fetch(`${API}/api/visit-status/${diksharthi.id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
 
-      const result = await response.json().catch(() => ({}));
+    const result = await response.json().catch(() => ({}));
 
-      if (!response.ok) {
-        throw new Error(
-          result?.message || "Failed to update visit status"
-        );
-      }
-
-      await fetchDiksharthiList();
-    } catch (error) {
-      console.error(error);
-      alert(error?.message || "Failed to update visit status");
-    } finally {
-      setUpdatingVisitStatusId(null);
+    if (!response.ok) {
+      throw new Error(result?.message || "Failed to update visit status");
     }
-  };
 
+    return result;
+  };
   // const handleVisitStatusChange = async (diksharthi, nextStatus) => {
   //   if (!diksharthi?.id || !nextStatus) return;
 
@@ -843,7 +1076,7 @@ const DiksharthiListing = () => {
         reschedule: {
           date: getLatestVisitCycle(diksharthi)?.rescheduled?.date || "",
           time: getLatestVisitCycle(diksharthi)?.rescheduled?.time || "",
-        }
+        },
       });
     } finally {
       setIsViewScheduleLoading(false);
@@ -851,6 +1084,7 @@ const DiksharthiListing = () => {
   };
 
   const openViewModal = async (diksharthi) => {
+    debugger;
     if (!diksharthi?.id) return;
 
     try {
@@ -862,7 +1096,9 @@ const DiksharthiListing = () => {
 
       const profileData = result?.data || result;
       if (!response.ok || !profileData || typeof profileData !== "object") {
-        throw new Error(result?.message || "Failed to fetch diksharthi details");
+        throw new Error(
+          result?.message || "Failed to fetch diksharthi details",
+        );
       }
 
       setViewModalData({ ...diksharthi, ...profileData });
@@ -873,7 +1109,19 @@ const DiksharthiListing = () => {
       setIsViewLoading(false);
     }
   };
+  const handleCloseCase = async (id) => {
+    try {
+      const response = await axios.put(`${API}/api/close-case/${id}`);
 
+      if (response.data.success) {
+        alert("Case closed successfully");
+
+        fetchDiksharthiList();
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
   // const handleAssignAdmin = async () => {
   //   if (!assignModalData?.id || !selectedAdminId) {
   //     alert("Please select an admin");
@@ -911,7 +1159,6 @@ const DiksharthiListing = () => {
   //   }
   // };
 
-
   const handleAssignAdmin = async () => {
     if (!assignModalData?.id || !selectedAdminId) {
       alert("Please select an admin");
@@ -948,7 +1195,6 @@ const DiksharthiListing = () => {
 
       // refresh latest data (with assign date)
       await fetchDiksharthiList();
-
     } catch (error) {
       console.error("Assign Error:", error);
       alert(error.message || "Failed to assign Karyakarta");
@@ -958,13 +1204,6 @@ const DiksharthiListing = () => {
   };
 
   const openFeedbackModal = (diksharthi) => {
-    // ❌ remove this check
-    // if (feedbackStatus[diksharthi?.id]) {
-    //   openViewFeedbackModal(diksharthi);
-    //   return;
-    // }
-
-    // ✅ always open add feedback
     setFeedbackModalData(diksharthi);
     setFeedbackForm(emptyFeedbackForm);
   };
@@ -1044,6 +1283,93 @@ const DiksharthiListing = () => {
   //   }
   // };
 
+  // const openFamilyDetailsModal = async (diksharthi) => {
+  //   if (!diksharthi?.id) return;
+
+  //   setIsFamilyDetailsLoading(true);
+  //   setFamilyDetailsModalData({ diksharthi, details: null });
+
+  //   try {
+  //     // ✅ NEW API
+  //     const response = await fetch(
+  //       `${API}/api/viewfamilydetails/${diksharthi.id}`,
+  //     );
+
+  //     const result = await response.json();
+
+  //     console.log("NEW API RESULT =>", result);
+
+  //     if (response.ok && result?.success && result?.data) {
+  //       const apiData = result.data;
+
+  //       // ✅ family_members array ko relation_details format me convert
+  //       const relationDetails = {};
+
+  //       if (apiData.family_members && Array.isArray(apiData.family_members)) {
+  //         apiData.family_members.forEach((member) => {
+  //           relationDetails[member.relation_key || "Member"] = {
+  //             firstName: member.first_name,
+  //             lastName: member.last_name,
+  //             aadharNumber: member.aadhar_number,
+  //             panNumber: member.pan_number,
+  //             ayushman: member.ayushman_coverage === "Yes" ? true : false,
+  //             mediclaim: member.has_mediclaim_policy === "Yes" ? true : false,
+  //             mediclaim_amount: member.mediclaim_amount,
+  //             needAssistance: member.need_assistance === "Yes" ? true : false,
+  //             family_head: member.is_primary === 1,
+  //             assistanceCategories: [],
+  //             photo: member.photo,
+  //           };
+  //         });
+  //       }
+
+  //       // ✅ modal old structure maintain
+  //       const transformed = {
+  //         permanent_address: apiData.permanent_address,
+  //         current_address: apiData.current_address,
+  //         village: apiData.village,
+  //         taluka: apiData.taluka,
+  //         district: apiData.district,
+  //         states: apiData.state,
+  //         pin_code: apiData.pin_code,
+  //         house_details: apiData.house_details,
+  //         type_of_house: apiData.type_of_house,
+  //         maintenance_cost: apiData.maintenance_cost,
+  //         light_bill_cost: apiData.light_bill_cost,
+  //         rent_cost: apiData.rent_cost,
+  //         mediclaim: apiData.mediclaim === "Yes" ? "1" : "0",
+  //         family_mediclaim_amount: apiData.family_mediclaim_amount,
+  //         mediclaim_premium_amount: apiData.mediclaim_premium_amount,
+  //         ngo_assistance: apiData.ngo_assistance,
+  //         ngo_sangh_name: apiData.ngo_sangh_name,
+  //         ngo_amount: apiData.ngo_amount,
+  //         ngo_frequency: apiData.ngo_frequency,
+  //         ngo_remark: apiData.ngo_remark,
+
+  //         relation_details: relationDetails,
+  //       };
+
+  //       setFamilyDetailsModalData({
+  //         diksharthi,
+  //         details: transformed,
+  //       });
+  //     } else {
+  //       setFamilyDetailsModalData({
+  //         diksharthi,
+  //         details: null,
+  //       });
+  //     }
+  //   } catch (error) {
+  //     console.error("Failed to fetch family details", error);
+
+  //     setFamilyDetailsModalData({
+  //       diksharthi,
+  //       details: null,
+  //     });
+  //   } finally {
+  //     setIsFamilyDetailsLoading(false);
+  //   }
+  // };
   const openFamilyDetailsModal = async (diksharthi) => {
     if (!diksharthi?.id) return;
 
@@ -1051,9 +1377,8 @@ const DiksharthiListing = () => {
     setFamilyDetailsModalData({ diksharthi, details: null });
 
     try {
-      // ✅ NEW API
       const response = await fetch(
-        `${API}/api/viewfamilydetails/${diksharthi.id}`
+        `${API}/api/viewfamilydetails/${diksharthi.id}`,
       );
 
       const result = await response.json();
@@ -1063,34 +1388,65 @@ const DiksharthiListing = () => {
       if (response.ok && result?.success && result?.data) {
         const apiData = result.data;
 
-        // ✅ family_members array ko relation_details format me convert
+        // ✅ relation wise data
         const relationDetails = {};
 
-        if (
-          apiData.family_members &&
-          Array.isArray(apiData.family_members)
-        ) {
+        // ✅ assistance data map by relation
+        const assistanceMap = {};
+
+        if (apiData.assistance_data && Array.isArray(apiData.assistance_data)) {
+          apiData.assistance_data.forEach((item) => {
+            const relation = item.relation_key || "Member";
+
+            if (!assistanceMap[relation]) {
+              assistanceMap[relation] = [];
+            }
+
+            assistanceMap[relation].push({
+              assistanceType: item.assistance_type,
+              status: item.status,
+              assistanceData: item.assistance_data,
+            });
+          });
+        }
+
+        // ✅ family members convert
+        if (apiData.family_members && Array.isArray(apiData.family_members)) {
           apiData.family_members.forEach((member) => {
-            relationDetails[member.relation_key || "Member"] = {
+            const relation = member.relation_key || "Member";
+
+            relationDetails[relation] = {
               firstName: member.first_name,
               lastName: member.last_name,
               aadharNumber: member.aadhar_number,
               panNumber: member.pan_number,
-              ayushman:
-                member.ayushman_coverage === "Yes" ? true : false,
-              mediclaim:
-                member.has_mediclaim_policy === "Yes" ? true : false,
+              mobileNumber: member.mobile_number,
+              age: member.age,
+              dob: member.dob,
+              ayushman: member.ayushman_coverage === "Yes",
+              ayushman_amount: member.ayushman_amount,
+
+              mediclaim: member.has_mediclaim_policy === "Yes",
+
               mediclaim_amount: member.mediclaim_amount,
-              needAssistance:
-                member.need_assistance === "Yes" ? true : false,
+
+              mediclaim_company_name: member.mediclaim_company_name,
+
+              mediclaim_premium: member.member_mediclaim_premium_amount,
+
+              needAssistance: member.need_assistance === "Yes",
+
               family_head: member.is_primary === 1,
-              assistanceCategories: [],
+
               photo: member.photo,
+
+              // ✅ relation wise assistance categories
+              assistanceCategories: assistanceMap[relation] || [],
             };
           });
         }
 
-        // ✅ modal old structure maintain
+        // ✅ final modal structure
         const transformed = {
           permanent_address: apiData.permanent_address,
           current_address: apiData.current_address,
@@ -1104,11 +1460,13 @@ const DiksharthiListing = () => {
           maintenance_cost: apiData.maintenance_cost,
           light_bill_cost: apiData.light_bill_cost,
           rent_cost: apiData.rent_cost,
+
           mediclaim: apiData.mediclaim === "Yes" ? "1" : "0",
-          family_mediclaim_amount:
-            apiData.family_mediclaim_amount,
-          mediclaim_premium_amount:
-            apiData.mediclaim_premium_amount,
+
+          family_mediclaim_amount: apiData.family_mediclaim_amount,
+
+          mediclaim_premium_amount: apiData.mediclaim_premium_amount,
+
           ngo_assistance: apiData.ngo_assistance,
           ngo_sangh_name: apiData.ngo_sangh_name,
           ngo_amount: apiData.ngo_amount,
@@ -1139,10 +1497,10 @@ const DiksharthiListing = () => {
       setIsFamilyDetailsLoading(false);
     }
   };
-
-
   const canDownloadApplication =
-    role === "admin" || role === "case-coordinator" || role === "operations-manager";
+    role === "admin" ||
+    role === "case-coordinator" ||
+    role === "operations-manager";
 
   // const handleDownloadApplicationExcel = async (diksharthi) => {
   //   if (!diksharthi?.id) return;
@@ -1177,7 +1535,6 @@ const DiksharthiListing = () => {
   //   }
   // };
 
-
   const handleDownloadApplicationExcel = async (diksharthi) => {
     if (!diksharthi?.id) return;
 
@@ -1186,12 +1543,14 @@ const DiksharthiListing = () => {
 
       // ✅ FIXED URL (use params, not query)
       const response = await fetch(
-        `${API}/api/diksharthi/excel/${diksharthi.id}`
+        `${API}/api/diksharthi/excel/${diksharthi.id}`,
       );
 
       if (!response.ok) {
         const result = await response.json().catch(() => ({}));
-        throw new Error(result?.message || "Failed to download application Excel");
+        throw new Error(
+          result?.message || "Failed to download application Excel",
+        );
       }
 
       const blob = await response.blob();
@@ -1212,7 +1571,6 @@ const DiksharthiListing = () => {
 
       document.body.removeChild(link);
       window.URL.revokeObjectURL(downloadUrl);
-
     } catch (error) {
       console.error(error);
       alert(error?.message || "Failed to download application Excel");
@@ -1221,7 +1579,6 @@ const DiksharthiListing = () => {
     }
   };
 
-
   const handleDownloadApplicationPdf = async (diksharthi) => {
     if (!diksharthi?.id) return;
 
@@ -1229,12 +1586,14 @@ const DiksharthiListing = () => {
       setDownloadingPdfId(diksharthi.id);
 
       const response = await fetch(
-        `${API}/api/generateDikshartiReport/${diksharthi.id}`
+        `${API}/api/generateDikshartiReport/${diksharthi.id}`,
       );
 
       if (!response.ok) {
         const result = await response.json().catch(() => ({}));
-        throw new Error(result?.message || "Failed to download application PDF");
+        throw new Error(
+          result?.message || "Failed to download application PDF",
+        );
       }
 
       const blob = await response.blob();
@@ -1308,56 +1667,170 @@ const DiksharthiListing = () => {
   //   }
   // };
 
+  // const handleSubmitFeedback = async () => {
+  //   if (!feedbackModalData?.id) return;
 
-  const handleSubmitFeedback = async () => {
-    if (!feedbackModalData?.id) return;
+  //   if (!feedbackForm.feedback.trim()) {
+  //     alert("Please enter feedback");
+  //     return;
+  //   }
 
-    if (!feedbackForm.feedback.trim()) {
-      alert("Please enter feedback");
-      return;
+  //   try {
+  //     setIsSubmittingFeedback(true);
+
+  //     const payload = {
+  //       diksharthi_id: feedbackModalData.id,
+  //       diksharthi_name: feedbackModalData.sadhu_sadhvi_name || "",
+  //       feedback: feedbackForm.feedback.trim(),
+  //       submitted_by: loggedInUserId,
+
+  //       // ✅ NEW FIELD
+  //       status: feedbackModalData.current_visit_status || "",
+  //     };
+
+  //     const response = await fetch(`${API}/api/feedback/create`, {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //       },
+  //       body: JSON.stringify(payload),
+  //     });
+
+  //     const result = await response.json();
+
+  //     if (!response.ok) {
+  //       throw new Error(result.message || "Failed to submit feedback");
+  //     }
+
+  //     alert("Feedback submitted successfully");
+
+  //     setFeedbackModalData(null);
+  //     setFeedbackForm(emptyFeedbackForm);
+  //   } catch (error) {
+  //     console.error(error);
+  //     alert(error.message || "Failed to submit feedback");
+  //   } finally {
+  //     setIsSubmittingFeedback(false);
+  //   }
+  // };
+  // const handleSubmitFeedback = async () => {
+  //   if (!feedbackModalData?.id) return;
+
+  //   if (!feedbackForm.feedback.trim()) {
+  //     alert("Please enter feedback");
+  //     return;
+  //   }
+
+  //   try {
+  //     setIsSubmittingFeedback(true);
+
+  //     // ==========================================
+  //     // 1. UPDATE VISIT STATUS
+  //     // ==========================================
+  //     await handleVisitStatusChange(
+  //       feedbackModalData,
+  //       feedbackModalData.current_visit_status,
+  //     );
+
+  //     // ==========================================
+  //     // 2. SAVE FEEDBACK
+  //     // ==========================================
+  //     const payload = {
+  //       diksharthi_id: feedbackModalData.id,
+  //       diksharthi_name: feedbackModalData.sadhu_sadhvi_name || "",
+  //       feedback: feedbackForm.feedback.trim(),
+  //       submitted_by: loggedInUserId,
+  //       status: feedbackModalData.current_visit_status || "",
+  //     };
+
+  //     const response = await fetch(`${API}/api/feedback/create`, {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //       },
+  //       body: JSON.stringify(payload),
+  //     });
+
+  //     const result = await response.json();
+
+  //     if (!response.ok) {
+  //       throw new Error(result.message || "Failed to submit feedback");
+  //     }
+
+  //     alert("Feedback submitted successfully");
+
+  //     setFeedbackModalData(null);
+  //     setFeedbackForm(emptyFeedbackForm);
+
+  //     await fetchDiksharthiList();
+  //   } catch (error) {
+  //     console.error(error);
+  //     alert(error.message || "Failed to submit feedback");
+  //   } finally {
+  //     setIsSubmittingFeedback(false);
+  //   }
+  // };
+ 
+ const handleSubmitFeedback = async () => {
+  if (!feedbackModalData?.id) return;
+
+  if (!feedbackForm.feedback.trim()) {
+    alert("Please enter feedback");
+    return;
+  }
+
+  try {
+    setIsSubmittingFeedback(true);
+
+    await handleVisitStatusChange(
+      feedbackModalData,
+      feedbackModalData.current_visit_status
+    );
+
+    const formData = new FormData();
+
+    formData.append("diksharthi_id", feedbackModalData.id);
+    formData.append(
+      "diksharthi_name",
+      feedbackModalData.sadhu_sadhvi_name || ""
+    );
+    formData.append("feedback", feedbackForm.feedback);
+    formData.append("submitted_by", loggedInUserId);
+    formData.append(
+      "status",
+      feedbackModalData.current_visit_status || ""
+    );
+
+    feedbackFiles.forEach((file) => {
+      formData.append("documents", file);
+    });
+
+    const response = await fetch(`${API}/api/feedback/create`, {
+      method: "POST",
+      body: formData,
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.message);
     }
 
-    try {
-      setIsSubmittingFeedback(true);
+    alert("Feedback submitted successfully");
 
-      const payload = {
-        diksharthi_id: feedbackModalData.id,
-        diksharthi_name: feedbackModalData.sadhu_sadhvi_name || "",
-        feedback: feedbackForm.feedback.trim(),
-        submitted_by: loggedInUserId,
+    setFeedbackModalData(null);
+    setFeedbackForm(emptyFeedbackForm);
+    setFeedbackFiles([]);
 
-        // ✅ NEW FIELD
-        status: feedbackModalData.current_visit_status || "",
-      };
-
-      const response = await fetch(`${API}/api/feedback/create`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.message || "Failed to submit feedback");
-      }
-
-      alert("Feedback submitted successfully");
-
-      setFeedbackModalData(null);
-      setFeedbackForm(emptyFeedbackForm);
-
-    } catch (error) {
-      console.error(error);
-      alert(error.message || "Failed to submit feedback");
-    } finally {
-      setIsSubmittingFeedback(false);
-    }
-  };
-
-
+    await fetchDiksharthiList();
+  } catch (error) {
+    alert(error.message);
+  } finally {
+    setIsSubmittingFeedback(false);
+  }
+};
+ 
+ 
   const openViewFeedbackModal = async (diksharthi) => {
     if (!diksharthi?.id) return;
     setIsFeedbackLoading(true);
@@ -1365,7 +1838,11 @@ const DiksharthiListing = () => {
     try {
       const response = await fetch(`${API}/api/feedback/view/${diksharthi.id}`);
       const result = await response.json().catch(() => ({}));
-      const feedbacks = Array.isArray(result?.data) ? result.data : result?.data ? [result.data] : [];
+      const feedbacks = Array.isArray(result?.data)
+        ? result.data
+        : result?.data
+          ? [result.data]
+          : [];
       setViewFeedbackModalData({ diksharthi, feedbacks });
     } catch (error) {
       console.error("Failed to fetch feedback", error);
@@ -1389,13 +1866,17 @@ const DiksharthiListing = () => {
             feedback: feedbackItem.feedback,
             approved_by: loggedInUserId,
           }),
-        }
+        },
       );
       const result = await response.json().catch(() => ({}));
       if (!response.ok) {
-        throw new Error(result?.message || "Failed to add feedback to diksharthi");
+        throw new Error(
+          result?.message || "Failed to add feedback to diksharthi",
+        );
       }
-      alert(result?.message || "Feedback added to diksharthi details successfully");
+      alert(
+        result?.message || "Feedback added to diksharthi details successfully",
+      );
       setViewFeedbackModalData(null);
     } catch (error) {
       console.error(error);
@@ -1429,7 +1910,7 @@ const DiksharthiListing = () => {
       } else if (Array.isArray(obj[key])) {
         result[newKey] = obj[key]
           .map((item) =>
-            typeof item === "object" ? JSON.stringify(item) : item
+            typeof item === "object" ? JSON.stringify(item) : item,
           )
           .join(", ");
       } else {
@@ -1439,7 +1920,6 @@ const DiksharthiListing = () => {
 
     return result;
   };
-
 
   // const formatExcelData = (data) => {
   //   return data.map((item) => {
@@ -1493,7 +1973,7 @@ const DiksharthiListing = () => {
   //       PinCode: item.pin_code,
 
   //       // ================= FAMILY DETAILS =================
-       
+
   //       // ================= RELATION DETAILS =================
   //       Father_Name:
   //         (relations?.father?.firstName || "") +
@@ -1554,8 +2034,9 @@ const DiksharthiListing = () => {
         dynamicRelations[`${relation}_NeedAssistance`] =
           rel?.needAssistance || "";
 
-        dynamicRelations[`${relation}_FamilyHead`] =
-          rel?.family_head ? "Yes" : "No";
+        dynamicRelations[`${relation}_FamilyHead`] = rel?.family_head
+          ? "Yes"
+          : "No";
       });
 
       return {
@@ -1608,13 +2089,11 @@ const DiksharthiListing = () => {
         ...dynamicRelations,
 
         // ================= EXTRA =================
-        Summary: item.summary
-          ? item.summary.replace(/<[^>]+>/g, "")
-          : "",
+        Summary: item.summary ? item.summary.replace(/<[^>]+>/g, "") : "",
       };
     });
   };
-  
+
   const downloadFormattedExcel = () => {
     if (!selectedRows.length) {
       alert("Please select at least one record to export");
@@ -1640,24 +2119,23 @@ const DiksharthiListing = () => {
     });
 
     const blob = new Blob([excelBuffer], {
-      type:
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8",
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8",
     });
 
     saveAs(blob, "Master Data.xlsx");
   };
-
 
   return (
     <div className="p-8 min-h-screen">
       {/* Header Section */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-slate-700">
-          {role === "staff" ? "Ratnakukshi Family Basic Info" : "Ratnakukshi Family Basic Info"}
+          {role === "staff"
+            ? "Ratnakukshi Family Basic Info"
+            : "Ratnakukshi Family Basic Info"}
         </h1>
         {role === "staff" && (
           <div className="flex gap-6">
-
             <button
               onClick={downloadFormattedExcel}
               className="bg-green-600 text-white px-4 py-2 rounded-md"
@@ -1703,7 +2181,9 @@ const DiksharthiListing = () => {
                     type="checkbox"
                     checked={
                       paginatedList.length > 0 &&
-                      paginatedList.every((item) => selectedRows.includes(item.id))
+                      paginatedList.every((item) =>
+                        selectedRows.includes(item.id),
+                      )
                     }
                     onChange={(e) => {
                       const pageIds = paginatedList.map((item) => item.id);
@@ -1717,14 +2197,17 @@ const DiksharthiListing = () => {
                   />
                 </th>
               )}
-              <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">
+              {/* <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">
                 Date
-              </th>
+              </th> */}
               {/* <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">
               F.A.N ID
               </th> */}
               <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">
                 M.S. ID
+              </th>
+              <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">
+                Application Date
               </th>
               <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">
                 M.S. Name
@@ -1733,12 +2216,14 @@ const DiksharthiListing = () => {
                 RBF Criteria
               </th> */}
               <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">
-                Spoken To Relation
+                RBF Criteria
               </th>
               <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">
-                Spoken To Name
+                Relative Name
               </th>
-
+              <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">
+                Relation With Ms
+              </th>
 
               {role === "operations-manager" && (
                 <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">
@@ -1762,7 +2247,6 @@ const DiksharthiListing = () => {
               )}
 
               {role === "karyakarta" && (
-
                 <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">
                   is Visted ?
                 </th>
@@ -1801,34 +2285,58 @@ const DiksharthiListing = () => {
                           checked={selectedRows.includes(diksharthi.id)}
                           onChange={(e) => {
                             if (e.target.checked) {
-                              setSelectedRows((prev) => [...new Set([...prev, diksharthi.id])]);
+                              setSelectedRows((prev) => [
+                                ...new Set([...prev, diksharthi.id]),
+                              ]);
                             } else {
-                              setSelectedRows((prev) => prev.filter((id) => id !== diksharthi.id));
+                              setSelectedRows((prev) =>
+                                prev.filter((id) => id !== diksharthi.id),
+                              );
                             }
                           }}
                         />
                       </td>
                     )}
 
-                    <td className="px-6 py-3">{formatIndianDate(diksharthi.created_at)}</td>
-
+                    {/* <td className="px-6 py-3">
+                      {formatIndianDate(diksharthi.created_at)}
+                    </td> */}
 
                     {/* <td className="px-6 py-3">{diksharthi.fan_id}</td> */}
                     <td className="px-6 py-3">{diksharthi.id}</td>
+                    <td className="px-6 py-3">
+                      {diksharthi.application_date
+                        ? new Date(
+                            diksharthi.application_date,
+                          ).toLocaleDateString("en-GB")
+                        : "-"}
+                    </td>
 
+                    <td className="px-6 py-3">
+                      {diksharthi.sadhu_sadhvi_name}
+                    </td>
+                    <td className="px-6 py-3">
+                      {diksharthi.rbf_criteria || "-"}
+                    </td>
 
-                    <td className="px-6 py-3">{diksharthi.sadhu_sadhvi_name}</td>
-
-
+                    <td className="px-6 py-3">
+                      {diksharthi.relation_name || "-"}
+                    </td>
+                    <td className="px-6 py-3">
+                      {diksharthi.relation_with_ms || "-"}
+                    </td>
                     {/* <td className="px-6 py-3">{diksharthi.rbf_criteria}</td> */}
 
-                    <td className="px-6 py-3">{diksharthi.spoken_to_relation || "-"}</td>
-                    <td className="px-6 py-3">{diksharthi.spoken_to || "-"}</td>
-
-
                     {role === "operations-manager" && (
-                      <td className="px-6 py-3">
+                      <td className="px-6 py-3 text-sm">
                         {getUserNameById(diksharthi.user_id)}
+                        <p>
+                          {diksharthi.manager_sent_at
+                            ? new Date(
+                                diksharthi.manager_sent_at,
+                              ).toLocaleString()
+                            : "-"}
+                        </p>
                       </td>
                     )}
 
@@ -1837,68 +2345,40 @@ const DiksharthiListing = () => {
                         <div>
                           <div>
                             {getUserNameById(
-                              diksharthi.karykarata_id || diksharthi.admin_id
+                              diksharthi.karykarata_id || diksharthi.admin_id,
                             )}
                           </div>
 
                           <div className="text-sm text-gray-500">
-                            {formatIndianDate(diksharthi.assign_karyakarta_date)}
+                            {formatIndianDate(
+                              diksharthi.assign_karyakarta_date,
+                            )}
                           </div>
                         </div>
                       </td>
                     )}
-                    {/* {role === "operations-manager" && (
-                      <td className="px-6 py-3">
-                        <div>
-                          {diksharthi.current_visit_status || "-"}
-                        </div>
-
-                        {diksharthi.visited_history?.length > 0 && (() => {
-                          const lastVisit = diksharthi.visited_history[diksharthi.visited_history.length - 1];
-                          return (
-                            <div className="mt-1 text-sm">
-                              {formatIndianDate(lastVisit.date)} {formatTo12Hour(lastVisit.time)}
-                            </div>
-                          );
-                        })()}
-                      </td> 
-                    )}*/}
 
                     {role === "operations-manager" && (
                       <td className="px-6 py-3">
                         <div className="flex items-center gap-2">
                           <span>{diksharthi.current_visit_status || "-"}</span>
-
-                          {/* 👁️ Show only if value exists */}
-                          {/* {diksharthi.current_visit_status && (
-                          <button
-                            onClick={() => openViewFeedbackModal(diksharthi)}
-                            className="text-blue-500 hover:text-blue-700"
-                            title="View Visit Details"
-                          >
-                            <Eye size={16} />
-                          </button>
-                        )} */}
                         </div>
 
+                        {diksharthi.visited_history?.length > 0 &&
+                          (() => {
+                            const lastVisit =
+                              diksharthi.visited_history[
+                                diksharthi.visited_history.length - 1
+                              ];
 
-                        {diksharthi.visited_history?.length > 0 && (() => {
-                          const lastVisit =
-                            diksharthi.visited_history[
-                            diksharthi.visited_history.length - 1
-                            ];
-
-                          return (
-                            <div className="mt-1 text-sm text-gray-500">
-                              {formatIndianDate(lastVisit.date)}{" "}
-                              {formatTo12Hour(lastVisit.time)}
-                            </div>
-                          );
-                        })()}
+                            return (
+                              <div className="mt-1 text-sm text-gray-500">
+                                {formatIndianDate(lastVisit.date)}{" "}
+                                {formatTo12Hour(lastVisit.time)}
+                              </div>
+                            );
+                          })()}
                       </td>
-
-
-
                     )}
 
                     {role === "karyakarta" && (
@@ -1911,15 +2391,26 @@ const DiksharthiListing = () => {
                               updatingVisitStatusId === diksharthi.id ||
                               diksharthi?.current_visit_status === "Yes"
                             }
+                            // onChange={(e) => {
+                            //   const value = e.target.value;
+
+                            //   handleVisitStatusChange(diksharthi, value);
+
+                            //   if (value === "Yes" || value === "No") {
+                            //     openFeedbackModal({
+                            //       ...diksharthi,
+                            //       current_visit_status: value,
+                            //     });
+                            //   }
+                            // }}
+
                             onChange={(e) => {
                               const value = e.target.value;
-
-                              handleVisitStatusChange(diksharthi, value);
 
                               if (value === "Yes" || value === "No") {
                                 openFeedbackModal({
                                   ...diksharthi,
-                                  current_visit_status: value
+                                  current_visit_status: value,
                                 });
                               }
                             }}
@@ -1936,51 +2427,83 @@ const DiksharthiListing = () => {
                       <td className="px-6 py-3">{status}</td>
                     )}
 
-                    <td className="px-6 py-3 flex gap-3 flex-wrap">
-
-
+                    <td className="px-6 py-3 flex gap-3 ">
                       {role === "staff" && (
                         <>
-                          <button
+                          {/* <button
                             className="rounded-lg bg-blue-600 text-sm px-2 py-1 text-white"
                             onClick={() => openViewModal(diksharthi)}
                           >
                             View
-                          </button>
+                          </button> */}
 
                           <button
-                            className="rounded-lg bg-green-600 text-sm px-2 py-1 text-white"
-                            onClick={() =>
-                              navigate("/diksharthi-details-add", {
-                                state: { mode: "edit", diksharthiData: diksharthi },
-                              })
-                            }
-                          >
-                            Edit
-                          </button>
+  className="p-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+  onClick={() => openViewModal(diksharthi)}
+  title="View"
+>
+  <Eye size={18} />
+</button>
 
+                         <button
+  className="p-2 rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors"
+  onClick={() =>
+    navigate("/diksharthi-details-add", {
+      state: {
+        mode: "edit",
+        diksharthiData: diksharthi,
+      },
+    })
+  }
+  title="Edit"
+>
+  <Pencil size={18} />
+</button>
+
+<button
+  title="View All Documents"
+  className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg transition-all"
+  onClick={() =>
+    navigate("/diksarthi-all-doc", {
+      state: {
+        diksharthiId: diksharthi.id,
+      },
+    })
+  }
+>
+  <Files size={18} />
+ 
+</button>
+
+                        
                           <button
-                            className="rounded-lg bg-red-600 text-sm px-2 py-1 text-white"
-                            onClick={() => handleDownloadApplicationPdf(diksharthi)}
-                            disabled={downloadingPdfId === diksharthi.id}
-                          >
-                            {downloadingPdfId === diksharthi.id ? "Downloading..." : "PDF"}
-                          </button>
+  className="p-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors disabled:opacity-50"
+  onClick={() => handleDownloadApplicationPdf(diksharthi)}
+  disabled={downloadingPdfId === diksharthi.id}
+  title="Download PDF"
+>
+  {downloadingPdfId === diksharthi.id ? (
+    <Loader2 size={18} className="animate-spin" />
+  ) : (
+    <FileText size={18} />
+  )}
+</button>
 
+                         
 
-
-                          {getDiksharthiStatus(diksharthi) == "pending" && (
-                            <button
-                              className="rounded-lg bg-blue-600 text-sm px-2 py-1 text-white"
-                              onClick={() => handleSendToOpManager(diksharthi.id)}
-                            >
-                              Send to Operation Manager
-                            </button>
-                          )}
+                         {getDiksharthiStatus(diksharthi) === "pending" && (
+  <button
+    className="p-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+    onClick={() => handleSendToOpManager(diksharthi.id)}
+    title="Send to Operation Manager"
+  >
+    <Send size={18} />
+  </button>
+)}
                         </>
                       )}
 
-                      {role === "operations-manager" && (
+                      {/* {role === "operations-manager" && (
                         <>
                           <button
                             className="rounded-lg bg-blue-600 text-sm px-2 py-1 text-white"
@@ -1989,28 +2512,14 @@ const DiksharthiListing = () => {
                             View
                           </button>
 
-                          {canDownloadApplication && diksharthi.family_details && (
-                            <div className="flex items-center gap-2">
-                              <button
-                                className="rounded-lg bg-rose-600 text-sm px-2 py-1 text-white disabled:opacity-60"
-                                onClick={() => handleDownloadApplicationPdf(diksharthi)}
-                                disabled={downloadingPdfId === diksharthi.id}
-                              >
-                                {downloadingPdfId === diksharthi.id ? (
-                                  <ButtonLoader />
-                                ) : ("Application PDF")}
-                              </button>
-                              {/* <button
-                                className="rounded-lg bg-emerald-600 text-sm px-2 py-1 text-white disabled:opacity-60"
-                                onClick={() => handleDownloadApplicationExcel(diksharthi)}
-                                disabled={downloadingApplicationId === diksharthi.id}
-                              >
-                                {downloadingApplicationId === diksharthi.id ? "Downloading..." : "Application Excel"}
-                              </button> */}
-                            </div>
-                          )}
 
-                          {/* ✅ Only show when status = send */}
+                         <button
+                            className="rounded-lg bg-red-600 text-sm px-2 py-1 text-white"
+                            onClick={() => openViewModal(diksharthi)}
+                          >
+                            Case Closed
+                          </button>
+
                           {getDiksharthiStatus(diksharthi) === "send" &&
                             isAdminUnassigned(diksharthi) && (
                               <button
@@ -2021,83 +2530,211 @@ const DiksharthiListing = () => {
                               </button>
                             )}
 
-                          {/* {getDiksharthiStatus(diksharthi) !== "send" &&
-                            getDiksharthiStatus(diksharthi) !== "manager" && (
-                              <button
-                                className="rounded-lg bg-indigo-600 text-sm px-2 py-1 text-white"
-                                onClick={() => openOMFeedbackModal(diksharthi)}
-                              >
+                          {getDiksharthiStatus(diksharthi) == "manager" && (
+                            <button
+                              className="rounded-lg bg-indigo-600 text-sm px-2 py-1 text-white"
+                              onClick={() => openOMFeedbackModal(diksharthi)}
+                            >
                               Send to Case Coordinator
-                              </button>
-                            )} */}
+                            </button>
+                          )}
 
-                          {/* ✅ Send to Case Coordinator only when NOT coordinator */}
-                          {
-                            getDiksharthiStatus(diksharthi) == "manager" && (
-                              <button
-                                className="rounded-lg bg-indigo-600 text-sm px-2 py-1 text-white"
-                                onClick={() => openOMFeedbackModal(diksharthi)}
-                              >
-                                Send to Case Coordinator
-                              </button>
-                            )}
-
-                          {/* ✅ Hide View Feedback when Assign Karyakarta button visible */}
-                          {!(getDiksharthiStatus(diksharthi) === "send" &&
-                            isAdminUnassigned(diksharthi)) && (
-                              <button
-                                className="rounded-lg bg-orange-500 text-sm px-2 py-1 text-white"
-                                onClick={() => openViewOMFeedbackModal(diksharthi)}
-                              >
-                                View Feedback
-                              </button>
-                            )}
-
-
-
-                          {/* {feedbackStatus[diksharthi.id] && (
+                         
+                          {!(
+                            getDiksharthiStatus(diksharthi) === "send" &&
+                            isAdminUnassigned(diksharthi)
+                          ) && (
                             <button
                               className="rounded-lg bg-orange-500 text-sm px-2 py-1 text-white"
-                              onClick={() => openViewFeedbackModal(diksharthi)}
+                              onClick={() =>
+                                openViewOMFeedbackModal(diksharthi)
+                              }
                             >
                               View Feedback
                             </button>
-                          )} */}
+                          )}
+
+                         
+                        </>
+                      )} */}
+                      {role === "operations-manager" && (
+                        <>
+                          {/* <button
+                            className="rounded-lg bg-blue-600 text-sm px-2 py-1 text-white"
+                            onClick={() => openViewModal(diksharthi)}
+                          >
+                            View
+                          </button> */}
+
+                          <button
+  className="p-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+  onClick={() => openViewModal(diksharthi)}
+  title="View"
+>
+  <Eye size={18} />
+</button>
+
+                          {diksharthi?.rbf_criteria === "No" && (
+                            <>
+                              {diksharthi?.isClosed != 1 && (
+                                // <button
+                                //   className="rounded-lg bg-red-600 text-sm px-2 py-1 text-white"
+                                //   onClick={() => handleCloseCase(diksharthi.id)}
+                                // >
+                                //   Case Closed
+                                // </button>
+                                <button
+  className="p-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors"
+  onClick={() => handleCloseCase(diksharthi.id)}
+  title="Case Closed"
+>
+  <CheckCircle size={18} />
+</button>
+                              )}
+                            </>
+                          )}
+
+                          {diksharthi?.rbf_criteria === "Yes" && (
+                            <>
+                              {getDiksharthiStatus(diksharthi) === "send" &&
+                                isAdminUnassigned(diksharthi) && (
+                                  // <button
+                                  //   className="rounded-lg bg-purple-600 text-sm px-2 py-1 text-white"
+                                  //   onClick={() =>
+                                  //     openAssignAdminModal(diksharthi)
+                                  //   }
+                                  // >
+                                  //   Assign Karyakarta
+                                  // </button>
+
+                                <button
+  className="p-2 rounded-lg bg-purple-600 text-white hover:bg-purple-700 transition-colors"
+  onClick={() => openAssignAdminModal(diksharthi)}
+  title="Assign Karyakarta"
+>
+  <UserPlus size={18} />
+</button>
+                                )}
+
+                              {getDiksharthiStatus(diksharthi) ===
+                                "manager" && (
+                                // <button
+                                //   className="rounded-lg bg-indigo-600 text-sm px-2 py-1 text-white"
+                                //   onClick={() =>
+                                //     openOMFeedbackModal(diksharthi)
+                                //   }
+                                // >
+                                //   Send to Case Coordinator
+                                // </button>
+
+                                <button
+  className="p-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition-colors"
+  onClick={() => openOMFeedbackModal(diksharthi)}
+  title="Send to Case Coordinator"
+>
+  <Send size={18} />
+</button>
+                              )}
+
+                              {!(
+                                getDiksharthiStatus(diksharthi) === "send" &&
+                                isAdminUnassigned(diksharthi)
+                              ) && (
+                                // <button
+                                //   className="rounded-lg bg-orange-500 text-sm px-2 py-1 text-white"
+                                //   onClick={() =>
+                                //     openViewOMFeedbackModal(diksharthi)
+                                //   }
+                                // >
+                                //   View Feedback
+                                // </button>
+
+                                <button
+  className="p-2 rounded-lg bg-orange-500 text-white hover:bg-orange-600 transition-colors"
+  onClick={() => openViewOMFeedbackModal(diksharthi)}
+  title="View Feedback"
+>
+  <MessageSquare size={18} />
+</button>
+                              )}
+
+                              <div className="flex items-center gap-2">
+                                {/* <button
+                                  className="rounded-lg bg-rose-600 text-sm px-2 py-1 text-white disabled:opacity-60"
+                                  onClick={() =>
+                                    handleDownloadApplicationPdf(diksharthi)
+                                  }
+                                  disabled={downloadingPdfId === diksharthi.id}
+                                >
+                                  {downloadingPdfId === diksharthi.id ? (
+                                    <ButtonLoader />
+                                  ) : (
+                                    "Application PDF"
+                                  )}
+                                </button> */}
+
+                                <button
+  className="p-2 rounded-lg bg-rose-600 text-white hover:bg-rose-700 transition-colors disabled:opacity-60"
+  onClick={() => handleDownloadApplicationPdf(diksharthi)}
+  disabled={downloadingPdfId === diksharthi.id}
+  title="Application PDF"
+>
+  {downloadingPdfId === diksharthi.id ? (
+    <ButtonLoader />
+  ) : (
+    <FileText size={18} />
+  )}
+</button>
+                              </div>
+                            </>
+                          )}
                         </>
                       )}
-
                       {role === "karyakarta" && (
                         <>
                           {canDownloadApplication && (
                             <div className="flex items-center gap-2">
-                              <button
+                              {/* <button
                                 className="rounded-lg bg-rose-600 text-sm px-2 py-1 text-white disabled:opacity-60"
-                                onClick={() => handleDownloadApplicationPdf(diksharthi)}
+                                onClick={() =>
+                                  handleDownloadApplicationPdf(diksharthi)
+                                }
                                 disabled={downloadingPdfId === diksharthi.id}
                               >
                                 {downloadingPdfId === diksharthi.id ? (
                                   <ButtonLoader />
-                                ) : ("Application PDF")}
-                              </button>
-                              {/* <button
-                                className="rounded-lg bg-emerald-600 text-sm px-2 py-1 text-white disabled:opacity-60"
-                                onClick={() => handleDownloadApplicationExcel(diksharthi)}
-                                disabled={downloadingApplicationId === diksharthi.id}
-                              >
-                                {downloadingApplicationId === diksharthi.id ? "Downloading..." : "Application Excel"}
+                                ) : (
+                                  "Application PDF"
+                                )}
                               </button> */}
+
+                              <button
+  className="p-2 rounded-lg bg-rose-600 text-white hover:bg-rose-700 transition-colors disabled:opacity-60"
+  onClick={() => handleDownloadApplicationPdf(diksharthi)}
+  disabled={downloadingPdfId === diksharthi.id}
+  title="Download Application PDF"
+>
+  {downloadingPdfId === diksharthi.id ? (
+    <ButtonLoader />
+  ) : (
+    <FileDown size={18} />
+  )}
+</button>
                             </div>
                           )}
 
-                          <button
+                          {/* <button
                             className="rounded-lg bg-yellow-500 text-sm px-2 py-1 text-white"
                             onClick={() =>
                               navigate("/family-details", {
                                 state: {
                                   id: diksharthi.id,
                                   diksharthi_code: diksharthi.diksharthi_code,
-                                  sadhu_sadhvi_name: diksharthi.sadhu_sadhvi_name,
+                                  sadhu_sadhvi_name:
+                                    diksharthi.sadhu_sadhvi_name,
                                   gender: diksharthi.gender,
+                                  ngo_assistance: diksharthi.ngo_assistance,
+                                  mediclaim: diksharthi.mediclaim,
                                 },
                               })
                             }
@@ -2105,18 +2742,48 @@ const DiksharthiListing = () => {
                             {diksharthi.family_details
                               ? "Update Family Details"
                               : "Add Family Details"}
-                          </button>
+                          </button> */}
+
+                          <button
+  className="p-2 rounded-lg bg-yellow-500 text-white hover:bg-yellow-600 transition-colors"
+  onClick={() =>
+    navigate("/family-details", {
+      state: {
+        id: diksharthi.id,
+        diksharthi_code: diksharthi.diksharthi_code,
+        sadhu_sadhvi_name: diksharthi.sadhu_sadhvi_name,
+        gender: diksharthi.gender,
+        ngo_assistance: diksharthi.ngo_assistance,
+        mediclaim: diksharthi.mediclaim,
+      },
+    })
+  }
+  title={
+    diksharthi.family_details
+      ? "Update Family Details"
+      : "Add Family Details"
+  }
+>
+  <Users size={18} />
+</button>
 
                           {diksharthi.family_details && (
+                            // <button
+                            //   className="rounded-lg bg-teal-600 text-sm px-2 py-1 text-white"
+                            //   onClick={() => openFamilyDetailsModal(diksharthi)}
+                            // >
+                            //   View Family Details
+                            // </button>
                             <button
-                              className="rounded-lg bg-teal-600 text-sm px-2 py-1 text-white"
-                              onClick={() => openFamilyDetailsModal(diksharthi)}
-                            >
-                              View Family Details
-                            </button>
+  className="p-2 rounded-lg bg-teal-600 text-white hover:bg-teal-700 transition-colors"
+  onClick={() => openFamilyDetailsModal(diksharthi)}
+  title="View Family Details"
+>
+  <Users size={18} />
+</button>
                           )}
 
-                          {getDiksharthiStatus(diksharthi) === "send" && (
+                          {/* {getDiksharthiStatus(diksharthi) === "send" && (
                             <button
                               className="rounded-lg bg-indigo-600 text-sm px-2 py-1 text-white"
                               onClick={() => handleSendToOM(diksharthi.id)}
@@ -2126,60 +2793,192 @@ const DiksharthiListing = () => {
                                 ? "Sending..."
                                 : "Send to Operations Manager"}
                             </button>
+                          )} */}
+                          {getDiksharthiStatus(diksharthi) === "send" && (
+                            // <button
+                            //   className="rounded-lg bg-indigo-600 text-sm px-2 py-1 text-white"
+                            //   onClick={() => openConfirmModal(diksharthi.id)}
+                            //   disabled={sendingId === diksharthi.id}
+                            // >
+                            //   {sendingId === diksharthi.id
+                            //     ? "Sending..."
+                            //     : "Send to Operations Manager"}
+                            // </button>
+
+                            <button
+  className="p-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition-colors disabled:opacity-60"
+  onClick={() => openConfirmModal(diksharthi.id)}
+  disabled={sendingId === diksharthi.id}
+  title="Send to Operations Manager"
+>
+  {sendingId === diksharthi.id ? (
+    <ButtonLoader />
+  ) : (
+                                  // <ArrowRightCircle size={18} />
+                                   <Send size={18} />
+  )}
+</button>
                           )}
 
-                          {/* ✅ Show only when Is Visited = Yes / No */}
                           {(String(diksharthi?.current_visit_status || "")
                             .trim()
                             .toLowerCase() === "yes" ||
                             String(diksharthi?.current_visit_status || "")
                               .trim()
                               .toLowerCase() === "no") && (
-                              <button
-                                className="rounded-lg bg-orange-500 text-sm px-2 py-1 text-white"
-                                onClick={() => openViewOMFeedbackModal(diksharthi)}
-                              >
-                                View Feedback
-                              </button>
-                            )}
+                            // <button
+                            //   className="rounded-lg bg-orange-500 text-sm px-2 py-1 text-white"
+                            //   onClick={() =>
+                            //     openViewOMFeedbackModal(diksharthi)
+                            //   }
+                            // >
+                            //   View Feedback
+                            // </button>
+                            <button
+  className="p-2 rounded-lg bg-orange-500 text-white hover:bg-orange-600 transition-colors"
+  onClick={() => openViewOMFeedbackModal(diksharthi)}
+  title="View Feedback"
+>
+  <MessageSquare size={18} />
+</button>
+                          )}
                         </>
                       )}
+                      {role === "committee-member" && (
+                        <div className="flex items-center gap-2">
+                          {/* <button
+                            className="rounded-lg bg-rose-600 text-sm px-2 py-1 text-white disabled:opacity-60"
+                            onClick={() =>
+                              handleDownloadApplicationPdf(diksharthi)
+                            }
+                            disabled={downloadingPdfId === diksharthi.id}
+                          >
+                            {downloadingPdfId === diksharthi.id ? (
+                              <ButtonLoader />
+                            ) : (
+                              "Application PDF"
+                            )}
+                          </button> */}
 
+                          <button
+  className="p-2 rounded-lg bg-rose-600 text-white hover:bg-rose-700 transition-colors disabled:opacity-60"
+  onClick={() => handleDownloadApplicationPdf(diksharthi)}
+  disabled={downloadingPdfId === diksharthi.id}
+  title="Application PDF"
+>
+  {downloadingPdfId === diksharthi.id ? (
+    <ButtonLoader />
+  ) : (
+    <FileDown size={18} />
+  )}
+</button>
+
+                          {!(
+                            getDiksharthiStatus(diksharthi) === "send" &&
+                            isAdminUnassigned(diksharthi)
+                          ) && (
+                            // <button
+                            //   className="rounded-lg bg-orange-500 text-sm px-2 py-1 text-white"
+                            //   onClick={() =>
+                            //     openViewOMFeedbackModal(diksharthi)
+                            //   }
+                            // >
+                            //   View Feedback
+                            // </button>
+                            <button
+  className="p-2 rounded-lg bg-orange-500 text-white hover:bg-orange-600 transition-colors"
+  onClick={() => openViewOMFeedbackModal(diksharthi)}
+  title="View Feedback"
+>
+  <MessageSquare size={18} />
+</button>
+                          )}
+
+                          {/* Committee Approval Button */}
+                          {/* {role === "committee-member" && (
+                            <button
+                              className="rounded-lg bg-green-600 text-sm px-2 py-1 text-white"
+                              onClick={() =>
+                                handleOpenApprovalModal(diksharthi)
+                              }
+                            >
+                              Approval
+                            </button>
+                          )} */}
+                        </div>
+                      )}
                       {role === "admin" && (
                         <>
                           {canDownloadApplication && (
                             <div className="flex items-center gap-2">
-                              <button
+                              {/* <button
                                 className="rounded-lg bg-rose-600 text-sm px-2 py-1 text-white disabled:opacity-60"
-                                onClick={() => handleDownloadApplicationPdf(diksharthi)}
+                                onClick={() =>
+                                  handleDownloadApplicationPdf(diksharthi)
+                                }
                                 disabled={downloadingPdfId === diksharthi.id}
                               >
-                                {downloadingPdfId === diksharthi.id ? "Downloading..." : "Application PDF"}
-                              </button>
-                              {/* <button
-                                className="rounded-lg bg-emerald-600 text-sm px-2 py-1 text-white disabled:opacity-60"
-                                onClick={() => handleDownloadApplicationExcel(diksharthi)}
-                                disabled={downloadingApplicationId === diksharthi.id}
-                              >
-                                {downloadingApplicationId === diksharthi.id ? "Downloading..." : "Application Excel"}
+                                {downloadingPdfId === diksharthi.id
+                                  ? "Downloading..."
+                                  : "Application PDF"}
                               </button> */}
+                              <button
+  className="p-2 rounded-lg bg-rose-600 text-white hover:bg-rose-700 transition-colors disabled:opacity-60"
+  onClick={() => handleDownloadApplicationPdf(diksharthi)}
+  disabled={downloadingPdfId === diksharthi.id}
+  title="Application PDF"
+>
+  {downloadingPdfId === diksharthi.id ? (
+    <Loader2 size={18} className="animate-spin" />
+  ) : (
+    <FileDown size={18} />
+  )}
+</button>
                             </div>
                           )}
-
-                          <button
+<button
+  title="View All Documents"
+  className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg transition-all"
+  onClick={() =>
+    navigate("/diksarthi-all-doc", {
+      state: {
+        diksharthiId: diksharthi.id,
+      },
+    })
+  }
+>
+  <Files size={18} />
+ 
+</button>
+                          {/* <button
                             className="rounded-lg bg-blue-600 text-sm px-2 py-1 text-white"
                             onClick={() => openViewModal(diksharthi)}
                           >
                             View
-                          </button>
+                          </button> */}
+
+                          <button
+  className="p-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+  onClick={() => openViewModal(diksharthi)}
+  title="View"
+>
+  <Eye size={18} />
+</button>
 
                           {diksharthi.family_details && (
+                            // <button
+                            //   className="rounded-lg bg-teal-600 text-sm px-2 py-1 text-white"
+                            //   onClick={() => openFamilyDetailsModal(diksharthi)}
+                            // >
+                            //   View Family Details
+                            // </button>
                             <button
-                              className="rounded-lg bg-teal-600 text-sm px-2 py-1 text-white"
-                              onClick={() => openFamilyDetailsModal(diksharthi)}
-                            >
-                              View Family Details
-                            </button>
+  className="p-2 rounded-lg bg-teal-600 text-white hover:bg-teal-700 transition-colors"
+  onClick={() => openFamilyDetailsModal(diksharthi)}
+  title="View Family Details"
+>
+  <Eye size={18} />
+</button>
                           )}
                         </>
                       )}
@@ -2188,38 +2987,56 @@ const DiksharthiListing = () => {
                         <>
                           {canDownloadApplication && (
                             <div className="flex items-center gap-2">
-                              <button
+                              {/* <button
                                 className="rounded-lg bg-rose-600 text-sm px-2 py-1 text-white disabled:opacity-60"
-                                onClick={() => handleDownloadApplicationPdf(diksharthi)}
+                                onClick={() =>
+                                  handleDownloadApplicationPdf(diksharthi)
+                                }
                                 disabled={downloadingPdfId === diksharthi.id}
                               >
-                                {downloadingPdfId === diksharthi.id ? "Downloading..." : "Application PDF"}
-                              </button>
-                              {/* <button
-                                className="rounded-lg bg-emerald-600 text-sm px-2 py-1 text-white disabled:opacity-60"
-                                onClick={() => handleDownloadApplicationExcel(diksharthi)}
-                                disabled={downloadingApplicationId === diksharthi.id}
-                              >
-                                {downloadingApplicationId === diksharthi.id ? "Downloading..." : "Application Excel"}
+                                {downloadingPdfId === diksharthi.id
+                                  ? "Downloading..."
+                                  : "Application PDF"}
                               </button> */}
+                             <button
+  className="p-2 rounded-lg bg-rose-600 text-white hover:bg-rose-700 transition-colors disabled:opacity-60"
+  onClick={() => handleDownloadApplicationPdf(diksharthi)}
+  disabled={downloadingPdfId === diksharthi.id}
+  title="Application PDF"
+>
+  {downloadingPdfId === diksharthi.id ? (
+    <Loader2 size={18} className="animate-spin" />
+  ) : (
+    <FileDown size={18} />
+  )}
+</button>
                             </div>
                           )}
 
                           {/* ✅ Hide View Feedback when Assign Karyakarta button visible */}
-                          {!(getDiksharthiStatus(diksharthi) === "send" &&
-                            isAdminUnassigned(diksharthi)) && (
-                              <button
-                                className="rounded-lg bg-orange-500 text-sm px-2 py-1 text-white"
-                                onClick={() => openViewOMFeedbackModal(diksharthi)}
-                              >
-                                View Feedback
-                              </button>
-                            )}
+                          {!(
+                            getDiksharthiStatus(diksharthi) === "send" &&
+                            isAdminUnassigned(diksharthi)
+                          ) && (
+                            // <button
+                            //   className="rounded-lg bg-orange-500 text-sm px-2 py-1 text-white"
+                            //   onClick={() =>
+                            //     openViewOMFeedbackModal(diksharthi)
+                            //   }
+                            // >
+                            //   View Feedback
+                            // </button>
+                            <button
+  className="p-2 rounded-lg bg-orange-500 text-white hover:bg-orange-600 transition-colors"
+  onClick={() => openViewOMFeedbackModal(diksharthi)}
+  title="View Feedback"
+>
+  <MessageSquare size={18} />
+</button>
+                          )}
                         </>
                       )}
-
                     </td>
-
                   </tr>
                 );
               })
@@ -2257,11 +3074,11 @@ const DiksharthiListing = () => {
         (viewModalData || isViewLoading) && (
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 px-4">
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden">
-
               {/* Header */}
               <div className="flex items-center justify-between px-6 py-4 border-b">
-                <h3 className="text-xl font-bold text-gray-800">M.S. Name :
-                  {viewModalData?.sadhu_sadhvi_name || "N/A"} -  {viewModalData?.id || "-"}
+                <h3 className="text-xl font-bold text-gray-800">
+                  M.S. Name :{viewModalData?.sadhu_sadhvi_name || "N/A"} -{" "}
+                  {viewModalData?.id || "-"}
                 </h3>
                 <button
                   onClick={() => {
@@ -2276,7 +3093,6 @@ const DiksharthiListing = () => {
 
               {/* Body */}
               <div className="flex-1 overflow-y-auto px-6 py-5">
-
                 {isViewLoading ? (
                   <div className="flex justify-center py-10">
                     <p className="text-gray-500 animate-pulse">
@@ -2285,37 +3101,53 @@ const DiksharthiListing = () => {
                   </div>
                 ) : (
                   <div className="space-y-6">
-
                     {(viewModalData?.rbf_criteria === "Yes" ||
                       viewModalData?.rbfCriteria === "Yes") && (
-                        <Section title="Ratnakukshi Family Basic Info">
-                          <Grid>
-                            <DetailItem label="Relation" value={viewModalData?.relation} />
-                            <DetailItem
-                              label="Relation Name"
-                              value={
-                                viewModalData?.family_member_name ||
-                                `${viewModalData?.family_member_firstName || "N/A"} ${viewModalData?.family_member_lastName || ""}`.trim()
-                              }
-                            />
-                            {/* <DetailItem label="Assistance" value={viewModalData?.assistance_received} /> */}
-                            <DetailItem label="Mobile No" value={viewModalData?.mobile_no || "N/A"} />
-                            {/* <DetailItem label="Alt Mobile No" value={viewModalData?.alt_mobile_no} /> */}
-                          </Grid>
-                        </Section>
-                      )}
+                      // <Section title="Ratnakukshi Family Basic Info">
+                      //   <Grid>
+                      //     <DetailItem label="Relation" value={viewModalData?.relation} />
+                      //     <DetailItem
+                      //       label="Relation Name"
+                      //       value={
+                      //         viewModalData?.family_member_name ||
+                      //         `${viewModalData?.family_member_firstName || "N/A"} ${viewModalData?.family_member_lastName || ""}`.trim()
+                      //       }
+                      //     />
+                      //     {/* <DetailItem label="Assistance" value={viewModalData?.assistance_received} /> */}
+                      //     <DetailItem label="Mobile No" value={viewModalData?.mobile_no || "N/A"} />
+                      //     {/* <DetailItem label="Alt Mobile No" value={viewModalData?.alt_mobile_no} /> */}
+                      //   </Grid>
+                      // </Section>
+                      <></>
+                    )}
 
                     {/*  */}
                     <Section title="RBF Criteria">
                       <Grid>
-                        <DetailItem label="RBF Criteria" value={viewModalData?.rbf_criteria || "N/A"} />
-                        <DetailItem label="Relation Name " value={viewModalData?.relation_name || "N/A"} />
+                        <DetailItem
+                          label="RBF Criteria"
+                          value={viewModalData?.rbf_criteria || "N/A"}
+                        />
+                        <DetailItem
+                          label="Relation Name"
+                          value={
+                            viewModalData?.family_details?.head_of_family
+                              ? `${viewModalData?.family_details?.head_of_family} (${viewModalData?.family_details?.head_of_family_name})`
+                              : "N/A"
+                          }
+                        />
                       </Grid>
                     </Section>
                     <Section title="Spoken To">
                       <Grid>
-                        <DetailItem label="Name" value={viewModalData?.spoken_to || "N/A"} />
-                        <DetailItem label="Relation " value={viewModalData?.spoken_to_relation || "N/A"} />
+                        <DetailItem
+                          label="Name"
+                          value={viewModalData?.spoken_to || "N/A"}
+                        />
+                        <DetailItem
+                          label="Relation "
+                          value={viewModalData?.spoken_to_relation || "N/A"}
+                        />
                       </Grid>
                     </Section>
                     {/* ADDRESS */}
@@ -2363,7 +3195,6 @@ const DiksharthiListing = () => {
                     <div className="flex flex-col md:flex-row gap-6 border-t  py-6">
                       {/* LEFT */}
                       <div className="flex-1 space-y-3">
-
                         {/* BASIC INFO */}
                         <Section title="MS Details">
                           <Grid>
@@ -2371,10 +3202,11 @@ const DiksharthiListing = () => {
                               label="DOB / Age"
                               value={
                                 viewModalData?.age
-                                  ? `${viewModalData.age} yrs${viewModalData?.dob
-                                    ? ` (${formatIndianDate(viewModalData.dob)})`
-                                    : ""
-                                  }`
+                                  ? `${viewModalData.age} yrs${
+                                      viewModalData?.dob
+                                        ? ` (${formatIndianDate(viewModalData.dob)})`
+                                        : ""
+                                    }`
                                   : viewModalData?.dob
                                     ? `${formatIndianDate(viewModalData.dob)}`
                                     : "N/A"
@@ -2383,18 +3215,40 @@ const DiksharthiListing = () => {
                             <DetailItem
                               label="Gender"
                               value={
-                                String(viewModalData?.gender || "").trim().toLowerCase() === "sadhu"
+                                String(viewModalData?.gender || "")
+                                  .trim()
+                                  .toLowerCase() === "sadhu"
                                   ? "Male"
-                                  : String(viewModalData?.gender || "").trim().toLowerCase() === "sadhvi"
+                                  : String(viewModalData?.gender || "")
+                                        .trim()
+                                        .toLowerCase() === "sadhvi"
                                     ? "Female"
                                     : viewModalData?.gender
                               }
                             />
-                            <DetailItem label="Pad" value={viewModalData?.pad} />
-                            <DetailItem label="Samudaay" value={viewModalData?.samudaay} />
-                            <DetailItem label="Guru" value={viewModalData?.guru_name || viewModalData?.guruName} />
-                            <DetailItem label="Acharya" value={viewModalData?.acharya} />
-                            <DetailItem label="Gachadhipati" value={viewModalData?.gadipati} />
+                            <DetailItem
+                              label="Pad"
+                              value={viewModalData?.pad}
+                            />
+                            <DetailItem
+                              label="Samudaay"
+                              value={viewModalData?.samudaay}
+                            />
+                            <DetailItem
+                              label="Guru"
+                              value={
+                                viewModalData?.guru_name ||
+                                viewModalData?.guruName
+                              }
+                            />
+                            <DetailItem
+                              label="Acharya"
+                              value={viewModalData?.acharya}
+                            />
+                            <DetailItem
+                              label="Gachadhipati"
+                              value={viewModalData?.gadipati}
+                            />
                           </Grid>
                         </Section>
                       </div>
@@ -2408,12 +3262,15 @@ const DiksharthiListing = () => {
                             className="w-32 h-32 rounded-xl object-cover border-4 border-white shadow-md"
                           />
                           <span
-                            className={`absolute bottom-25 -right-2 px-2 py-1 text-xs text-white rounded ${(viewModalData?.is_alive || viewModalData?.isAlive) === "No"
-                              ? "bg-red-500"
-                              : "bg-green-500"
-                              }`}
+                            className={`absolute bottom-25 -right-2 px-2 py-1 text-xs text-white rounded ${
+                              (viewModalData?.is_alive ||
+                                viewModalData?.isAlive) === "No"
+                                ? "bg-red-500"
+                                : "bg-green-500"
+                            }`}
                           >
-                            {(viewModalData?.is_alive || viewModalData?.isAlive) === "Yes"
+                            {(viewModalData?.is_alive ||
+                              viewModalData?.isAlive) === "Yes"
                               ? "Vidyamaan"
                               : "Kaaldharma"}
                           </span>
@@ -2421,14 +3278,11 @@ const DiksharthiListing = () => {
                       </div>
                     </div>
 
-
-
-
                     {/* RBF SECTION */}
 
-
                     {/* STATUS BASED */}
-                    {(viewModalData?.is_alive || viewModalData?.isAlive) === "Yes" && (
+                    {(viewModalData?.is_alive || viewModalData?.isAlive) ===
+                      "Yes" && (
                       <Section title="Current Status">
                         <DetailItem
                           label="Vihar Location"
@@ -2437,14 +3291,18 @@ const DiksharthiListing = () => {
                       </Section>
                     )}
 
-                    {(viewModalData?.is_alive === "No" || viewModalData?.isAlive === "No") &&
-                      (viewModalData?.samadhi_date || viewModalData?.samadhi_place) && (
+                    {(viewModalData?.is_alive === "No" ||
+                      viewModalData?.isAlive === "No") &&
+                      (viewModalData?.samadhi_date ||
+                        viewModalData?.samadhi_place) && (
                         <Section title="Samadhi Details">
                           <Grid>
                             {viewModalData?.samadhi_date && (
                               <DetailItem
                                 label="Date"
-                                value={formatIndianDate(viewModalData?.samadhi_date)}
+                                value={formatIndianDate(
+                                  viewModalData?.samadhi_date,
+                                )}
                               />
                             )}
 
@@ -2477,39 +3335,48 @@ const DiksharthiListing = () => {
                             </thead>
 
                             <tbody>
-                              {Object.entries(familyDetails).map(([relation, member], index) => (
-                                <tr key={relation} className="text-center">
-                                  <td className="p-2 border">{index + 1}</td>
+                              {Object.entries(familyDetails).map(
+                                ([relation, member], index) => (
+                                  <tr key={relation} className="text-center">
+                                    <td className="p-2 border">{index + 1}</td>
 
-                                  <td className="p-2 border">
-                                    {`${member.firstName || ""} ${member.lastName || ""}`.trim() || "N/A"}
-                                  </td>
+                                    <td className="p-2 border">
+                                      {`${member.firstName || ""} ${member.lastName || ""}`.trim() ||
+                                        "N/A"}
+                                    </td>
 
-                                  <td className="p-2 border">{relation}</td>
+                                    <td className="p-2 border">{relation}</td>
 
-                                  <td className="p-2 border">{member.mobileNumber || "N/A"}</td>
+                                    <td className="p-2 border">
+                                      {member.mobileNumber || "N/A"}
+                                    </td>
 
-                                  <td className="p-2 border">{member.aadharNumber || "N/A"}</td>
+                                    <td className="p-2 border">
+                                      {member.aadharNumber || "N/A"}
+                                    </td>
 
-                                  <td className="p-2 border">{member.panNumber || "N/A"}</td>
+                                    <td className="p-2 border">
+                                      {member.panNumber || "N/A"}
+                                    </td>
 
-                                  <td className="p-2 border">
-                                    {member.medicalPolicy === "Yes"
-                                      ? `Yes `
-                                      : "No"}
-                                  </td>
+                                    <td className="p-2 border">
+                                      {member.medicalPolicy === "Yes"
+                                        ? `Yes `
+                                        : "No"}
+                                    </td>
 
-                                  <td className="p-2 border">
-                                    {member.ayushmanCoverage === "Yes"
-                                      ? `Yes`
-                                      : "No"}
-                                  </td>
+                                    <td className="p-2 border">
+                                      {member.ayushmanCoverage === "Yes"
+                                        ? `Yes`
+                                        : "No"}
+                                    </td>
 
-                                  <td className="p-2 border">
-                                    {member.needAssistance || "No"}
-                                  </td>
-                                </tr>
-                              ))}
+                                    <td className="p-2 border">
+                                      {member.needAssistance || "No"}
+                                    </td>
+                                  </tr>
+                                ),
+                              )}
                             </tbody>
                           </table>
                         </div>
@@ -2521,7 +3388,9 @@ const DiksharthiListing = () => {
                       <Section title="Summary">
                         <div
                           className="text-sm text-gray-700 prose max-w-none"
-                          dangerouslySetInnerHTML={{ __html: viewModalData.summary }}
+                          dangerouslySetInnerHTML={{
+                            __html: viewModalData.summary,
+                          }}
                         />
                       </Section>
                     )}
@@ -2536,7 +3405,9 @@ const DiksharthiListing = () => {
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-md">
             <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-              <h3 className="text-lg font-semibold text-gray-800">Assign Karyakarta</h3>
+              <h3 className="text-lg font-semibold text-gray-800">
+                Assign Karyakarta
+              </h3>
               <button
                 type="button"
                 className="p-1 rounded hover:bg-gray-100"
@@ -2548,17 +3419,50 @@ const DiksharthiListing = () => {
 
             <div className="px-5 py-4 space-y-3 text-sm">
               {/* Data Display Section */}
-              <p><span className="font-semibold">M.S. ID:</span> {assignModalData?.id || "-"}</p>
-              <p><span className="font-semibold">M.S. Name:</span> {assignModalData?.sadhu_sadhvi_name || "-"}</p>
-              <p><span className="font-semibold">Contact No:</span> {assignModalData?.mobile_no || "-"}</p>
+              <p>
+                <span className="font-semibold">M.S. ID:</span>{" "}
+                {assignModalData?.id || "-"}
+              </p>
+              <p>
+                <span className="font-semibold">M.S. Name:</span>{" "}
+                {assignModalData?.sadhu_sadhvi_name || "-"}
+              </p>
+              <p>
+                <span className="font-semibold">Head Of The Family Name:</span>{" "}
+                {assignModalData?.family_details
+                  ? `${assignModalData.family_details.head_of_family_name || ""}`.trim()
+                  : "Not Available"}{" "}
+                {assignModalData?.family_details
+                  ? `${assignModalData.family_details.last_name || ""}`.trim()
+                  : "Not Available"}
+              </p>
+
+              <p>
+                <span className="font-semibold">
+                  Head Of The Family Contact No:
+                </span>{" "}
+                {assignModalData?.family_details?.mobile_number ||
+                  "Not Available"}
+              </p>
               <p>
                 <span className="font-semibold">Address:</span>{" "}
-                {assignModalData?.district}, {assignModalData?.state}
+                {[
+                  assignModalData?.current_address,
+                  assignModalData?.village,
+                  assignModalData?.taluka,
+                  assignModalData?.district,
+                  assignModalData?.state,
+                  assignModalData?.pin_code,
+                ]
+                  .filter((item) => item && item.trim() !== "")
+                  .join(", ") || "Not Available"}
               </p>
 
               {/* Search & Selection Section */}
               <div className="mt-4">
-                <label className="block font-semibold mb-1">Search Karyakarta :</label>
+                <label className="block font-semibold mb-1">
+                  Search Karyakarta :
+                </label>
 
                 <input
                   type="text"
@@ -2571,16 +3475,19 @@ const DiksharthiListing = () => {
                 {searchAdmin.trim().length > 0 && (
                   <div className="mt-2 max-h-40 overflow-y-auto border rounded-md">
                     {filteredAdmins.length === 0 ? (
-                      <p className="p-2 text-sm text-gray-500">No result found</p>
+                      <p className="p-2 text-sm text-gray-500">
+                        No result found
+                      </p>
                     ) : (
                       filteredAdmins.map((admin) => (
                         <div
                           key={admin.id}
                           onClick={() => setSelectedAdminId(admin.id)}
-                          className={`p-2 cursor-pointer hover:bg-gray-100 ${String(selectedAdminId) === String(admin.id)
-                            ? "bg-purple-100"
-                            : ""
-                            }`}
+                          className={`p-2 cursor-pointer hover:bg-gray-100 ${
+                            String(selectedAdminId) === String(admin.id)
+                              ? "bg-purple-100"
+                              : ""
+                          }`}
                         >
                           {admin.name || admin.email || `Admin #${admin.id}`}
                         </div>
@@ -2595,7 +3502,7 @@ const DiksharthiListing = () => {
                     Selected:{" "}
                     {
                       adminUsers.find(
-                        (a) => String(a.id) === String(selectedAdminId)
+                        (a) => String(a.id) === String(selectedAdminId),
                       )?.name
                     }
                   </p>
@@ -2624,112 +3531,120 @@ const DiksharthiListing = () => {
         </div>
       )}
 
-      {(role === "operations-manager" || role === "case-coordinator") && scheduleVisitModalData && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 px-4">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-              <h3 className="text-lg font-semibold text-gray-800">
-                {shouldUseRescheduleFlow(scheduleVisitModalData) ? "Reschedule Visit" : "Schedule Visit"}
-              </h3>
-              <button
-                type="button"
-                className="p-1 rounded hover:bg-gray-100"
-                onClick={() => {
-                  setScheduleVisitModalData(null);
-                  setScheduleForm(emptyScheduleForm);
-                }}
-              >
-                <X size={18} className="text-gray-600" />
-              </button>
-            </div>
-
-            {shouldUseRescheduleFlow(scheduleVisitModalData) && (
-              <div className=" px-6 rounded-lg overflow-hidden text-sm">
-                <div className="py-2 font-medium text-gray-900">
-                  Current Scheduled Visit
-                </div>
-
-                <table className="w-full border-collapse text-left">
-                  <thead className="bg-gray-100">
-                    <tr>
-                      <th className="px-3 py-2 border">Sr No</th>
-                      <th className="px-3 py-2 border">Visit Date</th>
-                      <th className="px-3 py-2 border">Visit Time</th>
-                    </tr>
-                  </thead>
-
-                  <tbody>
-                    <tr>
-                      <td className="px-3 py-2 border">1</td>
-                      <td className="px-3 py-2 border">
-                        {getLatestVisitCycle(scheduleVisitModalData)?.scheduled?.date
-                          ? new Date(getLatestVisitCycle(scheduleVisitModalData).scheduled.date).toLocaleDateString("en-GB")
-                          : "-"}
-                      </td>
-                      <td className="px-3 py-2 border">
-                        {getLatestVisitCycle(scheduleVisitModalData)?.scheduled?.time || "-"}
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
+      {(role === "operations-manager" || role === "case-coordinator") &&
+        scheduleVisitModalData && (
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 px-4">
+            <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg">
+              <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+                <h3 className="text-lg font-semibold text-gray-800">
+                  {shouldUseRescheduleFlow(scheduleVisitModalData)
+                    ? "Reschedule Visit"
+                    : "Schedule Visit"}
+                </h3>
+                <button
+                  type="button"
+                  className="p-1 rounded hover:bg-gray-100"
+                  onClick={() => {
+                    setScheduleVisitModalData(null);
+                    setScheduleForm(emptyScheduleForm);
+                  }}
+                >
+                  <X size={18} className="text-gray-600" />
+                </button>
               </div>
-            )}
-            <div className="px-5 py-4 grid grid-cols-1 gap-4 text-sm">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Date
-                  </label>
-                  <input
-                    type="date"
-                    name="date"
-                    value={scheduleForm.date}
-                    onChange={handleScheduleFormChange}
-                    min={new Date().toISOString().split("T")[0]} // 🔥 important
-                    className="w-full p-2 border border-slate-300 rounded-md outline-none"
-                  />
+
+              {shouldUseRescheduleFlow(scheduleVisitModalData) && (
+                <div className=" px-6 rounded-lg overflow-hidden text-sm">
+                  <div className="py-2 font-medium text-gray-900">
+                    Current Scheduled Visit
+                  </div>
+
+                  <table className="w-full border-collapse text-left">
+                    <thead className="bg-gray-100">
+                      <tr>
+                        <th className="px-3 py-2 border">Sr No</th>
+                        <th className="px-3 py-2 border">Visit Date</th>
+                        <th className="px-3 py-2 border">Visit Time</th>
+                      </tr>
+                    </thead>
+
+                    <tbody>
+                      <tr>
+                        <td className="px-3 py-2 border">1</td>
+                        <td className="px-3 py-2 border">
+                          {getLatestVisitCycle(scheduleVisitModalData)
+                            ?.scheduled?.date
+                            ? new Date(
+                                getLatestVisitCycle(scheduleVisitModalData)
+                                  .scheduled.date,
+                              ).toLocaleDateString("en-GB")
+                            : "-"}
+                        </td>
+                        <td className="px-3 py-2 border">
+                          {getLatestVisitCycle(scheduleVisitModalData)
+                            ?.scheduled?.time || "-"}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Time
-                  </label>
-                  <input
-                    type="time"
-                    name="time"
-                    value={scheduleForm.time}
-                    onChange={handleScheduleFormChange}
-                    className="w-full p-2 border border-slate-300 rounded-md outline-none"
-                  />
+              )}
+              <div className="px-5 py-4 grid grid-cols-1 gap-4 text-sm">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      Date
+                    </label>
+                    <input
+                      type="date"
+                      name="date"
+                      value={scheduleForm.date}
+                      onChange={handleScheduleFormChange}
+                      min={new Date().toISOString().split("T")[0]} // 🔥 important
+                      className="w-full p-2 border border-slate-300 rounded-md outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      Time
+                    </label>
+                    <input
+                      type="time"
+                      name="time"
+                      value={scheduleForm.time}
+                      onChange={handleScheduleFormChange}
+                      className="w-full p-2 border border-slate-300 rounded-md outline-none"
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
-            <div className="px-5 py-4 border-t border-gray-100 flex gap-2 justify-end">
-              <button
-                type="button"
-                className="rounded-lg bg-gray-200 text-sm px-4 py-2 text-gray-800"
-                onClick={() => {
-                  setScheduleVisitModalData(null);
-                  setScheduleForm(emptyScheduleForm);
-                }}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="rounded-lg bg-emerald-600 text-sm px-4 py-2 text-white disabled:opacity-60"
-                onClick={handleSaveVisitSchedule}
-                disabled={isSchedulingVisit}
-              >
-                {isSchedulingVisit
-                  ? "Saving..."
-                  : shouldUseRescheduleFlow(scheduleVisitModalData)
-                    ? "Save Reschedule"
-                    : "Save Visit Schedule"}
-              </button>
+              <div className="px-5 py-4 border-t border-gray-100 flex gap-2 justify-end">
+                <button
+                  type="button"
+                  className="rounded-lg bg-gray-200 text-sm px-4 py-2 text-gray-800"
+                  onClick={() => {
+                    setScheduleVisitModalData(null);
+                    setScheduleForm(emptyScheduleForm);
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="rounded-lg bg-emerald-600 text-sm px-4 py-2 text-white disabled:opacity-60"
+                  onClick={handleSaveVisitSchedule}
+                  disabled={isSchedulingVisit}
+                >
+                  {isSchedulingVisit
+                    ? "Saving..."
+                    : shouldUseRescheduleFlow(scheduleVisitModalData)
+                      ? "Save Reschedule"
+                      : "Save Visit Schedule"}
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
       {/* {role === "karyakarta" && viewScheduleModalData && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 px-4">
@@ -2827,7 +3742,6 @@ const DiksharthiListing = () => {
         </div>
       )} */}
 
-
       {role === "karyakarta" && viewScheduleModalData && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 px-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden">
@@ -2847,7 +3761,9 @@ const DiksharthiListing = () => {
               {isViewScheduleLoading ? (
                 <div className="flex flex-col items-center py-10 space-y-3">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-                  <p className="text-gray-500 font-medium">Loading visit schedule...</p>
+                  <p className="text-gray-500 font-medium">
+                    Loading visit schedule...
+                  </p>
                 </div>
               ) : viewScheduleModalData?.schedule ? (
                 <div className="space-y-6">
@@ -2856,30 +3772,51 @@ const DiksharthiListing = () => {
                     <table className="w-full text-sm text-left">
                       <tbody className="divide-y divide-gray-100">
                         <tr className="bg-white">
-                          <td className="px-1 py-1 font-semibold text-gray-600 w-1/3">M.S. Name</td>
-                          <td className="px-4 py-1 text-gray-900">{viewScheduleModalData.diksharthi?.sadhu_sadhvi_name || "-"}</td>
+                          <td className="px-1 py-1 font-semibold text-gray-600 w-1/3">
+                            M.S. Name
+                          </td>
+                          <td className="px-4 py-1 text-gray-900">
+                            {viewScheduleModalData.diksharthi
+                              ?.sadhu_sadhvi_name || "-"}
+                          </td>
                         </tr>
                         <tr className="bg-gray-50/50">
-                          <td className="px-1 py-1 font-semibold text-gray-600">Family Head</td>
+                          <td className="px-1 py-1 font-semibold text-gray-600">
+                            Family Head
+                          </td>
                           <td className="px-4 py-1 text-gray-900">
                             {`${viewScheduleModalData.diksharthi?.family_member_firstName || "-"} ${viewScheduleModalData.diksharthi?.family_member_lastName || ""}`}
                           </td>
                         </tr>
                         <tr className="bg-white">
-                          <td className="px-1 py-1 font-semibold text-gray-600">Contact</td>
+                          <td className="px-1 py-1 font-semibold text-gray-600">
+                            Contact
+                          </td>
                           <td className="px-4 py-1 text-gray-900">
                             <div className="flex flex-col">
-                              <span>{viewScheduleModalData.diksharthi?.mobile_no || "-"}</span>
-                              {viewScheduleModalData.diksharthi?.alt_mobile_no && (
-                                <span className="text-gray-400 text-xs italic">{viewScheduleModalData.diksharthi.alt_mobile_no}</span>
+                              <span>
+                                {viewScheduleModalData.diksharthi?.mobile_no ||
+                                  "-"}
+                              </span>
+                              {viewScheduleModalData.diksharthi
+                                ?.alt_mobile_no && (
+                                <span className="text-gray-400 text-xs italic">
+                                  {
+                                    viewScheduleModalData.diksharthi
+                                      .alt_mobile_no
+                                  }
+                                </span>
                               )}
                             </div>
                           </td>
                         </tr>
                         <tr className="bg-gray-50/50">
-                          <td className="px-1 py-1 font-semibold text-gray-600">Address</td>
+                          <td className="px-1 py-1 font-semibold text-gray-600">
+                            Address
+                          </td>
                           <td className="px-4 py-1 text-gray-900 leading-relaxed">
-                            {viewScheduleModalData.diksharthi?.current_address || "-"}
+                            {viewScheduleModalData.diksharthi
+                              ?.current_address || "-"}
                           </td>
                         </tr>
                       </tbody>
@@ -2889,13 +3826,17 @@ const DiksharthiListing = () => {
                   {/* Schedule Highlights */}
                   <div className="grid grid-cols-2 gap-4">
                     <div className="bg-indigo-50 p-4 rounded-xl border border-indigo-100">
-                      <p className="text-xs uppercase tracking-wider font-bold text-indigo-600 mb-1">Scheduled Date</p>
+                      <p className="text-xs uppercase tracking-wider font-bold text-indigo-600 mb-1">
+                        Scheduled Date
+                      </p>
                       <p className="text-lg font-semibold text-indigo-900">
                         {formatIndianDate(viewScheduleModalData.schedule.date)}
                       </p>
                     </div>
                     <div className="bg-emerald-50 p-4 rounded-xl border border-emerald-100">
-                      <p className="text-xs uppercase tracking-wider font-bold text-emerald-600 mb-1">Scheduled Time</p>
+                      <p className="text-xs uppercase tracking-wider font-bold text-emerald-600 mb-1">
+                        Scheduled Time
+                      </p>
                       <p className="text-lg font-semibold text-emerald-900">
                         {viewScheduleModalData.schedule.time || "-"}
                       </p>
@@ -2912,11 +3853,17 @@ const DiksharthiListing = () => {
                       <div className="grid grid-cols-2 gap-y-2 text-xs">
                         <span className="text-amber-700">Schedule:</span>
                         <span className="font-medium text-amber-900 text-right">
-                          {formatIndianDate(viewScheduleModalData?.originalSchedule?.date)} @ {viewScheduleModalData?.originalSchedule?.time}
+                          {formatIndianDate(
+                            viewScheduleModalData?.originalSchedule?.date,
+                          )}{" "}
+                          @ {viewScheduleModalData?.originalSchedule?.time}
                         </span>
                         <span className="text-amber-700">Re-Schedule:</span>
                         <span className="font-medium text-amber-900 text-right">
-                          {formatIndianDate(viewScheduleModalData?.reschedule?.date)} @ {viewScheduleModalData?.reschedule?.time}
+                          {formatIndianDate(
+                            viewScheduleModalData?.reschedule?.date,
+                          )}{" "}
+                          @ {viewScheduleModalData?.reschedule?.time}
                         </span>
                       </div>
                     </div>
@@ -2927,7 +3874,9 @@ const DiksharthiListing = () => {
                   <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gray-100 text-gray-400 mb-3">
                     <Calendar size={24} />
                   </div>
-                  <p className="text-gray-500">No visit schedule has been set for this diksharthi yet.</p>
+                  <p className="text-gray-500">
+                    No visit schedule has been set for this diksharthi yet.
+                  </p>
                 </div>
               )}
             </div>
@@ -2947,10 +3896,12 @@ const DiksharthiListing = () => {
       )}
 
       {role === "karyakarta" && feedbackModalData && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 px-4">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-3xl">
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 px-4 ">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-3xl h-[700px] overflow-auto">
             <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-              <h3 className="text-lg font-semibold text-gray-800">Add Karyakarta Feedback</h3>
+              <h3 className="text-lg font-semibold text-gray-800">
+                Add Karyakarta Feedback
+              </h3>
               <button
                 type="button"
                 className="p-1 rounded hover:bg-gray-100"
@@ -2990,6 +3941,18 @@ const DiksharthiListing = () => {
                   Feedback
                 </label>
 
+                {/* <JoditEditor
+                  ref={editor}
+                  value={feedbackForm.feedback}
+                  config={queryEditorConfig}
+                  onBlur={(newContent) =>
+                    setFeedbackForm({
+                      ...feedbackForm,
+                      feedback: newContent,
+                    })
+                  }
+                /> */}
+
                 <JoditEditor
                   ref={editor}
                   value={feedbackForm.feedback}
@@ -3003,6 +3966,45 @@ const DiksharthiListing = () => {
                 />
               </div>
             </div>
+
+              <div className='p-5'>
+  <label className="block text-sm font-medium text-slate-700 mb-2">
+    Upload Documents
+  </label>
+
+  <input
+    type="file"
+    multiple
+    accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"
+    onChange={handleFeedbackFiles}
+    className="w-full border border-gray-300 rounded-lg p-2"
+  />
+
+  {feedbackFiles.length > 0 && (
+    <div className="mt-3 space-y-2">
+      {feedbackFiles.map((file, index) => (
+        <div
+          key={index}
+          className="flex items-center justify-between bg-gray-50 border rounded-lg px-3 py-2"
+        >
+          <span className="text-sm truncate">{file.name}</span>
+
+          <button
+            type="button"
+            onClick={() =>
+              setFeedbackFiles((prev) =>
+                prev.filter((_, i) => i !== index)
+              )
+            }
+            className="text-red-500 text-sm"
+          >
+            Remove
+          </button>
+        </div>
+      ))}
+    </div>
+  )}
+</div>
             <div className="px-5 py-4 border-t border-gray-100 flex gap-2 justify-end">
               <button
                 type="button"
@@ -3024,6 +4026,8 @@ const DiksharthiListing = () => {
               </button>
             </div>
           </div>
+
+        
         </div>
       )}
 
@@ -3087,96 +4091,110 @@ const DiksharthiListing = () => {
         </div>
       )} */}
 
+      {(role === "operations-manager" || role === "karyakarta") &&
+        viewFeedbackModalData && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 px-4">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[85vh] flex flex-col overflow-hidden">
+              {/* HEADER */}
+              <div className="flex items-center justify-between px-6 py-5 border-b bg-gradient-to-r from-slate-50 to-blue-50">
+                <div>
+                  <h3 className="text-sm uppercase tracking-wider font-bold text-blue-600">
+                    Feedback History
+                  </h3>
+                  <p className="text-xl text-gray-900 font-extrabold mt-1">
+                    {viewFeedbackModalData.diksharthi?.sadhu_sadhvi_name || "-"}
+                    <span className="ml-2 text-sm font-medium text-gray-500">
+                      (ID: {viewFeedbackModalData.diksharthi?.id || "-"})
+                    </span>
+                  </p>
+                </div>
 
-      {(role === "operations-manager" || role === "karyakarta") && viewFeedbackModalData && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 px-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[85vh] flex flex-col overflow-hidden">
-
-            {/* HEADER */}
-            <div className="flex items-center justify-between px-6 py-5 border-b bg-gradient-to-r from-slate-50 to-blue-50">
-              <div>
-                <h3 className="text-sm uppercase tracking-wider font-bold text-blue-600">Feedback History</h3>
-                <p className="text-xl text-gray-900 font-extrabold mt-1">
-                  {viewFeedbackModalData.diksharthi?.sadhu_sadhvi_name || "-"}
-                  <span className="ml-2 text-sm font-medium text-gray-500">(ID: {viewFeedbackModalData.diksharthi?.id || "-"})</span>
-                </p>
+                <button
+                  onClick={() => setViewFeedbackModalData(null)}
+                  className="p-2 rounded-full hover:bg-white hover:shadow-md transition-all text-gray-400 hover:text-red-500"
+                >
+                  <X size={20} />
+                </button>
               </div>
 
-              <button
-                onClick={() => setViewFeedbackModalData(null)}
-                className="p-2 rounded-full hover:bg-white hover:shadow-md transition-all text-gray-400 hover:text-red-500"
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            {/* BODY - TABLE LAYOUT */}
-            <div className="flex-1 overflow-y-auto">
-              {isFeedbackLoading ? (
-                <div className="p-20 text-center">
-                  <div className="animate-spin inline-block w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mb-4"></div>
-                  <p className="text-gray-500">Loading feedback records...</p>
-                </div>
-              ) : viewFeedbackModalData.feedbacks.length === 0 ? (
-                <div className="p-20 text-center text-gray-400">
-                  <p className="text-lg italic">No feedback entries found for this record.</p>
-                </div>
-              ) : (
-                <table className="w-full px-16 text-left ">
-                  <thead className="sticky top-0 bg-white shadow-sm z-10">
-                    <tr className="bg-gray-50 border-b border-gray-100">
-                      <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
-                      <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Feedback</th>
-                      <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">Date & Time</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-50">
-                    {viewFeedbackModalData.feedbacks.map((item, index) => (
-                      <tr key={item.id || index} className="hover:bg-blue-50/30 transition-colors">
-                        {/* STATUS COLUMN */}
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`px-3 py-1 rounded-full text-[11px] font-bold uppercase ${item.status === 'Pending'
-                            ? 'bg-amber-100 text-amber-700'
-                            : item.status === 'No'
-                              ? 'bg-rose-100 text-rose-700'
-                              : 'bg-emerald-100 text-emerald-700'
-                            }`}>
-                            {item.status || "N/A"}
-                          </span>
-                        </td>
-
-                        {/* FEEDBACK COLUMN */}
-                        <td className="px-6 py-4">
-                          <p className="text-sm text-gray-700 max-w-md line-clamp-2 hover:line-clamp-none transition-all cursor-default">
-                            {item.feedback || "-"}
-                          </p>
-                        </td>
-
-                        {/* DATE & TIME COLUMN */}
-                        <td className="px-6 py-4 text-right whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">
-                            {formatIndianDate(item.created_at)}
-                          </div>
-                          <div className="text-xs text-gray-400 font-mono italic">
-                            {item.feedback_time || "-"}
-                          </div>
-                        </td>
+              {/* BODY - TABLE LAYOUT */}
+              <div className="flex-1 overflow-y-auto">
+                {isFeedbackLoading ? (
+                  <div className="p-20 text-center">
+                    <div className="animate-spin inline-block w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mb-4"></div>
+                    <p className="text-gray-500">Loading feedback records...</p>
+                  </div>
+                ) : viewFeedbackModalData.feedbacks.length === 0 ? (
+                  <div className="p-20 text-center text-gray-400">
+                    <p className="text-lg italic">
+                      No feedback entries found for this record.
+                    </p>
+                  </div>
+                ) : (
+                  <table className="w-full px-16 text-left ">
+                    <thead className="sticky top-0 bg-white shadow-sm z-10">
+                      <tr className="bg-gray-50 border-b border-gray-100">
+                        <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">
+                          Status
+                        </th>
+                        <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">
+                          Feedback
+                        </th>
+                        <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">
+                          Date & Time
+                        </th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
+                    </thead>
+                    <tbody className="divide-y divide-gray-50">
+                      {viewFeedbackModalData.feedbacks.map((item, index) => (
+                        <tr
+                          key={item.id || index}
+                          className="hover:bg-blue-50/30 transition-colors"
+                        >
+                          {/* STATUS COLUMN */}
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span
+                              className={`px-3 py-1 rounded-full text-[11px] font-bold uppercase ${
+                                item.status === "Pending"
+                                  ? "bg-amber-100 text-amber-700"
+                                  : item.status === "No"
+                                    ? "bg-rose-100 text-rose-700"
+                                    : "bg-emerald-100 text-emerald-700"
+                              }`}
+                            >
+                              {item.status || "N/A"}
+                            </span>
+                          </td>
+
+                          {/* FEEDBACK COLUMN */}
+                          <td className="px-6 py-4">
+                            <p className="text-sm text-gray-700 max-w-md line-clamp-2 hover:line-clamp-none transition-all cursor-default">
+                              {item.feedback || "-"}
+                            </p>
+                          </td>
+
+                          {/* DATE & TIME COLUMN */}
+                          <td className="px-6 py-4 text-right whitespace-nowrap">
+                            <div className="text-sm font-medium text-gray-900">
+                              {formatIndianDate(item.created_at)}
+                            </div>
+                            <div className="text-xs text-gray-400 font-mono italic">
+                              {item.feedback_time || "-"}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
             </div>
-
           </div>
-        </div>
-      )}
-
+        )}
 
       {omFeedbackModalData && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-3xl p-6">
-
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold">
                 Operations Manager Feedback
@@ -3191,7 +4209,8 @@ const DiksharthiListing = () => {
             </div>
 
             <p className="text-sm text-gray-600 mb-3">
-              M.S. ID: {omFeedbackModalData.id} - {omFeedbackModalData.sadhu_sadhvi_name}
+              M.S. ID: {omFeedbackModalData.id} -{" "}
+              {omFeedbackModalData.sadhu_sadhvi_name}
             </p>
 
             {/* <textarea
@@ -3232,13 +4251,10 @@ const DiksharthiListing = () => {
       {viewOMFeedbackModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
-
             {/* Header */}
             <div className="flex justify-between items-center px-6 py-4 border-b">
               <div>
-                <h2 className="text-lg font-semibold">
-                  Feedback History
-                </h2>
+                <h2 className="text-lg font-semibold">Feedback History</h2>
 
                 <p className="text-sm text-gray-500">
                   M.S. ID: {viewOMFeedbackModal.id}
@@ -3255,61 +4271,59 @@ const DiksharthiListing = () => {
 
             {/* Body */}
             <div className="p-6 overflow-auto flex-1 space-y-8">
-
               {isLoadingOMFeedback ? (
-                <p className="text-center text-gray-500">
-                  Loading...
-                </p>
+                <p className="text-center text-gray-500">Loading...</p>
               ) : (
                 <>
                   {/* ================= Karyakarta   FEEDBACK TABLE ================= */}
                   <div>
                     <h3 className="font-semibold text-blue-700 mb-3">
-                      Karyakarta  Feedback
+                      Karyakarta Feedback
                     </h3>
 
                     {omFeedbackList?.diksharthi_feedback?.length === 0 ? (
-                      <p className="text-sm text-gray-400">
-                        No feedback found
-                      </p>
+                      <p className="text-sm text-gray-400">No feedback found</p>
                     ) : (
                       <div className="space-y-4">
-                        {omFeedbackList.diksharthi_feedback.map((item, index) => (
-                          <div
-                            key={index}
-                            className="border rounded-xl p-4 shadow-sm bg-white w-full overflow-hidden"
-                          >
-                            {/* Top Row */}
-                            <div className="flex justify-between items-center flex-wrap gap-2 mb-3">
-                              <div className="text-sm font-semibold text-slate-700">
-                                <span
-                                  className={`px-3 py-1 rounded-md text-xs font-semibold ${item.status === "Yes"
-                                    ? "bg-green-100 text-green-700"
-                                    : "bg-red-100 text-red-700"
-                                    }`}
-                                >
-                                  Is Visted : {item.status || "-"}
-                                </span>
-                              </div>
-
-                              <div className="text-sm text-gray-500 break-words">
-                                {formatIndianDate(item.feedback_date?.slice(0, 10))} |{" "}
-                                {item.feedback_time}
-                              </div>
-                            </div>
-
-                            {/* Feedback Text Fix */}
-
+                        {omFeedbackList.diksharthi_feedback.map(
+                          (item, index) => (
                             <div
-                              className="text-sm text-gray-700 mb-3 leading-relaxed break-words whitespace-pre-wrap overflow-hidden prose max-w-none"
-                              dangerouslySetInnerHTML={{
-                                __html: item.feedback || "-",
-                              }}
-                            />
+                              key={index}
+                              className="border rounded-xl p-4 shadow-sm bg-white w-full overflow-hidden"
+                            >
+                              {/* Top Row */}
+                              <div className="flex justify-between items-center flex-wrap gap-2 mb-3">
+                                <div className="text-sm font-semibold text-slate-700">
+                                  <span
+                                    className={`px-3 py-1 rounded-md text-xs font-semibold ${
+                                      item.status === "Yes"
+                                        ? "bg-green-100 text-green-700"
+                                        : "bg-red-100 text-red-700"
+                                    }`}
+                                  >
+                                    Is Visted : {item.status || "-"}
+                                  </span>
+                                </div>
 
+                                <div className="text-sm text-gray-500 break-words">
+                                  {formatIndianDate(
+                                    item.feedback_date?.slice(0, 10),
+                                  )}{" "}
+                                  | {item.feedback_time}
+                                </div>
+                              </div>
 
-                          </div>
-                        ))}
+                              {/* Feedback Text Fix */}
+
+                              <div
+                                className="text-sm text-gray-700 mb-3 leading-relaxed break-words whitespace-pre-wrap overflow-hidden prose max-w-none"
+                                dangerouslySetInnerHTML={{
+                                  __html: item.feedback || "-",
+                                }}
+                              />
+                            </div>
+                          ),
+                        )}
                       </div>
                     )}
                   </div>
@@ -3329,9 +4343,10 @@ const DiksharthiListing = () => {
                               className="border rounded-xl p-4 bg-green-50"
                             >
                               <div className="text-sm text-gray-500 break-words flex justify-end">
-
                                 <span>
-                                  {formatIndianDate(item.feedback_date?.slice(0, 10))}{" "}
+                                  {formatIndianDate(
+                                    item.feedback_date?.slice(0, 10),
+                                  )}{" "}
                                   {item.feedback_time}
                                 </span>
                               </div>
@@ -3341,10 +4356,8 @@ const DiksharthiListing = () => {
                                   __html: item.feedback || "-",
                                 }}
                               />
-
-
                             </div>
-                          )
+                          ),
                         )}
                       </div>
                     </div>
@@ -3362,17 +4375,47 @@ const DiksharthiListing = () => {
                 Close
               </button>
             </div>
-
           </div>
         </div>
       )}
+      {showConfirmModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+            <h2 className="text-xl font-semibold text-slate-800">
+              Confirmation
+            </h2>
 
+            <p className="mt-3 text-sm text-slate-600">
+              Are you sure you want to send this Diksharthi to the Operations
+              Manager?
+            </p>
 
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={closeConfirmModal}
+                className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={handleSendToOM}
+                disabled={sendingId === selectedDiksharthiId}
+                className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+              >
+                {sendingId === selectedDiksharthiId ? "Sending..." : "Confirm"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {familyDetailsModalData && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 px-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
             <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-gray-100">
-              <h3 className="text-xl font-bold text-gray-800">Family Details</h3>
+              <h3 className="text-xl font-bold text-gray-800">
+                Family Details
+              </h3>
               <button
                 type="button"
                 className="p-2 rounded-full hover:bg-gray-200 transition-colors"
@@ -3384,11 +4427,12 @@ const DiksharthiListing = () => {
             <div className="flex-1 overflow-y-auto px-6 pb-6 pt-4">
               {isFamilyDetailsLoading ? (
                 <div className="flex justify-center py-10">
-                  <p className="text-gray-500 animate-pulse">Loading family details...</p>
+                  <p className="text-gray-500 animate-pulse">
+                    Loading family details...
+                  </p>
                 </div>
               ) : familyDetailsModalData?.details ? (
                 <div className="space-y-5 text-sm">
-
                   {/* Basic Family Info */}
                   <div>
                     <h4 className="text-sm font-bold text-gray-700 mb-3 uppercase tracking-wide">
@@ -3396,56 +4440,154 @@ const DiksharthiListing = () => {
                     </h4>
 
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-
-                      <DetailItem label="Permanent Address" value={familyDetailsModalData.details.permanent_address} />
-                      <DetailItem label="Current Address" value={familyDetailsModalData.details.current_address} />
-                      <DetailItem label="Village" value={familyDetailsModalData.details.village} />
-                      <DetailItem label="Taluka" value={familyDetailsModalData.details.taluka} />
-                      <DetailItem label="District" value={familyDetailsModalData.details.district} />
-                      <DetailItem label="State" value={familyDetailsModalData.details.states} />
-                      <DetailItem label="Pin Code" value={familyDetailsModalData.details.pin_code} />
-                      <DetailItem label="House Details" value={familyDetailsModalData.details.house_details} />
-                      <DetailItem label="Type of House" value={familyDetailsModalData.details.type_of_house} />
-                      <DetailItem label="Maintenance Cost" value={familyDetailsModalData.details.maintenance_cost} />
-                      <DetailItem label="Light Bill Cost" value={familyDetailsModalData.details.light_bill_cost} />
-                      <DetailItem label="Rent Cost" value={familyDetailsModalData.details.rent_cost} />
-                      <DetailItem label="Mediclaim" value={familyDetailsModalData.details.mediclaim === "1" ? "Yes" : "No"} />
-                      <DetailItem label="Family Mediclaim Amount" value={familyDetailsModalData.details.family_mediclaim_amount} />
-                      <DetailItem label="Mediclaim Premium Amount" value={familyDetailsModalData.details.mediclaim_premium_amount} />
-                      <DetailItem label="NGO Assistance" value={familyDetailsModalData.details.ngo_assistance} />
-                      <DetailItem label="NGO Sangh Name" value={familyDetailsModalData.details.ngo_sangh_name} />
-                      <DetailItem label="NGO Amount" value={familyDetailsModalData.details.ngo_amount} />
-                      <DetailItem label="NGO Frequency" value={familyDetailsModalData.details.ngo_frequency} />
-                      <DetailItem label="NGO Remark" value={familyDetailsModalData.details.ngo_remark} />
+                      <DetailItem
+                        label="Permanent Address"
+                        value={familyDetailsModalData.details.permanent_address}
+                      />
+                      <DetailItem
+                        label="Current Address"
+                        value={familyDetailsModalData.details.current_address}
+                      />
+                      <DetailItem
+                        label="Village"
+                        value={familyDetailsModalData.details.village}
+                      />
+                      <DetailItem
+                        label="Taluka"
+                        value={familyDetailsModalData.details.taluka}
+                      />
+                      <DetailItem
+                        label="District"
+                        value={familyDetailsModalData.details.district}
+                      />
+                      <DetailItem
+                        label="State"
+                        value={familyDetailsModalData.details.states}
+                      />
+                      <DetailItem
+                        label="Pin Code"
+                        value={familyDetailsModalData.details.pin_code}
+                      />
+                      <DetailItem
+                        label="House Details"
+                        value={familyDetailsModalData.details.house_details}
+                      />
+                      <DetailItem
+                        label="Type of House"
+                        value={familyDetailsModalData.details.type_of_house}
+                      />
+                      <DetailItem
+                        label="Maintenance Cost"
+                        value={familyDetailsModalData.details.maintenance_cost}
+                      />
+                      <DetailItem
+                        label="Light Bill Cost"
+                        value={familyDetailsModalData.details.light_bill_cost}
+                      />
+                      <DetailItem
+                        label="Rent Cost"
+                        value={familyDetailsModalData.details.rent_cost}
+                      />
+                      <DetailItem
+                        label="Mediclaim"
+                        value={
+                          familyDetailsModalData.details.mediclaim === "1"
+                            ? "Yes"
+                            : "No"
+                        }
+                      />
+                      <DetailItem
+                        label="Family Mediclaim Amount"
+                        value={
+                          familyDetailsModalData.details.family_mediclaim_amount
+                        }
+                      />
+                      <DetailItem
+                        label="Mediclaim Premium Amount"
+                        value={
+                          familyDetailsModalData.details
+                            .mediclaim_premium_amount
+                        }
+                      />
+                      <DetailItem
+                        label="NGO Assistance"
+                        value={familyDetailsModalData.details.ngo_assistance}
+                      />
+                      <DetailItem
+                        label="NGO Sangh Name"
+                        value={familyDetailsModalData.details.ngo_sangh_name}
+                      />
+                      <DetailItem
+                        label="NGO Amount"
+                        value={familyDetailsModalData.details.ngo_amount}
+                      />
+                      <DetailItem
+                        label="NGO Frequency"
+                        value={familyDetailsModalData.details.ngo_frequency}
+                      />
+                      <DetailItem
+                        label="NGO Remark"
+                        value={familyDetailsModalData.details.ngo_remark}
+                      />
                     </div>
                   </div>
 
-
                   {/* Relation Details */}
                   {familyDetailsModalData.details.relation_details &&
-                    Object.keys(familyDetailsModalData.details.relation_details).length > 0 && (
+                    Object.keys(familyDetailsModalData.details.relation_details)
+                      .length > 0 && (
                       <div>
                         <h4 className="text-sm font-bold text-gray-700 mb-3 uppercase tracking-wide">
                           Relation Details
                         </h4>
 
                         <div className="space-y-4">
-                          {Object.entries(familyDetailsModalData.details.relation_details).map(
-                            ([relation, info]) => (
+                          {Object.entries(
+                            familyDetailsModalData.details.relation_details,
+                          )
+
+                            .sort(([, a], [, b]) => {
+                              if (a?.family_head && !b?.family_head) return -1;
+                              if (!a?.family_head && b?.family_head) return 1;
+                              return 0;
+                            })
+                            .map(([relation, info]) => (
                               <div
                                 key={relation}
                                 className="border border-gray-100 rounded-lg p-4 bg-gray-50"
                               >
                                 <p className="font-semibold text-gray-700 capitalize mb-3">
                                   {relation}
+                                  <span
+                                    className={`ml-2 px-2 py-1 text-xs rounded-full ${
+                                      info?.family_head
+                                        ? "bg-green-100 text-green-700"
+                                        : "bg-gray-100 text-gray-600"
+                                    }`}
+                                  >
+                                    {info?.family_head
+                                      ? "Head of Family"
+                                      : "Not Head of Family"}
+                                  </span>
                                 </p>
 
                                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-
-                                  <DetailItem label="First Name" value={info?.firstName} />
-                                  <DetailItem label="Last Name" value={info?.lastName} />
-                                  <DetailItem label="Aadhar Number" value={info?.aadharNumber} />
-                                  <DetailItem label="PAN Number" value={info?.panNumber} />
+                                  <DetailItem
+                                    label="First Name"
+                                    value={info?.firstName}
+                                  />
+                                  <DetailItem
+                                    label="Last Name"
+                                    value={info?.lastName}
+                                  />
+                                  <DetailItem
+                                    label="Aadhar Number"
+                                    value={info?.aadharNumber}
+                                  />
+                                  <DetailItem
+                                    label="PAN Number"
+                                    value={info?.panNumber}
+                                  />
 
                                   <DetailItem
                                     label="Ayushman Card"
@@ -3477,13 +4619,34 @@ const DiksharthiListing = () => {
                                     value={info?.family_head ? "Yes" : "No"}
                                   />
 
-                                  {info?.assistanceCategories && (
-                                    <DetailItem
-                                      label="Assistance Categories"
-                                      value={info.assistanceCategories.join(", ")}
-                                    />
-                                  )}
+                                  {/* {info?.assistanceCategories && (
+                                  <DetailItem
+                                    label="Assistance Categories"
+                                    value={info.assistanceCategories.join(", ")}
+                                  />
+                                )} */}
 
+                                  {info?.assistanceCategories &&
+                                    info.assistanceCategories.length > 0 && (
+                                      <div className="col-span-1 sm:col-span-3">
+                                        <p className="text-xs font-semibold text-gray-500 mb-2">
+                                          Assistance Categories
+                                        </p>
+
+                                        <div className="flex flex-wrap gap-2">
+                                          {info.assistanceCategories.map(
+                                            (item, index) => (
+                                              <span
+                                                key={index}
+                                                className="px-3 py-2 rounded-full bg-teal-100 text-teal-700 text-xs font-medium"
+                                              >
+                                                {item.assistanceType}
+                                              </span>
+                                            ),
+                                          )}
+                                        </div>
+                                      </div>
+                                    )}
                                 </div>
 
                                 {info?.photo && (
@@ -3497,15 +4660,15 @@ const DiksharthiListing = () => {
                                   />
                                 )}
                               </div>
-                            )
-                          )}
+                            ))}
                         </div>
                       </div>
                     )}
-
                 </div>
               ) : (
-                <p className="text-gray-500 py-6 text-center">No family details available.</p>
+                <p className="text-gray-500 py-6 text-center">
+                  No family details available.
+                </p>
               )}
             </div>
             <div className="px-6 py-4 border-t border-gray-100 flex justify-end">
@@ -3520,11 +4683,63 @@ const DiksharthiListing = () => {
           </div>
         </div>
       )}
+
+      {/* Approval Modal */}
+      {approvalModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+            {/* Heading */}
+            <div className="mb-5 border-b pb-3">
+              <h2 className="text-xl font-bold text-gray-800">
+                Committee Member Approval
+              </h2>
+              <p className="mt-1 text-sm text-gray-500">
+                Please select application status.
+              </p>
+            </div>
+
+            {/* Dropdown */}
+            <div className="mb-6">
+              <label className="mb-2 block text-sm font-medium text-gray-700">
+                Select Status
+              </label>
+
+              <select
+                value={approvalStatus}
+                onChange={(e) => setApprovalStatus(e.target.value)}
+                className="w-full rounded-lg border border-gray-300 px-4 py-2 outline-none focus:border-blue-500"
+              >
+                <option value="">-- Select Status --</option>
+                <option value="approved">Approve</option>
+                <option value="rejected">Reject</option>
+              </select>
+            </div>
+
+            {/* Buttons */}
+            <div className="flex justify-end gap-3">
+              <button
+                className="rounded-lg bg-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-400"
+                onClick={() => {
+                  setApprovalModal(false);
+                  setApprovalStatus("");
+                }}
+              >
+                Cancel
+              </button>
+
+              <button
+                className="rounded-lg bg-blue-600 px-5 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+                onClick={handleCommitteeApproval}
+                disabled={!approvalStatus}
+              >
+                Submit
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
 export default DiksharthiListing;
-
-
-

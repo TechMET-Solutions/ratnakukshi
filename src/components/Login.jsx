@@ -110,6 +110,7 @@ const Login = () => {
                   <option value="operations-manager">Operations Manager</option>
                   <option value="karyakarta">Karyakarta</option>
                   <option value="case-coordinator">Case Coordinator</option>
+                  <option value="ceo-panel">CEO Panel</option>
                   <option value="committee-member">Committee Member</option>
                   <option value="expert-panel">Expert Panel</option>
                 </select>

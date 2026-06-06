@@ -1,34 +1,41 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
-import Sidebar from "./components/Sidebar";
 import Login from "./components/Login";
+import Sidebar from "./components/Sidebar";
+import AccontAssistncePage from "./pages/AccontAssistncePage";
+import AddDoner from "./pages/AddDoner";
 import Assisatncedetailspage from "./Pages/Assisatncedetailspage";
 import AssistancePage from "./Pages/assistancepage";
+import AssistantForFamilyDetails from "./Pages/AssistantForFamilyDetails";
+import AssistantpageForCeo from "./Pages/assistantpageForCeo";
+import CreditPage from "./pages/CreditPage";
+import StaffDashboard from "./pages/dashboard/StaffDashboard";
+import DebitAccountPage from "./pages/DebitAccountPage";
 import { default as DiksharthiListing } from "./pages/DiksharthiDetails";
 import DiksharthiDetailsAdd from "./Pages/DiksharthiDetailsAdd";
-import FamilyDetailsForm from "./pages/FamilyDetailsForm";
-import ProtectedRoute from "./routes/ProtectedRoute";
-import PublicRoute from "./routes/PublicRoute";
-import Settings from "./pages/Settings";
 import DonorList from "./pages/DonorList";
-import AddDoner from "./pages/AddDoner";
-import RequestDetails from "./pages/RequestDetails";
-import KaryakartaList from "./pages/KaryakartaList";
-import KaryakartaDetails from "./pages/KaryakartaDetails";
 import DonorPaymentHistory from "./pages/DonorPaymentHistory";
-import UserList from "./pages/UserList";
-import KaryakartaDetailsAdd from "./pages/KaryakartaDetailsAdd";
-import Pofile from "./pages/Pofile";
-import Language from "./pages/Language";
-import ResProof from "./pages/ResProof";
-import RBFBankDetails from "./pages/RBFBankDetails";
-import CreditPage from "./pages/CreditPage";
-import DebitAccountPage from "./pages/DebitAccountPage";
-import AccontAssistncePage from "./pages/AccontAssistncePage";
+import Expenses from "./Pages/Expenses";
 import FamilyBasicInfo from "./pages/FamilyBasicInfo";
-import StaffDashboard from "./pages/dashboard/StaffDashboard";
+import FamilyDetailsForm from "./pages/FamilyDetailsForm";
+import InComing from "./Pages/InComing";
+import KaryakartaDetails from "./pages/KaryakartaDetails";
+import KaryakartaDetailsAdd from "./pages/KaryakartaDetailsAdd";
+import KaryakartaList from "./pages/KaryakartaList";
+import Language from "./pages/Language";
+import MedicalIssueType from "./Pages/MedicalIssueType";
 import MeetingSchedule from "./pages/MeetingSchedule";
 import MeetingScheduleDetails from "./pages/MeetingScheduleDetails";
+import Pofile from "./pages/Pofile";
+import RBFBankDetails from "./pages/RBFBankDetails";
 import RBFDematDetails from "./pages/RBFDematDetails";
+import RequestDetails from "./pages/RequestDetails";
+import ResProof from "./pages/ResProof";
+import Settings from "./pages/Settings";
+import UserList from "./pages/UserList";
+import ProtectedRoute from "./routes/ProtectedRoute";
+import PublicRoute from "./routes/PublicRoute";
+import DiksarthiAllDoc from "./Pages/DiksarthiAllDoc";
+import QueriesAssistant from "./Pages/QueriesAssistant";
 
 const Layout = ({ children }) => {
   return (
@@ -43,7 +50,6 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-
         {/* Public Route */}
         <Route
           path="/login"
@@ -116,7 +122,16 @@ function App() {
             </ProtectedRoute>
           }
         />
-
+ <Route
+          path="/diksarthi-all-doc"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <DiksarthiAllDoc />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/diksharthi-details-add"
           element={
@@ -138,7 +153,16 @@ function App() {
             </ProtectedRoute>
           }
         />
-
+        <Route
+          path="/family-Assistance-details"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <AssistantForFamilyDetails />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/assistance"
           element={
@@ -150,6 +174,26 @@ function App() {
           }
         />
 
+        <Route
+          path="/queries-assistance"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <QueriesAssistant />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/CEO/assistance"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <AssistantpageForCeo />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/assistance-details"
           element={
@@ -230,7 +274,7 @@ function App() {
             </ProtectedRoute>
           }
         />
-       
+
         <Route
           path="/karyakarta/:id"
           element={
@@ -292,6 +336,37 @@ function App() {
           }
         />
         <Route
+          path="/Expenses"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <Expenses />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/InComing"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <InComing />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/Medical-Issue-Type"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <MedicalIssueType />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/account-assistnce"
           element={
             <ProtectedRoute>
@@ -321,7 +396,6 @@ function App() {
             </ProtectedRoute>
           }
         />
-
       </Routes>
     </BrowserRouter>
   );

@@ -17,11 +17,15 @@ const parseMaybeJson = (value) => {
 const asObject = (value) => (value && typeof value === "object" ? value : {});
 const DOC_ACCEPT = ".png,.jpg,.jpeg,.pdf";
 const IMAGE_ACCEPT = ".png,.jpg,.jpeg";
-const DOC_ALLOWED_TYPES = ["image/png", "image/jpeg", "image/jpg", "application/pdf"];
+const DOC_ALLOWED_TYPES = [
+  "image/png",
+  "image/jpeg",
+  "image/jpg",
+  "application/pdf",
+];
 const IMAGE_ALLOWED_TYPES = ["image/png", "image/jpeg", "image/jpg"];
 
 function AddDonor() {
-
   const navigate = useNavigate();
 
   const location = useLocation();
@@ -51,13 +55,13 @@ function AddDonor() {
       panNumber: "",
       panFile: null,
       photo: null,
-      donorType:"",
+      donorType: "",
     },
 
     contactPerson: {
       contactPersonName: "",
       contactPersonMobile: "",
-      contactPersonEmail:"",
+      contactPersonEmail: "",
     },
 
     residentialAddress: {
@@ -66,7 +70,7 @@ function AddDonor() {
       pincode: "",
       contactCode: "",
       contactNumber: "",
-      proof: "",
+       proof: null,
       preferredAddress: "",
     },
 
@@ -110,11 +114,8 @@ function AddDonor() {
       installments: [],
     },
   });
-
-
-    const [postOffices, setPostOffices] = useState([]);
-  
-
+console.log(formData,"FormData")
+  const [postOffices, setPostOffices] = useState([]);
 
   const requiredFields = {
     personalDetails: [
@@ -130,7 +131,11 @@ function AddDonor() {
       "panNumber",
       "donorType",
     ],
-    contactPerson: ["contactPersonName", "contactPersonMobile", "contactPersonEmail"],
+    contactPerson: [
+      "contactPersonName",
+      "contactPersonMobile",
+      "contactPersonEmail",
+    ],
     residentialAddress: [
       "address1",
       "city",
@@ -151,11 +156,6 @@ function AddDonor() {
     ],
   };
 
- 
-
-
-  
-
   const validateRequiredFields = () => {
     const newErrors = {};
 
@@ -174,15 +174,15 @@ function AddDonor() {
     return Object.keys(newErrors).length === 0;
   };
 
-
   const [errors, setErrors] = useState({});
   const [installmentError, setInstallmentError] = useState("");
-  const [requiredValidationTriggered, setRequiredValidationTriggered] = useState({
-    1: false,
-    2: false,
-    3: false,
-    4: false,
-  });
+  const [requiredValidationTriggered, setRequiredValidationTriggered] =
+    useState({
+      1: false,
+      2: false,
+      3: false,
+      4: false,
+    });
 
   const validateStep1 = (showAlert = false, showRequired = true) => {
     const e = {};
@@ -242,7 +242,6 @@ function AddDonor() {
       e.email = "Invalid email format";
     }
 
-  
     // Required: Aadhaar Number
     if (showRequired && !data.aadhaarNumber) {
       e.aadhaarNumber = "Aadhaar number required";
@@ -271,9 +270,6 @@ function AddDonor() {
     if (showRequired && !data.photo) {
       e.photo = "Photo upload is required";
     }
-
-    
-  
 
     setErrors(e);
     if (showAlert && Object.keys(e).length > 0) {
@@ -405,127 +401,457 @@ function AddDonor() {
   const validateStep4 = () => {
     return true;
   };
-  
-  const handleSubmit = async () => {
-    try {
-      // ============ STEP 4 Validation REMOVE ===================
-      // Validate Step 4 (Payment Details) before submission
-      // const isValidStep4 = validateStep4();
-      // if (!isValidStep4) {
-      //   return;
-      // }
 
-      const resolvedDonorId =
-        editDonorId || formData?.id || formData?.donor_id || null;
+  // const handleSubmit = async () => {
+  //   try {
+     
+  //     const installmentError = validateInstallments();
+
+  //     if (installmentError) {
+  //       alert(installmentError);
+  //       return; // ❌ Stop form submit
+  //     }
+  //     const resolvedDonorId =
+  //       editDonorId || formData?.id || formData?.donor_id || null;
+
       
-// ============ STEP 4 Validation REMOVE ===================
-      // const error = validateInstallments();
-      // if (error) {
-      //   alert(error);
-      //   return;
-      // }
 
-      if (!isValidAadhaar(formData.personalDetails.aadhaarNumber)) {
-        alert("Aadhaar must be 12 digits only");
-        return;
-      }
+  //     if (!isValidAadhaar(formData.personalDetails.aadhaarNumber)) {
+  //       alert("Aadhaar must be 12 digits only");
+  //       return;
+  //     }
 
-      if (!isValidPAN(formData.personalDetails.panNumber)) {
-        alert("PAN must be in format AAAAA9999A");
-        return;
-      }
+  //     if (!isValidPAN(formData.personalDetails.panNumber)) {
+  //       alert("PAN must be in format AAAAA9999A");
+  //       return;
+  //     }
 
-      const payload = {
-        ...formData,
-        personalDetails: {
-          ...formData.personalDetails,
-        },
-        familyDetails: {
-          ...formData.familyDetails,
-        },
-      };
+  //     const payload = {
+  //       ...formData,
+  //       personalDetails: {
+  //         ...formData.personalDetails,
+  //       },
+  //       familyDetails: {
+  //         ...formData.familyDetails,
+  //       },
+  //     };
 
-      if (isEditMode) {
-        if (!resolvedDonorId) {
-          alert("Donor id is missing for update.");
-          return;
-        }
-        payload.id = resolvedDonorId;
-        payload.donor_id = resolvedDonorId;
-      }
+  //     if (isEditMode) {
+  //       if (!resolvedDonorId) {
+  //         alert("Donor id is missing for update.");
+  //         return;
+  //       }
+  //       payload.id = resolvedDonorId;
+  //       payload.donor_id = resolvedDonorId;
+  //     }
 
-      const requestData = new FormData();
-      requestData.append(
-        "personalDetails",
-        JSON.stringify({
-          ...payload.personalDetails,
-          photo: undefined,
-          panFile: undefined,
-          aadhaarFile: undefined,
-        }),
-      );
-      requestData.append("contactPerson", JSON.stringify(payload.contactPerson));
-      requestData.append(
-        "residentialAddress",
-        JSON.stringify(payload.residentialAddress),
-      );
-      requestData.append(
-        "communicationAddress",
-        JSON.stringify(payload.communicationAddress),
-      );
-      requestData.append("companyDetails", JSON.stringify(payload.companyDetails));
-      requestData.append("familyDetails", JSON.stringify(payload.familyDetails));
-      requestData.append("nomineeDetails", JSON.stringify(payload.nomineeDetails));
-      requestData.append("paymentDetails", JSON.stringify(payload.paymentDetails));
+  //     const requestData = new FormData();
+  //     requestData.append(
+  //       "personalDetails",
+  //       JSON.stringify({
+  //         ...payload.personalDetails,
+  //         photo: undefined,
+  //         panFile: undefined,
+  //         aadhaarFile: undefined,
+  //       }),
+  //     );
+  //     requestData.append(
+  //       "contactPerson",
+  //       JSON.stringify(payload.contactPerson),
+  //     );
+  //     requestData.append(
+  //       "residentialAddress",
+  //       JSON.stringify(payload.residentialAddress),
+  //     );
+  //     requestData.append(
+  //       "communicationAddress",
+  //       JSON.stringify(payload.communicationAddress),
+  //     );
+  //     requestData.append(
+  //       "companyDetails",
+  //       JSON.stringify(payload.companyDetails),
+  //     );
+  //     requestData.append(
+  //       "familyDetails",
+  //       JSON.stringify(payload.familyDetails),
+  //     );
+  //     requestData.append(
+  //       "nomineeDetails",
+  //       JSON.stringify(payload.nomineeDetails),
+  //     );
+  //     requestData.append(
+  //       "paymentDetails",
+  //       JSON.stringify(payload.paymentDetails),
+  //     );
 
-      if (formData.personalDetails.photo instanceof File) {
-        requestData.append("photo", formData.personalDetails.photo);
-      }
-      if (formData.personalDetails.aadhaarFile instanceof File) {
-        requestData.append("aadhaarFile", formData.personalDetails.aadhaarFile);
-      }
-      if (formData.personalDetails.panFile instanceof File) {
-        requestData.append("panFile", formData.personalDetails.panFile);
-      }
+  //     if (formData.personalDetails.photo instanceof File) {
+  //       requestData.append("photo", formData.personalDetails.photo);
+  //     }
+  //     if (formData.personalDetails.aadhaarFile instanceof File) {
+  //       requestData.append("aadhaarFile", formData.personalDetails.aadhaarFile);
+  //     }
+  //     if (formData.personalDetails.panFile instanceof File) {
+  //       requestData.append("panFile", formData.personalDetails.panFile);
+  //     }
 
-      const response = await fetch(
-        donorId
-          ? `${API}/api/donor/update/${donorId}`  // ✅ UPDATE
-          : `${API}/api/donor/create`,           // fallback
-        {
-          method: donorId ? "PUT" : "POST",
-          body: requestData,
-        }
-      );
+  //     const response = await fetch(
+  //       donorId
+  //         ? `${API}/api/donor/update/${donorId}` // ✅ UPDATE
+  //         : `${API}/api/donor/create`, // fallback
+  //       {
+  //         method: donorId ? "PUT" : "POST",
+  //         body: requestData,
+  //       },
+  //     );
 
-      const data = await response.json();
+  //     const data = await response.json();
 
-      if (!response.ok || data?.success === false) {
-        throw new Error(data?.message || "Failed to save donor");
-      }
+  //     if (!response.ok || data?.success === false) {
+  //       throw new Error(data?.message || "Failed to save donor");
+  //     }
 
-      alert(
-        isEditMode ? "Members and Contributions Updated Successfully" : "Members and Contributions Created Successfully",
-      );
+  //     alert(
+  //       isEditMode
+  //         ? "Members and Contributions Updated Successfully"
+  //         : "Members and Contributions Created Successfully",
+  //     );
 
-      navigate("/members-contributions");
+  //     navigate("/members-contributions");
 
-      console.log(data);
-    } catch (error) {
-      console.log(error);
-      alert(error.message || "Failed to save donor");
+  //     console.log(data);
+  //   } catch (error) {
+  //     console.log(error);
+  //     alert(error.message || "Failed to save donor");
+  //   }
+  // };
+// =============================
+// HANDLE SUBMIT
+// =============================
+const handleSubmit = async () => {
+  try {
+
+    // ================= VALIDATIONS =================
+    const installmentError =
+      validateInstallments();
+
+    if (installmentError) {
+      alert(installmentError);
+      return;
     }
-  };
 
+    const resolvedDonorId =
+      editDonorId ||
+      formData?.id ||
+      formData?.donor_id ||
+      null;
 
+    if (
+      !isValidAadhaar(
+        formData.personalDetails.aadhaarNumber
+      )
+    ) {
+      alert("Aadhaar must be 12 digits only");
+      return;
+    }
 
+    if (
+      !isValidPAN(
+        formData.personalDetails.panNumber
+      )
+    ) {
+      alert(
+        "PAN must be in format AAAAA9999A"
+      );
+      return;
+    }
+
+    // ================= PAYLOAD =================
+    const requestData = new FormData();
+
+    // ===== PERSONAL DETAILS =====
+    requestData.append(
+      "personalDetails",
+      JSON.stringify({
+        ...formData.personalDetails,
+
+        // remove file objects
+        photo: undefined,
+        aadhaarFile: undefined,
+        panFile: undefined,
+      })
+    );
+
+    // ===== CONTACT PERSON =====
+    requestData.append(
+      "contactPerson",
+      JSON.stringify(
+        formData.contactPerson
+      )
+    );
+
+    // ===== RESIDENTIAL ADDRESS =====
+    requestData.append(
+      "residentialAddress",
+      JSON.stringify({
+        ...formData.residentialAddress,
+
+        // send proof type only
+        proof:
+          formData.residentialAddress
+            .proofType || "",
+
+        // remove actual file
+        resProofFile: undefined,
+      })
+    );
+
+    // ===== COMMUNICATION ADDRESS =====
+    requestData.append(
+      "communicationAddress",
+      JSON.stringify(
+        formData.communicationAddress
+      )
+    );
+
+    // ===== COMPANY DETAILS =====
+    requestData.append(
+      "companyDetails",
+      JSON.stringify(
+        formData.companyDetails
+      )
+    );
+
+    // ===== FAMILY DETAILS =====
+    requestData.append(
+      "familyDetails",
+      JSON.stringify(
+        formData.familyDetails
+      )
+    );
+
+    // ===== NOMINEE DETAILS =====
+    requestData.append(
+      "nomineeDetails",
+      JSON.stringify(
+        formData.nomineeDetails
+      )
+    );
+
+    // ===== PAYMENT DETAILS =====
+    requestData.append(
+      "paymentDetails",
+      JSON.stringify(
+        formData.paymentDetails
+      )
+    );
+
+    // ================= FILES =================
+
+    // PHOTO
+    if (
+      formData.personalDetails.photo instanceof
+      File
+    ) {
+      requestData.append(
+        "photo",
+        formData.personalDetails.photo
+      );
+    }
+
+    // AADHAAR FILE
+    if (
+      formData.personalDetails
+        .aadhaarFile instanceof File
+    ) {
+      requestData.append(
+        "aadhaarFile",
+        formData.personalDetails
+          .aadhaarFile
+      );
+    }
+
+    // PAN FILE
+    if (
+      formData.personalDetails.panFile instanceof
+      File
+    ) {
+      requestData.append(
+        "panFile",
+        formData.personalDetails.panFile
+      );
+    }
+
+    // ================= RESIDENTIAL PROOF FILE =================
+    if (
+      formData.residentialAddress
+        .resProofFile instanceof File
+    ) {
+      requestData.append(
+        "resProofFile",
+        formData.residentialAddress
+          .resProofFile
+      );
+    }
+
+    // ================= EDIT MODE =================
+    if (isEditMode) {
+
+      if (!resolvedDonorId) {
+        alert(
+          "Donor id is missing for update."
+        );
+        return;
+      }
+
+      requestData.append(
+        "id",
+        resolvedDonorId
+      );
+
+      requestData.append(
+        "donor_id",
+        resolvedDonorId
+      );
+    }
+
+    // ================= API =================
+    const response = await fetch(
+      donorId
+        ? `${API}/api/donor/update/${donorId}`
+        : `${API}/api/donor/create`,
+      {
+        method: donorId ? "PUT" : "POST",
+        body: requestData,
+      }
+    );
+
+    const data = await response.json();
+
+    if (
+      !response.ok ||
+      data?.success === false
+    ) {
+      throw new Error(
+        data?.message ||
+          "Failed to save donor"
+      );
+    }
+
+    alert(
+      isEditMode
+        ? "Members and Contributions Updated Successfully"
+        : "Members and Contributions Created Successfully"
+    );
+
+    navigate(
+      "/members-contributions"
+    );
+
+    console.log(data);
+
+  } catch (error) {
+
+    console.log(error);
+
+    alert(
+      error.message ||
+        "Failed to save donor"
+    );
+  }
+};
   const [numInstallments, setNumInstallments] = useState("");
   const [photo, setPhoto] = useState(null);
   const [languageOptions, setLanguageOptions] = useState([]);
   const [isLanguageLoading, setIsLanguageLoading] = useState(false);
   const [resProofOptions, setResProofOptions] = useState([]);
   const [isResProofLoading, setIsResProofLoading] = useState(false);
+// useEffect(() => {
+//   const totalAmount = Number(
+//     formData.paymentDetails.totalInstallmentsAmount
+//   );
+//   const installmentsCount = Number(numInstallments);
 
+//   if (
+//     totalAmount > 0 &&
+//     installmentsCount > 0
+//   ) {
+//     const amountPerInstallment = (
+//       totalAmount / installmentsCount
+//     ).toFixed(2);
+
+//     const today = new Date();
+
+//     const installments = Array.from(
+//       { length: installmentsCount },
+//       (_, index) => {
+//         const dueDate = new Date(today);
+
+//         // 1 year difference for each installment
+//         dueDate.setFullYear(today.getFullYear() + index);
+
+//         return {
+//           amount: amountPerInstallment,
+//           dueDate: dueDate.toISOString().split("T")[0],
+//         };
+//       }
+//     );
+
+//     setFormData((prev) => ({
+//       ...prev,
+//       paymentDetails: {
+//         ...prev.paymentDetails,
+//         installments,
+//       },
+//     }));
+//   }
+// }, [
+//   numInstallments,
+//   formData.paymentDetails.totalInstallmentsAmount,
+// ]);
+
+useEffect(() => {
+  const totalAmount = Number(
+    formData.paymentDetails.totalInstallmentsAmount
+  );
+  const installmentsCount = Number(numInstallments);
+
+  if (totalAmount > 0 && installmentsCount > 0) {
+    const amountPerInstallment = (
+      totalAmount / installmentsCount
+    ).toFixed(2);
+
+    const today = new Date();
+
+    const installments = Array.from(
+      { length: installmentsCount },
+      (_, index) => {
+        const dueDate = new Date(today);
+
+        // 1 year difference for each installment
+        dueDate.setFullYear(today.getFullYear() + index);
+
+        return {
+          id: `INS-${Date.now()}-${index + 1}`, // Unique Installment ID
+          installmentNo: index + 1,
+          amount: amountPerInstallment,
+          dueDate: dueDate.toISOString().split("T")[0],
+          status: "Pending",
+        };
+      }
+    );
+
+    setFormData((prev) => ({
+      ...prev,
+      paymentDetails: {
+        ...prev.paymentDetails,
+        installments,
+      },
+    }));
+  }
+}, [
+  numInstallments,
+  formData.paymentDetails.totalInstallmentsAmount,
+]);
   useEffect(() => {
     const fetchActiveLanguages = async () => {
       try {
@@ -547,7 +873,6 @@ function AddDonor() {
             value: item.name,
           }));
         setLanguageOptions(activeLanguages);
-
       } catch (error) {
         console.error("Error fetching active languages:", error);
         setLanguageOptions([]);
@@ -558,7 +883,6 @@ function AddDonor() {
 
     fetchActiveLanguages();
   }, []);
-
 
   useEffect(() => {
     const fetchActiveResProof = async () => {
@@ -577,7 +901,7 @@ function AddDonor() {
           .filter(
             (item) =>
               String(item?.status || "").toLowerCase() === "active" &&
-              String(item?.name || "").trim()
+              String(item?.name || "").trim(),
           )
           .map((item) => ({
             label: item.name,
@@ -585,8 +909,7 @@ function AddDonor() {
           }));
 
         setResProofOptions(activeResProofs);
-        console.log("test", activeResProofs)
-
+        console.log("test", activeResProofs);
       } catch (error) {
         console.error("Error fetching res proof:", error);
         setResProofOptions([]);
@@ -640,7 +963,9 @@ function AddDonor() {
         if (!donor) return;
 
         const personalDetails = asObject(
-          parseMaybeJson(donor?.personalDetails ?? donor?.personal_details ?? {}),
+          parseMaybeJson(
+            donor?.personalDetails ?? donor?.personal_details ?? {},
+          ),
         );
         const contactPerson = asObject(
           parseMaybeJson(donor?.contactPerson ?? donor?.contact_person ?? {}),
@@ -711,7 +1036,9 @@ function AddDonor() {
           },
         }));
 
-        setNumInstallments(installments.length ? String(installments.length) : "");
+        setNumInstallments(
+          installments.length ? String(installments.length) : "",
+        );
         setPhoto(personalDetails?.photo ?? null);
       } catch (error) {
         console.log("Error fetching donor details:", error);
@@ -766,21 +1093,44 @@ function AddDonor() {
     "Nominee Details",
     "Payment Details",
   ];
-  
 
   const updateDonor = async () => {
     if (!donorId) return;
 
     const formDataToSend = new FormData();
 
-    formDataToSend.append("personalDetails", JSON.stringify(formData.personalDetails));
-    formDataToSend.append("contactPerson", JSON.stringify(formData.contactPerson));
-    formDataToSend.append("residentialAddress", JSON.stringify(formData.residentialAddress));
-    formDataToSend.append("communicationAddress", JSON.stringify(formData.communicationAddress));
-    formDataToSend.append("companyDetails", JSON.stringify(formData.companyDetails));
-    formDataToSend.append("familyDetails", JSON.stringify(formData.familyDetails));
-    formDataToSend.append("nomineeDetails", JSON.stringify(formData.nomineeDetails));
-    formDataToSend.append("paymentDetails", JSON.stringify(formData.paymentDetails));
+    formDataToSend.append(
+      "personalDetails",
+      JSON.stringify(formData.personalDetails),
+    );
+    formDataToSend.append(
+      "contactPerson",
+      JSON.stringify(formData.contactPerson),
+    );
+    formDataToSend.append(
+      "residentialAddress",
+      JSON.stringify(formData.residentialAddress),
+    );
+    formDataToSend.append(
+      "communicationAddress",
+      JSON.stringify(formData.communicationAddress),
+    );
+    formDataToSend.append(
+      "companyDetails",
+      JSON.stringify(formData.companyDetails),
+    );
+    formDataToSend.append(
+      "familyDetails",
+      JSON.stringify(formData.familyDetails),
+    );
+    formDataToSend.append(
+      "nomineeDetails",
+      JSON.stringify(formData.nomineeDetails),
+    );
+    formDataToSend.append(
+      "paymentDetails",
+      JSON.stringify(formData.paymentDetails),
+    );
 
     await fetch(`${API}/api/donor/update/${donorId}`, {
       method: "PUT",
@@ -789,88 +1139,100 @@ function AddDonor() {
   };
 
   const handleNext = async (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  setRequiredValidationTriggered((prev) => ({
-    ...prev,
-    [currentStep]: true,
-  }));
+    setRequiredValidationTriggered((prev) => ({
+      ...prev,
+      [currentStep]: true,
+    }));
 
-  try {
-    setIsLoading(true); // 🔥 START LOADING
+    try {
+      setIsLoading(true); // 🔥 START LOADING
 
-    if (currentStep === 1) {
-      const isValid = validateStep1(true, true);
-      if (!isValid) return;
+      if (currentStep === 1) {
+        const isValid = validateStep1(true, true);
+        if (!isValid) return;
 
-      if (!donorId && !isEditMode) {
-        const formDataToSend = new FormData();
+        if (!donorId && !isEditMode) {
+          const formDataToSend = new FormData();
 
-        formDataToSend.append("personalDetails", JSON.stringify(formData.personalDetails));
-        formDataToSend.append("contactPerson", JSON.stringify(formData.contactPerson));
-        formDataToSend.append("residentialAddress", JSON.stringify(formData.residentialAddress));
-        formDataToSend.append("communicationAddress", JSON.stringify(formData.communicationAddress));
-        formDataToSend.append("companyDetails", JSON.stringify(formData.companyDetails));
+          formDataToSend.append(
+            "personalDetails",
+            JSON.stringify(formData.personalDetails),
+          );
+          formDataToSend.append(
+            "contactPerson",
+            JSON.stringify(formData.contactPerson),
+          );
+          formDataToSend.append(
+            "residentialAddress",
+            JSON.stringify(formData.residentialAddress),
+          );
+          formDataToSend.append(
+            "communicationAddress",
+            JSON.stringify(formData.communicationAddress),
+          );
+          formDataToSend.append(
+            "companyDetails",
+            JSON.stringify(formData.companyDetails),
+          );
 
-        // ✅ files
-        if (formData.personalDetails.photo) {
-          formDataToSend.append("photo", formData.personalDetails.photo);
+          // ✅ files
+          if (formData.personalDetails.photo) {
+            formDataToSend.append("photo", formData.personalDetails.photo);
+          }
+          if (formData.personalDetails.aadhaarFile) {
+            formDataToSend.append(
+              "aadhaarFile",
+              formData.personalDetails.aadhaarFile,
+            );
+          }
+          if (formData.personalDetails.panFile) {
+            formDataToSend.append("panFile", formData.personalDetails.panFile);
+          }
+
+          const res = await fetch(`${API}/api/donor/create`, {
+            method: "POST",
+            body: formDataToSend,
+          });
+
+          const data = await res.json();
+
+          if (!data.success) {
+            alert("Step 1 save failed");
+            return;
+          }
+
+          setDonorId(data.donorId);
+        } else {
+          await updateDonor();
         }
-        if (formData.personalDetails.aadhaarFile) {
-          formDataToSend.append("aadhaarFile", formData.personalDetails.aadhaarFile);
-        }
-        if (formData.personalDetails.panFile) {
-          formDataToSend.append("panFile", formData.personalDetails.panFile);
-        }
+      } else if (currentStep === 2) {
+        const isValid = validateStep2(true, true);
+        if (!isValid) return;
 
-        const res = await fetch(`${API}/api/donor/create`, {
-          method: "POST",
-          body: formDataToSend,
-        });
+        await updateDonor();
+      } else if (currentStep === 3) {
+        const isValid = validateStep3(true, true);
+        if (!isValid) return;
 
-        const data = await res.json();
-
-        if (!data.success) {
-          alert("Step 1 save failed");
-          return;
-        }
-
-        setDonorId(data.donorId);
-      } else {
         await updateDonor();
       }
+
+      setCurrentStep((prev) => prev + 1);
+    } catch (err) {
+      console.log(err);
+      alert("Something went wrong");
+    } finally {
+      setIsLoading(false); // 🔥 STOP LOADING
     }
+  };
 
-    else if (currentStep === 2) {
-      const isValid = validateStep2(true, true);
-      if (!isValid) return;
-
-      await updateDonor();
-    }
-
-    else if (currentStep === 3) {
-      const isValid = validateStep3(true, true);
-      if (!isValid) return;
-
-      await updateDonor();
-    }
-
-    setCurrentStep((prev) => prev + 1);
-  } catch (err) {
-    console.log(err);
-    alert("Something went wrong");
-  } finally {
-    setIsLoading(false); // 🔥 STOP LOADING
-  }
-};
-
-  
   useEffect(() => {
     if (editDonorId) {
       setDonorId(editDonorId);
     }
   }, [editDonorId]);
-
 
   const handlePrevious = (e) => {
     e.preventDefault();
@@ -880,14 +1242,13 @@ function AddDonor() {
     }
   };
 
-
   const handleRemoveChild = (id) => {
     setFormData((prev) => ({
       ...prev,
       familyDetails: {
         ...prev.familyDetails,
         children: prev.familyDetails.children.filter(
-          (child) => child.id !== id
+          (child) => child.id !== id,
         ),
       },
     }));
@@ -899,22 +1260,52 @@ function AddDonor() {
       familyDetails: {
         ...prev.familyDetails,
         children: prev.familyDetails.children.map((child) =>
-          child.id === id ? { ...child, [field]: value } : child
+          child.id === id ? { ...child, [field]: value } : child,
         ),
       },
     }));
   };
 
-  const handleChange = (section, field, value) => {
-    setFormData((prev) => ({
-      ...prev,
-      [section]: {
-        ...prev[section],
-        [field]: value,
-      },
-    }));
-  };
+ const handleChange = (section, field, value) => {
+  setFormData((prev) => ({
+    ...prev,
+    [section]: {
+      ...prev[section],
+      [field]: value,
+    },
+  }));
+};
+const handleFileUpload = (
+  e,
+  section,
+  field
+) => {
+  const file = e.target.files[0];
 
+  if (!file) return;
+
+  // ✅ Allowed file types
+  const allowedTypes = [
+    "image/png",
+    "image/jpeg",
+    "image/jpg",
+    "application/pdf",
+  ];
+
+  if (!allowedTypes.includes(file.type)) {
+    alert("Only PNG, JPG, JPEG, PDF allowed");
+    return;
+  }
+
+  // ✅ Max size 2MB
+  if (file.size > 2 * 1024 * 1024) {
+    alert("File size must be less than 2MB");
+    return;
+  }
+
+  // ✅ Store file in state
+  handleChange(section, field, file);
+};
   const getMaxDOB = () => {
     const today = new Date();
     today.setFullYear(today.getFullYear() - 18);
@@ -922,18 +1313,38 @@ function AddDonor() {
     return today.toISOString().split("T")[0]; // YYYY-MM-DD
   };
 
+  // const validateInstallments = () => {
+  //   const totalAmount = Number(formData.paymentDetails.totalInstallmentsAmount || 0);
+
+  //   const installmentAmounts = formData.paymentDetails.installments || [];
+
+  //   const sum = installmentAmounts.reduce(
+  //     (acc, item) => acc + Number(item.amount || 0),
+  //     0
+  //   );
+
+  //   if (sum !== totalAmount) {
+  //     return "Total installment amount and sum of installments must be equal";
+  //   }
+
+  //   return "";
+  // };
+
   const validateInstallments = () => {
-    const totalAmount = Number(formData.paymentDetails.totalInstallmentsAmount || 0);
+    const totalAmount = Number(
+      formData.paymentDetails.totalInstallmentsAmount || 0,
+    );
 
     const installmentAmounts = formData.paymentDetails.installments || [];
 
     const sum = installmentAmounts.reduce(
       (acc, item) => acc + Number(item.amount || 0),
-      0
+      0,
     );
 
+    // ✅ Only allow when both amounts match
     if (sum !== totalAmount) {
-      return "Total installment amount and sum of installments must be equal";
+      return `Installment total mismatch. Total Amount: ${totalAmount}, Installments Sum: ${sum}`;
     }
 
     return "";
@@ -987,31 +1398,36 @@ function AddDonor() {
     }));
   };
 
-
   // PINCODE VAlication
 
   const fetchPincodeDetails = async (pincode) => {
-  try {
-    const response = await fetch(`https://api.postalpincode.in/pincode/${pincode}`);
-    const data = await response.json();
-    const postOffice = data?.[0]?.PostOffice?.[0];
+    try {
+      const response = await fetch(
+        `https://api.postalpincode.in/pincode/${pincode}`,
+      );
+      const data = await response.json();
+      const postOffice = data?.[0]?.PostOffice?.[0];
 
-    if (data?.[0]?.Status === "Success" && postOffice) {
-      setPostOffices(data[0].PostOffice);
-      handleChange("nomineeDetails", "nomineecity", postOffice.District || "");
-      handleChange("nomineeDetails", "nomineestate", postOffice.State || "");
-    } else {
+      if (data?.[0]?.Status === "Success" && postOffice) {
+        setPostOffices(data[0].PostOffice);
+        handleChange(
+          "nomineeDetails",
+          "nomineecity",
+          postOffice.District || "",
+        );
+        handleChange("nomineeDetails", "nomineestate", postOffice.State || "");
+      } else {
+        setPostOffices([]);
+        handleChange("nomineeDetails", "nomineecity", "");
+        handleChange("nomineeDetails", "nomineestate", "");
+      }
+    } catch (error) {
+      console.error(error);
       setPostOffices([]);
       handleChange("nomineeDetails", "nomineecity", "");
       handleChange("nomineeDetails", "nomineestate", "");
     }
-  } catch (error) {
-    console.error(error);
-    setPostOffices([]);
-    handleChange("nomineeDetails", "nomineecity", "");
-    handleChange("nomineeDetails", "nomineestate", "");
-  }
-};
+  };
 
   const getFilePreviewUrl = (fileValue) => {
     if (!fileValue) return "";
@@ -1036,7 +1452,6 @@ function AddDonor() {
       setTimeout(() => URL.revokeObjectURL(previewUrl), 60 * 1000);
     }
   };
-
 
   return (
     <div className="min-h-screen bg-gray-50 flex p-6 justify-center">
@@ -1107,10 +1522,16 @@ function AddDonor() {
                     value={formData.personalDetails.firstName}
                     className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                     onChange={(e) =>
-                      handleChange("personalDetails", "firstName", e.target.value)
+                      handleChange(
+                        "personalDetails",
+                        "firstName",
+                        e.target.value,
+                      )
                     }
                   />
-                  {errors.firstName && <p className="text-red-500 text-xs">{errors.firstName}</p>}
+                  {errors.firstName && (
+                    <p className="text-red-500 text-xs">{errors.firstName}</p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -1121,11 +1542,16 @@ function AddDonor() {
                     value={formData.personalDetails.lastName}
                     className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                     onChange={(e) =>
-                      handleChange("personalDetails", "lastName", e.target.value)
+                      handleChange(
+                        "personalDetails",
+                        "lastName",
+                        e.target.value,
+                      )
                     }
                   />
-                  {errors.lastName && <p className="text-red-500 text-xs">{errors.lastName}</p>}
-
+                  {errors.lastName && (
+                    <p className="text-red-500 text-xs">{errors.lastName}</p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -1134,13 +1560,10 @@ function AddDonor() {
                   <select
                     value={formData.personalDetails.gender}
                     onChange={(e) =>
-                      handleChange(
-                        "personalDetails",
-                        "gender",
-                        e.target.value
-                      )
+                      handleChange("personalDetails", "gender", e.target.value)
                     }
-                    className="w-full p-2 border border-slate-300 rounded-md outline-none focus:ring-2 focus:ring-blue-100">
+                    className="w-full p-2 border border-slate-300 rounded-md outline-none focus:ring-2 focus:ring-blue-100"
+                  >
                     <option value="#">Select</option>
                     {GENDER.map((item) => (
                       <option key={item.value} value={item.value}>
@@ -1148,7 +1571,9 @@ function AddDonor() {
                       </option>
                     ))}
                   </select>
-                  {errors.gender && <p className="text-red-500 text-xs">{errors.gender}</p>}
+                  {errors.gender && (
+                    <p className="text-red-500 text-xs">{errors.gender}</p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -1159,15 +1584,13 @@ function AddDonor() {
                     max={getMaxDOB()} // 🔥 restrict future + under 18
                     value={formData.personalDetails.dob}
                     onChange={(e) =>
-                      handleChange(
-                        "personalDetails",
-                        "dob",
-                        e.target.value,
-                      )
+                      handleChange("personalDetails", "dob", e.target.value)
                     }
                     className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                   />
-                  {errors.dob && <p className="text-red-500 text-xs">{errors.dob}</p>}
+                  {errors.dob && (
+                    <p className="text-red-500 text-xs">{errors.dob}</p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -1200,13 +1623,15 @@ function AddDonor() {
                       handleChange(
                         "personalDetails",
                         "mobileNumber",
-                        onlyNumbers
+                        onlyNumbers,
                       );
                     }}
                     className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                   />
                   {errors.mobileNumber && (
-                    <p className="text-red-500 text-xs">{errors.mobileNumber}</p>
+                    <p className="text-red-500 text-xs">
+                      {errors.mobileNumber}
+                    </p>
                   )}
                 </div>
                 <div>
@@ -1223,13 +1648,15 @@ function AddDonor() {
                       handleChange(
                         "personalDetails",
                         "altMobileNumber",
-                        onlyNumbers
+                        onlyNumbers,
                       );
                     }}
                     className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                   />
                   {errors.altMobileNumber && (
-                    <p className="text-red-500 text-xs">{errors.altMobileNumber}</p>
+                    <p className="text-red-500 text-xs">
+                      {errors.altMobileNumber}
+                    </p>
                   )}
                 </div>
                 <div>
@@ -1244,7 +1671,9 @@ function AddDonor() {
                     }
                     className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                   />
-                  {errors.email && <p className="text-red-500 text-xs">{errors.email}</p>}
+                  {errors.email && (
+                    <p className="text-red-500 text-xs">{errors.email}</p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -1257,7 +1686,7 @@ function AddDonor() {
                       handleChange(
                         "personalDetails",
                         "bloodGroup",
-                        e.target.value
+                        e.target.value,
                       )
                     }
                     className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
@@ -1269,7 +1698,6 @@ function AddDonor() {
                       </option>
                     ))}
                   </select>
-
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -1281,7 +1709,7 @@ function AddDonor() {
                       handleChange(
                         "personalDetails",
                         "motherTongue",
-                        e.target.value
+                        e.target.value,
                       )
                     }
                     className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
@@ -1313,7 +1741,6 @@ function AddDonor() {
                     }
                     className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                   />
-
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -1325,12 +1752,20 @@ function AddDonor() {
                     value={formData.personalDetails.aadhaarNumber || ""}
                     onChange={(e) => {
                       const onlyNumbers = e.target.value.replace(/\D/g, "");
-                      handleChange("personalDetails", "aadhaarNumber", onlyNumbers);
+                      handleChange(
+                        "personalDetails",
+                        "aadhaarNumber",
+                        onlyNumbers,
+                      );
                     }}
                     className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                     placeholder="Enter 12 digit Aadhaar"
                   />
-                  {errors.aadhaarNumber && <p className="text-red-500 text-xs">{errors.aadhaarNumber}</p>}
+                  {errors.aadhaarNumber && (
+                    <p className="text-red-500 text-xs">
+                      {errors.aadhaarNumber}
+                    </p>
+                  )}
                 </div>
 
                 <div>
@@ -1345,7 +1780,9 @@ function AddDonor() {
                       if (!file) return;
 
                       if (!DOC_ALLOWED_TYPES.includes(file.type)) {
-                        alert("Aadhaar upload: only PNG, JPG, JPEG, PDF allowed");
+                        alert(
+                          "Aadhaar upload: only PNG, JPG, JPEG, PDF allowed",
+                        );
                         return;
                       }
 
@@ -1356,7 +1793,9 @@ function AddDonor() {
                   {formData.personalDetails.aadhaarFile && (
                     <button
                       type="button"
-                      onClick={() => handleViewFile(formData.personalDetails.aadhaarFile)}
+                      onClick={() =>
+                        handleViewFile(formData.personalDetails.aadhaarFile)
+                      }
                       className="mt-2 text-xs px-3 py-1 rounded bg-blue-600 text-white"
                     >
                       View
@@ -1381,7 +1820,9 @@ function AddDonor() {
                     className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                     placeholder="ABCDE1234F"
                   />
-                  {errors.panNumber && <p className="text-red-500 text-xs">{errors.panNumber}</p>}
+                  {errors.panNumber && (
+                    <p className="text-red-500 text-xs">{errors.panNumber}</p>
+                  )}
                 </div>
 
                 <div>
@@ -1407,7 +1848,9 @@ function AddDonor() {
                   {formData.personalDetails.panFile && (
                     <button
                       type="button"
-                      onClick={() => handleViewFile(formData.personalDetails.panFile)}
+                      onClick={() =>
+                        handleViewFile(formData.personalDetails.panFile)
+                      }
                       className="mt-2 text-xs px-3 py-1 rounded bg-blue-600 text-white"
                     >
                       View
@@ -1426,7 +1869,9 @@ function AddDonor() {
                       if (!file) return;
 
                       if (!IMAGE_ALLOWED_TYPES.includes(file.type)) {
-                        alert("Photo upload: only PNG, JPG, JPEG allowed (PDF not allowed)");
+                        alert(
+                          "Photo upload: only PNG, JPG, JPEG allowed (PDF not allowed)",
+                        );
                         return;
                       }
 
@@ -1437,7 +1882,9 @@ function AddDonor() {
                   {formData.personalDetails.photo && (
                     <button
                       type="button"
-                      onClick={() => handleViewFile(formData.personalDetails.photo)}
+                      onClick={() =>
+                        handleViewFile(formData.personalDetails.photo)
+                      }
                       className="mt-2 text-xs px-3 py-1 rounded bg-blue-600 text-white"
                     >
                       View
@@ -1454,7 +1901,7 @@ function AddDonor() {
                       handleChange(
                         "personalDetails",
                         "donorType",
-                        e.target.value
+                        e.target.value,
                       )
                     }
                     className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
@@ -1488,7 +1935,7 @@ function AddDonor() {
                         handleChange(
                           "contactPerson",
                           "contactPersonName",
-                          e.target.value
+                          e.target.value,
                         )
                       }
                       className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
@@ -1497,7 +1944,6 @@ function AddDonor() {
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">
                       Assistant Mobile Number
-                      
                     </label>
                     <input
                       type="text"
@@ -1508,8 +1954,8 @@ function AddDonor() {
                         handleChange(
                           "contactPerson",
                           "contactPersonMobile",
-                          onlyNumbers
-                        )
+                          onlyNumbers,
+                        );
                       }}
                       className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                     />
@@ -1517,13 +1963,16 @@ function AddDonor() {
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">
                       Assistant Email ID
-                      
                     </label>
                     <input
                       type="email"
                       value={formData.contactPerson.contactPersonEmail}
                       onChange={(e) =>
-                        handleChange("contactPerson", "contactPersonEmail", e.target.value)
+                        handleChange(
+                          "contactPerson",
+                          "contactPersonEmail",
+                          e.target.value,
+                        )
                       }
                       className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                     />
@@ -1545,7 +1994,11 @@ function AddDonor() {
                       type="text"
                       value={formData.residentialAddress.address1}
                       onChange={(e) =>
-                        handleChange("residentialAddress", "address1", e.target.value)
+                        handleChange(
+                          "residentialAddress",
+                          "address1",
+                          e.target.value,
+                        )
                       }
                       className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                     />
@@ -1558,24 +2011,37 @@ function AddDonor() {
                       type="text"
                       value={formData.residentialAddress.city}
                       onChange={(e) =>
-                        handleChange("residentialAddress", "city", e.target.value)
+                        handleChange(
+                          "residentialAddress",
+                          "city",
+                          e.target.value,
+                        )
                       }
                       className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">
-                      Res. Pincode<span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="number"
-                      value={formData.residentialAddress.pincode}
-                      onChange={(e) =>
-                        handleChange("residentialAddress", "pincode", e.target.value)
-                      }
-                      className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
-                    />
-                  </div>
+  <label className="block text-sm font-medium text-slate-700 mb-1">
+    Res. Pincode<span className="text-red-500">*</span>
+  </label>
+
+  <input
+    type="text"
+    inputMode="numeric"
+    maxLength={6}
+    value={formData.residentialAddress.pincode}
+    onChange={(e) => {
+      const value = e.target.value.replace(/\D/g, "").slice(0, 6);
+
+      handleChange(
+        "residentialAddress",
+        "pincode",
+        value
+      );
+    }}
+    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
+  />
+</div>
                   {/* <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">
                       Res. Contact Code<span className="text-red-500">*</span>
@@ -1603,82 +2069,91 @@ function AddDonor() {
                         handleChange(
                           "residentialAddress",
                           "contactNumber",
-                          onlyNumbers
+                          onlyNumbers,
                         );
                       }}
                       className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                     />
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">
-                      Res. Proof
-                    </label>
-                    <div className="flex gap-2">
-                      {/* <select className="flex-1 p-2 border border-slate-300 rounded-md outline-none focus:ring-2 focus:ring-blue-100">
-                        <option value="">Select</option>
-                      </select> */}
+                 <div>
+  <label className="block text-sm font-medium text-slate-700 mb-1">
+    Res. Proof
+  </label>
 
-                      <select
-                        value={formData.residentialAddress.proof}
-                        onChange={(e) =>
-                          handleChange("residentialAddress", "proof", e.target.value)
-                        }
-                        className="flex-1 p-2 border border-slate-300 rounded-md outline-none focus:ring-2 focus:ring-blue-100"
-                        disabled={isResProofLoading}
-                      >
-                        <option value="">
-                          {isResProofLoading ? "Loading..." : "Select"}
-                        </option>
+  <div className="flex gap-2 items-center">
+    
+    {/* ===== SELECT ===== */}
+    <select
+      value={formData.residentialAddress.proofType || ""}
+      onChange={(e) =>
+        handleChange(
+          "residentialAddress",
+          "proofType",
+          e.target.value
+        )
+      }
+      className="flex-1 p-2 border border-slate-300 rounded-md outline-none focus:ring-2 focus:ring-blue-100"
+      disabled={isResProofLoading}
+    >
+      <option value="">
+        {isResProofLoading ? "Loading..." : "Select"}
+      </option>
 
-                        {resProofOptions.map((item) => (
-                          <option key={item.value} value={item.value}>
-                            {item.label}
-                          </option>
-                        ))}
-                      </select>
-                      <div className="flex border rounded-md overflow-hidden">
-                        <input
-                          type="file"
-                          accept={DOC_ACCEPT}
-                          onChange={(e) => {
-                            const file = e.target.files[0];
+      {resProofOptions.map((item) => (
+        <option
+          key={item.value}
+          value={item.value}
+        >
+          {item.label}
+        </option>
+      ))}
+    </select>
 
-                            if (!file) return;
+    {/* ===== FILE INPUT ===== */}
+    <input
+      type="file"
+      accept=".png,.jpg,.jpeg,.pdf"
+      onChange={(e) =>
+        handleFileUpload(
+          e,
+          "residentialAddress",
+          "resProofFile"
+        )
+      }
+      className="w-full p-2 border border-slate-300 rounded-md"
+    />
 
-                            // ✅ File type validation
-                            const allowedTypes = DOC_ALLOWED_TYPES;
-                            if (!allowedTypes.includes(file.type)) {
-                              alert("Only PNG, JPG, JPEG, PDF allowed");
-                              return;
-                            }
+    {/* ===== VIEW BUTTON ===== */}
+    {formData.residentialAddress.resProofFile && (
+      <button
+        type="button"
+        onClick={() => {
+          const file =
+            formData.residentialAddress.resProofFile;
 
-                            // ✅ File size validation (2MB)
-                            if (file.size > 2 * 1024 * 1024) {
-                              alert("File size must be less than 2MB");
-                              return;
-                            }
+          const fileURL =
+            file instanceof File
+              ? URL.createObjectURL(file)
+              : file;
 
-                            handleChange("residentialAddress", "resProofFile", file);
-                          }}
-                          className="w-full p-2 border border-slate-300 rounded-md"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                  {/* <div className="max-w-xs w-[450px]">
-                    <label className="block text-sm font-medium text-slate-700 mb-1">
-                      Preferred Address For Communication
-                      <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.residentialAddress.preferredAddress}
-                      onChange={(e) =>
-                        handleChange("residentialAddress", "preferredAddress", e.target.value)
-                      }
-                      className="w-[535px] p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
-                    />
-                  </div> */}
+          window.open(fileURL, "_blank");
+        }}
+        className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+      >
+        View
+      </button>
+    )}
+  </div>
+
+  {/* ===== FILE NAME ===== */}
+  {formData.residentialAddress.resProofFile instanceof File && (
+    <p className="text-xs text-gray-500 mt-1">
+      Selected File:{" "}
+      {formData.residentialAddress.resProofFile.name}
+    </p>
+  )}
+</div>
+                  
                 </div>
               </div>
 
@@ -1696,7 +2171,11 @@ function AddDonor() {
                       type="text"
                       value={formData.companyDetails.companyName}
                       onChange={(e) =>
-                        handleChange("companyDetails", "companyName", e.target.value)
+                        handleChange(
+                          "companyDetails",
+                          "companyName",
+                          e.target.value,
+                        )
                       }
                       className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                     />
@@ -1711,7 +2190,11 @@ function AddDonor() {
                       value={formData.companyDetails.companyNumber}
                       onChange={(e) => {
                         const onlyNumbers = e.target.value.replace(/\D/g, "");
-                        handleChange("companyDetails", "companyNumber", onlyNumbers)
+                        handleChange(
+                          "companyDetails",
+                          "companyNumber",
+                          onlyNumbers,
+                        );
                       }}
                       className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                     />
@@ -1723,7 +2206,11 @@ function AddDonor() {
                     <textarea
                       value={formData.companyDetails.companyAddress}
                       onChange={(e) =>
-                        handleChange("companyDetails", "companyAddress", e.target.value)
+                        handleChange(
+                          "companyDetails",
+                          "companyAddress",
+                          e.target.value,
+                        )
                       }
                       className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                     />
@@ -1762,12 +2249,14 @@ function AddDonor() {
 
                     {/* 🔽 Dropdown */}
                     <select
-                      value={formData.communicationAddress.communicationAddress1}
+                      value={
+                        formData.communicationAddress.communicationAddress1
+                      }
                       onChange={(e) =>
                         handleChange(
                           "communicationAddress",
                           "communicationAddress1",
-                          e.target.value
+                          e.target.value,
                         )
                       }
                       className="w-full p-2 border border-slate-300 rounded-md mb-2"
@@ -1788,8 +2277,6 @@ function AddDonor() {
                         </option>
                       )}
                     </select>
-
-                  
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -1797,12 +2284,14 @@ function AddDonor() {
                     </label>
                     <input
                       type="text"
-                      value={formData.communicationAddress.communicationAddress2}
+                      value={
+                        formData.communicationAddress.communicationAddress2
+                      }
                       onChange={(e) =>
                         handleChange(
                           "communicationAddress",
                           "communicationAddress2",
-                          e.target.value
+                          e.target.value,
                         )
                       }
                       className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
@@ -1810,7 +2299,6 @@ function AddDonor() {
                   </div>
                 </div>
               </div>
-
             </>
           )}
 
@@ -1831,7 +2319,11 @@ function AddDonor() {
                       type="text"
                       value={formData.familyDetails.fatherName}
                       onChange={(e) =>
-                        handleChange("familyDetails", "fatherName", e.target.value)
+                        handleChange(
+                          "familyDetails",
+                          "fatherName",
+                          e.target.value,
+                        )
                       }
                       className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                     />
@@ -1846,7 +2338,11 @@ function AddDonor() {
                       type="text"
                       value={formData.familyDetails.spouseName}
                       onChange={(e) =>
-                        handleChange("familyDetails", "spouseName", e.target.value)
+                        handleChange(
+                          "familyDetails",
+                          "spouseName",
+                          e.target.value,
+                        )
                       }
                       className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                     />
@@ -1859,7 +2355,11 @@ function AddDonor() {
                       type="date"
                       value={formData.familyDetails.spouseDob}
                       onChange={(e) =>
-                        handleChange("familyDetails", "spouseDob", e.target.value)
+                        handleChange(
+                          "familyDetails",
+                          "spouseDob",
+                          e.target.value,
+                        )
                       }
                       className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                     />
@@ -1871,7 +2371,11 @@ function AddDonor() {
                     <select
                       value={formData.familyDetails.spouseBloodGroup}
                       onChange={(e) =>
-                        handleChange("familyDetails", "spouseBloodGroup", e.target.value)
+                        handleChange(
+                          "familyDetails",
+                          "spouseBloodGroup",
+                          e.target.value,
+                        )
                       }
                       className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                     >
@@ -1885,7 +2389,6 @@ function AddDonor() {
                       <option value="O+">O+</option>
                       <option value="O-">O-</option>
                     </select>
-
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -1900,7 +2403,11 @@ function AddDonor() {
                           value="Yes"
                           checked={formData.familyDetails.hasChildren === "Yes"}
                           onChange={(e) =>
-                            handleChange("familyDetails", "hasChildren", e.target.value)
+                            handleChange(
+                              "familyDetails",
+                              "hasChildren",
+                              e.target.value,
+                            )
                           }
                           className="w-4 h-4 text-blue-600"
                         />
@@ -1914,7 +2421,11 @@ function AddDonor() {
                           value="No"
                           checked={formData.familyDetails.hasChildren === "No"}
                           onChange={(e) =>
-                            handleChange("familyDetails", "hasChildren", e.target.value)
+                            handleChange(
+                              "familyDetails",
+                              "hasChildren",
+                              e.target.value,
+                            )
                           }
                           className="w-4 h-4 text-blue-600"
                         />
@@ -1995,7 +2506,11 @@ function AddDonor() {
                                   value="son"
                                   checked={child.relation === "son"}
                                   onChange={(e) =>
-                                    handleChildChange(child.id, "relation", e.target.value)
+                                    handleChildChange(
+                                      child.id,
+                                      "relation",
+                                      e.target.value,
+                                    )
                                   }
                                   className="w-4 h-4 text-blue-600"
                                 />
@@ -2009,7 +2524,11 @@ function AddDonor() {
                                   value="daughter"
                                   checked={child.relation === "daughter"}
                                   onChange={(e) =>
-                                    handleChildChange(child.id, "relation", e.target.value)
+                                    handleChildChange(
+                                      child.id,
+                                      "relation",
+                                      e.target.value,
+                                    )
                                   }
                                   className="w-4 h-4 text-blue-600"
                                 />
@@ -2161,7 +2680,9 @@ function AddDonor() {
                     type="text"
                     value={formData.nomineeDetails.nomineepincode}
                     onChange={(e) => {
-                      const value = e.target.value.replace(/\D/g, "").slice(0, 6);
+                      const value = e.target.value
+                        .replace(/\D/g, "")
+                        .slice(0, 6);
                       handleChange("nomineeDetails", "nomineepincode", value);
 
                       if (value.length === 6) {
@@ -2208,24 +2729,31 @@ function AddDonor() {
                     className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                   />
                 </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Relation<span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.nomineeDetails.nomineerelation}
-                    onChange={(e) =>
-                      handleChange(
-                        "nomineeDetails",
-                        "nomineerelation",
-                        e.target.value,
-                      )
-                    }
-                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
-                  />
-                </div>
+
+               <div>
+  <label className="block text-sm font-medium text-slate-700 mb-1">
+    Relation<span className="text-red-500">*</span>
+  </label>
+
+  <select
+    value={formData.nomineeDetails.nomineerelation}
+    onChange={(e) =>
+      handleChange(
+        "nomineeDetails",
+        "nomineerelation",
+        e.target.value,
+      )
+    }
+    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none bg-white"
+  >
+    <option value="">Select Relation</option>
+    <option value="Husband">Husband</option>
+    <option value="Wife">Wife</option>
+    <option value="Son">Son</option>
+    <option value="Daughter">Daughter</option>
+    <option value="Other">Other</option>
+  </select>
+</div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
                     Do you have Company?<span className="text-red-500">*</span>
@@ -2236,9 +2764,15 @@ function AddDonor() {
                       <input
                         type="radio"
                         value="Yes"
-                        checked={formData.nomineeDetails.nomineehasCompany === "Yes"}
+                        checked={
+                          formData.nomineeDetails.nomineehasCompany === "Yes"
+                        }
                         onChange={(e) =>
-                          handleChange("nomineeDetails", "nomineehasCompany", e.target.value)
+                          handleChange(
+                            "nomineeDetails",
+                            "nomineehasCompany",
+                            e.target.value,
+                          )
                         }
                       />{" "}
                       Yes
@@ -2248,9 +2782,15 @@ function AddDonor() {
                       <input
                         type="radio"
                         value="No"
-                        checked={formData.nomineeDetails.nomineehasCompany === "No"}
+                        checked={
+                          formData.nomineeDetails.nomineehasCompany === "No"
+                        }
                         onChange={(e) =>
-                          handleChange("nomineeDetails", "nomineehasCompany", e.target.value)
+                          handleChange(
+                            "nomineeDetails",
+                            "nomineehasCompany",
+                            e.target.value,
+                          )
                         }
                       />{" "}
                       No
@@ -2262,7 +2802,9 @@ function AddDonor() {
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Company Name</label>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">
+                        Company Name
+                      </label>
                       <input
                         type="text"
                         value={formData.nomineeDetails.nomineecompanyName}
@@ -2276,7 +2818,7 @@ function AddDonor() {
                         className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                       />
                     </div>
-{/* 
+                    {/* 
                     <div>
                       <label className="block text-sm font-medium text-slate-700 mb-1">
                         Residential Address
@@ -2308,7 +2850,7 @@ function AddDonor() {
                             "nomineeDetails",
                             "nomineeofficeContact",
                             onlyNumbers,
-                          )
+                          );
                         }}
                         className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
                       />
@@ -2329,7 +2871,6 @@ function AddDonor() {
                         className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none h-[40px]"
                       />
                     </div>
-                   
                   </div>
                 </div>
               )}
@@ -2348,7 +2889,6 @@ function AddDonor() {
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">
                       Number of Installment
-                      
                     </label>
                     <select
                       value={numInstallments}
@@ -2374,11 +2914,12 @@ function AddDonor() {
                   <div className="">
                     <label className="block text-sm font-medium text-slate-700 mb-1">
                       Total Installments Amount
-                      
                     </label>
                     <input
                       type="text"
-                      value={formData.paymentDetails.totalInstallmentsAmount || ""}
+                      value={
+                        formData.paymentDetails.totalInstallmentsAmount || ""
+                      }
                       onChange={(e) =>
                         setFormData((prev) => ({
                           ...prev,
@@ -2398,7 +2939,6 @@ function AddDonor() {
                       </p>
                     )}
                   </div>
-                 
                 </div>
 
                 {/* SECTION: Installment Tables - Conditional */}
@@ -2421,13 +2961,19 @@ function AddDonor() {
                             <div>
                               <label className="block text-sm font-medium text-slate-700 mb-1">
                                 Installment Amount
-                                
                               </label>
                               <input
                                 type="text"
-                                value={formData.paymentDetails.installments[index]?.amount || ""}
+                                value={
+                                  formData.paymentDetails.installments[index]
+                                    ?.amount || ""
+                                }
                                 onChange={(e) =>
-                                  handleInstallmentChange(index, "amount", e.target.value)
+                                  handleInstallmentChange(
+                                    index,
+                                    "amount",
+                                    e.target.value,
+                                  )
                                 }
                                 placeholder="Enter amount"
                                 className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-100 outline-none"
@@ -2442,19 +2988,26 @@ function AddDonor() {
                             <div>
                               <label className="block text-sm font-medium text-slate-700 mb-1">
                                 Installment Due Date
-                                
                               </label>
 
                               <input
                                 type="date"
-                                value={formData.paymentDetails.installments[index]?.dueDate || ""}
-                                onChange={(e) =>
-                                  handleInstallmentChange(index, "dueDate", e.target.value)
+                                value={
+                                  formData.paymentDetails.installments[index]
+                                    ?.dueDate || ""
                                 }
-                                className={`w-full p-2 border rounded-md outline-none ${errors.installmentDueDates?.[index]
+                                onChange={(e) =>
+                                  handleInstallmentChange(
+                                    index,
+                                    "dueDate",
+                                    e.target.value,
+                                  )
+                                }
+                                className={`w-full p-2 border rounded-md outline-none ${
+                                  errors.installmentDueDates?.[index]
                                     ? "border-red-500"
                                     : "border-slate-300"
-                                  }`}
+                                }`}
                               />
 
                               {errors.installmentDueDates?.[index] && (
@@ -2463,7 +3016,6 @@ function AddDonor() {
                                 </p>
                               )}
                             </div>
-
                           </div>
                         </div>
                       ),
@@ -2498,8 +3050,11 @@ function AddDonor() {
               <button
                 onClick={handleNext}
                 disabled={isLoading}
-                className={`px-6 py-2 rounded-md text-white font-semibold ${isLoading ? "bg-gray-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"
-                  }`}
+                className={`px-6 py-2 rounded-md text-white font-semibold ${
+                  isLoading
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-blue-600 hover:bg-blue-700"
+                }`}
               >
                 {isLoading ? "Saving..." : "Save & Next"}
               </button>
@@ -2519,6 +3074,3 @@ function AddDonor() {
 }
 
 export default AddDonor;
-
-
-

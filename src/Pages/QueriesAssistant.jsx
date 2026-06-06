@@ -1,3 +1,14 @@
+// import React from 'react'
+
+// const QueriesAssistant = () => {
+//   return (
+//     <div>
+      
+//     </div>
+//   )
+// }
+
+// export default QueriesAssistant
 import axios from "axios";
 import JoditEditor from "jodit-react";
 import {
@@ -233,7 +244,7 @@ const getAllowedActions = ({ role, status }) => {
   return [];
 };
 
-const AssistancePage = () => {
+const QueriesAssistant = () => {
   const { user } = useAuth();
   console.log(user, "user");
   const [searchType, setSearchType] = useState("sadhu");
@@ -255,14 +266,6 @@ const AssistancePage = () => {
   const [selectedRowIds, setSelectedRowIds] = useState([]);
   const [actionRows, setActionRows] = useState([]);
   const [meetingOptions, setMeetingOptions] = useState([]);
-
-  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
-const [selectedRowId, setSelectedRowId] = useState(null);
-const [feedback, setFeedback] = useState("");
-const [selectedStatus, setSelectedStatus] = useState("");
-
-
-  
   // const [selectedMeetingId, setSelectedMeetingId] = useState("");
   const dropdownContainerRef = useRef(null);
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
@@ -451,8 +454,7 @@ const [selectedStatus, setSelectedStatus] = useState("");
   };
 
   const monthYearList = generateMonthYearList();
-const [renewYear, setRenewYear] = useState("");
-const [renewMonth, setRenewMonth] = useState("");
+
   // const handleMonthlyAmountChange = (key, value) => {
   //   setMonthlyPayments((prev) => ({
   //     ...prev,
@@ -506,12 +508,11 @@ const [renewMonth, setRenewMonth] = useState("");
       .trim()
       .toLowerCase();
 
-    // if (normalizedRole === "staff") return "queries";
-     if (normalizedRole === "committee-member") return "committee-member";
-    if (normalizedRole === "operations-manager") return "operations-manager";
+    if (normalizedRole === "staff") return "queries";
+    if (normalizedRole === "committee-member") return "committee-member";
     // Case coordinator should be able to see all assistance cases (including Expert Panel status).
-    if (normalizedRole === "case-coordinator") return "case-coordinator";
-    if (normalizedRole === "karyakarta") return "karyakarta";
+    if (normalizedRole === "case-coordinator") return "all";
+    if (normalizedRole === "karyakarta") return "pending,queries";
     if (
       normalizedRole === "expert-panel" ||
       normalizedRole.startsWith("expert-panel-")
@@ -599,118 +600,6 @@ const [renewMonth, setRenewMonth] = useState("");
       console.log("GET ASSIGNED BANK ERROR =>", error);
     }
   };
-
-
-
-//   const handleUpdateAssociateStatus = async (id, status) => {
-//   try {
-//     const token = localStorage.getItem("token");
-
-//     const response = await axios.put(
-//       `${API}/api/assistance/update-associate-status/${id}`,
-//       {
-//         associate_status: status,
-//       },
-//       {
-//         headers: {
-//           Authorization: `Bearer ${token}`,
-//         },
-//       }
-//     );
-
-//     if (response.data.success) {
-//       alert(response.data.message); // optional
-//       fetchFamilyAccounting();
-//     }
-//   } catch (error) {
-//     console.error("Failed to update status:", error);
-//     alert(
-//       error?.response?.data?.message || "Failed to update status"
-//     );
-//   }
-// };
-// const handleUpdateAssociateStatus = async (
-//   id,
-//   status,
-//   feedback
-// ) => {
-//   try {
-//     const token = localStorage.getItem("token");
-
-//     const response = await axios.put(
-//       `${API}/api/assistance/update-associate-status/${id}`,
-//       {
-//         associate_status: status,
-//         feedback,
-//         role: user?.role,
-//       },
-//       {
-//         headers: {
-//           Authorization: `Bearer ${token}`,
-//         },
-//       }
-//     );
-
-//     if (response.data.success) {
-//       alert(response.data.message);
-
-//       setShowFeedbackModal(false);
-//       setFeedback("");
-//       setSelectedRowId(null);
-
-//       fetchFamilyAccounting();
-//     }
-//   } catch (error) {
-//     console.error("Failed to update status:", error);
-
-//     alert(
-//       error?.response?.data?.message ||
-//         "Failed to update status"
-//     );
-//   }
-// };
-const handleUpdateAssociateStatus = async (
-  id,
-  status,
-  feedback
-) => {
-  try {
-    const token = localStorage.getItem("token");
-
-    const response = await axios.put(
-      `${API}/api/assistance/update-associate-status/${id}`,
-      {
-        associate_status: status,
-        feedback,
-        role: user?.role,
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-
-    if (response.data.success) {
-      alert(response.data.message);
-
-      setShowFeedbackModal(false);
-      setFeedback("");
-      setSelectedRowId(null);
-      setSelectedStatus("");
-
-      fetchFamilyAccounting();
-    }
-  } catch (error) {
-    console.error("Failed to update status:", error);
-
-    alert(
-      error?.response?.data?.message ||
-      "Failed to update status"
-    );
-  }
-};
-
   const fetchFamilyAccounting = async (
     currentPage = page,
     currentStatus = statusFilter,
@@ -1430,10 +1319,8 @@ const handleUpdateAssociateStatus = async (
         }),
 
         ...(actionType === "approve" && {
-    approve_amount: approveAmount,
-    renew_year: renewYear,
-    renew_month: renewMonth,
-  }),
+          approve_amount: approveAmount,
+        }),
 
         monthly_payments: formattedMonthlyPayments,
 
@@ -1511,9 +1398,9 @@ const handleUpdateAssociateStatus = async (
       const status = normalizeWorkflowValue(row.status);
       const rowType = normalizeWorkflowValue(row.assistance_type);
 
-      // if (normalizedRole === "staff") {
-      //   return status === "queries";
-      // }
+      if (normalizedRole === "staff") {
+        return status === "queries";
+      }
 
       if (normalizedRole === "karyakarta") {
         return status === "pending" || status === "queries";
@@ -1771,7 +1658,7 @@ const handleUpdateAssociateStatus = async (
                             </button>
 
                             {user?.role !== "committee-member" &&
-                              user?.role !== "karyakarta" && user?.role !== "staff" && user?.role !== "operations-manager" && (
+                              user?.role !== "karyakarta" && (
                                 <button
                                   onClick={() => {
                                     handleAssignBank(row);
@@ -1783,31 +1670,6 @@ const handleUpdateAssociateStatus = async (
                                   Assign Bank Account
                                 </button>
                               )}
-{/* {user?.role === "staff" &&
-  row?.associate_status === "Pending" && (
-    <button
-      // onClick={() => {
-      //   handleUpdateAssociateStatus(
-      //     row.id,
-      //     "Operation_Manager"
-      //   );
-      //   setOpenDropdownId(null);
-      // }}
-
-       onClick={() => {
-        setSelectedRowId(row.id);
-        setSelectedStatus("Operation_Manager");
-        setShowFeedbackModal(true);
-        setOpenDropdownId(null);
-      }}
-      className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50"
-    >
-      Send To Operation Manager
-    </button>
-)} */}
-
-
-
 
                             {(hasQuery || !isStaff) && (
                               <button
@@ -2009,22 +1871,6 @@ const handleUpdateAssociateStatus = async (
                                     : "Rejected"}
                               </button>
                             )}
-
-                            {/* {user?.role === "operations-manager" &&
-  row?.associate_status === "Operation_Manager" && (
-    <button
-      onClick={() => {
-        handleUpdateAssociateStatus(
-          row.id,
-          "Operation_Manager"
-        );
-        setOpenDropdownId(null);
-      }}
-      className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50"
-    >
-      Send To Operation Manager
-    </button>
-)} */}
                           </div>
                         </div>
                       )}
@@ -2722,20 +2568,19 @@ const handleUpdateAssociateStatus = async (
                 {/* APPROVE AMOUNT */}
                 {actionType === "approve" && (
                   <>
-                   <div>
-  <label className="mb-2 block text-sm font-semibold text-slate-700">
-    Approve Amount
-  </label>
+                    <div>
+                      <label className="mb-2 block text-sm font-semibold text-slate-700">
+                        Approve Amount
+                      </label>
 
-  <input
-    type="number"
-    value={approveAmount}
-    onChange={(e) => setApproveAmount(e.target.value)}
-    placeholder="Enter approve amount"
-    disabled
-    className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-500 bg-gray-100 cursor-not-allowed"
-  />
-</div>
+                      <input
+                        type="number"
+                        value={approveAmount}
+                        onChange={(e) => setApproveAmount(e.target.value)}
+                        placeholder="Enter approve amount"
+                        className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-500"
+                      />
+                    </div>
 
                     <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
                       <div>
@@ -2891,61 +2736,6 @@ const handleUpdateAssociateStatus = async (
                         </div>
                       </div>
                     )}
-
-                    {/* RENEW SECTION */}
-<div className="mt-6 rounded-2xl border border-slate-200 p-5">
-  <h3 className="mb-4 text-lg font-semibold text-slate-700">
-    Renew Details
-  </h3>
-
-  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-    {/* RENEW YEAR */}
-    <div>
-      <label className="mb-2 block text-sm font-semibold text-slate-700">
-        Renew Year
-      </label>
-
-      <select
-        value={renewYear}
-        onChange={(e) => {
-          setRenewYear(e.target.value);
-          setRenewMonth("");
-        }}
-        className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-500"
-      >
-        <option value="">Select Year</option>
-
-        {yearOptions.map((year) => (
-          <option key={year} value={year}>
-            {year}
-          </option>
-        ))}
-      </select>
-    </div>
-
-    {/* RENEW MONTH */}
-    <div>
-      <label className="mb-2 block text-sm font-semibold text-slate-700">
-        Renew Month
-      </label>
-
-      <select
-        value={renewMonth}
-        onChange={(e) => setRenewMonth(e.target.value)}
-        disabled={!renewYear}
-        className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-500 disabled:bg-slate-100"
-      >
-        <option value="">Select Month</option>
-
-        {months.map((month) => (
-          <option key={month} value={month}>
-            {month}
-          </option>
-        ))}
-      </select>
-    </div>
-  </div>
-</div>
                   </>
                 )}
 
@@ -3517,54 +3307,9 @@ const handleUpdateAssociateStatus = async (
               </div>
             );
           })()}
-
-          {showFeedbackModal && (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-    <div className="bg-white rounded-xl shadow-xl w-full max-w-lg p-6">
-      <h2 className="text-xl font-semibold mb-4">
-        Add Feedback
-      </h2>
-
-      <textarea
-        rows={5}
-        value={feedback}
-        onChange={(e) =>
-          setFeedback(e.target.value)
-        }
-        placeholder="Enter feedback..."
-        className="w-full border rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
-      />
-
-      <div className="flex justify-end gap-3 mt-5">
-        <button
-          onClick={() => {
-            setShowFeedbackModal(false);
-            setFeedback("");
-          }}
-          className="px-4 py-2 rounded-lg border"
-        >
-          Cancel
-        </button>
-
-        <button
-          onClick={() =>
-            handleUpdateAssociateStatus(
-              selectedRowId,
-              selectedStatus,
-              feedback
-            )
-          }
-          className="px-4 py-2 rounded-lg bg-blue-600 text-white"
-        >
-          Submit
-        </button>
-      </div>
-    </div>
-  </div>
-)}
       </main>
     </div>
   );
 };
 
-export default AssistancePage;
+export default QueriesAssistant;

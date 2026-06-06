@@ -87,6 +87,17 @@ function DonorList() {
 
     return matchesSearch;
   });
+
+  const calculateDueAmount = (donor) => {
+  const installments = donor?.paymentDetails?.installments || [];
+
+  return installments.reduce((total, installment) => {
+    if (!installment.paymentMode) {
+      return total + Number(installment.amount || 0);
+    }
+    return total;
+  }, 0);
+};
   return (
     <div className="p-8 min-h-screen bg-gray-50">
       {/* Header Section */}
@@ -204,15 +215,16 @@ function DonorList() {
                   </td>
 
                   <td className="px-6 py-4 text-sm">
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs font-medium ${donor.dueAmount > 0
-                        ? "bg-red-50 text-red-600"
-                        : "bg-green-50 text-green-600"
-                        }`}
-                    >
-                      ₹{donor.dueAmount?.toLocaleString() || 0}
-                    </span>
-                  </td>
+  <span
+    className={`px-2 py-1 rounded-full text-xs font-medium ${
+      calculateDueAmount(donor) > 0
+        ? "bg-red-50 text-red-600"
+        : "bg-green-50 text-green-600"
+    }`}
+  >
+    ₹{calculateDueAmount(donor).toLocaleString()}
+  </span>
+</td>
                   <td className="px-6 py-4 text-sm">
                     <div className="flex gap-3 text-gray-400">
                         <button

@@ -182,7 +182,7 @@ function MeetingSchedule() {
                         <tr className="border-b bg-gray-50">
                             <th className="px-6 py-4 text-sm font-semibold">Meeting No</th>
                             <th className="px-6 py-4 text-sm font-semibold">Meeting Date</th>
-                            <th className="px-6 py-4 text-sm font-semibold">Presented Case</th>
+                            {/* <th className="px-6 py-4 text-sm font-semibold">Presented Case</th> */}
                             <th className="px-6 py-4 text-sm font-semibold">Status</th>
                             <th className="px-6 py-4 text-right text-sm font-semibold">Actions</th>
                         </tr>
@@ -193,7 +193,7 @@ function MeetingSchedule() {
                             <tr key={item.id} className="border-b">
                                 <td className="px-6 py-4">{item.meetingNo}</td>
                                 <td className="px-6 py-4">{formatIndianDate(item.meetingDate)}</td>
-                                <td className="px-6 py-4">{item.presentedCase}</td>
+                                {/* <td className="px-6 py-4">{item.presentedCase}</td> */}
                                 <td className="px-6 py-4">{item.status}</td>
 
                                 <td className="px-6 py-4 text-right">

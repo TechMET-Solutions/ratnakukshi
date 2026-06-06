@@ -18,7 +18,7 @@ function DonorPaymentHistory() {
   const [showModal, setShowModal] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [modalMode, setModalMode] = useState("pay");
-
+const [errors, setErrors] = useState({});
   const [formData, setFormData] = useState({
     donationType: "Amount", // Amount | Share
     amount: "",
@@ -26,15 +26,34 @@ function DonorPaymentHistory() {
     fundDate: "",
     paymentMode: "",
     utrNo: "",
-    status: "Completed",
+    status: "",
     payFrom: "",
     accountName: "",
+    accountNumber:"",
     fromRbfBankAccount: "",
     shareCount: "",
     shareRate: "",
     rbfDematAccountId: "",
-  });
 
+     pendingDetails: [
+    {
+      pendingAmount: "",
+      pendingDate: "",
+    },
+  
+  ],
+
+  bankName: "",
+ 
+  branchName: "",
+  });
+const [viewModal, setViewModal] = useState(false);
+
+
+const openViewModal = (payment) => {
+  setSelectedPayment(payment);
+  setViewModal(true);
+};
   const normalizeDonationType = (payment) => {
     const value = String(payment?.donationType || payment?.donation_type || "").trim();
     if (value) return value;
@@ -60,6 +79,45 @@ function DonorPaymentHistory() {
     const suffix = last4 ? ` (***${last4})` : "";
     return `${match.bank_name || "Bank"}${suffix}`;
   };
+  
+  
+ const addPendingRow = () => {
+  setFormData((prev) => ({
+    ...prev,
+    pendingDetails: [
+      ...(prev.pendingDetails || []),
+      {
+        pendingAmount: "",
+        pendingDate: "",
+      },
+    ],
+  }));
+};
+
+const removePendingRow = (index) => {
+  setFormData((prev) => ({
+    ...prev,
+    pendingDetails: prev.pendingDetails.filter(
+      (_, i) => i !== index
+    ),
+  }));
+};
+
+const handlePendingChange = (index, field, value) => {
+  setFormData((prev) => {
+    const updated = [...prev.pendingDetails];
+
+    updated[index] = {
+      ...updated[index],
+      [field]: value,
+    };
+
+    return {
+      ...prev,
+      pendingDetails: updated,
+    };
+  });
+};
 
   const getActiveDematLabel = (dematId) => {
     if (!dematId) return "-";
@@ -87,6 +145,7 @@ function DonorPaymentHistory() {
   };
 
   const openInstallmentModal = (payment, mode = "pay") => {
+    debugger
     setSelectedPayment(payment);
     setModalMode(mode);
 
@@ -97,7 +156,7 @@ function DonorPaymentHistory() {
       fundDate: payment.fundDate || "",
       paymentMode: payment.paymentMode || "",
       utrNo: payment.utrNo || "",
-      status: payment.status || "Completed",
+      status: payment.status || "",
       payFrom: payment.payFrom || "",
       accountName: payment.accountName || "",
       fromRbfBankAccount:
@@ -120,6 +179,9 @@ function DonorPaymentHistory() {
 
   useEffect(() => {
     if (!donorId) return;
+
+    fetchInstallments();
+  }, [donorId]);
 
     const fetchInstallments = async () => {
       setLoading(true);
@@ -175,9 +237,6 @@ function DonorPaymentHistory() {
         setLoading(false);
       }
     };
-
-    fetchInstallments();
-  }, [donorId]);
 
   useEffect(() => {
     const isActiveBank = (status) => {
@@ -259,48 +318,88 @@ function DonorPaymentHistory() {
   });
 
 
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-  };
+  // const handleChange = (e) => {
+  //   setFormData({
+  //     ...formData,
+  //     [e.target.name]: e.target.value,
+  //   });
+  // };
 
-  const updateInstallment = async () => {
-    try {
-      const routeName =
-        modalMode === "edit" ? "edit-installment" : "update-installment";
+//   const handleChange = (e) => {
+//   const { name, value } = e.target;
 
-      const payload = { ...formData };
+//   setFormData((prev) => ({
+//     ...prev,
+//     [name]: value,
+//   }));
 
-      if (payload.donationType === "Share") {
-        payload.paymentMode = "";
-        payload.utrNo = "";
-        payload.fromRbfBankAccount = "";
-        payload.amount = "";
-      } else {
-        payload.shareCount = "";
-        payload.shareRate = "";
-        payload.rbfDematAccountId = "";
-      }
+//   setErrors((prev) => ({
+//     ...prev,
+//     [name]: "",
+//   }));
+// };
+const handleChange = (e) => {
+  const { name, value } = e.target;
 
-      await axios.put(
-        `${API}/api/donor/${routeName}/${donorId}/${selectedPayment.id}`,
-        payload
-      );
+  if (name === "fromRbfBankAccount") {
+    const selectedBank = activeBanks.find(
+      (bank) => String(bank.id) === value
+    );
 
-      setPayments((prev) =>
-        prev.map((item) =>
-          String(item?.id) === String(selectedPayment?.id)
-            ? { ...item, ...payload }
-            : item
-        )
-      );
-      setShowModal(false);
-    } catch (error) {
-      console.error("Update error:", error);
-    }
-  };
+    setFormData((prev) => ({
+      ...prev,
+      fromRbfBankAccount: value,
+      bankName: selectedBank?.bank_name || "",
+      accountNumber: selectedBank?.account_no || "",
+      branchName: selectedBank?.branch_name || "",
+    }));
+  } else {
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  }
+
+  setErrors((prev) => ({
+    ...prev,
+    [name]: "",
+  }));
+};
+  // const updateInstallment = async () => {
+  //   try {
+  //     const routeName =
+  //       modalMode === "edit" ? "edit-installment" : "update-installment";
+
+  //     const payload = { ...formData };
+
+  //     if (payload.donationType === "Share") {
+  //       payload.paymentMode = "";
+  //       payload.utrNo = "";
+  //       payload.fromRbfBankAccount = "";
+  //       payload.amount = "";
+  //     } else {
+  //       payload.shareCount = "";
+  //       payload.shareRate = "";
+  //       payload.rbfDematAccountId = "";
+  //     }
+
+  //     await axios.put(
+  //       `${API}/api/donor/${routeName}/${donorId}/${selectedPayment.id}`,
+  //       payload
+  //     );
+
+  //     setPayments((prev) =>
+  //       prev.map((item) =>
+  //         String(item?.id) === String(selectedPayment?.id)
+  //           ? { ...item, ...payload }
+  //           : item
+  //       )
+  //     );
+  //     setShowModal(false);
+  //   } catch (error) {
+  //     console.error("Update error:", error);
+  //   }
+  // };
 
   // const downloadReceipt = async (id) => {
   //   try {
@@ -324,6 +423,403 @@ function DonorPaymentHistory() {
   //   }
   // };
 
+//  const updateInstallment = async () => {
+//   debugger
+//   try {
+//     const validationErrors = {};
+
+//     // Fund Date
+//     if (!formData.fundDate) {
+//       validationErrors.fundDate = "Fund Date is required";
+//     }
+
+// if (!formData.status) {
+//   validationErrors.status = "Status is required";
+//     }
+//     if (formData.status === "Pending") {
+//   if (!formData.pendingAmount) {
+//     validationErrors.pendingAmount = "Amount is required";
+//   }
+
+//   if (!formData.pendingDate) {
+//     validationErrors.pendingDate = "Date is required";
+//   }
+// }
+// if (!formData.payFrom) {
+//   validationErrors.payFrom = "Pay From is required";
+// }
+//     // Third Party
+//     if (formData.payFrom === "third-party") {
+//       if (!formData.accountName?.trim()) {
+//         validationErrors.accountName =
+//           "Account Holder Name is required";
+//       }
+
+//       if (!formData.accountNumber?.trim()) {
+//         validationErrors.accountNumber =
+//           "Account Number is required";
+//       }
+//     }
+// if (
+//   ["Bank Transfer", "UPI", "Card"].includes(formData.paymentMode) &&
+//   !formData.utrNo?.trim()
+// ) {
+//   validationErrors.utrNo = "UTR Number is required";
+// }
+//     // Non Share Donation
+  
+//       if (!formData.paymentMode) {
+//         validationErrors.paymentMode =
+//           "Payment Mode is required";
+//       }
+
+//       if (!formData.fromRbfBankAccount) {
+//         validationErrors.fromRbfBankAccount =
+//           "To RBF Bank Account is required";
+//       }
+
+//       if (
+//         formData.paymentMode === "Cheque" &&
+//         !formData.chequeNumber?.trim()
+//       ) {
+//         validationErrors.chequeNumber =
+//           "Cheque Number is required";
+//       }
+   
+
+//     // Stop API if errors exist
+//     if (Object.keys(validationErrors).length > 0) {
+//       setErrors(validationErrors);
+//       return;
+//     }
+
+//     setErrors({});
+
+//     const routeName =
+//       modalMode === "edit"
+//         ? "edit-installment"
+//         : "update-installment";
+
+//     const payload = { ...formData };
+
+//     await axios.put(
+//       `${API}/api/donor/${routeName}/${donorId}/${selectedPayment.id}`,
+//       payload
+//     );
+
+//     setShowModal(false);
+//   } catch (error) {
+//     console.error(error);
+//   }
+// };
+ 
+//  const updateInstallment = async () => {
+//   try {
+//     const validationErrors = {};
+
+//     // Fund Date
+//     if (!formData.fundDate) {
+//       validationErrors.fundDate = "Fund Date is required";
+//     }
+
+//     // Status
+//     // if (!formData.status) {
+//     //   validationErrors.status = "Status is required";
+//     // }
+
+//     // Pending Validation
+//     if (formData.status === "Pending") {
+//       if (!formData.pendingAmount) {
+//         validationErrors.pendingAmount = "Amount is required";
+//       }
+
+//       if (!formData.pendingDate) {
+//         validationErrors.pendingDate = "Date is required";
+//       }
+//     }
+
+//     // Pay From
+//     if (!formData.payFrom) {
+//       validationErrors.payFrom = "Pay From is required";
+//     }
+
+//     // Third Party Validation
+//     if (formData.payFrom === "third-party") {
+//       if (!formData.accountName?.trim()) {
+//         validationErrors.accountName =
+//           "Account Holder Name is required";
+//       }
+
+//       if (!formData.accountNumber?.trim()) {
+//         validationErrors.accountNumber =
+//           "Account Number is required";
+//       }
+//     }
+
+//     // Payment Mode
+//     if (!formData.paymentMode) {
+//       validationErrors.paymentMode =
+//         "Payment Mode is required";
+//     }
+
+//     // UTR Required
+//     if (
+//       ["Bank Transfer", "UPI", "Card"].includes(
+//         formData.paymentMode
+//       ) &&
+//       !formData.utrNo?.trim()
+//     ) {
+//       validationErrors.utrNo =
+//         "UTR Number is required";
+//     }
+
+//     // Cheque Number Required
+//     if (
+//       formData.paymentMode === "Cheque" &&
+//       !formData.chequeNumber?.trim()
+//     ) {
+//       validationErrors.chequeNumber =
+//         "Cheque Number is required";
+//     }
+
+//     // To RBF Bank Account
+//     if (!formData.fromRbfBankAccount) {
+//       validationErrors.fromRbfBankAccount =
+//         "To RBF Bank Account is required";
+//     }
+
+//     // Stop if validation failed
+//     if (Object.keys(validationErrors).length > 0) {
+//       setErrors(validationErrors);
+//       return;
+//     }
+
+//     setErrors({});
+
+//     const routeName =
+//       modalMode === "edit"
+//         ? "edit-installment"
+//         : "update-installment";
+
+//     // Build Clean Payload
+//     const payload = {
+//       amount: formData.amount,
+//       dueDate: formData.dueDate,
+//       fundDate: formData.fundDate,
+//       payFrom: formData.payFrom,
+//       paymentMode: formData.paymentMode,
+//       fromRbfBankAccount:
+//         formData.fromRbfBankAccount,
+//       status: formData.status,
+//     };
+
+//     // Third Party Details
+//     if (formData.payFrom === "third-party") {
+//       payload.accountName =
+//         formData.accountName;
+//       payload.accountNumber =
+//         formData.accountNumber;
+//     }
+
+//     // Payment Mode Wise Data
+//     if (formData.paymentMode === "Cheque") {
+//       payload.chequeNumber =
+//         formData.chequeNumber;
+//     } else {
+//       payload.utrNo = formData.utrNo;
+//     }
+
+//     // Pending Details
+//     if (formData.status === "Pending") {
+//       payload.pendingAmount =
+//         formData.pendingAmount;
+//       payload.pendingDate =
+//         formData.pendingDate;
+//     }
+
+//     const response = await axios.put(
+//       `${API}/api/donor/${routeName}/${donorId}/${selectedPayment.id}`,
+//       payload
+//     );
+
+//     if (response?.data?.success) {
+//       setShowModal(false);
+
+//       setPayments((prev) =>
+//         prev.map((item) =>
+//           String(item.id) ===
+//           String(selectedPayment.id)
+//             ? { ...item, ...payload }
+//             : item
+//         )
+//       );
+//     }
+//   } catch (error) {
+//     console.error(
+//       "Update Installment Error:",
+//       error
+//     );
+
+//     alert(
+//       error?.response?.data?.message ||
+//         "Something went wrong"
+//     );
+//   }
+// };
+
+const updateInstallment = async () => {
+  debugger
+  try {
+    const validationErrors = {};
+
+    // Fund Date
+    if (!formData.fundDate) {
+      validationErrors.fundDate = "Fund Date is required";
+    }
+
+    // Status
+    // if (!formData.status) {
+    //   validationErrors.status = "Status is required";
+    // }
+
+    
+   
+    
+  
+
+    // Pay From
+    if (!formData.payFrom) {
+      validationErrors.payFrom = "Pay From is required";
+    }
+
+    // Third Party Validation
+    if (formData.payFrom === "third-party") {
+      if (!formData.accountName?.trim()) {
+        validationErrors.accountName =
+          "Account Holder Name is required";
+      }
+
+      if (!formData.accountNumber?.trim()) {
+        validationErrors.accountNumber =
+          "Account Number is required";
+      }
+    }
+
+    // Payment Mode
+    if (!formData.paymentMode) {
+      validationErrors.paymentMode =
+        "Payment Mode is required";
+    }
+
+    // UTR Required
+    if (
+      ["Bank Transfer", "UPI", "Card"].includes(
+        formData.paymentMode
+      ) &&
+      !formData.utrNo?.trim()
+    ) {
+      validationErrors.utrNo =
+        "UTR Number is required";
+    }
+
+    // Cheque Number Required
+    if (
+      formData.paymentMode === "Cheque" &&
+      !formData.chequeNumber?.trim()
+    ) {
+      validationErrors.chequeNumber =
+        "Cheque Number is required";
+    }
+
+    // To RBF Bank Account
+    if (!formData.fromRbfBankAccount) {
+      validationErrors.fromRbfBankAccount =
+        "To RBF Bank Account is required";
+    }
+
+    // Stop if validation failed
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      return;
+    }
+
+    setErrors({});
+
+    const routeName =
+      modalMode === "edit"
+        ? "edit-installment"
+        : "update-installment";
+
+    // Build Clean Payload
+    const payload = {
+      amount: formData.amount,
+      dueDate: formData.dueDate,
+      fundDate: formData.fundDate,
+      payFrom: formData.payFrom,
+      paymentMode: formData.paymentMode,
+      fromRbfBankAccount:
+        formData.fromRbfBankAccount,
+
+         bankName: formData.bankName,
+  branchName: formData.branchName,
+  bankAccountNumber: formData.accountNumber,
+      status: formData.status,
+      pendingDetails :formData.pendingDetails,
+    };
+
+    // Third Party Details
+    if (formData.payFrom === "third-party") {
+      payload.accountName =
+        formData.accountName;
+      payload.accountNumber =
+        formData.accountNumber;
+    }
+
+    // Payment Mode Wise Data
+    if (formData.paymentMode === "Cheque") {
+      payload.chequeNumber =
+        formData.chequeNumber;
+    } else {
+      payload.utrNo = formData.utrNo;
+    }
+
+    // // Pending Details
+    // if (formData.status === "Pending") {
+    //   payload.pendingAmount =
+    //     formData.pendingAmount;
+    //   payload.pendingDate =
+    //     formData.pendingDate;
+    // }
+
+    const response = await axios.put(
+      `${API}/api/donor/${routeName}/${donorId}/${selectedPayment.id}`,
+      payload
+    );
+
+    if (response?.data?.success) {
+      setShowModal(false);
+      fetchInstallments();
+      setPayments((prev) =>
+        prev.map((item) =>
+          String(item.id) ===
+          String(selectedPayment.id)
+            ? { ...item, ...payload }
+            : item
+        )
+      );
+    }
+  } catch (error) {
+    console.error(
+      "Update Installment Error:",
+      error
+    );
+
+    alert(
+      error?.response?.data?.message ||
+        "Something went wrong"
+    );
+  }
+  };
   const downloadReceipt = async (donorId, installmentId, index) => {
     try {
       const response = await axios.get(
@@ -373,9 +869,9 @@ function DonorPaymentHistory() {
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-gray-50 border-b border-gray-100">
-              <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">Sr. No.</th>
               <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">Installment</th>
-              <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">Donation Type</th>
+              {/* <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">Installment</th> */}
+              {/* <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">Donation Type</th> */}
               <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">Paid From</th>
               <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">Received In</th>
               <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">Amount</th>
@@ -383,9 +879,9 @@ function DonorPaymentHistory() {
               <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">Date Installment Received</th>
               <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">Mode of Payment</th>
               <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">UTR Number</th>
-              <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">Shares</th>
+              {/* <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">Shares</th>
               <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">Share Rate</th>
-              <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">RBF Demat</th>
+              <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">RBF Demat</th> */}
               <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">
                 Action
               </th>
@@ -443,8 +939,8 @@ function DonorPaymentHistory() {
                     className="hover:bg-gray-50/50 transition-colors"
                   >
                     <td className="px-6 py-4 text-sm text-gray-600">{index + 1}</td>
-                    <td className="px-6 py-4 text-sm font-medium text-slate-700">{installmentLabel}</td>
-                    <td className="px-6 py-4 text-sm text-gray-700">{donationType}</td>
+                    {/* <td className="px-6 py-4 text-sm font-medium text-slate-700">{installmentLabel}</td> */}
+                    {/* <td className="px-6 py-4 text-sm text-gray-700">{donationType}</td> */}
                     <td className="px-6 py-4 text-sm text-gray-700">{paidFrom}</td>
                     <td className="px-6 py-4 text-sm text-gray-700">{receivedIn}</td>
                     <td className="px-6 py-4 text-sm font-bold text-green-600">
@@ -460,7 +956,7 @@ function DonorPaymentHistory() {
                     <td className="px-6 py-4 text-sm font-mono text-gray-500 uppercase tracking-tight">
                       {showUtr ? utr : "-"}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-700">
+                    {/* <td className="px-6 py-4 text-sm text-gray-700">
                       {donationType === "Share" ? shareCount : "-"}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-700">
@@ -468,40 +964,45 @@ function DonorPaymentHistory() {
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-700">
                       {donationType === "Share" ? rbfDemat : "-"}
-                    </td>
+                    </td> */}
                     <td className="px-6 py-4 text-sm">
-                      {payment.status === "Completed" ? (
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => openEditModal(payment)}
-                            className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs"
-                          >
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => downloadReceipt(donorId, payment.id, index)}
-                            className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs"
-                          >
-                            Download
-                          </button>
-                         
-                        </div>
-                      ) : (
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => openPayModal(payment)}
-                            className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded text-xs"
-                          >
-                            Pay
-                          </button>
-                          {/* <button
-                            onClick={() => openEditModal(payment)}
-                            className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs"
-                          >
-                            Edit
-                          </button> */}
-                        </div>
-                      )}
+                     {payment.status === "Completed" ? (
+  <div className="flex gap-2">
+    <button
+      onClick={() => openEditModal(payment)}
+      className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs"
+    >
+      Edit
+    </button>
+
+    <button
+      onClick={() =>
+        downloadReceipt(donorId, payment.id, index)
+      }
+      className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs"
+    >
+      Download
+    </button>
+  </div>
+) : payment.paymentMode ? (
+  <div className="flex gap-2">
+   <button
+  onClick={() => openViewModal(payment)}
+  className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1 rounded text-xs"
+>
+  View
+</button>
+  </div>
+) : !payment.paymentMode && !payment.fundDate ? (
+  <div className="flex gap-2">
+    <button
+      onClick={() => openPayModal(payment)}
+      className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded text-xs"
+    >
+      Pay
+    </button>
+  </div>
+) : null}
                     </td>
                   </tr>
                 );
@@ -519,33 +1020,18 @@ function DonorPaymentHistory() {
 
       {showModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm z-50 p-4">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-[500px] overflow-hidden border border-slate-200">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-[500px] overflow-hidden border border-slate-200 h-[500px] overflow-y-auto">
 
-            {/* Header */}
+           
             <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50">
               <h2 className="text-xl font-semibold text-slate-800">
                 {modalMode === "edit" ? "Edit Installment" : "Pay Installment"}
               </h2>
             </div>
-
-            {/* Form Body */}
             <div className="px-6 space-y-4">
 
-              <div className="grid grid-cols-1 gap-1.5">
-                <label className="text-sm font-medium text-slate-700">Donation Type</label>
-                <select
-                  name="donationType"
-                  value={formData.donationType}
-                  onChange={handleChange}
-                  className="w-full border border-slate-300 p-2.5 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 outline-none"
-                >
-                  <option value="Amount">Amount</option>
-                  <option value="Share">Share</option>
-                </select>
-              </div>
-
               {formData.donationType !== "Share" && (
-                <div className="grid grid-cols-1 gap-1.5">
+                <div className="grid grid-cols-1 gap-1.5 mt-5">
                   <label className="text-sm font-medium text-slate-700">Amount</label>
                   <input
                     type="number"
@@ -571,7 +1057,7 @@ function DonorPaymentHistory() {
                   />
                 </div>
                 <div className="grid grid-cols-1 gap-1.5">
-                  <label className="text-sm font-medium text-slate-700">Fund Date</label>
+                  <label className="text-sm font-medium text-slate-700">Fund Date <span className="text-red-500">*</span></label>
                   <input
                     type="date"
                     name="fundDate"
@@ -579,12 +1065,17 @@ function DonorPaymentHistory() {
                     onChange={handleChange}
                     className="w-full border border-slate-300 p-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                   />
+                  {errors.fundDate && (
+  <p className="text-red-500 text-xs mt-1">
+    {errors.fundDate}
+  </p>
+)}
                 </div>
               </div>
 
               <div className="grid grid-cols-1 gap-1.5">
                 <label className="text-sm font-medium text-slate-700">
-                  Pay From
+                  Pay From <span className="text-red-500">*</span>
                 </label>
 
                 <select
@@ -597,78 +1088,67 @@ function DonorPaymentHistory() {
                   <option value="self">Self</option>
                   <option value="third-party">Third Party</option>
                 </select>
+
+                {errors.payFrom && (
+  <p className="text-red-500 text-xs mt-1">
+    {errors.payFrom}
+  </p>
+)}
               </div>
 
               {formData.payFrom === "third-party" && (
-                <div className="grid grid-cols-1 gap-1.5">
-                  <label className="text-sm font-medium text-slate-700">
-                    Account Name<span className="text-red-500">*</span>
-                  </label>
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-                  <input
-                    type="text"
-                    name="accountName"
-                    value={formData.accountName}
-                    onChange={handleChange}
-                    placeholder="Enter Account Holder Name"
-                    className="w-full border border-slate-300 p-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                  />
-                </div>
-              )}
+    
+    <div className="grid grid-cols-1 gap-1.5">
+      <label className="text-sm font-medium text-slate-700">
+        Account Holder Name<span className="text-red-500">*</span>
+      </label>
 
-              {formData.donationType === "Share" ? (
-                <>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="grid grid-cols-1 gap-1.5">
-                      <label className="text-sm font-medium text-slate-700">No. of Shares</label>
-                      <input
-                        type="number"
-                        name="shareCount"
-                        placeholder="0"
-                        value={formData.shareCount}
-                        onChange={handleChange}
-                        className="w-full border border-slate-300 p-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                      />
-                    </div>
-                    <div className="grid grid-cols-1 gap-1.5">
-                      <label className="text-sm font-medium text-slate-700">Rate per Share</label>
-                      <input
-                        type="number"
-                        name="shareRate"
-                        placeholder="0.00"
-                        value={formData.shareRate}
-                        onChange={handleChange}
-                        className="w-full border border-slate-300 p-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                      />
-                    </div>
-                  </div>
+      <input
+        type="text"
+        name="accountName"
+        value={formData.accountName}
+        onChange={handleChange}
+        placeholder="Enter Account Holder Name"
+        className="w-full border border-slate-300 p-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+      />
+      {errors.accountName && (
+  <p className="text-red-500 text-xs mt-1">
+    {errors.accountName}
+  </p>
+)}
+    </div>
 
-                  <div className="grid grid-cols-1 gap-1.5">
-                    <label className="text-sm font-medium text-slate-700">
-                      RBF Demat Account
-                    </label>
+    {/* ACCOUNT NUMBER */}
+    <div className="grid grid-cols-1 gap-1.5">
+      <label className="text-sm font-medium text-slate-700">
+        Account Number<span className="text-red-500">*</span>
+      </label>
 
-                    <select
-                      name="rbfDematAccountId"
-                      value={formData.rbfDematAccountId}
-                      onChange={handleChange}
-                      className="w-full border border-slate-300 p-2.5 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 outline-none"
-                    >
-                      <option value="">Select</option>
-                      {activeDemats.map((item) => (
-                        <option key={item.id} value={item.id}>
-                          {item.broker_name} - {item.account_holder_name} {item.client_id ? `(${item.client_id})` : ""}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </>
-              ) : (
-                <>
+      <input
+        type="text"
+        name="accountNumber"
+        value={formData.accountNumber}
+        onChange={handleChange}
+        placeholder="Enter Account Number"
+        className="w-full border border-slate-300 p-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+      />
+      {errors.accountNumber && (
+  <p className="text-red-500 text-xs mt-1">
+    {errors.accountNumber}
+  </p>
+)}
+    </div>
+
+  </div>
+)}
+
+             
                   {/* Payment Info Row */}
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 gap-4">
                     <div className="grid grid-cols-1 gap-1.5">
-                      <label className="text-sm font-medium text-slate-700">Payment Mode</label>
+                      <label className="text-sm font-medium text-slate-700">Payment Mode <span className="text-red-500">*</span></label>
                       <select
                         name="paymentMode"
                         value={formData.paymentMode}
@@ -679,11 +1159,16 @@ function DonorPaymentHistory() {
                         <option value="Bank Transfer">Bank Transfer</option>
                         <option value="Card">Card</option>
                         <option value="Cheque">Cheque</option>
-                        <option value="Cash">Cash</option>
                         <option value="UPI">UPI</option>
                       </select>
+
+                      {errors.paymentMode && (
+  <p className="text-red-500 text-xs mt-1">
+    {errors.paymentMode}
+  </p>
+)}
                     </div>
-                    <div className="grid grid-cols-1 gap-1.5">
+                    {/* <div className="grid grid-cols-1 gap-1.5">
                       <label className="text-sm font-medium text-slate-700">UTR Number</label>
                       <input
                         type="text"
@@ -693,12 +1178,62 @@ function DonorPaymentHistory() {
                         onChange={handleChange}
                         className="w-ll border border-slate-300 p-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                       />
-                    </div>
+                    </div> */}
+
+                    <div className="grid grid-cols-1 gap-1.5">
+  {formData.paymentMode === "Cheque" ? (
+    <>
+      <label className="text-sm font-medium text-slate-700">
+        Cheque Number <span className="text-red-500">*</span>
+      </label>
+
+      <input
+        type="text"
+        name="chequeNumber"
+        placeholder="Enter Cheque Number"
+        value={formData.chequeNumber || ""}
+        onChange={handleChange}
+        className={`w-full border p-2.5 rounded-lg ${
+          errors.chequeNumber
+            ? "border-red-500"
+            : "border-slate-300"
+        }`}
+      />
+
+      {errors.chequeNumber && (
+        <p className="text-red-500 text-xs">
+          {errors.chequeNumber}
+        </p>
+      )}
+    </>
+  ) : (
+    <>
+      <label className="text-sm font-medium text-slate-700">
+        UTR Number<span className="text-red-500">*</span>
+      </label>
+
+      <input
+        type="text"
+        name="utrNo"
+        placeholder="Transaction ID"
+        value={formData.utrNo}
+        onChange={handleChange}
+        className="w-full border border-slate-300 p-2.5 rounded-lg"
+      />
+
+       {errors.utrNo && (
+      <p className="text-red-500 text-xs mt-1">
+        {errors.utrNo}
+      </p>
+    )}
+    </>
+  )}
+</div>
                   </div>
 
                   <div className="grid grid-cols-1 gap-1.5">
                     <label className="text-sm font-medium text-slate-700">
-                      To RBF Bank Account
+                      To RBF Bank Account <span className="text-red-500">*</span>
                     </label>
 
                     <select
@@ -710,18 +1245,22 @@ function DonorPaymentHistory() {
                       <option value="">Select</option>
                       {activeBanks.map((bank) => (
                         <option key={bank.id} value={bank.id}>
-                          {bank.bank_name} (***{String(bank.account_no).slice(-4)})
+                           {bank.bank_name} {bank.account_no} {bank.branch_name}
                         </option>
                       ))}
-                    </select>
+                </select>
+                {errors.fromRbfBankAccount && (
+  <p className="text-red-500 text-xs mt-1">
+    {errors.fromRbfBankAccount}
+  </p>
+)}
                   </div>
-                </>
-              )}
+                
 
-              {/* Status Field */}
-              <div className="grid grid-cols-1 gap-1.5">
-                <label className="text-sm font-medium text-slate-700">Status</label>
-                <select
+           
+              <div className="grid grid-cols-1 gap-1.5 mb-5">
+                {/* <label className="text-sm font-medium text-slate-700">Status <span className="text-red-500">*</span></label> */}
+                {/* <select
                   name="status"
                   value={formData.status}
                   onChange={handleChange}
@@ -731,7 +1270,95 @@ function DonorPaymentHistory() {
                   <option value="Success">Success</option>
                   <option value="Pending">Pending</option>
                  
-                </select>
+                </select> */}
+
+                 {/* {errors.status && (
+    <p className="text-red-500 text-xs mt-1">
+      {errors.status}
+    </p>
+                )} */}
+                
+ <div className="space-y-4 mt-4 mb-5">
+  
+
+  {/* Add Button */}
+                  <div className="flex items-center justify-between">
+                     <label className="text-sm font-medium text-slate-700">
+          Pending Details <span className="text-red-500">*</span>
+        </label>
+
+                  
+  <button
+    type="button"
+    onClick={addPendingRow}
+    className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg"
+  >
+    + Add More
+  </button>
+
+  
+                  </div>
+                  {formData?.pendingDetails?.map((item, index) => (
+    <div
+      key={index}
+      className="grid grid-cols-2 gap-4 border p-3 rounded-lg relative"
+    >
+      {/* Amount */}
+      <div className="grid grid-cols-1 gap-1.5">
+        <label className="text-sm font-medium text-slate-700">
+          Amount <span className="text-red-500">*</span>
+        </label>
+
+        <input
+          type="number"
+          value={item.pendingAmount}
+          onChange={(e) =>
+            handlePendingChange(
+              index,
+              "pendingAmount",
+              e.target.value
+            )
+          }
+          placeholder="Enter Amount"
+          className="w-full border border-slate-300 p-2.5 rounded-lg"
+        />
+      </div>
+
+      {/* Date */}
+      <div className="grid grid-cols-1 gap-1.5">
+        <label className="text-sm font-medium text-slate-700">
+          Date <span className="text-red-500">*</span>
+        </label>
+
+        <input
+          type="date"
+          value={item.pendingDate}
+          onChange={(e) =>
+            handlePendingChange(
+              index,
+              "pendingDate",
+              e.target.value
+            )
+          }
+          className="w-full border border-slate-300 p-2.5 rounded-lg"
+        />
+      </div>
+
+      {/* Remove Button */}
+      {formData.pendingDetails.length > 1 && (
+        <button
+          type="button"
+          onClick={() => removePendingRow(index)}
+          className="absolute -top-2 -right-2 bg-red-500 text-white w-6 h-6 rounded-full"
+        >
+          ×
+        </button>
+      )}
+    </div>
+  ))}
+  
+</div>
+
               </div>
             </div>
 
@@ -755,6 +1382,150 @@ function DonorPaymentHistory() {
           </div>
         </div>
       )}
+
+      {viewModal && selectedPayment && (
+ <div className="fixed inset-0 bg-black/30 backdrop-blur-md flex justify-center items-center z-50">
+    <div className="bg-white rounded-lg shadow-lg w-[90%] max-w-4xl max-h-[90vh] overflow-y-auto p-6">
+      
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-bold">
+          Installment Details
+        </h2>
+        <button
+          onClick={() => setViewModal(false)}
+          className="text-red-500 font-bold text-xl"
+        >
+          ✕
+        </button>
+      </div>
+
+      {/* Basic Details */}
+      <div className="grid grid-cols-2 gap-4 mb-6">
+        <div>
+          <label className="font-semibold">Installment No</label>
+          <p>{selectedPayment.installmentNo}</p>
+        </div>
+
+        <div>
+          <label className="font-semibold">Amount</label>
+          <p>₹ {selectedPayment.amount}</p>
+        </div>
+
+        <div>
+          <label className="font-semibold">Status</label>
+          <p>{selectedPayment.status}</p>
+        </div>
+
+        <div>
+          <label className="font-semibold">Due Date</label>
+          <p>{selectedPayment.dueDate}</p>
+        </div>
+
+        <div>
+          <label className="font-semibold">Fund Date</label>
+          <p>{selectedPayment.fundDate || "-"}</p>
+        </div>
+
+        <div>
+          <label className="font-semibold">Payment Mode</label>
+          <p>{selectedPayment.paymentMode || "-"}</p>
+        </div>
+
+        <div>
+          <label className="font-semibold">UTR No</label>
+          <p>{selectedPayment.utrNo || "-"}</p>
+        </div>
+
+        <div>
+          <label className="font-semibold">Pay From</label>
+          <p>{selectedPayment.payFrom || "-"}</p>
+        </div>
+
+        <div>
+          <label className="font-semibold">Account Name</label>
+          <p>{selectedPayment.accountName || "-"}</p>
+        </div>
+
+        <div>
+          <label className="font-semibold">Bank Account ID</label>
+          <p>{selectedPayment.bankName || "-"} {selectedPayment.accountNumber || "-"}</p>
+        </div>
+      </div>
+
+      {/* Pending Details */}
+      {selectedPayment.pendingDetails?.length > 0 && (
+        <div className="mb-6">
+          <h3 className="font-bold text-lg mb-2">
+            Pending Details
+          </h3>
+
+          <table className="w-full border">
+            <thead className="bg-gray-100">
+              <tr>
+                <th className="border p-2">Date</th>
+                <th className="border p-2">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              {selectedPayment.pendingDetails.map((item, index) => (
+                <tr key={index}>
+                  <td className="border p-2">
+                    {item.pendingDate}
+                  </td>
+                  <td className="border p-2">
+                    ₹ {item.pendingAmount}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Split Details */}
+      {selectedPayment.splits?.length > 0 && (
+        <div>
+          <h3 className="font-bold text-lg mb-2">
+            Split Details
+          </h3>
+
+          <table className="w-full border">
+            <thead className="bg-gray-100">
+              <tr>
+                <th className="border p-2">Donation Type</th>
+                <th className="border p-2">Amount</th>
+                <th className="border p-2">Payment Mode</th>
+                <th className="border p-2">UTR</th>
+                <th className="border p-2">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {selectedPayment.splits.map((split) => (
+                <tr key={split.id}>
+                  <td className="border p-2">
+                    {split.donation_type}
+                  </td>
+                  <td className="border p-2">
+                    ₹ {split.amount}
+                  </td>
+                  <td className="border p-2">
+                    {split.payment_mode}
+                  </td>
+                  <td className="border p-2">
+                    {split.utr_no}
+                  </td>
+                  <td className="border p-2">
+                    {split.status}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  </div>
+)}
     </div>
   );
 }

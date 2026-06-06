@@ -264,10 +264,10 @@ const RequestDetails = () => {
   const navigate = useNavigate();
 
   const location = useLocation();
-
+ const assistanceId = location.state?.assistanceId;
   const [row, setRow] = useState(location.state || {});
   const [assistanceData, setAssistanceData] = useState({});
-
+console.log(row, "initial row");
   // const [assistanceData, setAssistanceData] = useState(parseAssistanceData(row?.id));
   const [allRows, setAllRows] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -277,16 +277,22 @@ const RequestDetails = () => {
     [row?.assistance_type, row?.type],
   );
 
- const fetchRequestDetails = async (id) => {
+const fetchRequestDetails = async (id) => {
+
     try {
+
       setLoading(true);
 
-      const res = await axios.get(`${API}/api/assistance/all-assistance/${id}`);
+      const res = await axios.get(
+        `${API}/api/assistance/all-assistance/${id}`
+      );
 
       if (res.data?.success) {
+
         const apiData = res.data.data;
 
         setRow(apiData);
+
         setAssistanceData(
           typeof apiData.assistance_data === "string"
             ? JSON.parse(apiData.assistance_data)
@@ -297,17 +303,31 @@ const RequestDetails = () => {
       }
 
     } catch (error) {
+
       console.error("Details Fetch Error:", error);
+
     } finally {
+
       setLoading(false);
+
     }
   };
 
+  // =========================================
+  // CALL API
+  // =========================================
+
   useEffect(() => {
-    if (row?.id) {
-      fetchRequestDetails(row.id);
+
+    if (assistanceId) {
+
+      fetchRequestDetails(assistanceId);
+
     }
-  }, [row?.id]);
+
+  }, [assistanceId]);
+
+  console.log(row, "row");
 
   const labelStyle = "text-gray-500 font-semibold text-sm";
   const valueStyle = "text-gray-800 font-bold text-sm";
@@ -408,7 +428,7 @@ const RequestDetails = () => {
                   {row?.relation_key || row?.relation || "-"}
                 </span>
               </p>
-
+ 
               
             </div>
             <div>
@@ -431,9 +451,16 @@ const RequestDetails = () => {
                   {row?.mobile_number || "-"}
                 </span>
               </p>
+
+               <p className="text-sm text-gray-500">
+                samudaay :{" "}
+                <span className="font-semibold text-gray-700">
+                  {row?.samudaay || row?.samudaay || "-"}
+                </span>
+              </p>
             </div>
 
-            {/* Right Side */}
+           
             <div>
               
 
@@ -457,7 +484,12 @@ const RequestDetails = () => {
                   {row?.dob?.slice(0, 10) || "-"}
                 </span>
               </p>
-
+ <p className="text-sm text-gray-500">
+                Gachadhipati  :{" "}
+                <span className="font-semibold text-gray-700">
+                  {row?.gadipati || row?.gadipati || "-"}
+                </span>
+              </p>
               {/* <p className="text-sm text-gray-500">
                 Ayushman Coverage :{" "}
                 <span className="font-semibold text-gray-700">
@@ -497,7 +529,7 @@ const RequestDetails = () => {
       ) : (
         <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6 shadow-sm">
           <h3 className="text-red-500 font-bold mb-4">{assistanceTitle}</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-3">
+          {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-3">
             {renderFields.length > 0 ? (
               renderFields.map((field) => (
                 <div key={field.key} className="flex justify-between gap-4">
@@ -512,7 +544,33 @@ const RequestDetails = () => {
             ) : (
               <p className="text-sm text-gray-500 italic">No assistance fields available for this type.</p>
             )}
-          </div>
+          </div> */}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-3">
+  {renderFields.length > 0 ? (
+    renderFields.map((field) => (
+      <div key={field.key} className="flex justify-between gap-4">
+        <span className={labelStyle}>{field.label} :</span>
+
+        <span className={valueStyle}>
+          {field.key === "diseaseName"
+            ? assistanceData?.diseases?.length
+              ? assistanceData.diseases
+                  .map((disease) => disease.diseaseName)
+                  .join(", ")
+              : "-"
+            : field.isDate
+            ? formatDate(assistanceData?.[field.key])
+            : formatValue(assistanceData?.[field.key])}
+        </span>
+      </div>
+    ))
+  ) : (
+    <p className="text-sm text-gray-500 italic">
+      No assistance fields available for this type.
+    </p>
+  )}
+</div>
         </div>
       )}
 
@@ -591,7 +649,7 @@ const RequestDetails = () => {
         <h3 className="text-red-500 font-bold mb-4">Remarks & Feedback</h3>
 
         {/* Summary First */}
-        <div className="mb-6 border-b pb-4">
+        {/* <div className="mb-6 border-b pb-4">
           <h4 className="font-semibold text-gray-700 mb-2">Summary</h4>
           <div
             className="text-sm text-gray-700"
@@ -599,7 +657,7 @@ const RequestDetails = () => {
               __html: row?.summary || "-"
             }}
           />
-        </div>
+        </div> */}
 
         {/* Diksharthi Feedback */}
         <div className="mb-6 border-b pb-4">
@@ -636,7 +694,51 @@ const RequestDetails = () => {
             <p className="text-sm text-gray-400">No Feedback Found</p>
           )}
         </div>
+<div className="mb-6 border-b pb-4">
+  <h4 className="font-semibold text-blue-600 mb-3">
+    Review Feedback
+  </h4>
 
+  {[
+     row?.committee_feedback && {
+    title: "Case Coordinator → Committee Member",
+    feedback: row.committee_feedback,
+  },
+  row?.expert_feedback && {
+    title: "Case Coordinator → Expert Panel",
+    feedback: row.expert_feedback,
+  },
+  ]
+    .filter(Boolean)
+    .map((item, index) => (
+      <div
+        key={index}
+        className="mb-3 p-3  overflow-hidden"
+      >
+        <h5 className="font-medium text-gray-800 mb-2">
+          {item.title}
+        </h5>
+
+        <div
+          className="text-sm text-gray-700 leading-relaxed break-all whitespace-pre-wrap overflow-hidden w-full"
+          style={{
+            wordBreak: "break-word",
+            overflowWrap: "break-word",
+            whiteSpace: "pre-wrap",
+          }}
+          dangerouslySetInnerHTML={{
+            __html: item.feedback || "-",
+          }}
+        />
+      </div>
+    ))}
+
+  {!row?.committee_feedback && !row?.expert_feedback && (
+    <p className="text-sm text-gray-400">
+      No Feedback Found
+    </p>
+  )}
+</div>
 
         {/* Operation Manager Feedback */}
         {/* <div className="mb-6 border-b pb-4">
@@ -677,9 +779,9 @@ const RequestDetails = () => {
         </div> */}
 
         {/* Final Feedback */}
-        <div>
+        {/* <div>
           <h4 className="font-semibold text-red-500 mb-3">
-            Assitences Feedback
+            Staff Feedback
           </h4>
 
           {row?.feedback?.length > 0 ? (
@@ -707,7 +809,7 @@ const RequestDetails = () => {
           ) : (
             <p className="text-sm text-gray-400">No Feedback Found</p>
           )}
-        </div>
+        </div> */}
       </div>
     </div>
   );

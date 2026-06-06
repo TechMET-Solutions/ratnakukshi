@@ -63,7 +63,9 @@ const initialFormData = {
   // family_relation: [], // checkbox ke liye array
   summary: "", // 👈 new field
   spokenTo: "",
-  spokenTo_Relation: ""
+  spokenTo_Relation: "",
+  relation_with_ms: "",
+  application_date: new Date().toISOString().split("T")[0], // Today's Date
 };
 
 // Helper to calculate age from DOB
@@ -319,8 +321,15 @@ const mapDiksharthiToFormData = (record) => {
     assistanceReceived:
       record?.assistanceReceived || record?.assistance_received || "",
     summary: record?.summary || "",
+    summary_image: record?.summary_image || "",
+summary_document: record?.summary_document || "",
     spokenTo: record?.spoken_to || "",
-    spokenTo_Relation: record.spoken_to_relation || ""
+    spokenTo_Relation: record.spoken_to_relation || "",
+
+    relation_with_ms: record?.relation_with_ms || "",
+
+  // add this
+  application_date: toInputDate(record?.application_date),
   };
 };
 
@@ -388,6 +397,10 @@ const mapFormDataToApiPayload = (formData, userId, currentStep = 1) => {
     form_step: currentStep,
     spokenTo: formData.spokenTo,
     spokenTo_Relation: formData.spokenTo_Relation,
+
+    relation_with_ms: formData.relation_with_ms || "",
+
+    application_date: formData.application_date || "",
   };
 };
 
@@ -416,7 +429,7 @@ const DiksharthiDetailsAdd = () => {
   const [formData, setFormData] = useState(initialFormData);
   console.log(formData, "formData");
   console.log(formData.familyRelations, "familyRelations");
-
+  const [suggestions, setSuggestions] = useState([]);
   const [CurrentDiksarthiStore, setCurrentDiksarthiStore] = useState(false);
   console.log(formData?.familyRelationDetails, "familyRelationDetails");
   const [isEditLoading, setIsEditLoading] = useState(false);
@@ -433,14 +446,153 @@ const DiksharthiDetailsAdd = () => {
 
   const [existingFanRelations, setExistingFanRelations] = useState(new Set());
 
-
   const [sameAsMain, setSameAsMain] = useState(true);
   const [sameAsMainForNgo, setSameAsMainForNgo] = useState(true);
 
-
   const [isFanSelected, setIsFanSelected] = useState(false);
+const [documents, setDocuments] = useState([
+  {
+    title: "",
+    files: [],
+  },
+]);
 
+// Add New Section
+const handleAddDocument = () => {
+  setDocuments((prev) => [
+    ...prev,
+    {
+      title: "",
+      files: [],
+    },
+  ]);
+};
 
+// Update Title
+const handleTitleChange = (index, value) => {
+  const updated = [...documents];
+  updated[index].title = value;
+  setDocuments(updated);
+};
+
+// Update Files
+const handleFileChange = (index, files) => {
+  const updated = [...documents];
+  updated[index].files = Array.from(files);
+  setDocuments(updated);
+};
+
+// const handleUploadDocuments = async (diksharthiId) => {
+//   debugger
+//   try {
+//     const formData = new FormData();
+
+//     formData.append("diksharthi_id", diksharthiId);
+
+//     // Convert full documents array
+//     const documentData = documents.map((doc, index) => {
+//       return {
+//         title: doc.title,
+//         files: doc.files.map((file) => file.name),
+//       };
+//     });
+
+//     formData.append("documents", JSON.stringify(documentData));
+
+//     // Append actual files
+//     documents.forEach((doc, index) => {
+//       doc.files.forEach((file) => {
+//         formData.append("files", file);
+//       });
+//     });
+
+//     const response = await fetch(
+//         `${API}/api/upload-diksharthi-documents-new`,
+//       {
+//         method: "POST",
+//         body: formData,
+//       }
+//     );
+
+//     const data = await response.json();
+
+//     if (response.ok) {
+//       alert("Documents Uploaded Successfully");
+//       console.log(data);
+//     } else {
+//       alert(data.message);
+//     }
+//   } catch (error) {
+//     console.log(error);
+//   }
+// };
+
+const handleUploadDocuments = async (diksharthiId) => {
+  try {
+    const formData = new FormData();
+
+    formData.append("diksharthi_id", diksharthiId);
+
+    // ONLY DOCUMENTS HAVING NEW FILES
+    const updatedDocuments = documents
+      .map((doc) => {
+        // ONLY NEW FILES
+        const newFiles = doc.files.filter(
+          (file) => file instanceof File
+        );
+
+        return {
+          title: doc.title,
+          files: newFiles,
+        };
+      })
+      // REMOVE EMPTY DOCUMENTS
+      .filter((doc) => doc.files.length > 0);
+
+    // DOCUMENT JSON
+    const documentData = updatedDocuments.map((doc) => ({
+      title: doc.title,
+      files: doc.files.map((file) => file.name),
+    }));
+
+    formData.append(
+      "documents",
+      JSON.stringify(documentData)
+    );
+
+    // APPEND ONLY NEW FILE OBJECTS
+    updatedDocuments.forEach((doc) => {
+      doc.files.forEach((file) => {
+        formData.append("files", file);
+      });
+    });
+
+    // NO NEW FILES
+    if (updatedDocuments.length === 0) {
+      alert("No New Files Selected");
+      return;
+    }
+
+    const response = await fetch(
+      `${API}/api/upload-diksharthi-documents-new`,
+      {
+        method: "POST",
+        body: formData,
+      }
+    );
+
+    const data = await response.json();
+
+    if (response.ok) {
+      alert("Documents Uploaded Successfully");
+      console.log(data);
+    } else {
+      alert(data.message);
+    }
+  } catch (error) {
+    console.log(error);
+  }
+};
 
   const handleSameAsMainChange = (checked) => {
     setSameAsMain(checked);
@@ -515,8 +667,7 @@ const DiksharthiDetailsAdd = () => {
         family_mediclaim_type: data.Family_mediclaim_type || "",
         Family_mediclaim_amount: data.family_mediclaim_amount || "",
         mediclaimPremiumAmount: data.mediclaim_premium_amount || "",
-        family_mediclaim_companyName:
-          data.family_mediclaim_companyName || "",
+        family_mediclaim_companyName: data.family_mediclaim_companyName || "",
 
         // ✅ NGO
         ngoAssistance:
@@ -607,23 +758,43 @@ const DiksharthiDetailsAdd = () => {
     return "";
   };
 
-  const fetchPincodeDetails = async (pincode) => {
-    try {
-      const res = await axios.get(
-        `https://api.postalpincode.in/pincode/${pincode}`,
-      );
-      const data = res.data;
+  // const fetchPincodeDetails = async (pincode) => {
+  //   try {
+  //     const res = await axios.get(
+  //       `https://api.postalpincode.in/pincode/${pincode}`,
+  //     );
+  //     const data = res.data;
 
-      if (data[0].Status === "Success") {
-        setPostOffices(data[0].PostOffice); // 👈 all villages
-      } else {
-        setPostOffices([]);
-      }
-    } catch (error) {
-      console.error(error);
-    }
-  };
+  //     if (data[0].Status === "Success") {
+  //       setPostOffices(data[0].PostOffice); // 👈 all villages
+  //     } else {
+  //       setPostOffices([]);
+  //     }
+  //   } catch (error) {
+  //     console.error(error);
+  //   }
+  // };
+const fetchPincodeDetails = async (pincode) => {
+  try {
+    if (pincode.length !== 6) return;
 
+    const res = await axios.get(
+      `https://api.zippopotam.us/in/${pincode}`
+    );
+
+    console.log(res.data);
+
+    setFormData((prev) => ({
+      ...prev,
+      district: res.data.places?.[0]?.["state"] || "",
+      state: res.data.places?.[0]?.["state"] || "",
+      village: res.data.places?.[0]?.["place name"] || "",
+      taluka: "",
+    }));
+  } catch (error) {
+    console.error(error);
+  }
+};
   useEffect(() => {
     // debugger
     if (!isEditMode) return;
@@ -653,28 +824,67 @@ const DiksharthiDetailsAdd = () => {
     }
   }, [editId]);
 
-  useEffect(() => {
-    const fetchAllDiksharthi = async () => {
-      try {
-        setIsDiksharthiListLoading(true);
-        const response = await fetch(`${API}/api/get-diksharthi`);
-        const result = await response.json().catch(() => ({}));
-        const rows = Array.isArray(result?.data) ? result.data : [];
-        const currentId = editId ? String(editId) : "";
-        const filteredRows = rows.filter(
-          (item) => String(item?.id) !== currentId,
-        );
-        setAllDiksharthi(filteredRows);
-      } catch (error) {
-        console.error(error);
-      } finally {
-        setIsDiksharthiListLoading(false);
+  // useEffect(() => {
+  //   const fetchAllDiksharthi = async () => {
+  //     try {
+  //       setIsDiksharthiListLoading(true);
+  //       const response = await fetch(`${API}/api/get-diksharthi`);
+  //       const result = await response.json().catch(() => ({}));
+  //       const rows = Array.isArray(result?.data) ? result.data : [];
+  //       const currentId = editId ? String(editId) : "";
+  //       const filteredRows = rows.filter(
+  //         (item) => String(item?.id) !== currentId,
+  //       );
+  //       setAllDiksharthi(filteredRows);
+  //     } catch (error) {
+  //       console.error(error);
+  //     } finally {
+  //       setIsDiksharthiListLoading(false);
+  //     }
+  //   };
+
+  //   fetchAllDiksharthi();
+  // }, [editId]);
+useEffect(() => {
+  if (!isEditMode) return;
+
+  const fetchDiksharthiById = async () => {
+    try {
+      setIsEditLoading(true);
+
+      const response = await fetch(
+        `${API}/api/diksharthi/${editId}`
+      );
+
+      const result = await response.json().catch(() => ({}));
+
+      if (!response.ok || !result?.data) {
+        throw new Error("Fetch failed");
       }
-    };
 
-    fetchAllDiksharthi();
-  }, [editId]);
+      const mapped = mapDiksharthiToFormData(result?.data);
 
+      setFormData(mapped);
+
+      // ✅ SET DOCUMENTS
+      if (
+        result?.data?.documents &&
+        Array.isArray(result.data.documents)
+      ) {
+        setDocuments(result.data.documents);
+      }
+
+      setFanIdSearch(mapped?.id || "");
+      setCurrentStep(Number(result?.data?.form_step) || 1);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsEditLoading(false);
+    }
+  };
+
+  fetchDiksharthiById();
+}, [isEditMode, editId]);
   // const handleChange = (e) => {
   //   const { name, value } = e.target;
   //   let sanitizedValue = value;
@@ -733,9 +943,8 @@ const DiksharthiDetailsAdd = () => {
   //       nextState.state = "";
   //       nextState.assistanceReceived = "";
   //       nextState.assistance = [];
-  //       nextState.relation_name = ""; 
+  //       nextState.relation_name = "";
   //     }
-
 
   //     if (name === "relation" && value !== "sister" && value !== "daughter") {
   //       nextState.isMarried = "";
@@ -801,7 +1010,165 @@ const DiksharthiDetailsAdd = () => {
   //   }
   // };
 
-  const handleChange = (e) => {
+  // const handleChange = (e) => {
+  //   const { name, value } = e.target;
+  //   let sanitizedValue = value;
+
+  //   if (name === "mobileNo" || name === "altMobileNo") {
+  //     sanitizedValue = value.replace(/\D/g, "").slice(0, 10);
+  //   }
+
+  //   if (name === "pinCode") {
+  //     sanitizedValue = value.replace(/\D/g, "").slice(0, 6);
+  //   }
+
+  //   // ✅ Guru Name Prefix Auto Add
+  //   // if (name === "sadhu_sadhvi_name" || name === "guruName" || name === "gadipati" || name === "acharya") {
+  //   //   sanitizedValue = `Param Pujya ${value
+  //   //     .replace(/^Param Pujya\s*/i, "")
+  //   //     .trim()}`;
+  //   // }
+
+  //   if (
+  //     name === "sadhu_sadhvi_name" ||
+  //     name === "guruName" ||
+  //     name === "gadipati" ||
+  //     name === "acharya"
+  //   ) {
+  //     sanitizedValue = value
+  //       .replace(/^Param Pujya\s*/i, "")   // remove old prefix
+  //       .replace(/[0-9]/g, "")            // remove digits
+  //       .replace(/[^a-zA-Z\s]/g, "")      // allow only letters + space
+  //       .replace(/\s{2,}/g, " ")          // multiple spaces => single
+  //       .replace(/^\s+/, "");             // allow typing after prefix
+
+  //     sanitizedValue = `Param Pujya ${sanitizedValue}`;
+  //   }
+
+  //   setFormData((prev) => {
+  //     let nextState = { ...prev, [name]: sanitizedValue };
+
+  //     if (name === "pinCode") {
+  //       if (sanitizedValue.length === 6) {
+  //         fetchPincodeDetails(sanitizedValue);
+  //       }
+  //     }
+
+  //     // Auto-calculate age when DOB changes
+  //     if (name === "dob") {
+  //       nextState.age = calculateAge(sanitizedValue);
+  //     }
+
+  //     if (name === "isAlive") {
+  //       nextState.viharLocation =
+  //         sanitizedValue === "Yes" ? prev.viharLocation : "";
+
+  //       if (sanitizedValue === "Yes") {
+  //         nextState.samadhiDate = "";
+  //         nextState.samadhiPlace = "";
+  //       }
+  //     }
+
+  //     if (name === "fanIdExists") {
+  //       if (sanitizedValue === "No") {
+  //         nextState.fan_id = "";
+  //         nextState.sameRelationsWithFan = false;
+  //         setFanIdSearch("");
+  //       }
+
+  //       if (sanitizedValue === "Yes" && prev?.fan_id) {
+  //         setFanIdSearch(prev.fan_id);
+  //       }
+  //     }
+
+  //     if (name === "rbfCriteria" && sanitizedValue === "No") {
+  //       nextState.relation = "";
+  //       nextState.family_member_firstName = "";
+  //       nextState.family_member_lastName = "";
+  //       nextState.mobileNo = "";
+  //       nextState.familyRelations = [];
+  //       nextState.familyRelationDetails = {};
+  //       nextState.permanentAddress = "";
+  //       nextState.pinCode = "";
+  //       nextState.district = "";
+  //       nextState.state = "";
+  //       nextState.assistanceReceived = "";
+  //       nextState.assistance = [];
+  //       nextState.relation_name = "";
+  //     }
+
+  //     if (name === "relation" && value !== "sister" && value !== "daughter") {
+  //       nextState.isMarried = "";
+  //     }
+
+  //     if (name === "relation" && String(sanitizedValue || "").trim()) {
+  //       const relations = Array.isArray(nextState?.familyRelations)
+  //         ? nextState.familyRelations
+  //         : [];
+
+  //       if (!relations.includes(sanitizedValue)) {
+  //         nextState.familyRelations = [...relations, sanitizedValue];
+  //       }
+
+  //       if (!nextState?.familyRelationDetails?.[sanitizedValue]) {
+  //         nextState.familyRelationDetails = {
+  //           ...(nextState.familyRelationDetails || {}),
+  //           [sanitizedValue]: createEmptyFamilyRelationDetails(),
+  //         };
+  //       }
+  //     }
+
+  //     if (name === "isMarried" && value === "Yes") {
+  //       nextState.assistanceReceived = "";
+  //     }
+
+  //     return nextState;
+  //   });
+
+  //   const nextRbfCriteria =
+  //     name === "rbfCriteria" ? sanitizedValue : formData.rbfCriteria;
+
+  //   if (name === "rbfCriteria" && sanitizedValue !== "Yes") {
+  //     setErrors((prev) => {
+  //       const next = { ...prev };
+
+  //       [
+  //         "relation",
+  //         "family_member_firstName",
+  //         "family_member_lastName",
+  //         "mobileNo",
+  //         "permanentAddress",
+  //         "pinCode",
+  //         "district",
+  //         "state",
+  //         "assistanceReceived",
+  //       ].forEach((field) => delete next[field]);
+
+  //       return next;
+  //     });
+
+  //     return;
+  //   }
+
+  //   if (rbfMandatoryFields.includes(name) || name === "relation") {
+  //     const errorMessage =
+  //       name === "relation" &&
+  //         nextRbfCriteria === "Yes" &&
+  //         !String(sanitizedValue || "").trim()
+  //         ? "Required for RBF"
+  //         : validateRbfField(name, sanitizedValue, nextRbfCriteria);
+
+  //     setErrors((prev) => {
+  //       const next = { ...prev };
+
+  //       if (errorMessage) next[name] = errorMessage;
+  //       else delete next[name];
+
+  //       return next;
+  //     });
+  //   }
+  // };
+  const handleChange = async (e) => {
     const { name, value } = e.target;
     let sanitizedValue = value;
 
@@ -813,30 +1180,58 @@ const DiksharthiDetailsAdd = () => {
       sanitizedValue = value.replace(/\D/g, "").slice(0, 6);
     }
 
-    // ✅ Guru Name Prefix Auto Add
-    // if (name === "sadhu_sadhvi_name" || name === "guruName" || name === "gadipati" || name === "acharya") {
-    //   sanitizedValue = `Param Pujya ${value
-    //     .replace(/^Param Pujya\s*/i, "")
-    //     .trim()}`;
-    // }
+    // ==========================================
+    // SADHU / SADHVI NAME
+    // ==========================================
 
+  if (
+  name === "sadhu_sadhvi_name" ||
+  name === "guruName" ||
+  name === "gadipati" ||
+  name === "acharya"
+) {
+  sanitizedValue = value
+    .replace(/^Param Pujya M\.S\s*/i, "")
+    .replace(/^PPAG\s*/i, "")
+    .replace(/[0-9]/g, "")
+    .replace(/[^a-zA-Z\s]/g, "")
+    .replace(/\s{2,}/g, " ")
+    .trimStart();
 
-    if (
-      name === "sadhu_sadhvi_name" ||
-      name === "guruName" ||
-      name === "gadipati" ||
-      name === "acharya"
-    ) {
-      sanitizedValue = value
-        .replace(/^Param Pujya\s*/i, "")   // remove old prefix
-        .replace(/[0-9]/g, "")            // remove digits
-        .replace(/[^a-zA-Z\s]/g, "")      // allow only letters + space
-        .replace(/\s{2,}/g, " ")          // multiple spaces => single
-        .replace(/^\s+/, "");             // allow typing after prefix
+  if (name === "gadipati") {
+    sanitizedValue = `PPAG ${sanitizedValue}`;
+  } else {
+    sanitizedValue = `Param Pujya M.S ${sanitizedValue}`;
+  }
 
-      sanitizedValue = `Param Pujya ${sanitizedValue}`;
+  // SEARCH NAME SUGGESTION
+  if (name === "sadhu_sadhvi_name") {
+    try {
+      const searchText = sanitizedValue
+        .replace(/^Param Pujya M\.S\s*/i, "")
+        .trim();
+
+      if (searchText.length > 0) {
+        const response = await axios.get(
+          `${API}/api/search-sadhu-sadhvi`,
+          {
+            params: {
+              keyword: searchText,
+            },
+          }
+        );
+
+        if (response.data.success) {
+          setSuggestions(response.data.data);
+        }
+      } else {
+        setSuggestions([]);
+      }
+    } catch (error) {
+      console.log(error);
     }
-
+  }
+}
 
     setFormData((prev) => {
       let nextState = { ...prev, [name]: sanitizedValue };
@@ -946,8 +1341,8 @@ const DiksharthiDetailsAdd = () => {
     if (rbfMandatoryFields.includes(name) || name === "relation") {
       const errorMessage =
         name === "relation" &&
-          nextRbfCriteria === "Yes" &&
-          !String(sanitizedValue || "").trim()
+        nextRbfCriteria === "Yes" &&
+        !String(sanitizedValue || "").trim()
           ? "Required for RBF"
           : validateRbfField(name, sanitizedValue, nextRbfCriteria);
 
@@ -961,9 +1356,8 @@ const DiksharthiDetailsAdd = () => {
       });
     }
   };
-
   const validate = () => {
-    debugger
+    debugger;
     let newErrors = {};
 
     // ==========================================
@@ -1065,7 +1459,11 @@ const DiksharthiDetailsAdd = () => {
     // ==========================================
     if (currentStep === 4) {
       // Mediclaim - must be explicitly set
-      if (formData.mediclaim === null || formData.mediclaim === undefined || formData.mediclaim === "") {
+      if (
+        formData.mediclaim === null ||
+        formData.mediclaim === undefined ||
+        formData.mediclaim === ""
+      ) {
         newErrors.mediclaim = "Please select Yes or No for Mediclaim";
       }
 
@@ -1086,7 +1484,11 @@ const DiksharthiDetailsAdd = () => {
       }
 
       // NGO Assistance - must be explicitly set
-      if (formData.ngoAssistance === null || formData.ngoAssistance === undefined || formData.ngoAssistance === "") {
+      if (
+        formData.ngoAssistance === null ||
+        formData.ngoAssistance === undefined ||
+        formData.ngoAssistance === ""
+      ) {
         newErrors.ngoAssistance = "Please select Yes or No for NGO Assistance";
       }
 
@@ -1166,7 +1568,7 @@ const DiksharthiDetailsAdd = () => {
   };
 
   const handleSave = async () => {
-    // debugger;
+     debugger;
     if (!validate()) return;
     try {
       const loggedInUserId = user?.id || user?.user_id || user?.userId || "";
@@ -1185,6 +1587,16 @@ const DiksharthiDetailsAdd = () => {
       });
       if (photo) data.append("photo", photo);
       if (uploadDoc) data.append("uploadDoc", uploadDoc);
+       if (formData.summary_image) {
+      data.append("summary_image", formData.summary_image);
+    }
+
+    if (formData.summary_document) {
+      data.append(
+        "summary_document",
+        formData.summary_document
+      );
+    }
 
       const targetId = isEditMode ? editId : savedRecordId;
       const response = targetId
@@ -1344,7 +1756,6 @@ const DiksharthiDetailsAdd = () => {
   //   }
   // };
 
-
   const goToNextStep = async () => {
     debugger;
 
@@ -1354,10 +1765,7 @@ const DiksharthiDetailsAdd = () => {
     // ==========================================
     // ✅ If RBF = NO → Direct Step 1 to Step 5
     // ==========================================
-    if (
-      formData.rbfCriteria === "No" &&
-      currentStep === 1
-    ) {
+    if (formData.rbfCriteria === "No" && currentStep === 1) {
       setCurrentStep(5);
       return;
     }
@@ -1365,17 +1773,13 @@ const DiksharthiDetailsAdd = () => {
     // ==========================================
     // ✅ Disable Step 2 API Skip
     // ==========================================
-    if (
-      formData.rbfCriteria === "Yes" &&
-      currentStep === 2
-    ) {
+    if (formData.rbfCriteria === "Yes" && currentStep === 2) {
       setCurrentStep(3);
       return;
     }
 
     try {
-      const loggedInUserId =
-        user?.id || user?.user_id || user?.userId || "";
+      const loggedInUserId = user?.id || user?.user_id || user?.userId || "";
 
       if (!loggedInUserId) {
         alert("Login user id missing. Please login again.");
@@ -1385,7 +1789,7 @@ const DiksharthiDetailsAdd = () => {
       const payload = mapFormDataToApiPayload(
         formData,
         loggedInUserId,
-        currentStep
+        currentStep,
       );
 
       const data = new FormData();
@@ -1397,120 +1801,72 @@ const DiksharthiDetailsAdd = () => {
       if (photo) data.append("photo", photo);
       if (uploadDoc) data.append("uploadDoc", uploadDoc);
 
-      const targetId = isEditMode
-        ? editId
-        : savedRecordId;
+      const targetId = isEditMode ? editId : savedRecordId;
 
       const response = targetId
-        ? await axios.put(
-          `${API}/api/update-diksharthi/${targetId}`,
-          data
-        )
-        : await axios.post(
-          `${API}/api/create-diksharthi`,
-          data
-        );
+        ? await axios.put(`${API}/api/update-diksharthi/${targetId}`, data)
+        : await axios.post(`${API}/api/create-diksharthi`, data);
 
-      const persisted =
-        response?.data?.data || {};
+      const persisted = response?.data?.data || {};
 
-      const resolvedId =
-        Number(
-          persisted?.id ||
-          targetId ||
-          0
-        ) || null;
+      const resolvedId = Number(persisted?.id || targetId || 0) || null;
 
       if (resolvedId) {
         setSavedRecordId(resolvedId);
       }
 
-      if (
-        persisted?.diksharthi_code ||
-        persisted?.id
-      ) {
-        setSavedId(
-          persisted?.diksharthi_code ||
-          persisted?.id
-        );
+      if (persisted?.diksharthi_code || persisted?.id) {
+        setSavedId(persisted?.diksharthi_code || persisted?.id);
       }
 
       // ==========================================
       // ✅ FAN ID Data Fetch
       // ==========================================
-      const searchKey = String(
-        formData?.fan_id ||
-        fanIdSearch ||
-        ""
-      ).trim();
+      const searchKey = String(formData?.fan_id || fanIdSearch || "").trim();
 
       if (searchKey) {
         try {
-          const getRes = await axios.get(
-            `${API}/api/search`,
-            {
-              params: {
-                fan_id: searchKey,
-                diksharthi_id: fanIdSearch,
-              },
-            }
-          );
+          const getRes = await axios.get(`${API}/api/search`, {
+            params: {
+              fan_id: searchKey,
+              diksharthi_id: fanIdSearch,
+            },
+          });
 
-          const latestData =
-            getRes?.data?.data?.[0];
+          const latestData = getRes?.data?.data?.[0];
 
           if (latestData?.family_details) {
-            const relationDetails =
-              convertFamilyArrayToObject(
-                latestData.family_details
-              );
+            const relationDetails = convertFamilyArrayToObject(
+              latestData.family_details,
+            );
 
-            const relations =
-              Object.keys(
-                relationDetails
-              );
+            const relations = Object.keys(relationDetails);
 
             setFormData((prev) => ({
               ...prev,
-              familyRelations:
-                relations,
-              familyRelationDetails:
-                relationDetails,
-              relation:
-                relations[0] ||
-                prev.relation,
+              familyRelations: relations,
+              familyRelationDetails: relationDetails,
+              relation: relations[0] || prev.relation,
             }));
           }
         } catch (err) {
-          console.error(
-            "GET API failed",
-            err
-          );
+          console.error("GET API failed", err);
         }
       }
 
       // ==========================================
       // ✅ Move Step Logic
       // ==========================================
-      if (
-        formData.rbfCriteria === "No"
-      ) {
+      if (formData.rbfCriteria === "No") {
         setCurrentStep(5);
       } else {
-        setCurrentStep((prev) =>
-          Math.min(
-            prev + 1,
-            stepTitles.length
-          )
-        );
+        setCurrentStep((prev) => Math.min(prev + 1, stepTitles.length));
       }
     } catch (err) {
       console.error(err);
       alert("Failed to Save");
     }
   };
-
-
 
   // const goToPreviousStep = () => {
   //   setCurrentStep((prev) => Math.max(prev - 1, 1));
@@ -1521,10 +1877,7 @@ const DiksharthiDetailsAdd = () => {
     // ✅ If RBF = NO and Step 5
     // Direct back to Step 1
     // ==================================
-    if (
-      formData.rbfCriteria === "No" &&
-      currentStep === 5
-    ) {
+    if (formData.rbfCriteria === "No" && currentStep === 5) {
       setCurrentStep(1);
       return;
     }
@@ -1532,9 +1885,7 @@ const DiksharthiDetailsAdd = () => {
     // ==================================
     // ✅ If RBF = YES normal flow
     // ==================================
-    setCurrentStep((prev) =>
-      Math.max(prev - 1, 1)
-    );
+    setCurrentStep((prev) => Math.max(prev - 1, 1));
   };
 
   const filteredRelations = RELATIONS.filter((item) => {
@@ -1665,24 +2016,24 @@ const DiksharthiDetailsAdd = () => {
     .toLowerCase();
   const filteredDiksharthiOptions = normalizedDiksharthiSearch
     ? allDiksharthi
-      .filter((item) => {
-        const familyNumber = String(
-          getFamilyNumber(item) || "",
-        ).toLowerCase();
-        const searchFields = [
-          item?.sadhu_sadhvi_name,
-          item?.diksharthi_code,
-          item?.mobile_no,
-          item?.family_member_firstName,
-          item?.family_member_lastName,
-          familyNumber,
-        ]
-          .map((value) => String(value || "").toLowerCase())
-          .join(" ");
+        .filter((item) => {
+          const familyNumber = String(
+            getFamilyNumber(item) || "",
+          ).toLowerCase();
+          const searchFields = [
+            item?.sadhu_sadhvi_name,
+            item?.diksharthi_code,
+            item?.mobile_no,
+            item?.family_member_firstName,
+            item?.family_member_lastName,
+            familyNumber,
+          ]
+            .map((value) => String(value || "").toLowerCase())
+            .join(" ");
 
-        return searchFields.includes(normalizedDiksharthiSearch);
-      })
-      .slice(0, 8)
+          return searchFields.includes(normalizedDiksharthiSearch);
+        })
+        .slice(0, 8)
     : [];
 
   const uniqueFanOptions = Array.from(
@@ -1690,8 +2041,7 @@ const DiksharthiDetailsAdd = () => {
       (allDiksharthi || [])
         .filter(
           (item) =>
-            String(item?.fan_id || "").trim() ||
-            String(item?.id || "").trim()
+            String(item?.fan_id || "").trim() || String(item?.id || "").trim(),
         )
         .map((item) => [
           String(item.id).trim(),
@@ -1701,8 +2051,8 @@ const DiksharthiDetailsAdd = () => {
             diksharthi_code: String(item?.diksharthi_code || "").trim(),
             fan_id: String(item?.fan_id || "").trim(),
           },
-        ])
-    ).values()
+        ]),
+    ).values(),
   );
 
   const normalizedFanIdSearch = String(fanIdSearch || "")
@@ -1710,20 +2060,20 @@ const DiksharthiDetailsAdd = () => {
     .toLowerCase();
   const filteredFanOptions = normalizedFanIdSearch
     ? uniqueFanOptions
-      .filter((item) =>
-        `${item?.id || ""} ${item?.diksharthi_code || ""} ${item?.fan_id || ""} ${item?.sadhu_sadhvi_name || ""}`
-          .toLowerCase()
-          .includes(normalizedFanIdSearch),
-      )
-      .slice(0, 8)
+        .filter((item) =>
+          `${item?.id || ""} ${item?.diksharthi_code || ""} ${item?.fan_id || ""} ${item?.sadhu_sadhvi_name || ""}`
+            .toLowerCase()
+            .includes(normalizedFanIdSearch),
+        )
+        .slice(0, 8)
     : [];
 
   const filteredFanOptions2 = normalizedFanIdSearch
     ? uniqueFanOptions.filter(
-      (item) =>
-        String(item.id).toLowerCase() === normalizedFanIdSearch ||
-        String(item.fan_id).toLowerCase() === normalizedFanIdSearch
-    )
+        (item) =>
+          String(item.id).toLowerCase() === normalizedFanIdSearch ||
+          String(item.fan_id).toLowerCase() === normalizedFanIdSearch,
+      )
     : [];
   useEffect(() => {
     if (
@@ -1749,17 +2099,17 @@ const DiksharthiDetailsAdd = () => {
     }
   }, [currentStep, filteredFanOptions2]);
 
-  console.log(filteredFanOptions2, "filteredFanOptions2")
+  console.log(filteredFanOptions2, "filteredFanOptions2");
   const normalizedSelectedFanValue = String(formData?.fan_id || "").trim();
   const fanSourceRecord = normalizedSelectedFanValue
     ? (allDiksharthi || []).find(
-      (item) =>
-        (String(item?.fan_id || "").trim() === normalizedSelectedFanValue ||
-          String(item?.id || "").trim() === normalizedSelectedFanValue ||
-          String(item?.diksharthi_code || "").trim() ===
-          normalizedSelectedFanValue) &&
-        String(item?.id || "") !== String(editId || ""),
-    ) || null
+        (item) =>
+          (String(item?.fan_id || "").trim() === normalizedSelectedFanValue ||
+            String(item?.id || "").trim() === normalizedSelectedFanValue ||
+            String(item?.diksharthi_code || "").trim() ===
+              normalizedSelectedFanValue) &&
+          String(item?.id || "") !== String(editId || ""),
+      ) || null
     : null;
 
   useEffect(() => {
@@ -1897,12 +2247,13 @@ const DiksharthiDetailsAdd = () => {
                     }}
                     className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition
 
-          ${isDisabled
-                        ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
-                        : isActive
-                          ? "bg-[#ECB000] text-white border-[#ECB000]"
-                          : "bg-white text-slate-600 border-slate-300 hover:bg-gray-50"
-                      }
+          ${
+            isDisabled
+              ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
+              : isActive
+                ? "bg-[#ECB000] text-white border-[#ECB000]"
+                : "bg-white text-slate-600 border-slate-300 hover:bg-gray-50"
+          }
           `}
                   >
                     {stepNumber}. {title}
@@ -1919,7 +2270,7 @@ const DiksharthiDetailsAdd = () => {
           {currentStep === 1 && (
             <>
               {/* Name */}
-              <div>
+              {/* <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
                   Name of P. Pujya. Sadhu/ Sadhvi Ji{" "}
                   <span className="text-red-500">*</span>
@@ -1936,8 +2287,72 @@ const DiksharthiDetailsAdd = () => {
                     {errors.sadhu_sadhvi_name}
                   </p>
                 )}
-              </div>
+              </div> */}
+              <div className="relative">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Name of P. Pujya. Sadhu/ Sadhvi Ji{" "}
+                  <span className="text-red-500">*</span>
+                </label>
 
+                <input
+                  name="sadhu_sadhvi_name"
+                  value={formData.sadhu_sadhvi_name}
+                  onChange={handleChange}
+                  type="text"
+                  autoComplete="off"
+                  className="w-full p-2 border border-slate-300 rounded-md outline-none"
+                />
+
+                {errors.sadhu_sadhvi_name && (
+                  <p className="text-red-500 text-xs">
+                    {errors.sadhu_sadhvi_name}
+                  </p>
+                )}
+
+                {/* ===================================== */}
+                {/* SUGGESTION LIST */}
+                {/* ===================================== */}
+
+             {suggestions.length > 0 && (
+  <div className="absolute z-50 w-full mt-1 overflow-y-auto bg-white border border-slate-200 rounded-md shadow-lg max-h-52">
+
+    {/* Header */}
+    <div className="px-3 py-2 text-xs font-semibold text-blue-500 border-b ">
+      Diksharthi Already Exist
+    </div>
+
+    {suggestions.map((item, index) => {
+
+      const displayName = item.sadhu_sadhvi_name
+        ?.replace(/param pujya/gi, "")
+        .trim();
+
+      return (
+        <div
+          key={index}
+          // onClick={() => {
+          //   setFormData((prev) => ({
+          //     ...prev,
+          //     sadhu_sadhvi_name: displayName,
+          //   }));
+
+          //   setSuggestions([]);
+          // }}
+          className="px-3 py-2 cursor-pointer hover:bg-slate-100 border-b last:border-b-0"
+        >
+          <p className="font-medium text-slate-700">
+            {displayName}
+          </p>
+
+          {/* <p className="text-xs text-red-500">
+            Diksharthi Already Exist
+          </p> */}
+        </div>
+      );
+    })}
+  </div>
+)}
+              </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
                   FAN ID Exist? <span className="text-red-500">*</span>
@@ -2254,7 +2669,7 @@ const DiksharthiDetailsAdd = () => {
               {formData.isAlive === "Yes" && (
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Vihar Location 
+                    Vihar Location
                   </label>
                   <input
                     name="viharLocation"
@@ -2348,18 +2763,39 @@ const DiksharthiDetailsAdd = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">RBF Criteria <span className="text-red-500">*</span></label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  RBF Criteria <span className="text-red-500">*</span>
+                </label>
                 <div className="flex gap-4 mt-2">
-                  <label className="flex items-center gap-2 cursor-pointer"><input type="radio" name="rbfCriteria" value="Yes" checked={formData.rbfCriteria === "Yes"} onChange={handleChange} /> Yes</label>
-                  <label className="flex items-center gap-2 cursor-pointer"><input type="radio" name="rbfCriteria" value="No" checked={formData.rbfCriteria === "No"} onChange={handleChange} /> No</label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="rbfCriteria"
+                      value="Yes"
+                      checked={formData.rbfCriteria === "Yes"}
+                      onChange={handleChange}
+                    />{" "}
+                    Yes
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="rbfCriteria"
+                      value="No"
+                      checked={formData.rbfCriteria === "No"}
+                      onChange={handleChange}
+                    />{" "}
+                    No
+                  </label>
                 </div>
-                {errors.rbfCriteria && <p className="text-red-500 text-xs">{errors.rbfCriteria}</p>}
+                {errors.rbfCriteria && (
+                  <p className="text-red-500 text-xs">{errors.rbfCriteria}</p>
+                )}
               </div>
 
-
-              <div>
+              {/* <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Relation Name <span className="text-red-500">*</span>
+                  Relative Name <span className="text-red-500">*</span>
                 </label>
 
                 <input
@@ -2374,8 +2810,70 @@ const DiksharthiDetailsAdd = () => {
                 {errors.relation_name && (
                   <p className="text-red-500 text-xs">{errors.relation_name}</p>
                 )}
-              </div>
+              </div> */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Relative Name */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Relative Name <span className="text-red-500">*</span>
+                  </label>
 
+                  <input
+                    type="text"
+                    name="relation_name"
+                    value={formData.relation_name || ""}
+                    onChange={handleChange}
+                    placeholder="Enter relation name"
+                    className="w-full p-2 border border-slate-300 rounded-md outline-none"
+                  />
+
+                  {errors.relation_name && (
+                    <p className="text-red-500 text-xs">
+                      {errors.relation_name}
+                    </p>
+                  )}
+                </div>
+
+                {/* Relation With */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Relation With Ms
+                  </label>
+
+                  <input
+                    type="text"
+                    name="relation_with_ms"
+                    value={formData.relation_with_ms || ""}
+                    onChange={handleChange}
+                    placeholder="Enter relation"
+                    className="w-full p-2 border border-slate-300 rounded-md outline-none"
+                  />
+
+                  {errors.relation_with_ms && (
+                    <p className="text-red-500 text-xs">
+                      {errors.relation_with_ms}
+                    </p>
+                  )}
+                </div>
+
+                {/* Application Date */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Application Date
+                  </label>
+
+                  <input
+                    type="date"
+                    name="application_date"
+                    value={
+                      formData.application_date ||
+                      new Date().toISOString().split("T")[0]
+                    }
+                    onChange={handleChange}
+                    className="w-full p-2 border border-slate-300 rounded-md outline-none"
+                  />
+                </div>
+              </div>
             </>
           )}
 
@@ -2820,7 +3318,7 @@ const DiksharthiDetailsAdd = () => {
                   isEdit={isEditMode}
                 />
               ) : (
-                <div>Please save record first</div> // optional
+                <div>Please save record first</div>
               )}
             </>
           )}
@@ -2830,35 +3328,29 @@ const DiksharthiDetailsAdd = () => {
               <>
                 {/* Permanent Address */}
                 <div>
-                  {filteredFanOptions2 && (
+                  {savedMainDiksarthi?.[0]?.sadhu_sadhvi_name && (
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input
                         type="checkbox"
                         className="w-4 h-4"
                         checked={sameAsMain}
-                        onChange={(e) => handleSameAsMainChange(e.target.checked)}
+                        onChange={(e) =>
+                          handleSameAsMainChange(e.target.checked)
+                        }
                       />
 
                       <span className="text-sm font-medium text-slate-700">
-                        Address And House Details same as {filteredFanOptions2[0]?.sadhu_sadhvi_name}
-                        {savedMainDiksarthi?.[0]?.sadhu_sadhvi_name && (
-                          <span className="text-blue-600 font-semibold ml-1">
-                            ({savedMainDiksarthi[0].sadhu_sadhvi_name})
-                          </span>
-                        )}
+                        Address And House Details same as
+                        <span className="text-blue-600 font-semibold ml-1">
+                          ({savedMainDiksarthi[0].sadhu_sadhvi_name})
+                        </span>
                       </span>
                     </label>
                   )}
                 </div>
-                <div>
-
-                </div>
-                <div>
-
-                </div>
-                <div>
-
-                </div>
+                <div></div>
+                <div></div>
+                <div></div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
                     Permanent Address <span className="text-red-500">*</span>
@@ -2999,9 +3491,7 @@ const DiksharthiDetailsAdd = () => {
 
                   {/* edit old value show */}
                   {formData.village && !formData.villageObj && (
-                    <option value={formData.village}>
-                      {formData.village}
-                    </option>
+                    <option value={formData.village}>{formData.village}</option>
                   )}
 
                   {postOffices.map((po, index) => (
@@ -3150,35 +3640,35 @@ const DiksharthiDetailsAdd = () => {
           {currentStep === 4 && (
             <>
               <div>
-                {filteredFanOptions2 && (
+                {filteredFanOptions2?.[0]?.sadhu_sadhvi_name && (
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
                       type="checkbox"
                       className="w-4 h-4"
                       checked={sameAsMainForNgo}
-                      onChange={(e) => handleSameAsMainForNgoChange(e.target.checked)}
+                      onChange={(e) =>
+                        handleSameAsMainForNgoChange(e.target.checked)
+                      }
                     />
 
-                    <span className="text-sm font-medium text-slate-700 flex">
-                      <p>Mediclaims and NGO Same as </p> {filteredFanOptions2[0]?.sadhu_sadhvi_name}
+                    <span className="text-sm font-medium text-slate-700 flex items-center">
+                      <p>Mediclaims and NGO Same as</p>
 
+                      <span className="text-blue-600 font-semibold ml-1">
+                        ({filteredFanOptions2[0].sadhu_sadhvi_name})
+                      </span>
                     </span>
                   </label>
                 )}
               </div>
-              <div>
-
-              </div>
-              <div>
-
-              </div>
-              <div>
-
-              </div>
+              <div></div>
+              <div></div>
+              <div></div>
 
               <div className="col-span-1 md:col-span-2 xl:col-span-2 border border-slate-200 rounded-lg p-4 bg-slate-50">
                 <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Does the family have any Mediclaim policy? <span className="text-red-500">*</span>
+                  Does the family have any Mediclaim policy?{" "}
+                  <span className="text-red-500">*</span>
                 </label>
                 <div className="flex gap-4 mt-2">
                   <label className="flex items-center gap-2 cursor-pointer">
@@ -3205,7 +3695,9 @@ const DiksharthiDetailsAdd = () => {
                   </label>
                 </div>
                 {errors.mediclaim && (
-                  <p className="text-red-500 text-xs mt-1">{errors.mediclaim}</p>
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.mediclaim}
+                  </p>
                 )}
 
                 {formData.mediclaim === true && (
@@ -3225,13 +3717,16 @@ const DiksharthiDetailsAdd = () => {
                         <option value="joint">Joint</option>
                       </select>
                       {errors.family_mediclaim_type && (
-                        <p className="text-red-500 text-xs mt-1">{errors.family_mediclaim_type}</p>
+                        <p className="text-red-500 text-xs mt-1">
+                          {errors.family_mediclaim_type}
+                        </p>
                       )}
                     </div>
 
                     <div>
                       <label className="block text-sm font-medium text-slate-700 mb-1">
-                        Family Mediclaim Policy Amount <span className="text-red-500">*</span>
+                        Family Mediclaim Policy Amount{" "}
+                        <span className="text-red-500">*</span>
                       </label>
                       <input
                         name="Family_mediclaim_amount"
@@ -3241,13 +3736,16 @@ const DiksharthiDetailsAdd = () => {
                         className="w-full p-2 border border-slate-300 rounded-md outline-none bg-white"
                       />
                       {errors.Family_mediclaim_amount && (
-                        <p className="text-red-500 text-xs mt-1">{errors.Family_mediclaim_amount}</p>
+                        <p className="text-red-500 text-xs mt-1">
+                          {errors.Family_mediclaim_amount}
+                        </p>
                       )}
                     </div>
 
                     <div>
                       <label className="block text-sm font-medium text-slate-700 mb-1">
-                        Mediclaim Premium Amount <span className="text-red-500">*</span>
+                        Mediclaim Premium Amount{" "}
+                        <span className="text-red-500">*</span>
                       </label>
                       <input
                         name="mediclaimPremiumAmount"
@@ -3265,7 +3763,8 @@ const DiksharthiDetailsAdd = () => {
 
                     <div>
                       <label className="block text-sm font-medium text-slate-700 mb-1">
-                        Mediclaim Company Name <span className="text-red-500">*</span>
+                        Mediclaim Company Name{" "}
+                        <span className="text-red-500">*</span>
                       </label>
                       <input
                         name="family_mediclaim_companyName"
@@ -3275,7 +3774,9 @@ const DiksharthiDetailsAdd = () => {
                         className="w-full p-2 border border-slate-300 rounded-md outline-none bg-white"
                       />
                       {errors.family_mediclaim_companyName && (
-                        <p className="text-red-500 text-xs mt-1">{errors.family_mediclaim_companyName}</p>
+                        <p className="text-red-500 text-xs mt-1">
+                          {errors.family_mediclaim_companyName}
+                        </p>
                       )}
                     </div>
                   </div>
@@ -3284,7 +3785,8 @@ const DiksharthiDetailsAdd = () => {
 
               <div className="col-span-1 md:col-span-2 xl:col-span-2 border border-slate-200 rounded-lg p-4 bg-slate-50">
                 <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Is any Sangh/NGO assistance received? <span className="text-red-500">*</span>
+                  Is any Sangh/NGO assistance received?{" "}
+                  <span className="text-red-500">*</span>
                 </label>
                 <div className="flex gap-4 mt-2">
                   <label className="flex items-center gap-2 cursor-pointer">
@@ -3317,7 +3819,9 @@ const DiksharthiDetailsAdd = () => {
                   </label>
                 </div>
                 {errors.ngoAssistance && (
-                  <p className="text-red-500 text-xs mt-1">{errors.ngoAssistance}</p>
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.ngoAssistance}
+                  </p>
                 )}
 
                 {formData.ngoAssistance === true && (
@@ -3334,7 +3838,9 @@ const DiksharthiDetailsAdd = () => {
                         className="w-full p-2 border border-slate-300 rounded-md outline-none bg-white"
                       />
                       {errors.sanghName && (
-                        <p className="text-red-500 text-xs mt-1">{errors.sanghName}</p>
+                        <p className="text-red-500 text-xs mt-1">
+                          {errors.sanghName}
+                        </p>
                       )}
                     </div>
 
@@ -3350,7 +3856,9 @@ const DiksharthiDetailsAdd = () => {
                         className="w-full p-2 border border-slate-300 rounded-md outline-none bg-white"
                       />
                       {errors.ngoAmount && (
-                        <p className="text-red-500 text-xs mt-1">{errors.ngoAmount}</p>
+                        <p className="text-red-500 text-xs mt-1">
+                          {errors.ngoAmount}
+                        </p>
                       )}
                     </div>
 
@@ -3370,7 +3878,9 @@ const DiksharthiDetailsAdd = () => {
                         <option value="Annually">Annually</option>
                       </select>
                       {errors.ngoFrequency && (
-                        <p className="text-red-500 text-xs mt-1">{errors.ngoFrequency}</p>
+                        <p className="text-red-500 text-xs mt-1">
+                          {errors.ngoFrequency}
+                        </p>
                       )}
                     </div>
 
@@ -3386,7 +3896,9 @@ const DiksharthiDetailsAdd = () => {
                         className="w-full p-2 border border-slate-300 rounded-md outline-none resize-none bg-white"
                       />
                       {errors.ngoRemark && (
-                        <p className="text-red-500 text-xs mt-1">{errors.ngoRemark}</p>
+                        <p className="text-red-500 text-xs mt-1">
+                          {errors.ngoRemark}
+                        </p>
                       )}
                     </div>
                   </div>
@@ -3472,7 +3984,7 @@ const DiksharthiDetailsAdd = () => {
             </>
           )}
 
-          {currentStep === 5 && (
+          {/* {currentStep === 5 && (
             <>
               <div className="col-span-4">
                 <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -3522,7 +4034,273 @@ const DiksharthiDetailsAdd = () => {
                 ) : null}
               </div>
             </>
+          )} */}
+
+          {currentStep === 5 && (
+  <>
+  
+    <div className="col-span-4">
+      <label className="block text-sm font-medium text-slate-700 mb-1">
+        Summary <span className="text-red-500">*</span>
+      </label>
+
+      <JoditEditor
+        value={formData.summary}
+        onBlur={(newContent) =>
+          setFormData((prev) => ({
+            ...prev,
+            summary: newContent,
+          }))
+        }
+      />
+
+      {errors.summary && (
+        <p className="text-red-500 text-xs mt-1">{errors.summary}</p>
+      )}
+    </div>
+
+   
+{/* <div className="col-span-2">
+  <label className="block text-sm font-medium text-slate-700 mb-1">
+    Upload Image
+  </label>
+
+  <input
+    type="file"
+    accept="image/*"
+    onChange={(e) =>
+      setFormData((prev) => ({
+        ...prev,
+        summary_image: e.target.files[0],
+      }))
+    }
+    className="w-full border border-slate-300 rounded-lg p-2 text-sm"
+  />
+
+ 
+ {formData.summary_image && (
+  <img
+    src={
+      formData.summary_image instanceof File
+        ? URL.createObjectURL(
+            formData.summary_image
+          )
+        : formData.summary_image
+    }
+    alt="Preview"
+    onError={(e) => {
+      console.log(
+        "IMAGE LOAD FAILED",
+        e.target.src
+      );
+    }}
+    className="mt-2 h-24 w-24 object-cover rounded-lg border"
+  />
+)}
+</div> */}
+<div className="col-span-4 space-y-6">
+  {documents.map((doc, index) => (
+    <div
+      key={index}
+      className="border border-slate-300 rounded-xl p-4 bg-white shadow-sm"
+    >
+      {/* Title */}
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-slate-700 mb-1">
+          Title
+        </label>
+
+        <input
+          type="text"
+          placeholder="Enter Title"
+          value={doc.title}
+          onChange={(e) =>
+            handleTitleChange(index, e.target.value)
+          }
+          className="w-full border border-slate-300 rounded-lg p-2 text-sm"
+        />
+      </div>
+
+      {/* File Upload */}
+      <div>
+        <label className="block text-sm font-medium text-slate-700 mb-1">
+          Upload Files
+        </label>
+
+        <input
+          type="file"
+          multiple
+          accept="image/*,.pdf,.doc,.docx"
+          onChange={(e) =>
+            handleFileChange(index, e.target.files)
+          }
+          className="w-full border border-slate-300 rounded-lg p-2 text-sm"
+        />
+      </div>
+
+      {/* Preview Files */}
+     {/* Preview Files */}
+{doc.files && doc.files.length > 0 && (
+  <div className="mt-4 flex flex-wrap gap-3">
+    {doc.files.map((file, fileIndex) => {
+      const isNewFile = file instanceof File;
+
+      const fileUrl = isNewFile
+        ? URL.createObjectURL(file)
+        : file.file_url || file.file_path;
+
+      const fileType = isNewFile
+        ? file.type
+        : file.file_type;
+
+      const fileName = isNewFile
+        ? file.name
+        : file.original_name;
+
+      const extension = fileName
+        ?.split(".")
+        ?.pop()
+        ?.toLowerCase();
+
+      return (
+        <div
+          key={fileIndex}
+          className="border rounded-xl p-2 w-32 bg-white shadow-sm"
+        >
+          {/* IMAGE */}
+          {fileType?.startsWith("image/") ? (
+            <img
+              src={fileUrl}
+              alt="Preview"
+              className="h-24 w-full object-cover rounded-lg border"
+            />
+          ) : (
+            <a
+              href={fileUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="h-24 flex flex-col items-center justify-center border rounded-lg text-xs text-slate-700 hover:bg-slate-50"
+            >
+              {/* PDF */}
+              {extension === "pdf" && (
+                <>
+                  <div className="text-3xl">📕</div>
+                  <span>PDF File</span>
+                </>
+              )}
+
+              {/* WORD */}
+              {(extension === "doc" ||
+                extension === "docx") && (
+                <>
+                  <div className="text-3xl">📘</div>
+                  <span>Word File</span>
+                </>
+              )}
+
+              {/* EXCEL */}
+              {(extension === "xls" ||
+                extension === "xlsx") && (
+                <>
+                  <div className="text-3xl">📗</div>
+                  <span>Excel File</span>
+                </>
+              )}
+
+              {/* OTHER */}
+              {![
+                "pdf",
+                "doc",
+                "docx",
+                "xls",
+                "xlsx",
+              ].includes(extension) && (
+                <>
+                  <div className="text-3xl">📄</div>
+                  <span>Document</span>
+                </>
+              )}
+            </a>
           )}
+
+          {/* FILE NAME */}
+          <p className="text-xs mt-2 break-words text-center line-clamp-2">
+            {fileName}
+          </p>
+
+          {/* VIEW BUTTON */}
+          <a
+            href={fileUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="mt-2 block text-center text-xs bg-blue-600 hover:bg-blue-700 text-white py-1 rounded"
+          >
+            View
+          </a>
+        </div>
+      );
+    })}
+  </div>
+)}
+    </div>
+  ))}
+
+                {/* Add Button */}
+             
+  <div className="flex gap-5">
+    <button
+      type="button"
+      onClick={handleAddDocument}
+      className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm"
+    >
+      + Add More
+    </button>
+
+    <button
+      type="button"
+      onClick={() =>
+        handleUploadDocuments(savedRecordId)
+      }
+      className="ml-4 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm"
+    >
+      Upload Documents
+    </button>
+  </div>
+
+  
+</div>
+
+    
+    <div className="col-span-4 mt-2">
+      {formData?.deselected_assistance?.length ? (
+        <>
+          <label className="block text-sm font-medium text-slate-700 mb-1">
+            Assistance Reasons
+          </label>
+
+          <div className="space-y-2">
+            <p className="text-sm text-red-500">
+              The Karyakarta has deselected assistance for the
+              following reason(s):
+            </p>
+
+            <ul className="list-disc pl-5 text-sm text-red-500">
+              {formData.deselected_assistance.map((item, index) => (
+                <li key={index} className="leading-relaxed">
+                  <span className="font-semibold">{item.type}</span> —{" "}
+                  {item.reason}{" "}
+                  <span className="text-red-500">
+                    ({item.relation})
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </>
+      ) : null}
+    </div>
+  </>
+)}
         </div>
         <div className="p-6 flex justify-between items-center bg-white mt-4">
           <button
